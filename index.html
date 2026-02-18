@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WealthOS — Financial Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
+  --accent:#00e5ff; --accent2:#7c3aed; --accent3:#10b981; --accent4:#f59e0b;
+  --danger:#ef4444; --text:#e2e8f0; --muted:#64748b;
+  --glow:0 0 20px rgba(0,229,255,.15); --glow2:0 0 40px rgba(0,229,255,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── GRID BG ── */
+.grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+  background-size:60px 60px}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+  overflow-y:auto;
+  padding:1rem;
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:24px;
+  padding:2.5rem;width:100%;max-width:460px;
+  position:relative;z-index:1;
+  box-shadow:0 0 80px rgba(0,0,0,.6);
+  margin:auto;
+}
+.login-logo{font-size:2.2rem;font-weight:800;color:var(--accent);text-align:center;letter-spacing:-.03em;text-shadow:var(--glow2);margin-bottom:.3rem}
+.login-logo span{color:var(--text)}
+.login-tagline{text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:2rem}
+.ltabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:1.8rem}
+.ltab{flex:1;text-align:center;padding:.65rem .5rem;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);transition:all .2s;user-select:none}
+.ltab.active{background:var(--accent);color:var(--bg)}
+
+/* seed display */
+.seed-row{display:flex;gap:.6rem;margin:1rem 0}
+.sw{
+  flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;
+  padding:.9rem .4rem;text-align:center;
+  font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;
+  color:var(--accent);position:relative;
+  box-shadow:var(--glow);min-height:58px;
+  display:flex;align-items:center;justify-content:center;
+}
+.sw-num{position:absolute;top:4px;left:6px;font-size:.55rem;color:var(--muted);font-weight:400}
+
+/* seed inputs */
+.sinput{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:.9rem .4rem;text-align:center;
+  font-family:'Space Mono',monospace;font-size:.88rem;color:var(--text);
+  outline:none;transition:border-color .2s;
+}
+.sinput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
+.sinput::placeholder{color:var(--muted);font-size:.72rem}
+
+.seed-warn{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);
+  border-radius:10px;padding:.9rem 1rem;font-size:.78rem;color:var(--accent4);
+  line-height:1.6;margin:.8rem 0;
+}
+.check-row{display:flex;align-items:center;gap:.7rem;margin:1rem 0;cursor:pointer;user-select:none}
+.check-box{
+  width:20px;height:20px;border:2px solid var(--border);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;font-size:.8rem;
+}
+.check-box.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.check-label{font-size:.8rem;color:var(--muted);line-height:1.4}
+.lbtn{
+  width:100%;padding:.95rem;border-radius:10px;background:var(--accent);color:var(--bg);
+  border:none;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;
+  cursor:pointer;transition:all .2s;letter-spacing:.02em;margin-top:.5rem;
+}
+.lbtn:hover:not(:disabled){background:#33eaff;box-shadow:var(--glow2);transform:translateY(-1px)}
+.lbtn:disabled{opacity:.45;cursor:not-allowed}
+.lbtn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text);width:100%;padding:.7rem;border-radius:10px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:.5rem}
+.lbtn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.lerr{color:var(--danger);font-size:.8rem;text-align:center;margin:.5rem 0;display:none}
+.lloading{display:none;align-items:center;justify-content:center;gap:.7rem;padding:1rem;color:var(--muted);font-size:.84rem}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(5,8,16,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.5rem;gap:.5rem;
+}
+.nav-logo{font-size:1.2rem;font-weight:800;color:var(--accent);letter-spacing:-.02em;padding:1.1rem 0;margin-right:.5rem;white-space:nowrap;text-shadow:var(--glow)}
+.nav-logo span{color:var(--text)}
+.nav-tabs{display:flex;overflow-x:auto;flex:1}
+.nav-tab{padding:1.1rem 1.3rem;cursor:pointer;font-size:.82rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.btc-badge{display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .9rem;font-family:'Space Mono',monospace;font-size:.75rem;white-space:nowrap}
+.live-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.acct-badge{display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .9rem;font-size:.75rem;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:200px;overflow:hidden}
+.acct-badge:hover{border-color:var(--accent);color:var(--accent)}
+.acct-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;flex-shrink:0}
+
+/* ── PAGES ── */
+.page{display:none;padding:1.8rem;position:relative;z-index:1;max-width:1400px;margin:0 auto}
+.page.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── COMMON ── */
+.ph{margin-bottom:1.8rem}
+.ph h1{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.2rem}
+.ph p{color:var(--muted);font-size:.85rem}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
+.sec-title{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:.5rem}
+.sec-title::before{content:'';display:block;width:4px;height:14px;background:var(--accent);border-radius:2px}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;transition:all .3s;cursor:default}
+.stat-card:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px)}
+.slabel{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem}
+.sval{font-size:1.7rem;font-weight:800;font-family:'Space Mono',monospace;line-height:1}
+.ssub{font-size:.75rem;color:var(--muted);margin-top:.3rem;font-family:'Space Mono',monospace}
+.pos{color:var(--accent3)}.neg{color:var(--danger)}.acc{color:var(--accent)}.gld{color:var(--accent4)}
+
+/* ── BUTTONS ── */
+.btn{padding:.65rem 1.3rem;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.03em;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-primary:hover{background:#33eaff;box-shadow:var(--glow2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:.38rem .8rem;font-size:.75rem}
+.btn-del{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:.35rem .7rem;font-size:.72rem;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:all .2s}
+.btn-del:hover{background:var(--danger);color:#fff}
+
+/* ── CHART AREA ── */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-bottom:1.4rem}
+.chart-container{position:relative;height:240px;margin-top:.8rem}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{background:var(--surface2);padding:.85rem 1.1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:.85rem 1.1rem;border-bottom:1px solid rgba(30,45,69,.5);font-family:'Space Mono',monospace;font-size:.8rem;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,229,255,.02)}
+.badge{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-size:.68rem;font-weight:700;letter-spacing:.04em}
+.bg{background:rgba(16,185,129,.15);color:var(--accent3);border:1px solid rgba(16,185,129,.3)}
+.br{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.bb{background:rgba(0,229,255,.1);color:var(--accent);border:1px solid rgba(0,229,255,.2)}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex;animation:fadeIn .2s}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2rem;width:100%;max-width:460px;box-shadow:0 0 60px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.15rem;font-weight:800;color:var(--accent);margin-bottom:1.4rem}
+
+/* ── FORM ── */
+.fg{margin-bottom:1.1rem}
+.fl{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.35rem}
+.fi,.fs{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.65rem .9rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.85rem;transition:border-color .2s;outline:none}
+.fi:focus,.fs:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
+.fs option{background:var(--surface2)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.modal-footer{display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.4rem}
+
+/* ── SIMULATION ── */
+.sim-layout{display:grid;grid-template-columns:360px 1fr;gap:1.4rem;align-items:start}
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.6rem;position:sticky;top:72px}
+.sim-results{display:flex;flex-direction:column;gap:1rem}
+.sim-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
+.big-val-box{text-align:center;padding:1.4rem;background:linear-gradient(135deg,rgba(0,229,255,.05),rgba(124,58,237,.05));border:1px solid rgba(0,229,255,.2);border-radius:12px;margin-bottom:1rem}
+.big-val-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem}
+.big-val{font-size:2.5rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent3);line-height:1}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:1px solid rgba(30,45,69,.5)}
+.rrow:last-child{border-bottom:none}
+.rlabel{color:var(--muted);font-size:.82rem}
+.rval{font-family:'Space Mono',monospace;font-weight:700;font-size:.9rem}
+.sim-tbl-wrap{max-height:320px;overflow-y:auto}
+.sim-tbl-wrap::-webkit-scrollbar{width:4px}
+.sim-tbl-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 0 8px rgba(0,229,255,.5)}
+
+/* ── PORTFOLIO ── */
+.port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:1.4rem}
+.port-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;transition:all .3s}
+.port-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.port-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem}
+.asset-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:linear-gradient(135deg,rgba(0,229,255,.12),rgba(124,58,237,.12));border:1px solid var(--border)}
+.asset-name{font-weight:700;font-size:.95rem}
+.asset-ticker{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace}
+.asset-price{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:.2rem}
+.pbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin:.5rem 0}
+.pbar-fill{height:100%;border-radius:2px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);border:1px solid var(--accent3);border-radius:10px;padding:.75rem 1.3rem;font-size:.82rem;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;color:var(--accent3)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{
+  position:fixed;inset:0;z-index:600;
+  display:none;align-items:center;justify-content:center;
+  background:var(--bg);padding:1rem;overflow-y:auto;
+}
+.setup-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:24px;
+  padding:2.5rem;width:100%;max-width:500px;
+  box-shadow:0 0 80px rgba(0,0,0,.6);
+}
+.setup-step{
+  display:flex;align-items:center;gap:.8rem;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:.9rem 1rem;margin-bottom:.7rem;
+  font-size:.82rem;line-height:1.5;
+}
+.step-num{
+  width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.78rem;flex-shrink:0;
+}
+.setup-link{color:var(--accent);text-decoration:none;font-weight:600}
+.setup-link:hover{text-decoration:underline}
+
+
+.sync-bar{position:fixed;bottom:1.5rem;left:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .85rem;font-size:.72rem;color:var(--muted);z-index:200;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);flex-shrink:0}
+.sdot.syncing{background:var(--accent4);animation:pulse 1s infinite}
+.sdot.err{background:var(--danger)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty .emoji{font-size:2.5rem;margin-bottom:.8rem}
+.empty h3{font-size:1rem;margin-bottom:.4rem;color:var(--text)}
+.empty p{font-size:.82rem}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.two-col,.sim-layout{grid-template-columns:1fr}.sim-panel{position:static}}
+@media(max-width:640px){.frow{grid-template-columns:1fr}.nav-tab{padding:.9rem .8rem;font-size:.75rem}}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ══════════ SETUP SCREEN (isi API Key JSONBin) ══════════ -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="login-logo" style="margin-bottom:.3rem">Wealth<span>OS</span></div>
+    <div class="login-tagline" style="margin-bottom:1.8rem">Setup pertama kali — hanya perlu 2 menit ☕</div>
+
+    <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:1rem">📦 Setup Database Gratis (JSONBin.io)</div>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6">JSONBin.io adalah database gratis untuk menyimpan data kamu di cloud. Ikuti langkah berikut:</p>
+
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div>Buka <a class="setup-link" href="https://jsonbin.io" target="_blank">jsonbin.io</a> di browser → klik <strong style="color:var(--text)">Sign Up</strong> → daftar gratis (bisa pakai Google)</div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div>Setelah login, klik <strong style="color:var(--text)">API Keys</strong> di menu atas → klik <strong style="color:var(--text)">"+ Create Access Key"</strong></div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div>Beri nama key (bebas, misal: <em>wealthos</em>) → klik <strong style="color:var(--text)">Generate</strong> → <strong style="color:var(--accent)">copy API key yang muncul</strong></div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">4</div>
+      <div>Paste API key di bawah ini → klik <strong style="color:var(--text)">Simpan & Lanjut</strong></div>
+    </div>
+
+    <div style="margin-top:1.4rem">
+      <label class="fl" style="display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem">API Key JSONBin.io</label>
+      <input type="text" class="fi" id="setup-api-key" placeholder="$2a$10$xxxxxxxxxxxxxxxxxxxx..." autocomplete="off" spellcheck="false" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.8rem;outline:none;transition:border-color .2s;margin-bottom:.5rem">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem">⚠️ API key tersimpan hanya di browser kamu, tidak dikirim ke server manapun selain JSONBin.io</div>
+      <button type="button" class="lbtn" onclick="doSaveApiKey()">Simpan &amp; Lanjut →</button>
+    </div>
+
+    <div style="margin-top:1.2rem;padding:1rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:.78rem;color:var(--accent3);line-height:1.6">
+      ✅ <strong>JSONBin gratis</strong> sampai 10.000 request/bulan — lebih dari cukup untuk penggunaan pribadi.<br>
+      ✅ Data kamu <strong>private</strong> dan hanya bisa diakses dengan API key kamu sendiri.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Wealth<span>OS</span></div>
+    <div class="login-tagline">Financial Command Center · Login dengan 3 kata seed phrase</div>
+
+    <div class="ltabs">
+      <div class="ltab active" id="ltab-new" onclick="switchTab('new')">🌱 Akun Baru</div>
+      <div class="ltab" id="ltab-existing" onclick="switchTab('existing')">🔑 Sudah Punya Seed</div>
+    </div>
+
+    <!-- TAB NEW -->
+    <div id="tab-new">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">Seed phrase <strong style="color:var(--text)">3 kata</strong> ini adalah kunci akun kamu. Data tersimpan di cloud, bisa diakses dari device manapun.</p>
+
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Seed phrase kamu:</div>
+      <div class="seed-row">
+        <div class="sw"><div class="sw-num">1</div><span id="sw1">···</span></div>
+        <div class="sw"><div class="sw-num">2</div><span id="sw2">···</span></div>
+        <div class="sw"><div class="sw-num">3</div><span id="sw3">···</span></div>
+      </div>
+
+      <button type="button" class="lbtn-ghost" onclick="doGenerate()">🔄 Generate Ulang</button>
+
+      <div class="seed-warn">⚠️ <strong>SIMPAN SEED PHRASE INI!</strong> Screenshot atau catat ketiga kata ini. Tidak bisa dipulihkan jika hilang.</div>
+
+      <div class="check-row" onclick="doToggleConfirm()">
+        <div class="check-box" id="chk">✓</div>
+        <span class="check-label">Saya sudah mencatat dan mengerti tidak bisa dipulihkan</span>
+      </div>
+
+      <button type="button" class="lbtn" id="btn-create" onclick="doCreate()">Buat Akun &amp; Masuk →</button>
+    </div>
+
+    <!-- TAB EXISTING -->
+    <div id="tab-existing" style="display:none">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">Masukkan <strong style="color:var(--text)">3 kata seed phrase</strong> kamu.</p>
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">Seed phrase:</div>
+      <div class="seed-row">
+        <input class="sinput" id="iw1" placeholder="kata 1" autocomplete="off" spellcheck="false">
+        <input class="sinput" id="iw2" placeholder="kata 2" autocomplete="off" spellcheck="false">
+        <input class="sinput" id="iw3" placeholder="kata 3" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="lerr" id="lerr">❌ Akun tidak ditemukan</div>
+      <button type="button" class="lbtn" onclick="doLogin()">Masuk →</button>
+      <div style="text-align:center;margin-top:1rem;font-size:.76rem;color:var(--muted)">
+        Belum punya? <span style="color:var(--accent);cursor:pointer" onclick="switchTab('new')">Buat akun baru</span>
+      </div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div class="lloading" id="lloading">
+      <div style="width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+      <span id="lmsg">Memuat...</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="app" style="display:none">
+
+<nav>
+  <div class="nav-logo">Wealth<span>OS</span></div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="nav-tab" onclick="showPage('dca')">DCA Tracker</div>
+    <div class="nav-tab" onclick="showPage('portfolio')">Portofolio</div>
+    <div class="nav-tab" onclick="showPage('simulation')">Simulasi</div>
+    <div class="nav-tab" onclick="showPage('cashflow')">Arus Kas</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.5rem;margin-left:auto">
+    <div class="acct-badge" onclick="showAcct()" title="Info Akun">
+      <div class="acct-dot"></div>
+      <span id="nav-acct" style="font-family:'Space Mono',monospace;font-size:.72rem;overflow:hidden;text-overflow:ellipsis">—</span>
+    </div>
+    <div class="btc-badge">
+      <div class="live-dot"></div>
+      <span>BTC</span>
+      <span id="nav-btc">—</span>
+      <span id="nav-chg" style="font-size:.68rem;color:var(--muted)"></span>
+    </div>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="ph"><h1>Command Center</h1><p id="dash-date"></p></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="slabel">Total Aset</div><div class="sval acc" id="d-total">Rp 0</div><div class="ssub" id="d-total2">—</div></div>
+    <div class="stat-card"><div class="slabel">Total Investasi</div><div class="sval" id="d-invest">Rp 0</div><div class="ssub">Modal diinvestasikan</div></div>
+    <div class="stat-card"><div class="slabel">Total P&amp;L</div><div class="sval pos" id="d-pnl">Rp 0</div><div class="ssub pos" id="d-pnl-pct">+0.00%</div></div>
+    <div class="stat-card"><div class="slabel">Bitcoin Price</div><div class="sval gld" id="d-btc">—</div><div class="ssub" id="d-btc-chg">—</div></div>
+    <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="d-btcamt">0 BTC</div><div class="ssub" id="d-btcidr">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">DCA Entries</div><div class="sval acc" id="d-entries">0</div><div class="ssub" id="d-avg">Avg: $0</div></div>
+  </div>
+  <div class="two-col">
+    <div class="chart-wrap"><div class="sec-title">Portfolio Allocation</div><div class="chart-container"><canvas id="c-alloc"></canvas></div></div>
+    <div class="chart-wrap"><div class="sec-title">P&amp;L Timeline</div><div class="chart-container"><canvas id="c-pnl"></canvas></div></div>
+  </div>
+  <div class="sec-hdr"><div class="sec-title">Transaksi Terbaru</div><button class="btn btn-primary btn-sm" onclick="showPage('dca')">Lihat Semua</button></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Tanggal</th><th>Harga Beli</th><th>Modal IDR</th><th>BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="d-recent"></tbody></table></div>
+</div>
+
+<!-- DCA -->
+<div id="page-dca" class="page">
+  <div class="ph"><h1>DCA Tracker</h1><p>Catat setiap pembelian Bitcoin kamu</p></div>
+  <div class="sec-hdr"><div class="sec-title">Ringkasan</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-dca')">+ Tambah Transaksi</button></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="slabel">Total Investasi</div><div class="sval" id="dca-invest">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">Nilai Sekarang</div><div class="sval acc" id="dca-val">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">Total P&amp;L</div><div class="sval pos" id="dca-pnl">Rp 0</div><div class="ssub pos" id="dca-pnl-pct">+0%</div></div>
+    <div class="stat-card"><div class="slabel">Average Buy Price</div><div class="sval gld" id="dca-avg">$0</div></div>
+    <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="dca-btc">0 BTC</div></div>
+  </div>
+  <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
+  <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Histori</div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="clearDCA()">🗑️ Hapus Semua</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-dca')">+ Tambah</button>
+    </div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Tanggal</th><th>Harga (USD)</th><th>Harga (IDR)</th><th>Modal (IDR)</th><th>BTC</th><th>Nilai Kini</th><th>P&amp;L</th><th>Return%</th><th>Catatan</th><th></th></tr></thead><tbody id="dca-tbody"></tbody></table></div>
+</div>
+
+<!-- PORTFOLIO -->
+<div id="page-portfolio" class="page">
+  <div class="ph"><h1>Portofolio</h1><p>Semua aset investasi kamu</p></div>
+  <div class="sec-hdr"><div class="sec-title">Aset</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-port')">+ Tambah Aset</button></div>
+  <div class="port-grid" id="port-cards"><div class="empty" style="grid-column:1/-1"><div class="emoji">📊</div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div></div>
+  <div class="sec-hdr"><div class="sec-title">Detail</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Aset</th><th>Qty</th><th>Avg Buy</th><th>Harga Kini</th><th>Nilai</th><th>P&amp;L</th><th>Return%</th><th>Alokasi</th><th></th></tr></thead><tbody id="port-tbody"></tbody></table></div>
+</div>
+
+<!-- SIMULATION -->
+<div id="page-simulation" class="page">
+  <div class="ph"><h1>Simulasi DCA</h1><p>Hitung potensi return jika kamu rutin DCA Bitcoin</p></div>
+  <div class="sim-layout">
+    <div class="sim-panel">
+      <div class="sec-title" style="margin-bottom:1.3rem">Parameter</div>
+      <div class="fg"><label class="fl">DCA per periode (IDR)</label><input type="number" class="fi" id="s-amt" value="500000" oninput="runSim()"></div>
+      <div class="fg"><label class="fl">Mulai dari</label><select class="fs" id="s-start" onchange="runSim()">
+        <option value="2020">2020 (5 tahun lalu)</option>
+        <option value="2021">2021 (4 tahun lalu)</option>
+        <option value="2022">2022 (3 tahun lalu)</option>
+        <option value="2023">2023 (2 tahun lalu)</option>
+        <option value="2024" selected>2024 (1 tahun lalu)</option>
+      </select></div>
+      <div class="fg"><label class="fl">Frekuensi</label><select class="fs" id="s-freq" onchange="runSim()">
+        <option value="monthly" selected>Bulanan</option>
+        <option value="biweekly">2 Minggu Sekali</option>
+        <option value="weekly">Mingguan</option>
+      </select></div>
+      <div class="fg"><label class="fl">Harga BTC Sekarang (USD)</label><input type="number" class="fi" id="s-btc" value="95000" oninput="runSim()">
+      <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div></div>
+      <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="number" class="fi" id="s-rate" value="16000" oninput="runSim()"></div>
+    </div>
+    <div class="sim-results">
+      <div class="sim-card">
+        <div class="big-val-box"><div class="big-val-label">Nilai Portofolio Sekarang</div><div class="big-val" id="s-port">Rp 0</div><div style="color:var(--muted);font-size:.78rem;margin-top:.4rem" id="s-btctot">0 BTC</div></div>
+        <div class="rrow"><span class="rlabel">Total Modal</span><span class="rval" id="s-total">Rp 0</span></div>
+        <div class="rrow"><span class="rlabel">Profit/Loss</span><span class="rval pos" id="s-profit">+Rp 0</span></div>
+        <div class="rrow"><span class="rlabel">ROI</span><span class="rval pos" id="s-roi">0%</span></div>
+        <div class="rrow"><span class="rlabel">Avg Buy Price</span><span class="rval" id="s-avg">$0</span></div>
+        <div class="rrow"><span class="rlabel">Jumlah Periode</span><span class="rval" id="s-periods">0 kali</span></div>
+        <div class="rrow"><span class="rlabel">BTC Terkumpul</span><span class="rval gld" id="s-btcacc">0 BTC</span></div>
+      </div>
+      <div class="sim-card"><div class="sec-title" style="margin-bottom:.8rem">Growth Curve</div><div class="chart-container"><canvas id="c-sim"></canvas></div></div>
+      <div class="sim-card">
+        <div class="sec-title" style="margin-bottom:.8rem">Detail Per Periode</div>
+        <div class="sim-tbl-wrap"><table><thead><tr><th>Periode</th><th>Harga BTC</th><th>DCA</th><th>BTC Dibeli</th><th>Total BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CASHFLOW -->
+<div id="page-cashflow" class="page">
+  <div class="ph"><h1>Arus Kas</h1><p>Catat pemasukan dan pengeluaran</p></div>
+  <div class="sec-hdr"><div class="sec-title">Ringkasan</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-cf')">+ Tambah Transaksi</button></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="slabel">Pemasukan</div><div class="sval pos" id="cf-in">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">Pengeluaran</div><div class="sval neg" id="cf-out">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">Saldo Bersih</div><div class="sval pos" id="cf-net">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel">% Investasi</div><div class="sval acc" id="cf-pct">0%</div></div>
+  </div>
+  <div class="chart-wrap"><div class="sec-title">Cashflow Bulanan</div><div class="chart-container"><canvas id="c-cf"></canvas></div></div>
+  <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Transaksi</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Tipe</th><th>Jumlah</th><th></th></tr></thead><tbody id="cf-tbody"></tbody></table></div>
+</div>
+
+</div><!-- end #app -->
+
+<!-- ══════════ MODALS ══════════ -->
+<div class="overlay" id="modal-dca">
+  <div class="modal">
+    <div class="modal-title">₿ Tambah Transaksi DCA</div>
+    <div class="fg"><label class="fl">Tanggal</label><input type="date" class="fi" id="m-dca-date"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Harga BTC (USD)</label><input type="number" class="fi" id="m-dca-usd" placeholder="95000">
+      <div style="font-size:.7rem;color:var(--accent);margin-top:.3rem;cursor:pointer" onclick="fillBTCPrice()">↩ Pakai harga sekarang</div></div>
+      <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="number" class="fi" id="m-dca-rate" value="16000"></div>
+    </div>
+    <div class="fg"><label class="fl">Jumlah Investasi (IDR)</label><input type="number" class="fi" id="m-dca-idr" placeholder="500000"></div>
+    <div class="fg"><label class="fl">Catatan (opsional)</label><input type="text" class="fi" id="m-dca-note" placeholder="DCA bulan Januari"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-dca')">Batal</button>
+      <button class="btn btn-primary" onclick="addDCA()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-port">
+  <div class="modal">
+    <div class="modal-title">📊 Tambah Aset</div>
+    <div class="fg"><label class="fl">Nama Aset</label><input type="text" class="fi" id="m-p-name" placeholder="Bitcoin, BBCA, Emas..."></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Ticker</label><input type="text" class="fi" id="m-p-ticker" placeholder="BTC"></div>
+      <div class="fg"><label class="fl">Tipe</label><select class="fs" id="m-p-type">
+        <option value="crypto">Kripto</option><option value="stock">Saham</option>
+        <option value="gold">Emas</option><option value="reksadana">Reksadana</option><option value="other">Lainnya</option>
+      </select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Jumlah (qty)</label><input type="number" class="fi" id="m-p-qty" placeholder="0.05" step="any"></div>
+      <div class="fg"><label class="fl">Avg Buy (IDR)</label><input type="number" class="fi" id="m-p-avg" placeholder="500000000"></div>
+    </div>
+    <div class="fg"><label class="fl">Harga Sekarang (IDR)</label><input type="number" class="fi" id="m-p-cur" placeholder="1500000000"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-port')">Batal</button>
+      <button class="btn btn-primary" onclick="addPort()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-cf">
+  <div class="modal">
+    <div class="modal-title">💰 Tambah Transaksi Keuangan</div>
+    <div class="fg"><label class="fl">Tanggal</label><input type="date" class="fi" id="m-cf-date"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Tipe</label><select class="fs" id="m-cf-type">
+        <option value="income">Pemasukan</option><option value="expense">Pengeluaran</option><option value="investment">Investasi</option>
+      </select></div>
+      <div class="fg"><label class="fl">Kategori</label><input type="text" class="fi" id="m-cf-cat" placeholder="Gaji, Makan..."></div>
+    </div>
+    <div class="fg"><label class="fl">Deskripsi</label><input type="text" class="fi" id="m-cf-desc" placeholder="Deskripsi singkat"></div>
+    <div class="fg"><label class="fl">Jumlah (IDR)</label><input type="number" class="fi" id="m-cf-amt" placeholder="1000000"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cf')">Batal</button>
+      <button class="btn btn-primary" onclick="addCF()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-acct">
+  <div class="modal">
+    <div class="modal-title">🔐 Info Akun</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem">
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem">Seed Phrase</div>
+      <div class="seed-row" id="acct-seed-row" style="margin:0"></div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.7rem;line-height:1.5">⚠️ Jangan bagikan ke siapapun. Gunakan untuk login dari device lain.</div>
+    </div>
+    <div style="display:flex;gap:.7rem;margin-bottom:1rem">
+      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">DCA</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-dca">0</div>
+      </div>
+      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">Aset</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-port">0</div>
+      </div>
+      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
+        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">Transaksi</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-cf">0</div>
+      </div>
+    </div>
+    <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct');showSetupScreen()">🔑 Ganti API Key</button>
+      <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sync-bar" id="sync-bar"><div class="sdot" id="sdot"></div><span id="stext">Tersimpan</span></div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ══════════ WORD LIST ══════════ */
+const W = ['apel','baju','cinta','daun','elang','fajar','gajah','hujan','ikan','jalan',
+'kapal','laut','malam','naga','ombak','pantai','awan','rimba','sinar','tanah',
+'udara','visi','warna','yoga','angin','bintang','cahaya','embun','gerak','hutan',
+'jiwa','keras','lebah','mawar','nyata','pohon','rakit','senja','tunas','ujung',
+'waktu','abadi','badai','ceria','darat','ekor','gelap','harum','indah','kuat',
+'murni','nyawa','otak','pagi','rasa','sapu','takut','viral','wajah','akar',
+'bunga','cerah','dalam','elok','girang','hemat','ilmu','jamur','lurus','manis',
+'nyaman','padat','ramah','sehat','teguh','utama','bulat','deras','empat','keras',
+'lebar','merah','nyaman','ringan','setia','tepat','unggul','wangi','agung','besar',
+'fokus','gratis','hijau','imaji','juara','kunci','logam','mahir','modal','nafsu',
+'prima','sigap','cepat','diam','giat','hening','impian','janji','kebun','laga',
+'mantap','nalar','pagar','sukma','teduh','ulet','vital','warga','amal','balas',
+'corak','dewata','etnik','gabung','hakim','insting','jejak','karya','mulus','napas',
+'aktif','bening','damai','efisien','gambar','hitam','ikhlas','jalur','ketat','lembut',
+'mudah','nektar','panca','turun','utuh','alami','cuaca','dorong','enak','garis',
+'hewan','lapar','nomor','perlu','risiko','sawah','tanam','ukir','versi','wahyu'];
+
+function rnd3(){
+  const s=[...W].sort(()=>Math.random()-.5);
+  return [s[0],s[1],s[2]];
+}
+function seedKey(a,b,c){return `${a}-${b}-${c}`}
+
+/* ══════════ JSONBIN CONFIG ══════════ */
+// JSONBin.io sebagai database — gratis, tidak perlu server
+const JBIN_BASE = 'https://api.jsonbin.io/v3';
+let JBIN_KEY = ''; // diisi user lewat setup screen
+
+function getJBinKey(){
+  if(JBIN_KEY) return JBIN_KEY;
+  const k = localStorage.getItem('wo_jbin_key');
+  if(k){ JBIN_KEY=k; return k; }
+  return null;
+}
+
+async function jbinGet(binId){
+  const k=getJBinKey(); if(!k) throw new Error('no key');
+  const r=await fetch(`${JBIN_BASE}/b/${binId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
+  if(!r.ok) throw new Error('fetch failed '+r.status);
+  return await r.json();
+}
+
+async function jbinCreate(data){
+  const k=getJBinKey(); if(!k) throw new Error('no key');
+  const r=await fetch(`${JBIN_BASE}/b`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':'wealthos','X-Bin-Private':'true'},
+    body:JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error('create failed '+r.status);
+  const d=await r.json();
+  return d.metadata.id;
+}
+
+async function jbinUpdate(binId, data){
+  const k=getJBinKey(); if(!k) throw new Error('no key');
+  const r=await fetch(`${JBIN_BASE}/b/${binId}`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json','X-Master-Key':k},
+    body:JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error('update failed '+r.status);
+}
+
+// Map seed → binId disimpan di localStorage index
+function getIndex(){ try{return JSON.parse(localStorage.getItem('wo_idx')||'{}')}catch(e){return {}} }
+function setIndex(idx){ localStorage.setItem('wo_idx', JSON.stringify(idx)) }
+
+async function dbGet(seed){
+  const key=seedKey(...seed);
+  const idx=getIndex();
+  if(!idx[key]) return null;
+  return await jbinGet(idx[key]);
+}
+
+async function dbSet(seed, data){
+  const key=seedKey(...seed);
+  const idx=getIndex();
+  if(idx[key]){
+    await jbinUpdate(idx[key], data);
+  } else {
+    const binId=await jbinCreate(data);
+    idx[key]=binId;
+    setIndex(idx);
+  }
+}
+
+/* ══════════ STATE ══════════ */
+const S={btcPrice:null,btcPriceIDR:null,btcChange:null,usdIdr:16000,dca:[],port:[],cf:[]};
+let curSeed=null, curKey=null, lastSync=null, syncTmr=null;
+
+/* ══════════ SETUP SCREEN (isi API key) ══════════ */
+function showSetupScreen(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+}
+
+function doSaveApiKey(){
+  const k=document.getElementById('setup-api-key').value.trim();
+  if(!k||k.length<20){toast('API Key tidak valid!',1);return}
+  JBIN_KEY=k;
+  localStorage.setItem('wo_jbin_key',k);
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  toast('✅ API Key tersimpan!');
+}
+
+/* ══════════ LOGIN ══════════ */
+let genSeed=null, confirmed=true;
+
+function switchTab(t){
+  document.getElementById('tab-new').style.display=t==='new'?'block':'none';
+  document.getElementById('tab-existing').style.display=t==='existing'?'block':'none';
+  document.getElementById('ltab-new').className='ltab'+(t==='new'?' active':'');
+  document.getElementById('ltab-existing').className='ltab'+(t==='existing'?' active':'');
+  document.getElementById('lerr').style.display='none';
+  document.getElementById('lloading').style.display='none';
+}
+
+function doGenerate(){
+  genSeed=rnd3();
+  document.getElementById('sw1').textContent=genSeed[0];
+  document.getElementById('sw2').textContent=genSeed[1];
+  document.getElementById('sw3').textContent=genSeed[2];
+}
+
+function doToggleConfirm(){
+  confirmed=!confirmed;
+  const b=document.getElementById('chk');
+  b.className='check-box'+(confirmed?' on':'');
+  b.textContent=confirmed?'✓':'';
+  document.getElementById('btn-create').disabled=!confirmed;
+}
+
+async function doCreate(){
+  if(!genSeed){toast('Generate seed phrase dulu!',1);return}
+  if(!confirmed){toast('Centang konfirmasi dulu!',1);return}
+  showLL('Membuat akun...');
+  try{
+    // Cek apakah seed sudah ada
+    let ex=null;
+    try{ex=await dbGet(genSeed)}catch(e){}
+    if(ex){hideLL();await enterApp(genSeed,ex);return}
+    // Buat akun baru
+    const fresh={dca:[],port:[],cf:[],createdAt:new Date().toISOString()};
+    try{await dbSet(genSeed,fresh)}catch(e){console.warn('cloud save failed',e)}
+    hideLL();
+    await enterApp(genSeed,fresh);
+  }catch(e){
+    hideLL();
+    await enterApp(genSeed,{dca:[],port:[],cf:[]});
+    toast('⚠️ Mode offline — data lokal saja',1);
+  }
+}
+
+async function doLogin(){
+  const w1=document.getElementById('iw1').value.trim().toLowerCase();
+  const w2=document.getElementById('iw2').value.trim().toLowerCase();
+  const w3=document.getElementById('iw3').value.trim().toLowerCase();
+  if(!w1||!w2||!w3){showLerr('Isi ketiga kata');return}
+  showLL('Mencari akun...');
+  try{
+    // Cek local index dulu (lebih cepat)
+    const key=seedKey(w1,w2,w3);
+    const idx=getIndex();
+    if(!idx[key]){hideLL();showLerr('Akun tidak ditemukan. Cek kembali seed phrase.');return}
+    const data=await dbGet([w1,w2,w3]);
+    if(!data){hideLL();showLerr('Gagal mengambil data. Coba lagi.');return}
+    hideLL();
+    await enterApp([w1,w2,w3],data);
+  }catch(e){
+    hideLL();
+    // Fallback: cek cache lokal
+    try{
+      const raw=localStorage.getItem('wo_cache');
+      if(raw){
+        const {seed,data}=JSON.parse(raw);
+        if(seed&&seed[0]===w1&&seed[1]===w2&&seed[2]===w3){
+          await enterApp([w1,w2,w3],data);
+          toast('📱 Mode offline — data dari cache');return;
+        }
+      }
+    }catch(e2){}
+    showLerr('Gagal terhubung. Cek koneksi internet.');
+  }
+}
+
+async function enterApp(seed,data){
+  curSeed=seed; curKey=seedKey(...seed);
+  S.dca=data.dca||data.dcaEntries||[];
+  S.port=data.port||data.portfolioItems||[];
+  S.cf=data.cf||data.cashflowItems||[];
+  localStorage.setItem('wo_cache',JSON.stringify({seed,data:{dca:S.dca,port:S.port,cf:S.cf}}));
+  document.getElementById('nav-acct').textContent=seed.join(' · ');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sync-bar').style.display='flex';
+  setSyncStatus('synced');
+  lastSync=new Date();
+  initApp();
+}
+
+function showLL(m){
+  document.getElementById('tab-new').style.display='none';
+  document.getElementById('tab-existing').style.display='none';
+  document.getElementById('lloading').style.display='flex';
+  document.getElementById('lmsg').textContent=m;
+}
+function hideLL(){document.getElementById('lloading').style.display='none'}
+function showLerr(m){document.getElementById('lerr').textContent='❌ '+m;document.getElementById('lerr').style.display='block';document.getElementById('tab-existing').style.display='block'}
+
+function showAcct(){
+  document.getElementById('acct-dca').textContent=S.dca.length;
+  document.getElementById('acct-port').textContent=S.port.length;
+  document.getElementById('acct-cf').textContent=S.cf.length;
+  document.getElementById('acct-sync').textContent=lastSync?'🕐 '+lastSync.toLocaleString('id-ID'):'Belum sync';
+  const row=document.getElementById('acct-seed-row');
+  row.innerHTML=(curSeed||[]).map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
+  openModal('modal-acct');
+}
+
+async function doLogout(){
+  if(!confirm('Logout? Pastikan sudah menyimpan seed phrase!'))return;
+  curSeed=null;curKey=null;
+  S.dca=[];S.port=[];S.cf=[];
+  localStorage.removeItem('wo_cache');
+  closeModal('modal-acct');
+  document.getElementById('app').style.display='none';
+  document.getElementById('sync-bar').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('tab-new').style.display='block';
+  document.getElementById('tab-existing').style.display='none';
+  document.getElementById('iw1').value='';
+  document.getElementById('iw2').value='';
+  document.getElementById('iw3').value='';
+  [cAlloc,cPNL,cDCA,cSim,cCF].forEach(c=>{if(c)try{c.destroy()}catch(e){}});
+  cAlloc=cPNL=cDCA=cSim=cCF=null;
+  doGenerate();
+}
+
+/* ══════════ SYNC ══════════ */
+function setSyncStatus(st){
+  const dot=document.getElementById('sdot'),txt=document.getElementById('stext');
+  dot.className='sdot';
+  if(st==='syncing'){dot.classList.add('syncing');txt.textContent='Menyimpan...'}
+  else if(st==='synced'){txt.textContent='Tersimpan '+(lastSync?lastSync.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'')}
+  else{dot.classList.add('err');txt.textContent='Gagal sync — data lokal aman'}
+}
+
+async function saveState(){
+  const payload={dca:S.dca,port:S.port,cf:S.cf,updatedAt:new Date().toISOString()};
+  // Simpan lokal dulu (instant)
+  localStorage.setItem('wo_cache',JSON.stringify({seed:curSeed,data:payload}));
+  if(!curSeed)return;
+  // Debounce cloud save 2 detik
+  clearTimeout(syncTmr);setSyncStatus('syncing');
+  syncTmr=setTimeout(async()=>{
+    try{
+      await dbSet(curSeed,payload);
+      lastSync=new Date();setSyncStatus('synced');
+    }catch(e){
+      setSyncStatus('err');
+      toast('⚠️ Gagal sync cloud — data lokal aman',1);
+    }
+  },2000);
+}
+
+/* ══════════ NAV ══════════ */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=document.querySelectorAll('.nav-tab');
+  ['dashboard','dca','portfolio','simulation','cashflow'].forEach((p,i)=>{if(p===id)tabs[i].classList.add('active')});
+  if(id==='dashboard')renderDash();
+  if(id==='dca')renderDCA();
+  if(id==='portfolio')renderPort();
+  if(id==='simulation'){syncSimInputs();runSim()}
+  if(id==='cashflow')renderCF();
+}
+
+/* ══════════ MODAL ══════════ */
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('overlay'))e.target.classList.remove('open');
+});
+
+/* ══════════ TOAST ══════════ */
+function toast(m,err){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  t.style.borderColor=err?'var(--danger)':'var(--accent3)';
+  t.style.color=err?'var(--danger)':'var(--accent3)';
+  t.classList.add('show');
+  clearTimeout(t._tmr);t._tmr=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ══════════ FORMAT ══════════ */
+const fmtIDR=n=>{
+  n=Math.round(n);
+  if(Math.abs(n)>=1e12)return'Rp '+(n/1e12).toFixed(2)+'T';
+  if(Math.abs(n)>=1e9)return'Rp '+(n/1e9).toFixed(2)+'M';
+  if(Math.abs(n)>=1e6)return'Rp '+(n/1e6).toFixed(2)+'jt';
+  return'Rp '+n.toLocaleString('id-ID');
+};
+const fmtUSD=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtBTC=n=>n.toFixed(8)+' BTC';
+const fmtPct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
+
+/* ══════════ LIVE BTC ══════════ */
+async function fetchBTC(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr&include_24hr_change=true');
+    const d=await r.json();
+    S.btcPrice=d.bitcoin.usd;S.btcPriceIDR=d.bitcoin.idr;
+    S.btcChange=d.bitcoin.usd_24h_change;
+    S.usdIdr=Math.round(d.bitcoin.idr/d.bitcoin.usd);
+    updateBTCDisplay();
+    updateChartsInPlace();
+  }catch(e){
+    if(!S.btcPrice){S.btcPrice=95000;S.btcPriceIDR=95000*16000;S.btcChange=2.5;S.usdIdr=16000}
+    updateBTCDisplay();
+  }
+}
+function updateBTCDisplay(){
+  const p=S.btcPrice||95000,ch=S.btcChange||0;
+  const cs=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+  const cc=ch>=0?'var(--accent3)':'var(--danger)';
+  const safe=(id,fn)=>{const el=document.getElementById(id);if(el)fn(el)};
+  safe('nav-btc',e=>e.textContent='$'+p.toLocaleString());
+  safe('nav-chg',e=>{e.textContent=cs;e.style.color=cc});
+  safe('d-btc',e=>e.textContent='$'+p.toLocaleString());
+  safe('d-btc-chg',e=>{e.textContent=cs;e.style.color=cc});
+  safe('s-live',e=>e.textContent='$'+p.toLocaleString());
+}
+function updateChartsInPlace(){
+  const p=S.btcPrice||95000,r=S.usdIdr;
+  if(cDCA?.data){
+    const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    if(sorted.length){cDCA.data.datasets[0].data=sorted.map(e=>Math.round(e.btcAmount*p*r/1e3));cDCA.update('none')}
+  }
+  if(cPNL?.data){
+    let cb=0,ci=0;const pd=[],id2=[];
+    [...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(e=>{
+      cb+=e.btcAmount;ci+=e.amountIDR;
+      pd.push(Math.round(cb*p*r/1e6));id2.push(Math.round(ci/1e6));
+    });
+    if(pd.length){cPNL.data.datasets[0].data=pd;cPNL.data.datasets[1].data=id2;cPNL.update('none')}
+  }
+  // refresh stat numbers on visible pages
+  const ap=document.querySelector('.page.active');
+  if(ap?.id==='page-dashboard')refreshDashStats();
+  if(ap?.id==='page-dca')refreshDCAStats();
+}
+
+/* ══════════ CHARTS ══════════ */
+let cAlloc=null,cPNL=null,cDCA=null,cSim=null,cCF=null;
+const CO={animation:false,responsive:true,maintainAspectRatio:false};
+const TK={color:'#64748b',font:{size:10}};
+const GR={color:'rgba(255,255,255,0.03)'};
+const LG={color:'#94a3b8',font:{family:'Syne',size:11}};
+
+function mkLineChart(id,labels,datasets){
+  const ctx=document.getElementById(id).getContext('2d');
+  return new Chart(ctx,{type:'line',data:{labels,datasets},
+    options:{...CO,plugins:{legend:{labels:LG}},scales:{x:{ticks:TK,grid:GR},y:{ticks:{...TK,callback:v=>'Rp'+v+'jt'},grid:GR}}}});
+}
+function mkBarChart(id,labels,datasets){
+  const ctx=document.getElementById(id).getContext('2d');
+  return new Chart(ctx,{type:'bar',data:{labels,datasets},
+    options:{...CO,plugins:{legend:{labels:LG}},scales:{x:{ticks:TK,grid:GR},y:{ticks:TK,grid:GR}}}});
+}
+
+/* ══════════ DASHBOARD ══════════ */
+function refreshDashStats(){
+  const p=S.btcPrice||95000,r=S.usdIdr;
+  let ti=0,tb=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb+=e.btcAmount});
+  const cv=tb*p*r,pnl=cv-ti,pp=ti>0?pnl/ti*100:0;
+  let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
+  const q=id=>document.getElementById(id);
+  q('d-total').textContent=fmtIDR(cv+ptot);
+  q('d-invest').textContent=fmtIDR(ti);
+  q('d-pnl').textContent=fmtIDR(Math.abs(pnl));q('d-pnl').className='sval '+(pnl>=0?'pos':'neg');
+  q('d-pnl-pct').textContent=fmtPct(pp);q('d-pnl-pct').className='ssub '+(pnl>=0?'pos':'neg');
+  q('d-btcamt').textContent=fmtBTC(tb);
+  q('d-btcidr').textContent=fmtIDR(cv);
+  q('d-entries').textContent=S.dca.length;
+  q('d-avg').textContent='Avg: $'+(tb>0?Math.round(ti/tb/r).toLocaleString():0);
+}
+function renderDash(){
+  refreshDashStats();
+  const today=new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dash-date').textContent='Terakhir diperbarui: '+today;
+
+  const p=S.btcPrice||95000,r=S.usdIdr;
+  // Recent table
+  const recent=[...S.dca].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  const tb=document.getElementById('d-recent');
+  if(!recent.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Belum ada data. <a href="#" onclick="showPage(\'dca\')" style="color:var(--accent)">Tambah DCA →</a></td></tr>';return}
+  tb.innerHTML=recent.map(e=>{
+    const cv=e.btcAmount*p*r,pnl=cv-e.amountIDR,pp=pnl/e.amountIDR*100;
+    return`<tr><td>${e.date}</td><td>${fmtUSD(e.priceUSD)}</td><td>${fmtIDR(e.amountIDR)}</td><td style="color:var(--accent4)">${e.btcAmount.toFixed(8)}</td><td>${fmtIDR(cv)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPct(pp)}</td></tr>`;
+  }).join('');
+
+  // Alloc chart
+  let ti=0,tb2=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb2+=e.btcAmount});
+  const dcaVal=tb2*p*r;let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
+  if(cAlloc)cAlloc.destroy();
+  const ctx1=document.getElementById('c-alloc').getContext('2d');
+  cAlloc=new Chart(ctx1,{type:'doughnut',data:{
+    labels:dcaVal>0||ptot>0?['Bitcoin DCA','Aset Lain']:['Kosong'],
+    datasets:[{data:dcaVal>0||ptot>0?[dcaVal,ptot]:[1],backgroundColor:['#F7931A','#7c3aed'],borderWidth:0,hoverOffset:4}]
+  },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Syne',size:12}}}}}});
+
+  // PNL chart
+  const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let cb=0,ci=0;const pl=[],il=[],dl=[];
+  sorted.forEach(e=>{cb+=e.btcAmount;ci+=e.amountIDR;pl.push(Math.round(cb*p*r/1e6));il.push(Math.round(ci/1e6));dl.push(e.date)});
+  if(cPNL)cPNL.destroy();
+  cPNL=mkLineChart('c-pnl',dl.length?dl:['—'],[
+    {label:'Nilai (juta)',data:pl.length?pl:[0],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#00e5ff'},
+    {label:'Modal (juta)',data:il.length?il:[0],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:3,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
+  ]);
+}
+
+/* ══════════ DCA ══════════ */
+function refreshDCAStats(){
+  const p=S.btcPrice||95000,r=S.usdIdr;
+  let ti=0,tb=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb+=e.btcAmount});
+  const cv=tb*p*r,pnl=cv-ti,pp=ti>0?pnl/ti*100:0,avg=tb>0?ti/tb/r:0;
+  const q=id=>document.getElementById(id);
+  q('dca-invest').textContent=fmtIDR(ti);
+  q('dca-val').textContent=fmtIDR(cv);
+  q('dca-pnl').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));q('dca-pnl').className='sval '+(pnl>=0?'pos':'neg');
+  q('dca-pnl-pct').textContent=fmtPct(pp);q('dca-pnl-pct').className='ssub '+(pnl>=0?'pos':'neg');
+  q('dca-avg').textContent='$'+Math.round(avg).toLocaleString();
+  q('dca-btc').textContent=fmtBTC(tb);
+}
+function renderDCA(){
+  refreshDCAStats();
+  const p=S.btcPrice||95000,r=S.usdIdr;
+  const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const tb=document.getElementById('dca-tbody');
+  if(!sorted.length){
+    tb.innerHTML='<tr><td colspan="11"><div class="empty"><div class="emoji">₿</div><h3>Belum ada transaksi DCA</h3><p>Klik Tambah Transaksi</p></div></td></tr>';
+  }else{
+    tb.innerHTML=sorted.map((e,i)=>{
+      const cv=e.btcAmount*p*r,pnl=cv-e.amountIDR,pp=pnl/e.amountIDR*100;
+      return`<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td>${e.date}</td>
+        <td>${fmtUSD(e.priceUSD)}</td>
+        <td>${fmtIDR(e.priceUSD*e.kurs)}</td>
+        <td>${fmtIDR(e.amountIDR)}</td>
+        <td style="color:var(--accent4)">${e.btcAmount.toFixed(8)}</td>
+        <td>${fmtIDR(cv)}</td>
+        <td class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':'-'}${fmtIDR(Math.abs(pnl))}</td>
+        <td><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td>
+        <td style="color:var(--muted);font-size:.72rem">${e.note||'—'}</td>
+        <td><button class="btn-del" onclick="delDCA('${e.id}')">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  // chart
+  if(cDCA){cDCA.destroy();cDCA=null}
+  if(sorted.length){
+    cDCA=mkBarChart('c-dca',sorted.map(e=>e.date),[
+      {label:'Nilai Kini (ribu)',data:sorted.map(e=>Math.round(e.btcAmount*p*r/1e3)),backgroundColor:'rgba(0,229,255,.6)',borderRadius:4,barPercentage:.7,categoryPercentage:.75},
+      {label:'Modal (ribu)',data:sorted.map(e=>Math.round(e.amountIDR/1e3)),backgroundColor:'rgba(124,58,237,.4)',borderRadius:4,barPercentage:.7,categoryPercentage:.75}
+    ]);
+  }
+}
+function addDCA(){
+  const date=document.getElementById('m-dca-date').value;
+  const usd=parseFloat(document.getElementById('m-dca-usd').value);
+  const rate=parseFloat(document.getElementById('m-dca-rate').value)||16000;
+  const idr=parseFloat(document.getElementById('m-dca-idr').value);
+  const note=document.getElementById('m-dca-note').value;
+  if(!date||!usd||!idr){toast('Isi tanggal, harga BTC, dan jumlah IDR!',1);return}
+  S.dca.push({id:Date.now().toString(),date,priceUSD:usd,kurs:rate,amountIDR:idr,btcAmount:idr/rate/usd,note});
+  saveState();closeModal('modal-dca');
+  document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-idr').value='';document.getElementById('m-dca-note').value='';
+  toast('✅ Transaksi ditambahkan!');renderDCA();
+}
+function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('🗑️ Dihapus');renderDCA()}
+function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('🗑️ Semua data DCA dihapus');renderDCA()}
+function fillBTCPrice(){if(S.btcPrice){document.getElementById('m-dca-usd').value=S.btcPrice;document.getElementById('m-dca-rate').value=S.usdIdr}}
+
+/* ══════════ PORTFOLIO ══════════ */
+function renderPort(){
+  const total=S.port.reduce((s,x)=>s+x.qty*x.currentPrice,0);
+  const ICONS={crypto:'🔗',stock:'📈',gold:'🥇',reksadana:'📊',other:'💼'};
+  const cards=document.getElementById('port-cards');
+  const tb=document.getElementById('port-tbody');
+  if(!S.port.length){
+    cards.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="emoji">📊</div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div>';
+    tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">—</td></tr>';return;
+  }
+  cards.innerHTML=S.port.map(x=>{
+    const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=pnl/inv*100;
+    return`<div class="port-card">
+      <div class="port-top">
+        <div style="display:flex;align-items:center;gap:.6rem">
+          <div class="asset-icon">${ICONS[x.type]||'💼'}</div>
+          <div><div class="asset-name">${x.name}</div><div class="asset-ticker">${x.ticker}</div></div>
+        </div>
+        <button class="btn-del" onclick="delPort('${x.id}')">✕</button>
+      </div>
+      <div class="asset-price">${fmtIDR(x.currentPrice)}</div>
+      <div style="font-size:.8rem;font-family:'Space Mono',monospace;font-weight:700" class="${pnl>=0?'pos':'neg'}">${fmtPct(pp)} &nbsp; ${pnl>=0?'+':''} ${fmtIDR(pnl)}</div>
+      <div class="pbar"><div class="pbar-fill" style="width:${Math.min(Math.abs(pp),100)}%;background:${pnl>=0?'var(--accent3)':'var(--danger)'}"></div></div>
+      <div style="font-size:.7rem;color:var(--muted)">${fmtIDR(val)} · ${total>0?(val/total*100).toFixed(1):'0'}% portofolio</div>
+    </div>`;
+  }).join('');
+  tb.innerHTML=S.port.map(x=>{
+    const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=pnl/inv*100;
+    return`<tr>
+      <td>${ICONS[x.type]||'💼'} <strong>${x.name}</strong> <span style="color:var(--muted);font-size:.7rem">${x.ticker}</span></td>
+      <td>${x.qty}</td><td>${fmtIDR(x.avgPrice)}</td><td>${fmtIDR(x.currentPrice)}</td>
+      <td>${fmtIDR(val)}</td>
+      <td class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''} ${fmtIDR(pnl)}</td>
+      <td><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td>
+      <td>${total>0?(val/total*100).toFixed(1):'0'}%</td>
+      <td><button class="btn-del" onclick="delPort('${x.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function addPort(){
+  const name=document.getElementById('m-p-name').value.trim();
+  const ticker=document.getElementById('m-p-ticker').value.toUpperCase();
+  const type=document.getElementById('m-p-type').value;
+  const qty=parseFloat(document.getElementById('m-p-qty').value);
+  const avg=parseFloat(document.getElementById('m-p-avg').value);
+  const cur=parseFloat(document.getElementById('m-p-cur').value);
+  if(!name||!qty||!avg||!cur){toast('Isi semua field!',1);return}
+  S.port.push({id:Date.now().toString(),name,ticker,type,qty,avgPrice:avg,currentPrice:cur});
+  saveState();closeModal('modal-port');
+  ['m-p-name','m-p-ticker','m-p-qty','m-p-avg','m-p-cur'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Aset ditambahkan!');renderPort();
+}
+function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('🗑️ Dihapus');renderPort()}
+
+/* ══════════ SIMULATION ══════════ */
+const BTC_HIST={'2020-01':9300,'2020-02':9700,'2020-03':5300,'2020-04':8600,'2020-05':9700,'2020-06':9200,'2020-07':11000,'2020-08':11600,'2020-09':10700,'2020-10':13600,'2020-11':19700,'2020-12':28900,'2021-01':33000,'2021-02':46200,'2021-03':58900,'2021-04':57700,'2021-05':35700,'2021-06':35000,'2021-07':41500,'2021-08':47100,'2021-09':44000,'2021-10':61400,'2021-11':57800,'2021-12':47700,'2022-01':38300,'2022-02':43100,'2022-03':45500,'2022-04':40800,'2022-05':29000,'2022-06':19800,'2022-07':23300,'2022-08':20100,'2022-09':19400,'2022-10':20400,'2022-11':16500,'2022-12':16700,'2023-01':23100,'2023-02':23400,'2023-03':28500,'2023-04':29000,'2023-05':27700,'2023-06':30500,'2023-07':29700,'2023-08':26000,'2023-09':26700,'2023-10':34500,'2023-11':37900,'2023-12':42900,'2024-01':42600,'2024-02':51800,'2024-03':71000,'2024-04':63800,'2024-05':67600,'2024-06':63000,'2024-07':66600,'2024-08':60400,'2024-09':63300,'2024-10':72700,'2024-11':96800,'2024-12':97500,'2025-01':94200,'2025-02':96000};
+function syncSimInputs(){
+  if(S.btcPrice){document.getElementById('s-btc').value=S.btcPrice;document.getElementById('s-live').textContent='$'+S.btcPrice.toLocaleString()}
+  document.getElementById('s-rate').value=S.usdIdr;
+}
+function runSim(){
+  const amt=parseFloat(document.getElementById('s-amt').value)||500000;
+  const yr=parseInt(document.getElementById('s-start').value)||2024;
+  const freq=document.getElementById('s-freq').value;
+  const curP=parseFloat(document.getElementById('s-btc').value)||95000;
+  const rate=parseFloat(document.getElementById('s-rate').value)||16000;
+  const now=new Date(2025,1,1);
+  const periods=[];
+  for(let y=yr;y<=2025;y++){
+    for(let m=1;m<=12;m++){
+      if(new Date(y,m-1,1)>now)break;
+      const k=`${y}-${String(m).padStart(2,'0')}`;
+      const price=BTC_HIST[k]||curP;
+      const n=freq==='monthly'?1:freq==='biweekly'?2:4;
+      for(let i=0;i<n;i++)periods.push({label:n>1?`${k} #${i+1}`:k,price});
+    }
+  }
+  let tb=0,ti=0;const rows=[],cl=[],cv=[],ci=[];
+  periods.forEach((p,i)=>{
+    const bought=amt/rate/p.price;tb+=bought;ti+=amt;
+    const val=tb*curP*rate,pnl=val-ti,pp=pnl/ti*100;
+    rows.push(`<tr><td>${p.label}</td><td>$${p.price.toLocaleString()}</td><td>${fmtIDR(amt)}</td><td>${bought.toFixed(8)}</td><td style="color:var(--accent4)">${tb.toFixed(8)}</td><td>${fmtIDR(val)}</td><td class="${pnl>=0?'pos':'neg'}"><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td></tr>`);
+    if(i%Math.max(1,Math.floor(periods.length/24))===0||i===periods.length-1){cl.push(p.label);cv.push(Math.round(val/1e6));ci.push(Math.round(ti/1e6))}
+  });
+  const curVal=tb*curP*rate,pnl=curVal-ti,roi=ti>0?pnl/ti*100:0,avg=tb>0?ti/tb/rate:0;
+  const q=id=>document.getElementById(id);
+  q('s-port').textContent=fmtIDR(curVal);q('s-btctot').textContent=tb.toFixed(8)+' BTC';
+  q('s-total').textContent=fmtIDR(ti);
+  q('s-profit').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));q('s-profit').className='rval '+(pnl>=0?'pos':'neg');
+  q('s-roi').textContent=fmtPct(roi);q('s-roi').className='rval '+(roi>=0?'pos':'neg');
+  q('s-avg').textContent='$'+Math.round(avg).toLocaleString();
+  q('s-periods').textContent=periods.length+' kali';q('s-btcacc').textContent=tb.toFixed(8)+' BTC';
+  q('s-tbody').innerHTML=rows.join('');
+  if(cSim)cSim.destroy();
+  cSim=mkLineChart('c-sim',cl,[
+    {label:'Nilai (juta)',data:cv,borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.1)',fill:true,tension:.4,pointRadius:2,pointBackgroundColor:'#00e5ff'},
+    {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
+  ]);
+}
+
+/* ══════════ CASHFLOW ══════════ */
+function renderCF(){
+  let inc=0,exp=0,inv=0;
+  S.cf.forEach(e=>{if(e.type==='income')inc+=e.amount;else if(e.type==='expense')exp+=e.amount;else inv+=e.amount});
+  const net=inc-exp-inv,pct=inc>0?inv/inc*100:0;
+  const q=id=>document.getElementById(id);
+  q('cf-in').textContent=fmtIDR(inc);q('cf-out').textContent=fmtIDR(exp);
+  q('cf-net').textContent=fmtIDR(net);q('cf-net').className='sval '+(net>=0?'pos':'neg');
+  q('cf-pct').textContent=pct.toFixed(1)+'%';
+  const tb=q('cf-tbody');
+  if(!S.cf.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="emoji">💰</div><h3>Belum ada transaksi</h3><p>Mulai catat keuangan kamu</p></div></td></tr>'}
+  else{
+    const sorted=[...S.cf].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const TC={income:'bb',expense:'br',investment:'bg'};
+    const TL={income:'📥 Pemasukan',expense:'📤 Pengeluaran',investment:'📊 Investasi'};
+    tb.innerHTML=sorted.map(e=>`<tr><td>${e.date}</td><td style="color:var(--muted)">${e.category}</td><td>${e.desc||'—'}</td><td><span class="badge ${TC[e.type]}">${TL[e.type]}</span></td><td class="${e.type==='income'?'pos':e.type==='expense'?'neg':'acc'}">${e.type==='income'?'+':'-'} ${fmtIDR(e.amount)}</td><td><button class="btn-del" onclick="delCF('${e.id}')">✕</button></td></tr>`).join('');
+  }
+  // chart
+  const months={};
+  S.cf.forEach(e=>{const m=e.date.substring(0,7);if(!months[m])months[m]={i:0,e:0,v:0};if(e.type==='income')months[m].i+=e.amount;else if(e.type==='expense')months[m].e+=e.amount;else months[m].v+=e.amount});
+  const ml=Object.keys(months).sort();
+  if(cCF)cCF.destroy();
+  const ctx=document.getElementById('c-cf').getContext('2d');
+  cCF=new Chart(ctx,{type:'bar',data:{labels:ml.length?ml:['—'],datasets:[
+    {label:'Pemasukan',data:ml.map(m=>+(months[m].i/1e6).toFixed(2)),backgroundColor:'rgba(16,185,129,.6)',borderRadius:4,barPercentage:.7,categoryPercentage:.75},
+    {label:'Pengeluaran',data:ml.map(m=>+(months[m].e/1e6).toFixed(2)),backgroundColor:'rgba(239,68,68,.5)',borderRadius:4,barPercentage:.7,categoryPercentage:.75},
+    {label:'Investasi',data:ml.map(m=>+(months[m].v/1e6).toFixed(2)),backgroundColor:'rgba(0,229,255,.5)',borderRadius:4,barPercentage:.7,categoryPercentage:.75}
+  ]},options:{...CO,plugins:{legend:{labels:LG}},scales:{x:{ticks:TK,grid:GR},y:{ticks:{...TK,callback:v=>'Rp'+v+'jt'},grid:GR}}}});
+}
+function addCF(){
+  const date=document.getElementById('m-cf-date').value;
+  const type=document.getElementById('m-cf-type').value;
+  const cat=document.getElementById('m-cf-cat').value.trim();
+  const desc=document.getElementById('m-cf-desc').value;
+  const amt=parseFloat(document.getElementById('m-cf-amt').value);
+  if(!date||!cat||!amt){toast('Isi tanggal, kategori, dan jumlah!',1);return}
+  S.cf.push({id:Date.now().toString(),date,type,category:cat,desc,amount:amt});
+  saveState();closeModal('modal-cf');
+  ['m-cf-cat','m-cf-desc','m-cf-amt'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Transaksi ditambahkan!');renderCF();
+}
+function delCF(id){S.cf=S.cf.filter(e=>e.id!==id);saveState();toast('🗑️ Dihapus');renderCF()}
+
+/* ══════════ INIT ══════════ */
+function initApp(){
+  const today=new Date().toISOString().split('T')[0];
+  ['m-dca-date','m-cf-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
+  fetchBTC();
+  setInterval(fetchBTC,60000);
+  renderDash();
+  syncSimInputs();
+  runSim();
+}
+
+async function boot(){
+  doGenerate();
+  const chk=document.getElementById('chk');
+  chk.className='check-box on';chk.textContent='✓';
+  document.getElementById('btn-create').disabled=false;
+
+  // Cek apakah sudah punya API key
+  const savedKey=localStorage.getItem('wo_jbin_key');
+  if(savedKey){
+    JBIN_KEY=savedKey;
+  } else {
+    // Belum ada API key → tampilkan setup screen
+    showSetupScreen();
+    return;
+  }
+
+  // Try auto-login from cache
+  try{
+    const raw=localStorage.getItem('wo_cache');
+    if(raw){
+      const {seed,data}=JSON.parse(raw);
+      if(seed?.length===3&&data){
+        showLL('Memulihkan sesi...');
+        // Coba ambil data terbaru dari cloud
+        try{
+          const cloud=await dbGet(seed);
+          if(cloud){
+            // Gunakan yang lebih banyak datanya
+            const useCloud=(cloud.dca||[]).length>=(data.dca||[]).length;
+            hideLL();await enterApp(seed,useCloud?cloud:data);return;
+          }
+        }catch(e){}
+        // Fallback ke cache lokal
+        hideLL();await enterApp(seed,data);
+        toast('📱 Data dari cache lokal');return;
+      }
+    }
+  }catch(e){}
+  hideLL();
+  switchTab('new');
+}
+
+boot();
+</script>
+</body>
+</html>
