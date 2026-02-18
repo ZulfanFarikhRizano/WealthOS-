@@ -828,12 +828,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
-    <div id="acct-sync-btn-wrap" style="margin-bottom:.8rem">
-      <button class="btn btn-primary" style="width:100%;font-size:.82rem" onclick="pushToCloud()">☁️ Sinkron ke Cloud (aktifkan login device lain)</button>
-      <div id="acct-sync-cloud-status" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:.4rem;display:none"></div>
-    </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct')">🔑 Ganti API Key</button>
       <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
@@ -1031,60 +1028,53 @@ async function doCreate(){
   }
 }
 
-async function doLogin(){
-  const w1=document.getElementById('iw1').value.trim().toLowerCase();
-  const w2=document.getElementById('iw2').value.trim().toLowerCase();
-  const w3=document.getElementById('iw3').value.trim().toLowerCase();
-  if(!w1||!w2||!w3){showLerr('Isi ketiga kata');return}
-  showLL('Mencari akun...');
-  try{
-    const key=seedKey(w1,w2,w3);
-    let idx=getIndex();
+/* ── PERBAIKAN FUNGSI LOGIN ── */
+async function doLogin() {
+  const w1 = document.getElementById('iw1').value.trim().toLowerCase();
+  const w2 = document.getElementById('iw2').value.trim().toLowerCase();
+  const w3 = document.getElementById('iw3').value.trim().toLowerCase();
 
-    // Jika tidak ada di local index → cari di master cloud index
-    if(!idx[key]){
-      showLL('Mencari di cloud...');
-      try{
-        const master=await fetchMasterIndex();
-        if(master&&master.data&&master.data[key]){
-          // Ketemu di cloud — simpan ke local index supaya berikutnya lebih cepat
-          idx[key]=master.data[key];
-          setIndex(idx);
-          // Simpan juga master bin id
-          if(master.binId) localStorage.setItem('wo_midx_id',master.binId);
-        }
-      }catch(me){console.warn('master index fetch failed',me);}
-    }
+  if (!w1 || !w2 || !w3) {
+    toast('⚠️ Masukkan semua kata seed phrase!');
+    return;
+  }
 
-    // Cek lagi setelah update dari cloud
-    if(!idx[key]){
+  const seed = [w1, w2, w3];
+  showLL('Menghubungkan ke Cloud...');
+
+  try {
+    // PERBAIKAN: Sekarang sistem mencari ke Cloud (dbGet), bukan cuma cek HP sendiri
+    const cloudData = await dbGet(seed);
+
+    if (cloudData) {
+      // Jika ketemu di cloud, simpan ke memori HP baru ini
+      S = cloudData;
+      CUR_SEED = seed;
+      
+      // Buat cache agar kedepannya login otomatis
+      localStorage.setItem('wo_cache', JSON.stringify({
+        seed: CUR_SEED,
+        data: S,
+        ts: Date.now()
+      }));
+
       hideLL();
-      showLerr('Akun tidak ditemukan. Pastikan seed phrase benar.');
-      return;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initApp();
+      toast('✅ Berhasil Memulihkan Akun!');
+    } else {
+      hideLL();
+      document.getElementById('lerr').style.display = 'block';
+      document.getElementById('lerr').textContent = '❌ Akun tidak ditemukan di Cloud';
     }
-
-    // Ambil data akun
-    const data=await dbGet([w1,w2,w3]);
-    if(!data){hideLL();showLerr('Gagal mengambil data. Coba lagi.');return}
+  } catch (err) {
     hideLL();
-    await enterApp([w1,w2,w3],data);
-
-  }catch(e){
-    hideLL();
-    // Fallback: cek cache lokal (untuk mode offline)
-    try{
-      const raw=localStorage.getItem('wo_cache');
-      if(raw){
-        const {seed,data}=JSON.parse(raw);
-        if(seed&&seed[0]===w1&&seed[1]===w2&&seed[2]===w3){
-          await enterApp([w1,w2,w3],data);
-          toast('📱 Mode offline — data dari cache');return;
-        }
-      }
-    }catch(e2){}
-    showLerr('Gagal terhubung. Cek koneksi internet.');
+    toast('❌ Gagal terhubung ke server. Cek internet Anda.');
+    console.error(err);
   }
 }
+
 
 async function enterApp(seed,data){
   curSeed=seed; curKey=seedKey(...seed);
@@ -1118,42 +1108,7 @@ function showAcct(){
   document.getElementById('acct-sync').textContent=lastSync?'🕐 '+lastSync.toLocaleString('id-ID'):'Belum sync';
   const row=document.getElementById('acct-seed-row');
   row.innerHTML=(curSeed||[]).map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
-  // Reset status
-  const st=document.getElementById('acct-sync-cloud-status');
-  if(st){st.style.display='none';st.textContent='';}
   openModal('modal-acct');
-}
-
-// Paksa push akun ini ke cloud master index agar bisa login dari device lain
-async function pushToCloud(){
-  const btn=document.querySelector('#acct-sync-btn-wrap button');
-  const st=document.getElementById('acct-sync-cloud-status');
-  if(!curSeed){toast('Tidak ada sesi aktif',1);return;}
-  btn.disabled=true;btn.textContent='⏳ Menyinkron...';
-  if(st){st.style.display='block';st.style.color='var(--muted)';st.textContent='Menghubungi server...';}
-  try{
-    const key=seedKey(...curSeed);
-    const idx=getIndex();
-    let binId=idx[key];
-    // Jika belum ada binId lokal → buat dulu
-    if(!binId){
-      const fresh={dca:S.dca,port:S.port,cf:S.cf,updatedAt:new Date().toISOString()};
-      binId=await jbinCreate(fresh);
-      idx[key]=binId;
-      setIndex(idx);
-    }
-    // Push ke master cloud index
-    await updateMasterIndex(key,binId);
-    btn.textContent='✅ Berhasil! Login dari device lain sekarang bisa';
-    btn.style.background='var(--accent3)';btn.style.color='#000';
-    if(st){st.style.color='var(--accent3)';st.textContent='Seed phrase kamu sudah terdaftar di cloud. Buka WealthOS di device lain dan masukkan seed phrase yang sama.';}
-    toast('✅ Sinkron berhasil!');
-  }catch(e){
-    console.error('pushToCloud error:',e);
-    btn.disabled=false;btn.textContent='☁️ Sinkron ke Cloud';
-    if(st){st.style.color='var(--danger)';st.textContent='Gagal — cek koneksi dan coba lagi';}
-    toast('Gagal sinkron ke cloud',1);
-  }
 }
 
 async function doLogout(){
