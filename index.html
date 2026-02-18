@@ -571,7 +571,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <button class="tf-btn active" data-tf="1W" onclick="loadBTCChart('1W')">1M</button>
           <button class="tf-btn" data-tf="1M" onclick="loadBTCChart('1M')">1B</button>
           <button class="tf-btn" data-tf="1Y" onclick="loadBTCChart('1Y')">1T</button>
+          <button class="tf-btn" data-tf="3Y" onclick="loadBTCChart('3Y')">3T</button>
           <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5T</button>
+          <button class="tf-btn" data-tf="10Y" onclick="loadBTCChart('10Y')">10T</button>
         </div>
         <div style="font-size:.65rem;color:var(--muted);text-align:right">via Binance · auto refresh 60s</div>
       </div>
@@ -589,6 +591,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="btc-ohlc-item"><div class="btc-ohlc-label">Low</div><div class="btc-ohlc-val neg" id="btcc-low">—</div></div>
       <div class="btc-ohlc-item"><div class="btc-ohlc-label">Close</div><div class="btc-ohlc-val acc" id="btcc-close">—</div></div>
       <div class="btc-ohlc-item"><div class="btc-ohlc-label">Volume 24h</div><div class="btc-ohlc-val gld" id="btcc-vol">—</div></div>
+    </div>
+    <!-- RETURN ROW -->
+    <div id="btcc-return-row" style="margin-top:.7rem;padding:.65rem 1rem;border-radius:8px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+      <span style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'Space Mono',monospace" id="btcc-return-label">Return periode</span>
+      <div style="display:flex;align-items:center;gap:.8rem">
+        <span style="font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700" id="btcc-return-usd">—</span>
+        <span style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;padding:.2rem .7rem;border-radius:6px" id="btcc-return-pct">—</span>
+      </div>
     </div>
   </div>
 
@@ -632,9 +642,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <!-- SIMULATION -->
 <div id="page-simulation" class="page">
-  <div class="ph"><h1>Simulasi DCA</h1><p>Hitung return jika kamu rutin DCA Bitcoin</p></div>
+  <div class="ph"><h1>Simulasi DCA</h1><p>Harga historis real dari Binance — bukan estimasi</p></div>
 
-  <!-- PARAMETER PANEL (collapsible on mobile) -->
+  <!-- PARAMETER PANEL -->
   <div class="sim-param-card">
     <button class="sim-param-toggle" onclick="toggleSimParam()" id="sim-param-toggle">
       <span>⚙️ Parameter Simulasi</span>
@@ -644,36 +654,37 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="sim-param-grid">
         <div class="fg">
           <label class="fl">DCA per periode (IDR)</label>
-          <input type="text" class="fi" id="s-amt" value="500.000" inputmode="numeric" oninput="fmtInput(this);runSim()">
+          <input type="text" class="fi" id="s-amt" value="500.000" inputmode="numeric" oninput="fmtInput(this)">
         </div>
         <div class="fg">
-          <label class="fl">Mulai dari</label>
-          <select class="fs" id="s-start" onchange="runSim()">
-            <option value="2020">2020 (5 tahun lalu)</option>
-            <option value="2021">2021 (4 tahun lalu)</option>
-            <option value="2022">2022 (3 tahun lalu)</option>
-            <option value="2023">2023 (2 tahun lalu)</option>
-            <option value="2024" selected>2024 (1 tahun lalu)</option>
-          </select>
+          <label class="fl">Tanggal Mulai DCA</label>
+          <input type="date" class="fi" id="s-startdate" max="" oninput="">
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Harga diambil langsung dari Binance</div>
         </div>
         <div class="fg">
-          <label class="fl">Frekuensi</label>
-          <select class="fs" id="s-freq" onchange="runSim()">
-            <option value="monthly" selected>Bulanan</option>
+          <label class="fl">Tanggal Akhir</label>
+          <input type="date" class="fi" id="s-enddate" max="">
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Kosongkan = sampai hari ini</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Frekuensi DCA</label>
+          <select class="fs" id="s-freq">
+            <option value="monthly" selected>Bulanan (tanggal sama)</option>
             <option value="biweekly">2 Minggu Sekali</option>
             <option value="weekly">Mingguan</option>
+            <option value="daily">Harian</option>
           </select>
-        </div>
-        <div class="fg">
-          <label class="fl">Harga BTC (USD)</label>
-          <input type="number" class="fi" id="s-btc" value="95000" oninput="runSim()">
-          <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div>
         </div>
         <div class="fg">
           <label class="fl">Kurs USD/IDR</label>
-          <input type="text" class="fi" id="s-rate" value="16.000" inputmode="numeric" oninput="fmtInput(this);runSim()">
+          <input type="text" class="fi" id="s-rate" value="16.000" inputmode="numeric" oninput="fmtInput(this)">
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div>
         </div>
       </div>
+      <button class="lbtn" id="s-run-btn" onclick="runSimDynamic()" style="margin-top:1rem;max-width:100%">
+        🔄 Hitung Simulasi (Ambil data Binance)
+      </button>
+      <div id="sim-fetch-status" style="font-size:.75rem;color:var(--muted);margin-top:.5rem;text-align:center;display:none"></div>
     </div>
   </div>
 
@@ -817,9 +828,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
+    <div id="acct-sync-btn-wrap" style="margin-bottom:.8rem">
+      <button class="btn btn-primary" style="width:100%;font-size:.82rem" onclick="pushToCloud()">☁️ Sinkron ke Cloud (aktifkan login device lain)</button>
+      <div id="acct-sync-cloud-status" style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:.4rem;display:none"></div>
+    </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct')">🔑 Ganti API Key</button>
       <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
@@ -861,8 +875,55 @@ function seedKey(a,b,c){return `${a}-${b}-${c}`}
 /* ══════════ JSONBIN CONFIG ══════════ */
 const JBIN_BASE = 'https://api.jsonbin.io/v3';
 const JBIN_KEY = '$2a$10$Ed5UlGGHnK4FiE2IGm32IuLTq6Ix9h5kcBuoYNrJPQeA7rYnSiaUm';
+// ID bin khusus yang menyimpan master index (seed → binId mapping) untuk semua device
+// Akan dibuat otomatis pertama kali, lalu ID-nya disimpan di localStorage 'wo_midx_id'
+const MASTER_IDX_NAME = 'wealthos-master-index';
 
 function getJBinKey(){ return JBIN_KEY; }
+
+// Ambil master index dari cloud (berisi semua mapping seed→binId)
+async function fetchMasterIndex(){
+  const k=getJBinKey();
+  // Cari bin bernama master index
+  const r=await fetch(`${JBIN_BASE}/b?page=1&pageSize=100`,{
+    headers:{'X-Master-Key':k}
+  });
+  if(!r.ok) return null;
+  const list=await r.json();
+  if(!list||!list.result) return null;
+  const found=list.result.find(b=>b.record?.name===MASTER_IDX_NAME||b.snippetMeta?.name===MASTER_IDX_NAME);
+  if(!found) return null;
+  const binId=found.record?.id||found.id;
+  localStorage.setItem('wo_midx_id',binId);
+  // Fetch isi index
+  const r2=await fetch(`${JBIN_BASE}/b/${binId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
+  if(!r2.ok) return null;
+  return {binId, data: await r2.json()};
+}
+
+// Update master index di cloud
+async function updateMasterIndex(seedKey, dataBinId){
+  const k=getJBinKey();
+  let midxId=localStorage.getItem('wo_midx_id');
+  let current={};
+  if(midxId){
+    try{
+      const r=await fetch(`${JBIN_BASE}/b/${midxId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
+      if(r.ok) current=await r.json();
+    }catch(e){}
+    current[seedKey]=dataBinId;
+    await fetch(`${JBIN_BASE}/b/${midxId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':k},body:JSON.stringify(current)});
+  } else {
+    // Buat master index bin baru
+    current[seedKey]=dataBinId;
+    const r=await fetch(`${JBIN_BASE}/b`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':MASTER_IDX_NAME,'X-Bin-Private':'true'},
+      body:JSON.stringify(current)
+    });
+    if(r.ok){const d=await r.json();midxId=d.metadata.id;localStorage.setItem('wo_midx_id',midxId);}
+  }
+}
 
 async function jbinGet(binId){
   const k=getJBinKey(); if(!k) throw new Error('no key');
@@ -913,6 +974,8 @@ async function dbSet(seed, data){
     const binId=await jbinCreate(data);
     idx[key]=binId;
     setIndex(idx);
+    // Simpan ke master cloud index agar bisa login dari device lain
+    try{ await updateMasterIndex(key, binId); }catch(e){ console.warn('master index update failed',e); }
   }
 }
 
@@ -975,17 +1038,40 @@ async function doLogin(){
   if(!w1||!w2||!w3){showLerr('Isi ketiga kata');return}
   showLL('Mencari akun...');
   try{
-    // Cek local index dulu (lebih cepat)
     const key=seedKey(w1,w2,w3);
-    const idx=getIndex();
-    if(!idx[key]){hideLL();showLerr('Akun tidak ditemukan. Cek kembali seed phrase.');return}
+    let idx=getIndex();
+
+    // Jika tidak ada di local index → cari di master cloud index
+    if(!idx[key]){
+      showLL('Mencari di cloud...');
+      try{
+        const master=await fetchMasterIndex();
+        if(master&&master.data&&master.data[key]){
+          // Ketemu di cloud — simpan ke local index supaya berikutnya lebih cepat
+          idx[key]=master.data[key];
+          setIndex(idx);
+          // Simpan juga master bin id
+          if(master.binId) localStorage.setItem('wo_midx_id',master.binId);
+        }
+      }catch(me){console.warn('master index fetch failed',me);}
+    }
+
+    // Cek lagi setelah update dari cloud
+    if(!idx[key]){
+      hideLL();
+      showLerr('Akun tidak ditemukan. Pastikan seed phrase benar.');
+      return;
+    }
+
+    // Ambil data akun
     const data=await dbGet([w1,w2,w3]);
     if(!data){hideLL();showLerr('Gagal mengambil data. Coba lagi.');return}
     hideLL();
     await enterApp([w1,w2,w3],data);
+
   }catch(e){
     hideLL();
-    // Fallback: cek cache lokal
+    // Fallback: cek cache lokal (untuk mode offline)
     try{
       const raw=localStorage.getItem('wo_cache');
       if(raw){
@@ -1032,7 +1118,42 @@ function showAcct(){
   document.getElementById('acct-sync').textContent=lastSync?'🕐 '+lastSync.toLocaleString('id-ID'):'Belum sync';
   const row=document.getElementById('acct-seed-row');
   row.innerHTML=(curSeed||[]).map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
+  // Reset status
+  const st=document.getElementById('acct-sync-cloud-status');
+  if(st){st.style.display='none';st.textContent='';}
   openModal('modal-acct');
+}
+
+// Paksa push akun ini ke cloud master index agar bisa login dari device lain
+async function pushToCloud(){
+  const btn=document.querySelector('#acct-sync-btn-wrap button');
+  const st=document.getElementById('acct-sync-cloud-status');
+  if(!curSeed){toast('Tidak ada sesi aktif',1);return;}
+  btn.disabled=true;btn.textContent='⏳ Menyinkron...';
+  if(st){st.style.display='block';st.style.color='var(--muted)';st.textContent='Menghubungi server...';}
+  try{
+    const key=seedKey(...curSeed);
+    const idx=getIndex();
+    let binId=idx[key];
+    // Jika belum ada binId lokal → buat dulu
+    if(!binId){
+      const fresh={dca:S.dca,port:S.port,cf:S.cf,updatedAt:new Date().toISOString()};
+      binId=await jbinCreate(fresh);
+      idx[key]=binId;
+      setIndex(idx);
+    }
+    // Push ke master cloud index
+    await updateMasterIndex(key,binId);
+    btn.textContent='✅ Berhasil! Login dari device lain sekarang bisa';
+    btn.style.background='var(--accent3)';btn.style.color='#000';
+    if(st){st.style.color='var(--accent3)';st.textContent='Seed phrase kamu sudah terdaftar di cloud. Buka WealthOS di device lain dan masukkan seed phrase yang sama.';}
+    toast('✅ Sinkron berhasil!');
+  }catch(e){
+    console.error('pushToCloud error:',e);
+    btn.disabled=false;btn.textContent='☁️ Sinkron ke Cloud';
+    if(st){st.style.color='var(--danger)';st.textContent='Gagal — cek koneksi dan coba lagi';}
+    toast('Gagal sinkron ke cloud',1);
+  }
 }
 
 async function doLogout(){
@@ -1190,13 +1311,15 @@ function updateBTCDisplay(){
 /* ══════════ BTC LIVE CHART ══════════ */
 let cBTCLive = null;
 let curTF = '1W';
-// Binance Kline intervals: 1h,4h,1d,1w
+// Binance Kline intervals
 const TF_CONFIG = {
   '1D': { interval:'1h',  limit:24,   label:'1 Hari',   fmt:(t)=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
   '1W': { interval:'4h',  limit:42,   label:'1 Minggu', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
   '1M': { interval:'1d',  limit:30,   label:'1 Bulan',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
   '1Y': { interval:'3d',  limit:122,  label:'1 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '3Y': { interval:'1w',  limit:156,  label:'3 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
   '5Y': { interval:'1w',  limit:260,  label:'5 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '10Y':{ interval:'1w',  limit:520,  label:'10 Tahun', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
 };
 
 async function loadBTCChart(tf){
@@ -1235,6 +1358,16 @@ async function loadBTCChart(tf){
     safe('btcc-low',   e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('btcc-close', e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('btcc-vol',   e=>e.textContent='$'+(lastVol*lastPrice/1e9).toFixed(2)+'B');
+    // Return periode
+    const retPct=(cl-op)/op*100;
+    const retUsd=cl-op;
+    const retUp=retPct>=0;
+    const retColor=retUp?'var(--accent3)':'var(--danger)';
+    const retBg=retUp?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)';
+    const retSign=retUp?'+':'';
+    safe('btcc-return-label',e=>e.textContent=`Return ${cfg.label}`);
+    safe('btcc-return-usd',e=>{e.textContent=retSign+'$'+Math.abs(retUsd).toLocaleString('en-US',{maximumFractionDigits:0});e.style.color=retColor});
+    safe('btcc-return-pct',e=>{e.textContent=retSign+retPct.toFixed(2)+'%';e.style.color=retColor;e.style.background=retBg;e.style.border=`1px solid ${retColor}`});
     // Destroy old chart
     if(cBTCLive){cBTCLive.destroy();cBTCLive=null;}
     const ctx = document.getElementById('c-btclive');
@@ -1269,14 +1402,30 @@ async function loadBTCChart(tf){
         plugins:{
           legend:{display:false},
           tooltip:{
-            backgroundColor:'rgba(11,17,32,.95)',
+            backgroundColor:'rgba(11,17,32,.97)',
             borderColor:color,
             borderWidth:1,
             titleColor:'#94a3b8',
+            titleFont:{family:'Space Mono',size:10},
             bodyColor:color,
             bodyFont:{family:'Space Mono',size:13,weight:'bold'},
+            padding:10,
             callbacks:{
-              label:ctx=>` $${ctx.parsed.y.toLocaleString('en-US',{maximumFractionDigits:0})}`,
+              label:ctx=>{
+                const price=ctx.parsed.y;
+                const firstPrice=vals[0];
+                const retPct=((price-firstPrice)/firstPrice*100);
+                const retSign=retPct>=0?'+':'';
+                const priceStr=` $${price.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+                const retStr=`  ${retSign}${retPct.toFixed(2)}% vs awal`;
+                return [priceStr, retStr];
+              },
+              labelColor:(ctx)=>{
+                const price=ctx.parsed.y;
+                const retPct=((price-vals[0])/vals[0]*100);
+                const c=retPct>=0?'#10b981':'#ef4444';
+                return{borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:3};
+              }
             }
           }
         },
@@ -1539,56 +1688,163 @@ function addPort(){
 }
 function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('🗑️ Dihapus');renderPort()}
 
-/* ══════════ SIMULATION ══════════ */
-const BTC_HIST={'2020-01':9300,'2020-02':9700,'2020-03':5300,'2020-04':8600,'2020-05':9700,'2020-06':9200,'2020-07':11000,'2020-08':11600,'2020-09':10700,'2020-10':13600,'2020-11':19700,'2020-12':28900,'2021-01':33000,'2021-02':46200,'2021-03':58900,'2021-04':57700,'2021-05':35700,'2021-06':35000,'2021-07':41500,'2021-08':47100,'2021-09':44000,'2021-10':61400,'2021-11':57800,'2021-12':47700,'2022-01':38300,'2022-02':43100,'2022-03':45500,'2022-04':40800,'2022-05':29000,'2022-06':19800,'2022-07':23300,'2022-08':20100,'2022-09':19400,'2022-10':20400,'2022-11':16500,'2022-12':16700,'2023-01':23100,'2023-02':23400,'2023-03':28500,'2023-04':29000,'2023-05':27700,'2023-06':30500,'2023-07':29700,'2023-08':26000,'2023-09':26700,'2023-10':34500,'2023-11':37900,'2023-12':42900,'2024-01':42600,'2024-02':51800,'2024-03':71000,'2024-04':63800,'2024-05':67600,'2024-06':63000,'2024-07':66600,'2024-08':60400,'2024-09':63300,'2024-10':72700,'2024-11':96800,'2024-12':97500,'2025-01':94200,'2025-02':96000};
+/* ══════════ SIMULATION DINAMIS ══════════ */
+let simPriceCache = {}; // cache harga per tanggal dari Binance
+
 function syncSimInputs(){
-  if(S.btcPrice){
-    document.getElementById('s-btc').value=S.btcPrice;
-    const lv=document.getElementById('s-live');
-    if(lv) lv.textContent='$'+S.btcPrice.toLocaleString();
-  }
+  const lv=document.getElementById('s-live');
+  if(lv&&S.btcPrice) lv.textContent='$'+S.btcPrice.toLocaleString();
   const rateEl=document.getElementById('s-rate');
-  if(rateEl&&S.usdIdr) rateEl.value=(S.usdIdr).toLocaleString('id-ID');
-}
-function runSim(){
-  const amt=getRawVal('s-amt')||500000;
-  const yr=parseInt(document.getElementById('s-start').value)||2024;
-  const freq=document.getElementById('s-freq').value;
-  const curP=parseFloat(document.getElementById('s-btc').value)||95000;
-  const rate=getRawVal('s-rate')||16000;
-  const now=new Date(2025,1,1);
-  const periods=[];
-  for(let y=yr;y<=2025;y++){
-    for(let m=1;m<=12;m++){
-      if(new Date(y,m-1,1)>now)break;
-      const k=`${y}-${String(m).padStart(2,'0')}`;
-      const price=BTC_HIST[k]||curP;
-      const n=freq==='monthly'?1:freq==='biweekly'?2:4;
-      for(let i=0;i<n;i++)periods.push({label:n>1?`${k} #${i+1}`:k,price});
-    }
+  if(rateEl&&S.usdIdr&&(getRawVal('s-rate')<1000)) rateEl.value=(S.usdIdr).toLocaleString('id-ID');
+  // Set default tanggal
+  const today=new Date().toISOString().split('T')[0];
+  const sd=document.getElementById('s-startdate');
+  const ed=document.getElementById('s-enddate');
+  if(sd&&!sd.value){
+    // Default: 1 tahun lalu
+    const d=new Date();d.setFullYear(d.getFullYear()-1);
+    sd.value=d.toISOString().split('T')[0];
   }
-  let tb=0,ti=0;const rows=[],cl=[],cv=[],ci=[];
-  periods.forEach((p,i)=>{
-    const bought=amt/rate/p.price;tb+=bought;ti+=amt;
-    const val=tb*curP*rate,pnl=val-ti,pp=pnl/ti*100;
-    rows.push(`<tr><td>${p.label}</td><td>$${p.price.toLocaleString()}</td><td>${fmtIDR(amt)}</td><td>${bought.toFixed(8)}</td><td style="color:var(--accent4)">${tb.toFixed(8)}</td><td>${fmtIDR(val)}</td><td class="${pnl>=0?'pos':'neg'}"><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td></tr>`);
-    if(i%Math.max(1,Math.floor(periods.length/24))===0||i===periods.length-1){cl.push(p.label);cv.push(Math.round(val/1e6));ci.push(Math.round(ti/1e6))}
-  });
-  const curVal=tb*curP*rate,pnl=curVal-ti,roi=ti>0?pnl/ti*100:0,avg=tb>0?ti/tb/rate:0;
-  const q=id=>document.getElementById(id);
-  q('s-port').textContent=fmtIDR(curVal);q('s-btctot').textContent=tb.toFixed(8)+' BTC';
-  q('s-total').textContent=fmtIDR(ti);
-  q('s-profit').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));q('s-profit').className='rval '+(pnl>=0?'pos':'neg');
-  q('s-roi').textContent=fmtPct(roi);q('s-roi').className='rval '+(roi>=0?'pos':'neg');
-  q('s-avg').textContent='$'+Math.round(avg).toLocaleString();
-  q('s-periods').textContent=periods.length+' kali';q('s-btcacc').textContent=tb.toFixed(8)+' BTC';
-  q('s-tbody').innerHTML=rows.join('');
-  if(cSim)cSim.destroy();
-  cSim=mkLineChart('c-sim',cl,[
-    {label:'Nilai (juta)',data:cv,borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.1)',fill:true,tension:.4,pointRadius:2,pointBackgroundColor:'#00e5ff'},
-    {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
-  ]);
+  if(sd) sd.max=today;
+  if(ed) ed.max=today;
 }
+
+// Ambil harga BTC di tanggal tertentu dari Binance (kline harian)
+async function fetchBTCPriceAt(dateStr){
+  if(simPriceCache[dateStr]) return simPriceCache[dateStr];
+  try{
+    const ts=new Date(dateStr).getTime();
+    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`;
+    const r=await fetch(url);
+    if(!r.ok) throw new Error();
+    const d=await r.json();
+    if(d&&d[0]){
+      const price=parseFloat(d[0][4]); // close price
+      simPriceCache[dateStr]=price;
+      return price;
+    }
+  }catch(e){}
+  return null;
+}
+
+// Generate daftar tanggal DCA berdasarkan frekuensi
+function generateDCAdates(startDate, endDate, freq){
+  const dates=[];
+  let cur=new Date(startDate);
+  const end=new Date(endDate);
+  while(cur<=end){
+    dates.push(cur.toISOString().split('T')[0]);
+    if(freq==='monthly'){cur=new Date(cur);cur.setMonth(cur.getMonth()+1)}
+    else if(freq==='biweekly'){cur=new Date(cur);cur.setDate(cur.getDate()+14)}
+    else if(freq==='weekly'){cur=new Date(cur);cur.setDate(cur.getDate()+7)}
+    else if(freq==='daily'){cur=new Date(cur);cur.setDate(cur.getDate()+1)}
+    else{cur=new Date(cur);cur.setMonth(cur.getMonth()+1)}
+    if(dates.length>500) break; // safety limit
+  }
+  return dates;
+}
+
+async function runSimDynamic(){
+  const btn=document.getElementById('s-run-btn');
+  const status=document.getElementById('sim-fetch-status');
+
+  // ── SELALU reset tombol, apapun yang terjadi ──
+  const resetBtn=()=>{
+    if(btn){btn.disabled=false;btn.textContent='🔄 Hitung Simulasi';}
+  };
+
+  const startDate=document.getElementById('s-startdate').value;
+  const endDateRaw=document.getElementById('s-enddate').value;
+  const endDate=endDateRaw||new Date().toISOString().split('T')[0];
+  const freq=document.getElementById('s-freq').value;
+  const amt=getRawVal('s-amt')||500000;
+  const rate=getRawVal('s-rate')||S.usdIdr||16000;
+  const curP=S.btcPrice||95000;
+
+  if(!startDate){toast('Pilih tanggal mulai DCA!',1);return}
+  if(new Date(startDate)>=new Date(endDate)){toast('Tanggal mulai harus sebelum tanggal akhir!',1);return}
+
+  // Disable tombol
+  if(btn){btn.disabled=true;btn.textContent='⏳ Mengambil data Binance...';}
+  if(status){status.style.display='block';status.style.color='var(--muted)';status.textContent='Mengambil data historis...';}
+
+  try{
+    const dates=generateDCAdates(startDate,endDate,freq);
+    const total=dates.length;
+    const prices=new Array(total).fill(null);
+    const batchSize=10;
+
+    // Fetch paralel per batch
+    for(let i=0;i<total;i+=batchSize){
+      const batch=dates.slice(i,i+batchSize);
+      const results=await Promise.all(batch.map(d=>fetchBTCPriceAt(d)));
+      results.forEach((p,j)=>{prices[i+j]=p;});
+      if(status) status.textContent=`Mengambil data: ${Math.min(i+batchSize,total)}/${total} tanggal...`;
+      if(i+batchSize<total) await new Promise(r=>setTimeout(r,180));
+    }
+
+    // Hitung simulasi
+    let tb=0,ti=0;
+    const rows=[],cl=[],cv=[],ci=[],validPeriods=[];
+
+    dates.forEach((dateStr,i)=>{
+      const price=prices[i]||curP;
+      const bought=amt/rate/price;
+      tb+=bought;ti+=amt;
+      const val=tb*curP*rate,pnl=val-ti,pp=pnl/ti*100;
+      validPeriods.push({dateStr,price,bought,tb,ti,val,pnl,pp});
+      rows.push(`<tr>
+        <td style="color:var(--muted);font-size:.72rem">${dateStr}</td>
+        <td style="color:var(--accent4)">$${price.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+        <td>${fmtIDR(amt)}</td>
+        <td style="font-size:.72rem">${bought.toFixed(8)}</td>
+        <td style="color:var(--accent4);font-size:.72rem">${tb.toFixed(8)}</td>
+        <td>${fmtIDR(val)}</td>
+        <td class="${pnl>=0?'pos':'neg'}"><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td>
+      </tr>`);
+      const step=Math.max(1,Math.floor(dates.length/60));
+      if(i%step===0||i===dates.length-1){
+        cl.push(dateStr.substring(0,7));
+        cv.push(+(val/1e6).toFixed(2));
+        ci.push(+(ti/1e6).toFixed(2));
+      }
+    });
+
+    const curVal=tb*curP*rate,pnl=curVal-ti,roi=ti>0?pnl/ti*100:0,avg=tb>0?ti/tb/rate:0;
+    const q=id=>document.getElementById(id);
+    q('s-port').textContent=fmtIDR(curVal);
+    q('s-btctot').textContent=tb.toFixed(8)+' BTC';
+    q('s-total').textContent=fmtIDR(ti);
+    q('s-profit').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));
+    q('s-profit').className='sim-sum-val '+(pnl>=0?'pos':'neg');
+    q('s-roi').textContent=fmtPct(roi);
+    q('s-roi').className='sim-sum-sub '+(roi>=0?'pos':'neg');
+    q('s-avg').textContent='$'+Math.round(avg).toLocaleString('en-US');
+    q('s-periods').textContent=validPeriods.length+' kali';
+    q('s-btcacc').textContent=tb.toFixed(8)+' BTC';
+    q('s-tbody').innerHTML=rows.join('');
+
+    try{if(cSim)cSim.destroy();}catch(e){}
+    cSim=mkLineChart('c-sim',cl,[
+      {label:'Nilai (juta)',data:cv,borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.1)',fill:true,tension:.4,pointRadius:2,pointBackgroundColor:'#00e5ff'},
+      {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
+    ]);
+
+    if(status){status.style.color='var(--accent3)';status.textContent=`✅ ${validPeriods.length} periode · ${dates[0]} → ${dates[dates.length-1]} · harga real Binance`;}
+    toast('✅ Simulasi selesai!');
+
+  }catch(err){
+    console.error('runSimDynamic error:',err);
+    if(status){status.style.color='var(--danger)';status.textContent='⚠️ Gagal — cek koneksi dan coba lagi';}
+    toast('Gagal ambil data Binance',1);
+  }finally{
+    // SELALU aktifkan tombol kembali, apapun yang terjadi
+    resetBtn();
+  }
+}
+
+// runSim: dummy agar tidak error dipanggil sebelum simulasi dijalankan
+function runSim(){}
 
 /* ══════════ CASHFLOW ══════════ */
 function renderCF(){
