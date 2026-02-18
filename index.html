@@ -24,46 +24,50 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 /* ── LOGIN ── */
 #login-screen{
   position:fixed;inset:0;z-index:500;
-  display:flex;align-items:center;justify-content:center;
   background:var(--bg);
   overflow-y:auto;
-  padding:1rem;
+  overflow-x:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem;
+  min-height:100dvh;
 }
 .login-box{
-  background:var(--surface);border:1px solid var(--border);border-radius:24px;
-  padding:2.5rem;width:100%;max-width:460px;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2rem;width:100%;max-width:460px;
   position:relative;z-index:1;
   box-shadow:0 0 80px rgba(0,0,0,.6);
-  margin:auto;
 }
-.login-logo{font-size:2.2rem;font-weight:800;color:var(--accent);text-align:center;letter-spacing:-.03em;text-shadow:var(--glow2);margin-bottom:.3rem}
+.login-logo{font-size:2rem;font-weight:800;color:var(--accent);text-align:center;letter-spacing:-.03em;text-shadow:var(--glow2);margin-bottom:.3rem}
 .login-logo span{color:var(--text)}
-.login-tagline{text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:2rem}
-.ltabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:1.8rem}
-.ltab{flex:1;text-align:center;padding:.65rem .5rem;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);transition:all .2s;user-select:none}
+.login-tagline{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:1.5rem;line-height:1.5}
+.ltabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:1.5rem;gap:2px}
+.ltab{flex:1;text-align:center;padding:.6rem .3rem;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);transition:all .2s;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .ltab.active{background:var(--accent);color:var(--bg)}
 
 /* seed display */
-.seed-row{display:flex;gap:.6rem;margin:1rem 0}
+.seed-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1rem 0;width:100%}
 .sw{
-  flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;
-  padding:.9rem .4rem;text-align:center;
-  font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;
+  background:var(--bg);border:1.5px solid var(--accent);border-radius:10px;
+  padding:.8rem .3rem;text-align:center;
+  font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700;
   color:var(--accent);position:relative;
-  box-shadow:var(--glow);min-height:58px;
+  box-shadow:var(--glow);min-height:54px;
   display:flex;align-items:center;justify-content:center;
+  overflow:hidden;word-break:break-word;
 }
-.sw-num{position:absolute;top:4px;left:6px;font-size:.55rem;color:var(--muted);font-weight:400}
+.sw-num{position:absolute;top:3px;left:5px;font-size:.52rem;color:var(--muted);font-weight:400}
 
 /* seed inputs */
 .sinput{
-  flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
-  padding:.9rem .4rem;text-align:center;
-  font-family:'Space Mono',monospace;font-size:.88rem;color:var(--text);
-  outline:none;transition:border-color .2s;
+  width:100%;min-width:0;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:.8rem .3rem;text-align:center;
+  font-family:'Space Mono',monospace;font-size:.85rem;color:var(--text);
+  outline:none;transition:border-color .2s;box-sizing:border-box;
 }
 .sinput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
-.sinput::placeholder{color:var(--muted);font-size:.72rem}
+.sinput::placeholder{color:var(--muted);font-size:.7rem}
 
 .seed-warn{
   background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);
@@ -93,38 +97,40 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 /* ── NAV ── */
 nav{
   position:sticky;top:0;z-index:100;
-  background:rgba(5,8,16,.85);backdrop-filter:blur(20px);
+  background:rgba(5,8,16,.92);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 1.5rem;gap:.5rem;
+  display:flex;flex-wrap:wrap;align-items:center;
+  padding:0 1rem;gap:.4rem;
 }
-.nav-logo{font-size:1.2rem;font-weight:800;color:var(--accent);letter-spacing:-.02em;padding:1.1rem 0;margin-right:.5rem;white-space:nowrap;text-shadow:var(--glow)}
+.nav-logo{font-size:1.1rem;font-weight:800;color:var(--accent);letter-spacing:-.02em;padding:.85rem 0;margin-right:.3rem;white-space:nowrap;text-shadow:var(--glow)}
 .nav-logo span{color:var(--text)}
-.nav-tabs{display:flex;overflow-x:auto;flex:1}
-.nav-tab{padding:1.1rem 1.3rem;cursor:pointer;font-size:.82rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-tabs{display:flex;overflow-x:auto;flex:1;scrollbar-width:none;-ms-overflow-style:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:.85rem .9rem;cursor:pointer;font-size:.75rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.btc-badge{display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .9rem;font-family:'Space Mono',monospace;font-size:.75rem;white-space:nowrap}
+.btc-badge{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-family:'Space Mono',monospace;font-size:.7rem;white-space:nowrap}
 .live-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-.acct-badge{display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .9rem;font-size:.75rem;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:200px;overflow:hidden}
+.acct-badge{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:140px;overflow:hidden}
 .acct-badge:hover{border-color:var(--accent);color:var(--accent)}
 .acct-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;flex-shrink:0}
 
 /* ── PAGES ── */
-.page{display:none;padding:1.8rem;position:relative;z-index:1;max-width:1400px;margin:0 auto}
+.page{display:none;padding:1.2rem;position:relative;z-index:1;max-width:1400px;margin:0 auto}
 .page.active{display:block;animation:fadeIn .3s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── COMMON ── */
-.ph{margin-bottom:1.8rem}
-.ph h1{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.2rem}
-.ph p{color:var(--muted);font-size:.85rem}
+.ph{margin-bottom:1.2rem}
+.ph h1{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.2rem}
+.ph p{color:var(--muted);font-size:.82rem}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
 .sec-title{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:.5rem}
 .sec-title::before{content:'';display:block;width:4px;height:14px;background:var(--accent);border-radius:2px}
 
 /* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1.2rem}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;transition:all .3s;cursor:default}
 .stat-card:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px)}
 .slabel{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem}
@@ -174,8 +180,8 @@ tr:hover td{background:rgba(0,229,255,.02)}
 .modal-footer{display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.4rem}
 
 /* ── SIMULATION ── */
-.sim-layout{display:grid;grid-template-columns:360px 1fr;gap:1.4rem;align-items:start}
-.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.6rem;position:sticky;top:72px}
+.sim-layout{display:grid;grid-template-columns:340px 1fr;gap:1.2rem;align-items:start} /* legacy */
+.sim-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;position:sticky;top:72px}
 .sim-results{display:flex;flex-direction:column;gap:1rem}
 .sim-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
 .big-val-box{text-align:center;padding:1.4rem;background:linear-gradient(135deg,rgba(0,229,255,.05),rgba(124,58,237,.05));border:1px solid rgba(0,229,255,.2);border-radius:12px;margin-bottom:1rem}
@@ -234,7 +240,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .setup-link:hover{text-decoration:underline}
 
 
-.sync-bar{position:fixed;bottom:1.5rem;left:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .85rem;font-size:.72rem;color:var(--muted);z-index:200;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace}
+.sync-bar{position:fixed;bottom:1.5rem;left:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .85rem;font-size:.72rem;color:var(--muted);z-index:150;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;transition:bottom .2s}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);flex-shrink:0}
 .sdot.syncing{background:var(--accent4);animation:pulse 1s infinite}
 .sdot.err{background:var(--danger)}
@@ -249,8 +255,170 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
 
 /* ── RESPONSIVE ── */
-@media(max-width:900px){.two-col,.sim-layout{grid-template-columns:1fr}.sim-panel{position:static}}
-@media(max-width:640px){.frow{grid-template-columns:1fr}.nav-tab{padding:.9rem .8rem;font-size:.75rem}}
+@media(max-width:900px){
+  .two-col,.sim-layout{grid-template-columns:1fr}
+  .sim-panel{position:static}
+}
+@media(max-width:640px){
+  .frow{grid-template-columns:1fr}
+  .nav-tab{padding:.75rem .6rem;font-size:.68rem;letter-spacing:.01em}
+  .page{padding:.9rem}
+  .ph h1{font-size:1.5rem}
+  .ph{margin-bottom:.9rem}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:.6rem}
+  .stat-card{padding:1rem}
+  .sval{font-size:1.4rem}
+  /* Login mobile */
+  #login-screen{padding:1rem;align-items:flex-start;padding-top:2rem}
+  .login-box{padding:1.4rem;border-radius:16px}
+  .login-logo{font-size:1.7rem}
+  .login-tagline{font-size:.75rem;margin-bottom:1.2rem}
+  .ltabs{margin-bottom:1rem;padding:3px}
+  .ltab{font-size:.72rem;padding:.55rem .2rem}
+  .seed-warn{font-size:.73rem;padding:.7rem}
+  .seed-row{gap:.4rem}
+  .sw{font-size:.82rem;min-height:48px;padding:.7rem .2rem}
+  .sinput{font-size:.78rem;padding:.7rem .2rem}
+  .sinput::placeholder{font-size:.65rem}
+  .lbtn{font-size:.88rem;padding:.85rem}
+  /* Simulation mobile */
+  .sim-layout{grid-template-columns:1fr !important}
+  .sim-panel{position:static !important;margin-bottom:0}
+  .big-val{font-size:1.8rem}
+  /* App */
+  .chart-container{height:200px}
+  .modal{padding:1.4rem;border-radius:14px}
+  .port-grid{grid-template-columns:1fr}
+  .btc-badge{display:none}
+  .acct-badge{max-width:110px}
+  .sync-bar{font-size:.65rem;padding:.35rem .65rem;bottom:calc(4.5rem + env(safe-area-inset-bottom,0));left:.75rem}
+  nav{padding:0 .75rem;gap:.3rem}
+  .nav-logo{font-size:1rem;padding:.75rem 0}
+  table{min-width:480px}
+  td,th{padding:.65rem .75rem;font-size:.72rem}
+}
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr}
+  #login-screen{padding:.75rem}
+  .login-box{padding:1.1rem}
+  .ltab{font-size:.66rem;padding:.5rem .15rem}
+  .seed-row{gap:.3rem}
+  .sw,.sinput{font-size:.75rem;padding:.6rem .15rem;min-height:44px}
+  .lbtn{font-size:.85rem;padding:.8rem}
+}
+
+/* ── LOGOUT BTN ── */
+.logout-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger)}
+@media(max-width:640px){.logout-txt{display:none}.logout-btn{padding:.4rem .55rem;font-size:.82rem}}
+
+/* ── BTC LIVE CHART ── */
+.btc-chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-bottom:1.4rem}
+.btc-chart-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.8rem;margin-bottom:1rem}
+.btc-price-display{display:flex;flex-direction:column;gap:.2rem}
+.btc-price-big{font-family:'Space Mono',monospace;font-size:1.9rem;font-weight:700;color:var(--accent4);line-height:1}
+.btc-price-idr{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--muted)}
+.btc-change-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:6px;font-size:.8rem;font-weight:700;font-family:'Space Mono',monospace;margin-top:.3rem}
+.btc-change-badge.up{background:rgba(16,185,129,.15);color:var(--accent3);border:1px solid rgba(16,185,129,.3)}
+.btc-change-badge.dn{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.tf-btns{display:flex;gap:.3rem;flex-wrap:wrap}
+.tf-btn{padding:.35rem .7rem;border-radius:6px;font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s}
+.tf-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tf-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btc-chart-container{position:relative;height:280px;margin-top:.5rem}
+.btc-chart-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,17,32,.7);border-radius:8px;font-size:.82rem;color:var(--muted);gap:.6rem;z-index:10}
+.btc-ohlc{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.btc-ohlc-item{display:flex;flex-direction:column;gap:.1rem}
+.btc-ohlc-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.btc-ohlc-val{font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700}
+@media(max-width:640px){
+  .btc-price-big{font-size:1.5rem}
+  .btc-chart-container{height:220px}
+  .tf-btn{padding:.3rem .55rem;font-size:.68rem}
+  .btc-ohlc{gap:.6rem}
+  .btc-ohlc-val{font-size:.72rem}
+}
+
+/* ── BOTTOM NAV (mobile only) ── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(11,17,32,.97);
+  border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  padding:0 0 env(safe-area-inset-bottom,0) 0;
+}
+.bnav-items{display:flex;align-items:stretch}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:.6rem .3rem .55rem;gap:.18rem;cursor:pointer;
+  color:var(--muted);transition:color .2s;border:none;background:none;
+  font-family:'Syne',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.bnav-item.active{color:var(--accent)}
+.bnav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:2px;
+  background:var(--accent);border-radius:0 0 3px 3px;
+}
+.bnav-icon{font-size:1.25rem;line-height:1}
+.bnav-label{font-size:.58rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+/* Top nav account+logout strip on mobile */
+.nav-topstrip{
+  display:none;
+  background:rgba(11,17,32,.97);
+  border-bottom:1px solid var(--border);
+  padding:.5rem 1rem;
+  align-items:center;justify-content:space-between;gap:.5rem;
+}
+.nav-topstrip-left{display:flex;align-items:center;gap:.5rem}
+@media(max-width:640px){
+  .bottom-nav{display:block}
+  .nav-tabs{display:none !important}
+  .nav-right-desktop{display:none !important}
+  .nav-topstrip{display:flex}
+  nav{padding:0 1rem;min-height:44px}
+  .nav-logo{font-size:1rem;padding:.7rem 0}
+  #app .page{padding-bottom:calc(5rem + env(safe-area-inset-bottom,0))}
+}
+/* Desktop: bottom nav & topstrip hidden, normal nav */
+@media(min-width:641px){
+  .bottom-nav{display:none !important}
+  .nav-topstrip{display:none !important}
+  .nav-right-desktop{display:flex !important}
+  .nav-tabs{display:flex !important}
+}
+
+/* ── SIMULATION NEW ── */
+.sim-param-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:1.2rem;overflow:hidden}
+.sim-param-toggle{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.2rem;background:none;border:none;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
+  text-align:left;
+}
+.sim-param-toggle:hover{background:rgba(0,229,255,.04)}
+#sim-param-arrow{color:var(--accent);transition:transform .25s;font-size:.8rem}
+.sim-param-body{padding:0 1.2rem 1.2rem;border-top:1px solid var(--border)}
+.sim-param-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 1rem;margin-top:1rem}
+.sim-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1rem}
+.sim-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:.25rem}
+.sim-sum-card.accent{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04)}
+.sim-sum-card.green{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)}
+.sim-sum-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.sim-sum-val{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;line-height:1.2}
+.sim-sum-sub{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted)}
+@media(max-width:640px){
+  .sim-param-grid{grid-template-columns:1fr}
+  .sim-summary-grid{grid-template-columns:1fr 1fr}
+  .sim-sum-val{font-size:.9rem}
+  .sim-param-toggle{padding:.85rem 1rem;font-size:.85rem}
+  .sim-param-body{padding:0 1rem 1rem}
+}
+@media(max-width:400px){
+  .sim-summary-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -258,45 +426,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="grid-bg"></div>
 
 <!-- ══════════ SETUP SCREEN (isi API Key JSONBin) ══════════ -->
-<div id="setup-screen">
-  <div class="setup-box">
-    <div class="login-logo" style="margin-bottom:.3rem">Wealth<span>OS</span></div>
-    <div class="login-tagline" style="margin-bottom:1.8rem">Setup pertama kali — hanya perlu 2 menit ☕</div>
-
-    <div style="font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:1rem">📦 Setup Database Gratis (JSONBin.io)</div>
-    <p style="font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6">JSONBin.io adalah database gratis untuk menyimpan data kamu di cloud. Ikuti langkah berikut:</p>
-
-    <div class="setup-step">
-      <div class="step-num">1</div>
-      <div>Buka <a class="setup-link" href="https://jsonbin.io" target="_blank">jsonbin.io</a> di browser → klik <strong style="color:var(--text)">Sign Up</strong> → daftar gratis (bisa pakai Google)</div>
-    </div>
-    <div class="setup-step">
-      <div class="step-num">2</div>
-      <div>Setelah login, klik <strong style="color:var(--text)">API Keys</strong> di menu atas → klik <strong style="color:var(--text)">"+ Create Access Key"</strong></div>
-    </div>
-    <div class="setup-step">
-      <div class="step-num">3</div>
-      <div>Beri nama key (bebas, misal: <em>wealthos</em>) → klik <strong style="color:var(--text)">Generate</strong> → <strong style="color:var(--accent)">copy API key yang muncul</strong></div>
-    </div>
-    <div class="setup-step">
-      <div class="step-num">4</div>
-      <div>Paste API key di bawah ini → klik <strong style="color:var(--text)">Simpan & Lanjut</strong></div>
-    </div>
-
-    <div style="margin-top:1.4rem">
-      <label class="fl" style="display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem">API Key JSONBin.io</label>
-      <input type="text" class="fi" id="setup-api-key" placeholder="$2a$10$xxxxxxxxxxxxxxxxxxxx..." autocomplete="off" spellcheck="false" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.8rem;outline:none;transition:border-color .2s;margin-bottom:.5rem">
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem">⚠️ API key tersimpan hanya di browser kamu, tidak dikirim ke server manapun selain JSONBin.io</div>
-      <button type="button" class="lbtn" onclick="doSaveApiKey()">Simpan &amp; Lanjut →</button>
-    </div>
-
-    <div style="margin-top:1.2rem;padding:1rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:.78rem;color:var(--accent3);line-height:1.6">
-      ✅ <strong>JSONBin gratis</strong> sampai 10.000 request/bulan — lebih dari cukup untuk penggunaan pribadi.<br>
-      ✅ Data kamu <strong>private</strong> dan hanya bisa diakses dengan API key kamu sendiri.
-    </div>
-  </div>
-</div>
-
+<!-- API key built-in — no setup needed -->
 <!-- ══════════ LOGIN SCREEN ══════════ -->
 <div id="login-screen">
   <div class="login-box">
@@ -358,6 +488,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ══════════ MAIN APP ══════════ -->
 <div id="app" style="display:none">
 
+<!-- TOP STRIP (mobile: account + btc + logout) -->
+<div class="nav-topstrip" id="nav-topstrip">
+  <div class="nav-topstrip-left">
+    <div class="acct-dot" style="width:6px;height:6px;background:var(--accent3);border-radius:50%;flex-shrink:0"></div>
+    <span id="nav-acct-mob" style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+    <div style="width:1px;height:12px;background:var(--border);margin:0 .3rem"></div>
+    <div class="live-dot" style="width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0"></div>
+    <span id="nav-btc-mob" style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--accent4)">—</span>
+    <span id="nav-chg-mob" style="font-size:.62rem;color:var(--muted)"></span>
+  </div>
+  <button onclick="showAcct()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;font-size:.65rem;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">⚙️ Akun</button>
+</div>
+
 <nav>
   <div class="nav-logo">Wealth<span>OS</span></div>
   <div class="nav-tabs">
@@ -367,7 +510,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="nav-tab" onclick="showPage('simulation')">Simulasi</div>
     <div class="nav-tab" onclick="showPage('cashflow')">Arus Kas</div>
   </div>
-  <div style="display:flex;align-items:center;gap:.5rem;margin-left:auto">
+  <div class="nav-right-desktop" style="display:flex;align-items:center;gap:.5rem;margin-left:auto">
     <div class="acct-badge" onclick="showAcct()" title="Info Akun">
       <div class="acct-dot"></div>
       <span id="nav-acct" style="font-family:'Space Mono',monospace;font-size:.72rem;overflow:hidden;text-overflow:ellipsis">—</span>
@@ -378,8 +521,30 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <span id="nav-btc">—</span>
       <span id="nav-chg" style="font-size:.68rem;color:var(--muted)"></span>
     </div>
+    <button onclick="doLogout()" class="logout-btn" title="Logout">🚪 <span class="logout-txt">Logout</span></button>
   </div>
 </nav>
+
+<!-- BOTTOM NAV (mobile only) -->
+<div class="bottom-nav" id="bottom-nav">
+  <div class="bnav-items">
+    <button class="bnav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+      <span class="bnav-icon">📊</span><span class="bnav-label">Dashboard</span>
+    </button>
+    <button class="bnav-item" data-page="dca" onclick="showPage('dca')">
+      <span class="bnav-icon">₿</span><span class="bnav-label">DCA</span>
+    </button>
+    <button class="bnav-item" data-page="portfolio" onclick="showPage('portfolio')">
+      <span class="bnav-icon">💼</span><span class="bnav-label">Portofolio</span>
+    </button>
+    <button class="bnav-item" data-page="simulation" onclick="showPage('simulation')">
+      <span class="bnav-icon">🔮</span><span class="bnav-label">Simulasi</span>
+    </button>
+    <button class="bnav-item" data-page="cashflow" onclick="showPage('cashflow')">
+      <span class="bnav-icon">💰</span><span class="bnav-label">Arus Kas</span>
+    </button>
+  </div>
+</div>
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
@@ -392,6 +557,41 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="d-btcamt">0 BTC</div><div class="ssub" id="d-btcidr">Rp 0</div></div>
     <div class="stat-card"><div class="slabel">DCA Entries</div><div class="sval acc" id="d-entries">0</div><div class="ssub" id="d-avg">Avg: $0</div></div>
   </div>
+  <!-- BTC LIVE CHART -->
+  <div class="btc-chart-wrap">
+    <div class="btc-chart-header">
+      <div class="btc-price-display">
+        <div class="btc-price-big" id="btcc-price">$—</div>
+        <div class="btc-price-idr" id="btcc-idr">≈ Rp —</div>
+        <div class="btc-change-badge up" id="btcc-badge">— %</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
+        <div class="tf-btns" id="tf-btns">
+          <button class="tf-btn" data-tf="1D" onclick="loadBTCChart('1D')">1H</button>
+          <button class="tf-btn active" data-tf="1W" onclick="loadBTCChart('1W')">1M</button>
+          <button class="tf-btn" data-tf="1M" onclick="loadBTCChart('1M')">1B</button>
+          <button class="tf-btn" data-tf="1Y" onclick="loadBTCChart('1Y')">1T</button>
+          <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5T</button>
+        </div>
+        <div style="font-size:.65rem;color:var(--muted);text-align:right">via Binance · auto refresh 60s</div>
+      </div>
+    </div>
+    <div class="btc-chart-container">
+      <div class="btc-chart-loading" id="btcc-loading">
+        <div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+        Memuat chart...
+      </div>
+      <canvas id="c-btclive"></canvas>
+    </div>
+    <div class="btc-ohlc" id="btcc-ohlc">
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Open</div><div class="btc-ohlc-val" id="btcc-open">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">High</div><div class="btc-ohlc-val pos" id="btcc-high">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Low</div><div class="btc-ohlc-val neg" id="btcc-low">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Close</div><div class="btc-ohlc-val acc" id="btcc-close">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Volume 24h</div><div class="btc-ohlc-val gld" id="btcc-vol">—</div></div>
+    </div>
+  </div>
+
   <div class="two-col">
     <div class="chart-wrap"><div class="sec-title">Portfolio Allocation</div><div class="chart-container"><canvas id="c-alloc"></canvas></div></div>
     <div class="chart-wrap"><div class="sec-title">P&amp;L Timeline</div><div class="chart-container"><canvas id="c-pnl"></canvas></div></div>
@@ -432,42 +632,86 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <!-- SIMULATION -->
 <div id="page-simulation" class="page">
-  <div class="ph"><h1>Simulasi DCA</h1><p>Hitung potensi return jika kamu rutin DCA Bitcoin</p></div>
-  <div class="sim-layout">
-    <div class="sim-panel">
-      <div class="sec-title" style="margin-bottom:1.3rem">Parameter</div>
-      <div class="fg"><label class="fl">DCA per periode (IDR)</label><input type="number" class="fi" id="s-amt" value="500000" oninput="runSim()"></div>
-      <div class="fg"><label class="fl">Mulai dari</label><select class="fs" id="s-start" onchange="runSim()">
-        <option value="2020">2020 (5 tahun lalu)</option>
-        <option value="2021">2021 (4 tahun lalu)</option>
-        <option value="2022">2022 (3 tahun lalu)</option>
-        <option value="2023">2023 (2 tahun lalu)</option>
-        <option value="2024" selected>2024 (1 tahun lalu)</option>
-      </select></div>
-      <div class="fg"><label class="fl">Frekuensi</label><select class="fs" id="s-freq" onchange="runSim()">
-        <option value="monthly" selected>Bulanan</option>
-        <option value="biweekly">2 Minggu Sekali</option>
-        <option value="weekly">Mingguan</option>
-      </select></div>
-      <div class="fg"><label class="fl">Harga BTC Sekarang (USD)</label><input type="number" class="fi" id="s-btc" value="95000" oninput="runSim()">
-      <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div></div>
-      <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="number" class="fi" id="s-rate" value="16000" oninput="runSim()"></div>
+  <div class="ph"><h1>Simulasi DCA</h1><p>Hitung return jika kamu rutin DCA Bitcoin</p></div>
+
+  <!-- PARAMETER PANEL (collapsible on mobile) -->
+  <div class="sim-param-card">
+    <button class="sim-param-toggle" onclick="toggleSimParam()" id="sim-param-toggle">
+      <span>⚙️ Parameter Simulasi</span>
+      <span id="sim-param-arrow">▼</span>
+    </button>
+    <div class="sim-param-body" id="sim-param-body">
+      <div class="sim-param-grid">
+        <div class="fg">
+          <label class="fl">DCA per periode (IDR)</label>
+          <input type="text" class="fi" id="s-amt" value="500.000" inputmode="numeric" oninput="fmtInput(this);runSim()">
+        </div>
+        <div class="fg">
+          <label class="fl">Mulai dari</label>
+          <select class="fs" id="s-start" onchange="runSim()">
+            <option value="2020">2020 (5 tahun lalu)</option>
+            <option value="2021">2021 (4 tahun lalu)</option>
+            <option value="2022">2022 (3 tahun lalu)</option>
+            <option value="2023">2023 (2 tahun lalu)</option>
+            <option value="2024" selected>2024 (1 tahun lalu)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Frekuensi</label>
+          <select class="fs" id="s-freq" onchange="runSim()">
+            <option value="monthly" selected>Bulanan</option>
+            <option value="biweekly">2 Minggu Sekali</option>
+            <option value="weekly">Mingguan</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Harga BTC (USD)</label>
+          <input type="number" class="fi" id="s-btc" value="95000" oninput="runSim()">
+          <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Kurs USD/IDR</label>
+          <input type="text" class="fi" id="s-rate" value="16.000" inputmode="numeric" oninput="fmtInput(this);runSim()">
+        </div>
+      </div>
     </div>
-    <div class="sim-results">
-      <div class="sim-card">
-        <div class="big-val-box"><div class="big-val-label">Nilai Portofolio Sekarang</div><div class="big-val" id="s-port">Rp 0</div><div style="color:var(--muted);font-size:.78rem;margin-top:.4rem" id="s-btctot">0 BTC</div></div>
-        <div class="rrow"><span class="rlabel">Total Modal</span><span class="rval" id="s-total">Rp 0</span></div>
-        <div class="rrow"><span class="rlabel">Profit/Loss</span><span class="rval pos" id="s-profit">+Rp 0</span></div>
-        <div class="rrow"><span class="rlabel">ROI</span><span class="rval pos" id="s-roi">0%</span></div>
-        <div class="rrow"><span class="rlabel">Avg Buy Price</span><span class="rval" id="s-avg">$0</span></div>
-        <div class="rrow"><span class="rlabel">Jumlah Periode</span><span class="rval" id="s-periods">0 kali</span></div>
-        <div class="rrow"><span class="rlabel">BTC Terkumpul</span><span class="rval gld" id="s-btcacc">0 BTC</span></div>
+  </div>
+
+  <!-- HASIL -->
+  <div class="sim-results">
+    <!-- Summary cards -->
+    <div class="sim-summary-grid">
+      <div class="sim-sum-card accent">
+        <div class="sim-sum-label">Nilai Portofolio</div>
+        <div class="sim-sum-val" id="s-port">Rp 0</div>
+        <div class="sim-sum-sub" id="s-btctot">0 BTC</div>
       </div>
-      <div class="sim-card"><div class="sec-title" style="margin-bottom:.8rem">Growth Curve</div><div class="chart-container"><canvas id="c-sim"></canvas></div></div>
-      <div class="sim-card">
-        <div class="sec-title" style="margin-bottom:.8rem">Detail Per Periode</div>
-        <div class="sim-tbl-wrap"><table><thead><tr><th>Periode</th><th>Harga BTC</th><th>DCA</th><th>BTC Dibeli</th><th>Total BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
+      <div class="sim-sum-card">
+        <div class="sim-sum-label">Total Modal</div>
+        <div class="sim-sum-val" id="s-total">Rp 0</div>
       </div>
+      <div class="sim-sum-card green">
+        <div class="sim-sum-label">Profit / ROI</div>
+        <div class="sim-sum-val pos" id="s-profit">+Rp 0</div>
+        <div class="sim-sum-sub pos" id="s-roi">0%</div>
+      </div>
+      <div class="sim-sum-card">
+        <div class="sim-sum-label">Avg Buy Price</div>
+        <div class="sim-sum-val gld" id="s-avg">$0</div>
+      </div>
+      <div class="sim-sum-card">
+        <div class="sim-sum-label">Periode</div>
+        <div class="sim-sum-val acc" id="s-periods">0x</div>
+      </div>
+      <div class="sim-sum-card">
+        <div class="sim-sum-label">BTC Terkumpul</div>
+        <div class="sim-sum-val" id="s-btcacc">0 BTC</div>
+      </div>
+    </div>
+    <div class="sim-card"><div class="sec-title" style="margin-bottom:.8rem">📈 Growth Curve</div><div class="chart-container"><canvas id="c-sim"></canvas></div></div>
+    <div class="sim-card">
+      <div class="sec-title" style="margin-bottom:.8rem">📋 Detail Per Periode</div>
+      <div class="sim-tbl-wrap"><table><thead><tr><th>Periode</th><th>Harga BTC</th><th>DCA</th><th>BTC Dibeli</th><th>Total BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -497,9 +741,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="frow">
       <div class="fg"><label class="fl">Harga BTC (USD)</label><input type="number" class="fi" id="m-dca-usd" placeholder="95000">
       <div style="font-size:.7rem;color:var(--accent);margin-top:.3rem;cursor:pointer" onclick="fillBTCPrice()">↩ Pakai harga sekarang</div></div>
-      <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="number" class="fi" id="m-dca-rate" value="16000"></div>
+      <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="text" class="fi" id="m-dca-rate" value="16.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     </div>
-    <div class="fg"><label class="fl">Jumlah Investasi (IDR)</label><input type="number" class="fi" id="m-dca-idr" placeholder="500000"></div>
+    <div class="fg"><label class="fl">Jumlah Investasi (IDR)</label><input type="text" class="fi" id="m-dca-idr" placeholder="500.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     <div class="fg"><label class="fl">Catatan (opsional)</label><input type="text" class="fi" id="m-dca-note" placeholder="DCA bulan Januari"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-dca')">Batal</button>
@@ -521,9 +765,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Jumlah (qty)</label><input type="number" class="fi" id="m-p-qty" placeholder="0.05" step="any"></div>
-      <div class="fg"><label class="fl">Avg Buy (IDR)</label><input type="number" class="fi" id="m-p-avg" placeholder="500000000"></div>
+      <div class="fg"><label class="fl">Avg Buy (IDR)</label><input type="text" class="fi" id="m-p-avg" placeholder="500.000.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     </div>
-    <div class="fg"><label class="fl">Harga Sekarang (IDR)</label><input type="number" class="fi" id="m-p-cur" placeholder="1500000000"></div>
+    <div class="fg"><label class="fl">Harga Sekarang (IDR)</label><input type="text" class="fi" id="m-p-cur" placeholder="1.500.000.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-port')">Batal</button>
       <button class="btn btn-primary" onclick="addPort()">Simpan</button>
@@ -542,7 +786,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="fg"><label class="fl">Kategori</label><input type="text" class="fi" id="m-cf-cat" placeholder="Gaji, Makan..."></div>
     </div>
     <div class="fg"><label class="fl">Deskripsi</label><input type="text" class="fi" id="m-cf-desc" placeholder="Deskripsi singkat"></div>
-    <div class="fg"><label class="fl">Jumlah (IDR)</label><input type="number" class="fi" id="m-cf-amt" placeholder="1000000"></div>
+    <div class="fg"><label class="fl">Jumlah (IDR)</label><input type="text" class="fi" id="m-cf-amt" placeholder="1.000.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-cf')">Batal</button>
       <button class="btn btn-primary" onclick="addCF()">Simpan</button>
@@ -575,7 +819,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct');showSetupScreen()">🔑 Ganti API Key</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct')">🔑 Ganti API Key</button>
       <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
@@ -615,16 +859,10 @@ function rnd3(){
 function seedKey(a,b,c){return `${a}-${b}-${c}`}
 
 /* ══════════ JSONBIN CONFIG ══════════ */
-// JSONBin.io sebagai database — gratis, tidak perlu server
 const JBIN_BASE = 'https://api.jsonbin.io/v3';
-let JBIN_KEY = ''; // diisi user lewat setup screen
+const JBIN_KEY = '$2a$10$Ed5UlGGHnK4FiE2IGm32IuLTq6Ix9h5kcBuoYNrJPQeA7rYnSiaUm';
 
-function getJBinKey(){
-  if(JBIN_KEY) return JBIN_KEY;
-  const k = localStorage.getItem('wo_jbin_key');
-  if(k){ JBIN_KEY=k; return k; }
-  return null;
-}
+function getJBinKey(){ return JBIN_KEY; }
 
 async function jbinGet(binId){
   const k=getJBinKey(); if(!k) throw new Error('no key');
@@ -681,22 +919,6 @@ async function dbSet(seed, data){
 /* ══════════ STATE ══════════ */
 const S={btcPrice:null,btcPriceIDR:null,btcChange:null,usdIdr:16000,dca:[],port:[],cf:[]};
 let curSeed=null, curKey=null, lastSync=null, syncTmr=null;
-
-/* ══════════ SETUP SCREEN (isi API key) ══════════ */
-function showSetupScreen(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('setup-screen').style.display='flex';
-}
-
-function doSaveApiKey(){
-  const k=document.getElementById('setup-api-key').value.trim();
-  if(!k||k.length<20){toast('API Key tidak valid!',1);return}
-  JBIN_KEY=k;
-  localStorage.setItem('wo_jbin_key',k);
-  document.getElementById('setup-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  toast('✅ API Key tersimpan!');
-}
 
 /* ══════════ LOGIN ══════════ */
 let genSeed=null, confirmed=true;
@@ -785,6 +1007,7 @@ async function enterApp(seed,data){
   S.cf=data.cf||data.cashflowItems||[];
   localStorage.setItem('wo_cache',JSON.stringify({seed,data:{dca:S.dca,port:S.port,cf:S.cf}}));
   document.getElementById('nav-acct').textContent=seed.join(' · ');
+  const mob=document.getElementById('nav-acct-mob');if(mob)mob.textContent=seed.join(' · ');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('sync-bar').style.display='flex';
@@ -865,11 +1088,24 @@ function showPage(id){
   document.getElementById('page-'+id).classList.add('active');
   const tabs=document.querySelectorAll('.nav-tab');
   ['dashboard','dca','portfolio','simulation','cashflow'].forEach((p,i)=>{if(p===id)tabs[i].classList.add('active')});
+  // Bottom nav active
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(id==='dashboard')renderDash();
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
   if(id==='simulation'){syncSimInputs();runSim()}
   if(id==='cashflow')renderCF();
+  // Scroll to top
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleSimParam(){
+  const body=document.getElementById('sim-param-body');
+  const arrow=document.getElementById('sim-param-arrow');
+  if(!body||!arrow)return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  arrow.style.transform=open?'rotate(-90deg)':'rotate(0deg)';
 }
 
 /* ══════════ MODAL ══════════ */
@@ -901,6 +1137,26 @@ const fmtUSD=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtBTC=n=>n.toFixed(8)+' BTC';
 const fmtPct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
 
+// Format input angka dengan titik ribuan saat mengetik
+function fmtInput(el){
+  let pos=el.selectionStart, oldLen=el.value.length;
+  let raw=el.value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  let num=parseInt(raw,10);
+  if(isNaN(num))return;
+  let formatted=num.toLocaleString('id-ID');
+  el.value=formatted;
+  // Jaga posisi cursor
+  let diff=formatted.length-oldLen;
+  el.setSelectionRange(pos+diff,pos+diff);
+}
+// Baca nilai numerik bersih dari input yang sudah diformat
+function getRawVal(id){
+  const el=document.getElementById(id);
+  if(!el)return 0;
+  return parseFloat(el.value.replace(/\./g,'').replace(',','.').replace(/[^0-9.]/g,''))||0;
+}
+
 /* ══════════ LIVE BTC ══════════ */
 async function fetchBTC(){
   try{
@@ -915,6 +1171,7 @@ async function fetchBTC(){
     if(!S.btcPrice){S.btcPrice=95000;S.btcPriceIDR=95000*16000;S.btcChange=2.5;S.usdIdr=16000}
     updateBTCDisplay();
   }
+  updateBTCLiveDisplay();
 }
 function updateBTCDisplay(){
   const p=S.btcPrice||95000,ch=S.btcChange||0;
@@ -923,10 +1180,150 @@ function updateBTCDisplay(){
   const safe=(id,fn)=>{const el=document.getElementById(id);if(el)fn(el)};
   safe('nav-btc',e=>e.textContent='$'+p.toLocaleString());
   safe('nav-chg',e=>{e.textContent=cs;e.style.color=cc});
+  safe('nav-btc-mob',e=>e.textContent=' $'+p.toLocaleString());
+  safe('nav-chg-mob',e=>{e.textContent=' '+cs;e.style.color=cc});
   safe('d-btc',e=>e.textContent='$'+p.toLocaleString());
   safe('d-btc-chg',e=>{e.textContent=cs;e.style.color=cc});
   safe('s-live',e=>e.textContent='$'+p.toLocaleString());
 }
+
+/* ══════════ BTC LIVE CHART ══════════ */
+let cBTCLive = null;
+let curTF = '1W';
+// Binance Kline intervals: 1h,4h,1d,1w
+const TF_CONFIG = {
+  '1D': { interval:'1h',  limit:24,   label:'1 Hari',   fmt:(t)=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
+  '1W': { interval:'4h',  limit:42,   label:'1 Minggu', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
+  '1M': { interval:'1d',  limit:30,   label:'1 Bulan',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  '1Y': { interval:'3d',  limit:122,  label:'1 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '5Y': { interval:'1w',  limit:260,  label:'5 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+};
+
+async function loadBTCChart(tf){
+  curTF = tf;
+  document.querySelectorAll('.tf-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tf===tf);
+  });
+  const cfg = TF_CONFIG[tf];
+  const loading = document.getElementById('btcc-loading');
+  const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
+  if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
+  try{
+    // Binance API — gratis, no key, reliable untuk semua timeframe
+    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`;
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('Binance error '+r.status);
+    const klines=await r.json();
+    if(!klines||!klines.length) throw new Error('no data');
+    // Binance kline: [openTime, open, high, low, close, volume, ...]
+    const labels = klines.map(k=>cfg.fmt(k[0]));
+    const vals   = klines.map(k=>parseFloat(k[4])); // close price
+    const opens  = klines.map(k=>parseFloat(k[1]));
+    const highs  = klines.map(k=>parseFloat(k[2]));
+    const lows   = klines.map(k=>parseFloat(k[3]));
+    const vols   = klines.map(k=>parseFloat(k[5]));
+    const isUp   = vals[vals.length-1] >= vals[0];
+    const color  = isUp ? '#10b981' : '#ef4444';
+    const colorBg= isUp ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
+    // OHLC
+    const hi=Math.max(...highs), lo=Math.min(...lows);
+    const op=opens[0], cl=vals[vals.length-1];
+    const lastVol=vols[vols.length-1];
+    const lastPrice=cl;
+    safe('btcc-open',  e=>e.textContent='$'+op.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('btcc-high',  e=>e.textContent='$'+hi.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('btcc-low',   e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('btcc-close', e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('btcc-vol',   e=>e.textContent='$'+(lastVol*lastPrice/1e9).toFixed(2)+'B');
+    // Destroy old chart
+    if(cBTCLive){cBTCLive.destroy();cBTCLive=null;}
+    const ctx = document.getElementById('c-btclive');
+    if(!ctx){if(loading)loading.style.display='none';return;}
+    cBTCLive = new Chart(ctx.getContext('2d'),{
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          label:'BTC/USD',
+          data:vals,
+          borderColor:color,
+          borderWidth:2,
+          pointRadius:0,
+          pointHoverRadius:4,
+          pointHoverBackgroundColor:color,
+          fill:true,
+          backgroundColor:(ctx2)=>{
+            const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);
+            g.addColorStop(0,colorBg+'0.25)');
+            g.addColorStop(1,colorBg+'0.01)');
+            return g;
+          },
+          tension:.35,
+        }]
+      },
+      options:{
+        animation:false,
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'rgba(11,17,32,.95)',
+            borderColor:color,
+            borderWidth:1,
+            titleColor:'#94a3b8',
+            bodyColor:color,
+            bodyFont:{family:'Space Mono',size:13,weight:'bold'},
+            callbacks:{
+              label:ctx=>` $${ctx.parsed.y.toLocaleString('en-US',{maximumFractionDigits:0})}`,
+            }
+          }
+        },
+        scales:{
+          x:{
+            ticks:{color:'#475569',font:{size:9},maxTicksLimit:8,maxRotation:0},
+            grid:{color:'rgba(255,255,255,0.03)'},
+            border:{display:false}
+          },
+          y:{
+            position:'right',
+            ticks:{
+              color:'#475569',font:{size:9},
+              callback:v=>'$'+v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'})
+            },
+            grid:{color:'rgba(255,255,255,0.03)'},
+            border:{display:false}
+          }
+        }
+      }
+    });
+  }catch(e){
+    console.warn('BTC chart error:',e);
+    if(loading){
+      loading.innerHTML=`<div style="text-align:center">
+        <div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div>
+        <button onclick="loadBTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">↺ Coba Lagi</button>
+      </div>`;
+      loading.style.display='flex';
+    }
+    return;
+  }
+  if(loading) loading.style.display='none';
+}
+
+function updateBTCLiveDisplay(){
+  const p=S.btcPrice||0, ch=S.btcChange||0, r=S.usdIdr||16000;
+  const isUp=ch>=0;
+  const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
+  safe('btcc-price',e=>e.textContent='$'+p.toLocaleString('en-US',{maximumFractionDigits:0}));
+  safe('btcc-idr',e=>e.textContent='≈ '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(p*r));
+  safe('btcc-badge',e=>{
+    e.textContent=(isUp?'▲ +':'▼ ')+ch.toFixed(2)+'% (24h)';
+    e.className='btc-change-badge '+(isUp?'up':'dn');
+  });
+}
+
 function updateChartsInPlace(){
   const p=S.btcPrice||95000,r=S.usdIdr;
   if(cDCA?.data){
@@ -1067,18 +1464,26 @@ function renderDCA(){
 function addDCA(){
   const date=document.getElementById('m-dca-date').value;
   const usd=parseFloat(document.getElementById('m-dca-usd').value);
-  const rate=parseFloat(document.getElementById('m-dca-rate').value)||16000;
-  const idr=parseFloat(document.getElementById('m-dca-idr').value);
+  const rate=getRawVal('m-dca-rate')||S.usdIdr||16000;
+  const idr=getRawVal('m-dca-idr');
   const note=document.getElementById('m-dca-note').value;
   if(!date||!usd||!idr){toast('Isi tanggal, harga BTC, dan jumlah IDR!',1);return}
   S.dca.push({id:Date.now().toString(),date,priceUSD:usd,kurs:rate,amountIDR:idr,btcAmount:idr/rate/usd,note});
   saveState();closeModal('modal-dca');
-  document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-idr').value='';document.getElementById('m-dca-note').value='';
+  document.getElementById('m-dca-usd').value='';
+  document.getElementById('m-dca-idr').value='';
+  document.getElementById('m-dca-note').value='';
   toast('✅ Transaksi ditambahkan!');renderDCA();
 }
 function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('🗑️ Dihapus');renderDCA()}
 function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('🗑️ Semua data DCA dihapus');renderDCA()}
-function fillBTCPrice(){if(S.btcPrice){document.getElementById('m-dca-usd').value=S.btcPrice;document.getElementById('m-dca-rate').value=S.usdIdr}}
+function fillBTCPrice(){
+  if(S.btcPrice){
+    document.getElementById('m-dca-usd').value=S.btcPrice;
+    const rateEl=document.getElementById('m-dca-rate');
+    if(rateEl) rateEl.value=(S.usdIdr||16000).toLocaleString('id-ID');
+  }
+}
 
 /* ══════════ PORTFOLIO ══════════ */
 function renderPort(){
@@ -1124,8 +1529,8 @@ function addPort(){
   const ticker=document.getElementById('m-p-ticker').value.toUpperCase();
   const type=document.getElementById('m-p-type').value;
   const qty=parseFloat(document.getElementById('m-p-qty').value);
-  const avg=parseFloat(document.getElementById('m-p-avg').value);
-  const cur=parseFloat(document.getElementById('m-p-cur').value);
+  const avg=getRawVal('m-p-avg');
+  const cur=getRawVal('m-p-cur');
   if(!name||!qty||!avg||!cur){toast('Isi semua field!',1);return}
   S.port.push({id:Date.now().toString(),name,ticker,type,qty,avgPrice:avg,currentPrice:cur});
   saveState();closeModal('modal-port');
@@ -1137,15 +1542,20 @@ function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('🗑�
 /* ══════════ SIMULATION ══════════ */
 const BTC_HIST={'2020-01':9300,'2020-02':9700,'2020-03':5300,'2020-04':8600,'2020-05':9700,'2020-06':9200,'2020-07':11000,'2020-08':11600,'2020-09':10700,'2020-10':13600,'2020-11':19700,'2020-12':28900,'2021-01':33000,'2021-02':46200,'2021-03':58900,'2021-04':57700,'2021-05':35700,'2021-06':35000,'2021-07':41500,'2021-08':47100,'2021-09':44000,'2021-10':61400,'2021-11':57800,'2021-12':47700,'2022-01':38300,'2022-02':43100,'2022-03':45500,'2022-04':40800,'2022-05':29000,'2022-06':19800,'2022-07':23300,'2022-08':20100,'2022-09':19400,'2022-10':20400,'2022-11':16500,'2022-12':16700,'2023-01':23100,'2023-02':23400,'2023-03':28500,'2023-04':29000,'2023-05':27700,'2023-06':30500,'2023-07':29700,'2023-08':26000,'2023-09':26700,'2023-10':34500,'2023-11':37900,'2023-12':42900,'2024-01':42600,'2024-02':51800,'2024-03':71000,'2024-04':63800,'2024-05':67600,'2024-06':63000,'2024-07':66600,'2024-08':60400,'2024-09':63300,'2024-10':72700,'2024-11':96800,'2024-12':97500,'2025-01':94200,'2025-02':96000};
 function syncSimInputs(){
-  if(S.btcPrice){document.getElementById('s-btc').value=S.btcPrice;document.getElementById('s-live').textContent='$'+S.btcPrice.toLocaleString()}
-  document.getElementById('s-rate').value=S.usdIdr;
+  if(S.btcPrice){
+    document.getElementById('s-btc').value=S.btcPrice;
+    const lv=document.getElementById('s-live');
+    if(lv) lv.textContent='$'+S.btcPrice.toLocaleString();
+  }
+  const rateEl=document.getElementById('s-rate');
+  if(rateEl&&S.usdIdr) rateEl.value=(S.usdIdr).toLocaleString('id-ID');
 }
 function runSim(){
-  const amt=parseFloat(document.getElementById('s-amt').value)||500000;
+  const amt=getRawVal('s-amt')||500000;
   const yr=parseInt(document.getElementById('s-start').value)||2024;
   const freq=document.getElementById('s-freq').value;
   const curP=parseFloat(document.getElementById('s-btc').value)||95000;
-  const rate=parseFloat(document.getElementById('s-rate').value)||16000;
+  const rate=getRawVal('s-rate')||16000;
   const now=new Date(2025,1,1);
   const periods=[];
   for(let y=yr;y<=2025;y++){
@@ -1214,7 +1624,7 @@ function addCF(){
   const type=document.getElementById('m-cf-type').value;
   const cat=document.getElementById('m-cf-cat').value.trim();
   const desc=document.getElementById('m-cf-desc').value;
-  const amt=parseFloat(document.getElementById('m-cf-amt').value);
+  const amt=getRawVal('m-cf-amt');
   if(!date||!cat||!amt){toast('Isi tanggal, kategori, dan jumlah!',1);return}
   S.cf.push({id:Date.now().toString(),date,type,category:cat,desc,amount:amt});
   saveState();closeModal('modal-cf');
@@ -1228,7 +1638,9 @@ function initApp(){
   const today=new Date().toISOString().split('T')[0];
   ['m-dca-date','m-cf-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
   fetchBTC();
+  loadBTCChart('1W');
   setInterval(fetchBTC,60000);
+  setInterval(()=>loadBTCChart(curTF),300000); // refresh chart tiap 5 menit
   renderDash();
   syncSimInputs();
   runSim();
@@ -1239,16 +1651,6 @@ async function boot(){
   const chk=document.getElementById('chk');
   chk.className='check-box on';chk.textContent='✓';
   document.getElementById('btn-create').disabled=false;
-
-  // Cek apakah sudah punya API key
-  const savedKey=localStorage.getItem('wo_jbin_key');
-  if(savedKey){
-    JBIN_KEY=savedKey;
-  } else {
-    // Belum ada API key → tampilkan setup screen
-    showSetupScreen();
-    return;
-  }
 
   // Try auto-login from cache
   try{
