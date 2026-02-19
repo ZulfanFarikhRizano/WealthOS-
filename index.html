@@ -471,6 +471,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <input class="sinput" id="iw3" placeholder="kata 3" autocomplete="off" spellcheck="false">
       </div>
       <div class="lerr" id="lerr">❌ Akun tidak ditemukan</div>
+      <!-- Kode Transfer — muncul otomatis saat login gagal -->
+      <div id="transfer-code-section" style="display:none;margin-bottom:.8rem;padding:.85rem;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:10px">
+        <div style="font-size:.72rem;color:var(--accent);font-weight:700;margin-bottom:.5rem">☁️ Punya Kode Transfer dari device lain?</div>
+        <input class="fi" id="transfer-code-input" placeholder="Paste Kode Transfer di sini..." style="font-size:.72rem;font-family:'Space Mono',monospace;margin-bottom:.5rem;width:100%">
+        <button type="button" class="lbtn" style="padding:.6rem;font-size:.8rem;margin-top:.3rem" onclick="loginWithTransferCode()">Login dengan Kode Transfer</button>
+      </div>
       <button type="button" class="lbtn" onclick="doLogin()">Masuk →</button>
       <div style="text-align:center;margin-top:1rem;font-size:.76rem;color:var(--muted)">
         Belum punya? <span style="color:var(--accent);cursor:pointer" onclick="switchTab('new')">Buat akun baru</span>
@@ -828,9 +834,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
+    <div style="margin-bottom:.8rem;padding:.7rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:center">
+      <div style="font-size:.72rem;color:var(--accent3);font-weight:700">✅ Login multi-device otomatis</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Cukup masukkan 3 kata seed phrase di device manapun</div>
+    </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:.5rem .8rem;border-color:var(--muted)" onclick="closeModal('modal-acct')">🔑 Ganti API Key</button>
       <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
@@ -872,54 +881,45 @@ function seedKey(a,b,c){return `${a}-${b}-${c}`}
 /* ══════════ JSONBIN CONFIG ══════════ */
 const JBIN_BASE = 'https://api.jsonbin.io/v3';
 const JBIN_KEY = '$2a$10$Ed5UlGGHnK4FiE2IGm32IuLTq6Ix9h5kcBuoYNrJPQeA7rYnSiaUm';
-// ID bin khusus yang menyimpan master index (seed → binId mapping) untuk semua device
-// Akan dibuat otomatis pertama kali, lalu ID-nya disimpan di localStorage 'wo_midx_id'
-const MASTER_IDX_NAME = 'wealthos-master-index';
 
 function getJBinKey(){ return JBIN_KEY; }
 
-// Ambil master index dari cloud (berisi semua mapping seed→binId)
-async function fetchMasterIndex(){
+// Nama bin deterministik dari seed phrase — sama di semua device
+// Format: "wo-{word1}-{word2}-{word3}"
+function seedBinName(a,b,c){ return `wo-${a}-${b}-${c}`; }
+
+// Cari binId berdasarkan nama bin (deterministik dari seed)
+// JSONBin GET /b mengembalikan list semua bins dengan metadata
+async function findBinByName(name){
+  // Cek cache lokal dulu
+  const cached=localStorage.getItem('wo_idx');
+  if(cached){
+    try{
+      const idx=JSON.parse(cached);
+      // Cari berdasarkan bin name yang disimpan
+      if(idx['__name__'+name]) return idx['__name__'+name];
+    }catch(e){}
+  }
   const k=getJBinKey();
-  // Cari bin bernama master index
-  const r=await fetch(`${JBIN_BASE}/b?page=1&pageSize=100`,{
-    headers:{'X-Master-Key':k}
-  });
+  // List semua bins dan cari yang namanya cocok
+  const r=await fetch(`${JBIN_BASE}/b`,{headers:{'X-Master-Key':k}});
   if(!r.ok) return null;
   const list=await r.json();
-  if(!list||!list.result) return null;
-  const found=list.result.find(b=>b.record?.name===MASTER_IDX_NAME||b.snippetMeta?.name===MASTER_IDX_NAME);
+  if(!Array.isArray(list)) return null;
+  // JSONBin v3 list response: array of { id, snippetMeta: { name } }
+  const found=list.find(b=>{
+    const n=b.snippetMeta?.name||b.record?.name||b.name||'';
+    return n===name;
+  });
   if(!found) return null;
-  const binId=found.record?.id||found.id;
-  localStorage.setItem('wo_midx_id',binId);
-  // Fetch isi index
-  const r2=await fetch(`${JBIN_BASE}/b/${binId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
-  if(!r2.ok) return null;
-  return {binId, data: await r2.json()};
-}
-
-// Update master index di cloud
-async function updateMasterIndex(seedKey, dataBinId){
-  const k=getJBinKey();
-  let midxId=localStorage.getItem('wo_midx_id');
-  let current={};
-  if(midxId){
-    try{
-      const r=await fetch(`${JBIN_BASE}/b/${midxId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
-      if(r.ok) current=await r.json();
-    }catch(e){}
-    current[seedKey]=dataBinId;
-    await fetch(`${JBIN_BASE}/b/${midxId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':k},body:JSON.stringify(current)});
-  } else {
-    // Buat master index bin baru
-    current[seedKey]=dataBinId;
-    const r=await fetch(`${JBIN_BASE}/b`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':MASTER_IDX_NAME,'X-Bin-Private':'true'},
-      body:JSON.stringify(current)
-    });
-    if(r.ok){const d=await r.json();midxId=d.metadata.id;localStorage.setItem('wo_midx_id',midxId);}
-  }
+  const binId=found.id||found.record?.id;
+  // Cache hasilnya
+  try{
+    const idx=JSON.parse(localStorage.getItem('wo_idx')||'{}');
+    idx['__name__'+name]=binId;
+    localStorage.setItem('wo_idx',JSON.stringify(idx));
+  }catch(e){}
+  return binId;
 }
 
 async function jbinGet(binId){
@@ -929,11 +929,12 @@ async function jbinGet(binId){
   return await r.json();
 }
 
-async function jbinCreate(data){
+async function jbinCreate(data, name){
   const k=getJBinKey(); if(!k) throw new Error('no key');
+  const binName=name||'wealthos';
   const r=await fetch(`${JBIN_BASE}/b`,{
     method:'POST',
-    headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':'wealthos','X-Bin-Private':'true'},
+    headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':binName,'X-Bin-Private':'true'},
     body:JSON.stringify(data)
   });
   if(!r.ok) throw new Error('create failed '+r.status);
@@ -951,28 +952,45 @@ async function jbinUpdate(binId, data){
   if(!r.ok) throw new Error('update failed '+r.status);
 }
 
-// Map seed → binId disimpan di localStorage index
+// Local index: cache seed → binId agar tidak perlu list bins tiap login
 function getIndex(){ try{return JSON.parse(localStorage.getItem('wo_idx')||'{}')}catch(e){return {}} }
 function setIndex(idx){ localStorage.setItem('wo_idx', JSON.stringify(idx)) }
 
 async function dbGet(seed){
   const key=seedKey(...seed);
+  const name=seedBinName(...seed);
   const idx=getIndex();
-  if(!idx[key]) return null;
-  return await jbinGet(idx[key]);
+  // 1. Cek cache lokal dulu (cepat)
+  if(idx[key]) return await jbinGet(idx[key]);
+  // 2. Tidak ada di lokal → cari di cloud berdasarkan nama deterministik
+  const binId=await findBinByName(name);
+  if(!binId) return null;
+  // Simpan ke cache lokal untuk berikutnya
+  idx[key]=binId;
+  setIndex(idx);
+  return await jbinGet(binId);
 }
 
 async function dbSet(seed, data){
   const key=seedKey(...seed);
+  const name=seedBinName(...seed);
   const idx=getIndex();
   if(idx[key]){
     await jbinUpdate(idx[key], data);
   } else {
-    const binId=await jbinCreate(data);
-    idx[key]=binId;
-    setIndex(idx);
-    // Simpan ke master cloud index agar bisa login dari device lain
-    try{ await updateMasterIndex(key, binId); }catch(e){ console.warn('master index update failed',e); }
+    // Cek dulu apakah bin dengan nama ini sudah ada di cloud
+    let binId=await findBinByName(name).catch(()=>null);
+    if(binId){
+      // Sudah ada, update saja
+      idx[key]=binId;
+      setIndex(idx);
+      await jbinUpdate(binId, data);
+    } else {
+      // Buat baru dengan nama deterministik dari seed
+      binId=await jbinCreate(data, name);
+      idx[key]=binId;
+      setIndex(idx);
+    }
   }
 }
 
@@ -1028,53 +1046,38 @@ async function doCreate(){
   }
 }
 
-/* ── PERBAIKAN FUNGSI LOGIN ── */
-async function doLogin() {
-  const w1 = document.getElementById('iw1').value.trim().toLowerCase();
-  const w2 = document.getElementById('iw2').value.trim().toLowerCase();
-  const w3 = document.getElementById('iw3').value.trim().toLowerCase();
-
-  if (!w1 || !w2 || !w3) {
-    toast('⚠️ Masukkan semua kata seed phrase!');
-    return;
-  }
-
-  const seed = [w1, w2, w3];
-  showLL('Menghubungkan ke Cloud...');
-
-  try {
-    // PERBAIKAN: Sekarang sistem mencari ke Cloud (dbGet), bukan cuma cek HP sendiri
-    const cloudData = await dbGet(seed);
-
-    if (cloudData) {
-      // Jika ketemu di cloud, simpan ke memori HP baru ini
-      S = cloudData;
-      CUR_SEED = seed;
-      
-      // Buat cache agar kedepannya login otomatis
-      localStorage.setItem('wo_cache', JSON.stringify({
-        seed: CUR_SEED,
-        data: S,
-        ts: Date.now()
-      }));
-
+async function doLogin(){
+  const w1=document.getElementById('iw1').value.trim().toLowerCase();
+  const w2=document.getElementById('iw2').value.trim().toLowerCase();
+  const w3=document.getElementById('iw3').value.trim().toLowerCase();
+  if(!w1||!w2||!w3){showLerr('Isi ketiga kata');return}
+  showLL('Mencari akun...');
+  try{
+    // dbGet otomatis: cek cache lokal → search cloud by name
+    const data=await dbGet([w1,w2,w3]);
+    if(!data){
       hideLL();
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      initApp();
-      toast('✅ Berhasil Memulihkan Akun!');
-    } else {
-      hideLL();
-      document.getElementById('lerr').style.display = 'block';
-      document.getElementById('lerr').textContent = '❌ Akun tidak ditemukan di Cloud';
+      showLerr('Akun tidak ditemukan. Pastikan seed phrase benar (huruf kecil, urutan tepat).');
+      return;
     }
-  } catch (err) {
     hideLL();
-    toast('❌ Gagal terhubung ke server. Cek internet Anda.');
-    console.error(err);
+    await enterApp([w1,w2,w3],data);
+  }catch(e){
+    hideLL();
+    // Fallback: cache lokal (offline)
+    try{
+      const raw=localStorage.getItem('wo_cache');
+      if(raw){
+        const {seed,data}=JSON.parse(raw);
+        if(seed&&seed[0]===w1&&seed[1]===w2&&seed[2]===w3){
+          await enterApp([w1,w2,w3],data);
+          toast('📱 Mode offline — data dari cache');return;
+        }
+      }
+    }catch(e2){}
+    showLerr('Gagal terhubung. Cek koneksi internet.');
   }
 }
-
 
 async function enterApp(seed,data){
   curSeed=seed; curKey=seedKey(...seed);
@@ -1099,7 +1102,14 @@ function showLL(m){
   document.getElementById('lmsg').textContent=m;
 }
 function hideLL(){document.getElementById('lloading').style.display='none'}
-function showLerr(m){document.getElementById('lerr').textContent='❌ '+m;document.getElementById('lerr').style.display='block';document.getElementById('tab-existing').style.display='block'}
+function showLerr(m){
+  document.getElementById('lerr').textContent='❌ '+m;
+  document.getElementById('lerr').style.display='block';
+  document.getElementById('tab-existing').style.display='block';
+  // Tampilkan section kode transfer saat gagal
+  const tcs=document.getElementById('transfer-code-section');
+  if(tcs) tcs.style.display='block';
+}
 
 function showAcct(){
   document.getElementById('acct-dca').textContent=S.dca.length;
@@ -1108,8 +1118,13 @@ function showAcct(){
   document.getElementById('acct-sync').textContent=lastSync?'🕐 '+lastSync.toLocaleString('id-ID'):'Belum sync';
   const row=document.getElementById('acct-seed-row');
   row.innerHTML=(curSeed||[]).map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
+  // Reset status
+  const st=document.getElementById('acct-sync-cloud-status');
+  if(st){st.style.display='none';st.textContent='';}
   openModal('modal-acct');
 }
+
+
 
 async function doLogout(){
   if(!confirm('Logout? Pastikan sudah menyimpan seed phrase!'))return;
@@ -1795,6 +1810,38 @@ async function runSimDynamic(){
   }finally{
     // SELALU aktifkan tombol kembali, apapun yang terjadi
     resetBtn();
+  }
+}
+
+// Login menggunakan kode transfer (midxId) dari device lain
+async function loginWithTransferCode(){
+  const w1=document.getElementById('iw1').value.trim().toLowerCase();
+  const w2=document.getElementById('iw2').value.trim().toLowerCase();
+  const w3=document.getElementById('iw3').value.trim().toLowerCase();
+  const codeEl=document.getElementById('transfer-code-input');
+  const code=(codeEl?codeEl.value.trim():'');
+  if(!w1||!w2||!w3){showLerr('Isi seed phrase dulu!');return}
+  if(!code){showLerr('Isi kode transfer!');return}
+  showLL('Mencari akun dengan kode transfer...');
+  try{
+    const k=getJBinKey();
+    localStorage.setItem('wo_midx_id',code);
+    const r=await fetch(JBIN_BASE+'/b/'+code+'/latest',{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
+    if(!r.ok) throw new Error('Kode transfer tidak valid');
+    const masterData=await r.json();
+    const key=seedKey(w1,w2,w3);
+    if(!masterData[key]) throw new Error('Seed phrase tidak cocok dengan kode transfer ini');
+    const idx=getIndex();
+    idx[key]=masterData[key];
+    setIndex(idx);
+    const data=await jbinGet(masterData[key]);
+    if(!data) throw new Error('Gagal ambil data akun');
+    hideLL();
+    await enterApp([w1,w2,w3],data);
+    toast('Login berhasil via kode transfer!');
+  }catch(e){
+    hideLL();
+    showLerr(e.message||'Kode transfer tidak valid');
   }
 }
 
