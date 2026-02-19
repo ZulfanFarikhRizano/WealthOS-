@@ -471,12 +471,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <input class="sinput" id="iw3" placeholder="kata 3" autocomplete="off" spellcheck="false">
       </div>
       <div class="lerr" id="lerr">❌ Akun tidak ditemukan</div>
-      <!-- Kode Transfer — muncul otomatis saat login gagal -->
-      <div id="transfer-code-section" style="display:none;margin-bottom:.8rem;padding:.85rem;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:10px">
-        <div style="font-size:.72rem;color:var(--accent);font-weight:700;margin-bottom:.5rem">☁️ Punya Kode Transfer dari device lain?</div>
-        <input class="fi" id="transfer-code-input" placeholder="Paste Kode Transfer di sini..." style="font-size:.72rem;font-family:'Space Mono',monospace;margin-bottom:.5rem;width:100%">
-        <button type="button" class="lbtn" style="padding:.6rem;font-size:.8rem;margin-top:.3rem" onclick="loginWithTransferCode()">Login dengan Kode Transfer</button>
-      </div>
+
       <button type="button" class="lbtn" onclick="doLogin()">Masuk →</button>
       <div style="text-align:center;margin-top:1rem;font-size:.76rem;color:var(--muted)">
         Belum punya? <span style="color:var(--accent);cursor:pointer" onclick="switchTab('new')">Buat akun baru</span>
@@ -878,120 +873,59 @@ function rnd3(){
 }
 function seedKey(a,b,c){return `${a}-${b}-${c}`}
 
-/* ══════════ JSONBIN CONFIG ══════════ */
-const JBIN_BASE = 'https://api.jsonbin.io/v3';
-const JBIN_KEY = '$2a$10$Ed5UlGGHnK4FiE2IGm32IuLTq6Ix9h5kcBuoYNrJPQeA7rYnSiaUm';
+/* ══════════════════════════════════════════════
+   DATABASE: Supabase — query by seed_key
+   Table: accounts (seed_key TEXT PK, data JSONB)
+   REST API: /rest/v1/accounts?seed_key=eq.xxx
+   Works dari semua device, deterministik
+══════════════════════════════════════════════ */
+const SB_URL  = 'https://kpikyqafapclyirpqflp.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c';
+const SB_HEADERS = {
+  'apikey': SB_ANON,
+  'Authorization': 'Bearer '+SB_ANON,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
 
-function getJBinKey(){ return JBIN_KEY; }
-
-// Nama bin deterministik dari seed phrase — sama di semua device
-// Format: "wo-{word1}-{word2}-{word3}"
-function seedBinName(a,b,c){ return `wo-${a}-${b}-${c}`; }
-
-// Cari binId berdasarkan nama bin (deterministik dari seed)
-// JSONBin GET /b mengembalikan list semua bins dengan metadata
-async function findBinByName(name){
-  // Cek cache lokal dulu
-  const cached=localStorage.getItem('wo_idx');
-  if(cached){
-    try{
-      const idx=JSON.parse(cached);
-      // Cari berdasarkan bin name yang disimpan
-      if(idx['__name__'+name]) return idx['__name__'+name];
-    }catch(e){}
-  }
-  const k=getJBinKey();
-  // List semua bins dan cari yang namanya cocok
-  const r=await fetch(`${JBIN_BASE}/b`,{headers:{'X-Master-Key':k}});
-  if(!r.ok) return null;
-  const list=await r.json();
-  if(!Array.isArray(list)) return null;
-  // JSONBin v3 list response: array of { id, snippetMeta: { name } }
-  const found=list.find(b=>{
-    const n=b.snippetMeta?.name||b.record?.name||b.name||'';
-    return n===name;
-  });
-  if(!found) return null;
-  const binId=found.id||found.record?.id;
-  // Cache hasilnya
-  try{
-    const idx=JSON.parse(localStorage.getItem('wo_idx')||'{}');
-    idx['__name__'+name]=binId;
-    localStorage.setItem('wo_idx',JSON.stringify(idx));
-  }catch(e){}
-  return binId;
+// GET data akun dari Supabase by seed_key
+async function sbGet(seedKey){
+  const url=`${SB_URL}/rest/v1/accounts?seed_key=eq.${encodeURIComponent(seedKey)}&select=data`;
+  const r=await fetch(url,{headers:SB_HEADERS});
+  if(!r.ok) throw new Error('sbGet failed '+r.status);
+  const rows=await r.json();
+  if(!rows||!rows.length) return null;
+  return rows[0].data;
 }
 
-async function jbinGet(binId){
-  const k=getJBinKey(); if(!k) throw new Error('no key');
-  const r=await fetch(`${JBIN_BASE}/b/${binId}/latest`,{headers:{'X-Master-Key':k,'X-Bin-Meta':'false'}});
-  if(!r.ok) throw new Error('fetch failed '+r.status);
-  return await r.json();
-}
-
-async function jbinCreate(data, name){
-  const k=getJBinKey(); if(!k) throw new Error('no key');
-  const binName=name||'wealthos';
-  const r=await fetch(`${JBIN_BASE}/b`,{
+// UPSERT data akun ke Supabase (insert atau update otomatis)
+async function sbSet(seedKey, data){
+  const url=`${SB_URL}/rest/v1/accounts`;
+  const headers={...SB_HEADERS,'Prefer':'resolution=merge-duplicates,return=minimal'};
+  const r=await fetch(url,{
     method:'POST',
-    headers:{'Content-Type':'application/json','X-Master-Key':k,'X-Bin-Name':binName,'X-Bin-Private':'true'},
-    body:JSON.stringify(data)
+    headers,
+    body:JSON.stringify({seed_key:seedKey, data, updated_at:new Date().toISOString()})
   });
-  if(!r.ok) throw new Error('create failed '+r.status);
-  const d=await r.json();
-  return d.metadata.id;
+  if(!r.ok){
+    const err=await r.text();
+    throw new Error('sbSet failed '+r.status+': '+err);
+  }
+  return true;
 }
 
-async function jbinUpdate(binId, data){
-  const k=getJBinKey(); if(!k) throw new Error('no key');
-  const r=await fetch(`${JBIN_BASE}/b/${binId}`,{
-    method:'PUT',
-    headers:{'Content-Type':'application/json','X-Master-Key':k},
-    body:JSON.stringify(data)
-  });
-  if(!r.ok) throw new Error('update failed '+r.status);
-}
-
-// Local index: cache seed → binId agar tidak perlu list bins tiap login
-function getIndex(){ try{return JSON.parse(localStorage.getItem('wo_idx')||'{}')}catch(e){return {}} }
-function setIndex(idx){ localStorage.setItem('wo_idx', JSON.stringify(idx)) }
-
+// dbGet: ambil data akun dari Supabase
 async function dbGet(seed){
   const key=seedKey(...seed);
-  const name=seedBinName(...seed);
-  const idx=getIndex();
-  // 1. Cek cache lokal dulu (cepat)
-  if(idx[key]) return await jbinGet(idx[key]);
-  // 2. Tidak ada di lokal → cari di cloud berdasarkan nama deterministik
-  const binId=await findBinByName(name);
-  if(!binId) return null;
-  // Simpan ke cache lokal untuk berikutnya
-  idx[key]=binId;
-  setIndex(idx);
-  return await jbinGet(binId);
+  const data=await sbGet(key);
+  if(!data) return null;
+  return data;
 }
 
+// dbSet: simpan/update data akun ke Supabase
 async function dbSet(seed, data){
   const key=seedKey(...seed);
-  const name=seedBinName(...seed);
-  const idx=getIndex();
-  if(idx[key]){
-    await jbinUpdate(idx[key], data);
-  } else {
-    // Cek dulu apakah bin dengan nama ini sudah ada di cloud
-    let binId=await findBinByName(name).catch(()=>null);
-    if(binId){
-      // Sudah ada, update saja
-      idx[key]=binId;
-      setIndex(idx);
-      await jbinUpdate(binId, data);
-    } else {
-      // Buat baru dengan nama deterministik dari seed
-      binId=await jbinCreate(data, name);
-      idx[key]=binId;
-      setIndex(idx);
-    }
-  }
+  await sbSet(key, data);
 }
 
 /* ══════════ STATE ══════════ */
@@ -1054,6 +988,7 @@ async function doLogin(){
   showLL('Mencari akun...');
   try{
     // dbGet otomatis: cek cache lokal → search cloud by name
+    showLL('Mencari di cloud...');
     const data=await dbGet([w1,w2,w3]);
     if(!data){
       hideLL();
@@ -1107,8 +1042,6 @@ function showLerr(m){
   document.getElementById('lerr').style.display='block';
   document.getElementById('tab-existing').style.display='block';
   // Tampilkan section kode transfer saat gagal
-  const tcs=document.getElementById('transfer-code-section');
-  if(tcs) tcs.style.display='block';
 }
 
 function showAcct(){
@@ -1834,7 +1767,8 @@ async function loginWithTransferCode(){
     const idx=getIndex();
     idx[key]=masterData[key];
     setIndex(idx);
-    const data=await jbinGet(masterData[key]);
+    // Fetch data langsung dari URL deterministik seed
+    const data=await sbGet(seedKey(w1,w2,w3));
     if(!data) throw new Error('Gagal ambil data akun');
     hideLL();
     await enterApp([w1,w2,w3],data);
