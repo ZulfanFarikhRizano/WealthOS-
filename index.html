@@ -434,8 +434,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="login-tagline">Financial Command Center · Login dengan 3 kata seed phrase</div>
 
     <div class="ltabs">
-      <div class="ltab active" id="ltab-new" onclick="switchTab('new')">🌱 Akun Baru</div>
-      <div class="ltab" id="ltab-existing" onclick="switchTab('existing')">🔑 Sudah Punya Seed</div>
+      <div class="ltab active" id="ltab-new" onclick="switchTab('new')" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M5 3a7 7 0 0 0 7 7 7 7 0 0 0 7-7"/></svg> Akun Baru</div>
+      <div class="ltab" id="ltab-existing" onclick="switchTab('existing')" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Sudah Punya Seed</div>
     </div>
 
     <!-- TAB NEW -->
@@ -449,7 +449,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="sw"><div class="sw-num">3</div><span id="sw3">···</span></div>
       </div>
 
-      <button type="button" class="lbtn-ghost" onclick="doGenerate()">🔄 Generate Ulang</button>
+      <button type="button" class="lbtn-ghost" onclick="doGenerate()" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Generate Ulang</button>
 
       <div class="seed-warn">⚠️ <strong>SIMPAN SEED PHRASE INI!</strong> Screenshot atau catat ketiga kata ini. Tidak bisa dipulihkan jika hilang.</div>
 
@@ -470,7 +470,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <input class="sinput" id="iw2" placeholder="kata 2" autocomplete="off" spellcheck="false">
         <input class="sinput" id="iw3" placeholder="kata 3" autocomplete="off" spellcheck="false">
       </div>
-      <div class="lerr" id="lerr">❌ Akun tidak ditemukan</div>
+      <div class="lerr" id="lerr">Akun tidak ditemukan</div>
 
       <button type="button" class="lbtn" onclick="doLogin()">Masuk →</button>
       <div style="text-align:center;margin-top:1rem;font-size:.76rem;color:var(--muted)">
@@ -625,7 +625,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
   <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Histori</div>
     <div style="display:flex;gap:.5rem">
-      <button class="btn btn-ghost btn-sm" onclick="clearDCA()">🗑️ Hapus Semua</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearDCA()" style="display:inline-flex;align-items:center;gap:.35rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg> Hapus Semua</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('modal-dca')">+ Tambah</button>
     </div>
   </div>
@@ -636,7 +636,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div id="page-portfolio" class="page">
   <div class="ph"><h1>Portofolio</h1><p>Semua aset investasi kamu</p></div>
   <div class="sec-hdr"><div class="sec-title">Aset</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-port')">+ Tambah Aset</button></div>
-  <div class="port-grid" id="port-cards"><div class="empty" style="grid-column:1/-1"><div class="emoji">📊</div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div></div>
+  <div class="port-grid" id="port-cards"><div class="empty" style="grid-column:1/-1"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div></div>
   <div class="sec-hdr"><div class="sec-title">Detail</div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Aset</th><th>Qty</th><th>Avg Buy</th><th>Harga Kini</th><th>Nilai</th><th>P&amp;L</th><th>Return%</th><th>Alokasi</th><th></th></tr></thead><tbody id="port-tbody"></tbody></table></div>
 </div>
@@ -682,8 +682,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Live: <span id="s-live" style="color:var(--accent)">—</span></div>
         </div>
       </div>
-      <button class="lbtn" id="s-run-btn" onclick="runSimDynamic()" style="margin-top:1rem;max-width:100%">
-        🔄 Hitung Simulasi (Ambil data Binance)
+      <button class="lbtn" id="s-run-btn" onclick="runSimDynamic()" style="margin-top:1rem;max-width:100%" style="display:inline-flex;align-items:center;gap:.4rem">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Hitung Simulasi
       </button>
       <div id="sim-fetch-status" style="font-size:.75rem;color:var(--muted);margin-top:.5rem;text-align:center;display:none"></div>
     </div>
@@ -720,9 +721,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="sim-sum-val" id="s-btcacc">0 BTC</div>
       </div>
     </div>
-    <div class="sim-card"><div class="sec-title" style="margin-bottom:.8rem">📈 Growth Curve</div><div class="chart-container"><canvas id="c-sim"></canvas></div></div>
+    <div class="sim-card"><div class="sec-title" style="margin-bottom:.8rem">Growth Curve</div><div class="chart-container"><canvas id="c-sim"></canvas></div></div>
     <div class="sim-card">
-      <div class="sec-title" style="margin-bottom:.8rem">📋 Detail Per Periode</div>
+      <div class="sec-title" style="margin-bottom:.8rem">Detail Per Periode</div>
       <div class="sim-tbl-wrap"><table><thead><tr><th>Periode</th><th>Harga BTC</th><th>DCA</th><th>BTC Dibeli</th><th>Total BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="s-tbody"></tbody></table></div>
     </div>
   </div>
@@ -749,10 +750,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="overlay" id="modal-dca">
   <div class="modal">
     <div class="modal-title">₿ Tambah Transaksi DCA</div>
-    <div class="fg"><label class="fl">Tanggal</label><input type="date" class="fi" id="m-dca-date"></div>
+    <div class="fg"><label class="fl">Tanggal</label><input type="date" class="fi" id="m-dca-date" onchange="onDCADateChange(this.value)"></div>
     <div class="frow">
-      <div class="fg"><label class="fl">Harga BTC (USD)</label><input type="number" class="fi" id="m-dca-usd" placeholder="95000">
-      <div style="font-size:.7rem;color:var(--accent);margin-top:.3rem;cursor:pointer" onclick="fillBTCPrice()">↩ Pakai harga sekarang</div></div>
+      <div class="fg"><label class="fl">Harga BTC (USD)</label>
+        <div style="position:relative">
+          <input type="text" class="fi" id="m-dca-usd" placeholder="66.000" inputmode="numeric" oninput="fmtInputUSD(this)" autocomplete="off">
+          <div id="m-dca-usd-loading" style="display:none;position:absolute;right:.8rem;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted)">⏳ Mengambil...</div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:.4rem">
+          <div style="font-size:.7rem;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:.25rem" onclick="fillBTCPrice()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+            Pakai harga sekarang
+          </div>
+          <div style="font-size:.7rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:.25rem" onclick="fillBTCPriceByDate()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Pakai harga di tanggal ini
+          </div>
+        </div>
+      </div>
       <div class="fg"><label class="fl">Kurs USD/IDR</label><input type="text" class="fi" id="m-dca-rate" value="16.000" inputmode="numeric" oninput="fmtInput(this)"></div>
     </div>
     <div class="fg"><label class="fl">Jumlah Investasi (IDR)</label><input type="text" class="fi" id="m-dca-idr" placeholder="500.000" inputmode="numeric" oninput="fmtInput(this)"></div>
@@ -808,7 +823,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <div class="overlay" id="modal-acct">
   <div class="modal">
-    <div class="modal-title">🔐 Info Akun</div>
+    <div class="modal-title" style="display:flex;align-items:center;gap:.5rem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Info Akun</div>
     <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem">
       <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem">Seed Phrase</div>
       <div class="seed-row" id="acct-seed-row" style="margin:0"></div>
@@ -830,12 +845,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
     <div style="margin-bottom:.8rem;padding:.7rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:center">
-      <div style="font-size:.72rem;color:var(--accent3);font-weight:700">✅ Login multi-device otomatis</div>
+      <div style="font-size:.72rem;color:var(--accent3);font-weight:700">Login multi-device aktif</div>
       <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Cukup masukkan 3 kata seed phrase di device manapun</div>
     </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()">🚪 Logout</button>
+      <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
     </div>
   </div>
 </div>
@@ -931,6 +946,7 @@ async function dbSet(seed, data){
 /* ══════════ STATE ══════════ */
 const S={btcPrice:null,btcPriceIDR:null,btcChange:null,usdIdr:16000,dca:[],port:[],cf:[]};
 let curSeed=null, curKey=null, lastSync=null, syncTmr=null;
+const SVG_CLK='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 
 /* ══════════ LOGIN ══════════ */
 let genSeed=null, confirmed=true;
@@ -1006,7 +1022,7 @@ async function doLogin(){
         const {seed,data}=JSON.parse(raw);
         if(seed&&seed[0]===w1&&seed[1]===w2&&seed[2]===w3){
           await enterApp([w1,w2,w3],data);
-          toast('📱 Mode offline — data dari cache');return;
+          toast('Mode offline — data lokal');return;
         }
       }
     }catch(e2){}
@@ -1048,7 +1064,7 @@ function showAcct(){
   document.getElementById('acct-dca').textContent=S.dca.length;
   document.getElementById('acct-port').textContent=S.port.length;
   document.getElementById('acct-cf').textContent=S.cf.length;
-  document.getElementById('acct-sync').textContent=lastSync?'🕐 '+lastSync.toLocaleString('id-ID'):'Belum sync';
+  document.getElementById('acct-sync').textContent=lastSync?SVG_CLK+' '+lastSync.toLocaleString('id-ID'):'Belum sync';
   const row=document.getElementById('acct-seed-row');
   row.innerHTML=(curSeed||[]).map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
   // Reset status
@@ -1198,7 +1214,7 @@ async function fetchBTC(){
   updateBTCLiveDisplay();
 }
 function updateBTCDisplay(){
-  const p=S.btcPrice||95000,ch=S.btcChange||0;
+  const p=S.btcPrice,ch=S.btcChange||0;
   const cs=(ch>=0?'+':'')+ch.toFixed(2)+'%';
   const cc=ch>=0?'var(--accent3)':'var(--danger)';
   const safe=(id,fn)=>{const el=document.getElementById(id);if(el)fn(el)};
@@ -1377,7 +1393,7 @@ function updateBTCLiveDisplay(){
 }
 
 function updateChartsInPlace(){
-  const p=S.btcPrice||95000,r=S.usdIdr;
+  const p=S.btcPrice,r=S.usdIdr;
   if(cDCA?.data){
     const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
     if(sorted.length){cDCA.data.datasets[0].data=sorted.map(e=>Math.round(e.btcAmount*p*r/1e3));cDCA.update('none')}
@@ -1416,7 +1432,8 @@ function mkBarChart(id,labels,datasets){
 
 /* ══════════ DASHBOARD ══════════ */
 function refreshDashStats(){
-  const p=S.btcPrice||95000,r=S.usdIdr;
+  const p=S.btcPrice,r=S.usdIdr||16000;
+  if(!p) return;
   let ti=0,tb=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb+=e.btcAmount});
   const cv=tb*p*r,pnl=cv-ti,pp=ti>0?pnl/ti*100:0;
   let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
@@ -1435,7 +1452,7 @@ function renderDash(){
   const today=new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   document.getElementById('dash-date').textContent='Terakhir diperbarui: '+today;
 
-  const p=S.btcPrice||95000,r=S.usdIdr;
+  const p=S.btcPrice,r=S.usdIdr;
   // Recent table
   const recent=[...S.dca].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const tb=document.getElementById('d-recent');
@@ -1468,7 +1485,7 @@ function renderDash(){
 
 /* ══════════ DCA ══════════ */
 function refreshDCAStats(){
-  const p=S.btcPrice||95000,r=S.usdIdr;
+  const p=S.btcPrice,r=S.usdIdr;
   let ti=0,tb=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb+=e.btcAmount});
   const cv=tb*p*r,pnl=cv-ti,pp=ti>0?pnl/ti*100:0,avg=tb>0?ti/tb/r:0;
   const q=id=>document.getElementById(id);
@@ -1481,11 +1498,12 @@ function refreshDCAStats(){
 }
 function renderDCA(){
   refreshDCAStats();
-  const p=S.btcPrice||95000,r=S.usdIdr;
+  const p=S.btcPrice,r=S.usdIdr||16000;
+  if(!p){setTimeout(renderDCA,600);return;}
   const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
   const tb=document.getElementById('dca-tbody');
   if(!sorted.length){
-    tb.innerHTML='<tr><td colspan="11"><div class="empty"><div class="emoji">₿</div><h3>Belum ada transaksi DCA</h3><p>Klik Tambah Transaksi</p></div></td></tr>';
+    tb.innerHTML='<tr><td colspan="11"><div class="empty"><div class="empty-icon" style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#f7931a22,#f7931a44);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 8.5c-.83-1-2-1.5-3-1.5-2.21 0-4 1.79-4 4s1.79 4 4 4c1 0 2.17-.5 3-1.5"/><path d="M9 12h6"/></svg></div><h3>Belum ada transaksi DCA</h3><p>Klik Tambah Transaksi</p></div></td></tr>';
   }else{
     tb.innerHTML=sorted.map((e,i)=>{
       const cv=e.btcAmount*p*r,pnl=cv-e.amountIDR,pp=pnl/e.amountIDR*100;
@@ -1515,25 +1533,79 @@ function renderDCA(){
 }
 function addDCA(){
   const date=document.getElementById('m-dca-date').value;
-  const usd=parseFloat(document.getElementById('m-dca-usd').value);
+  const usd=getRawUSD('m-dca-usd');
   const rate=getRawVal('m-dca-rate')||S.usdIdr||16000;
   const idr=getRawVal('m-dca-idr');
   const note=document.getElementById('m-dca-note').value;
   if(!date||!usd||!idr){toast('Isi tanggal, harga BTC, dan jumlah IDR!',1);return}
   S.dca.push({id:Date.now().toString(),date,priceUSD:usd,kurs:rate,amountIDR:idr,btcAmount:idr/rate/usd,note});
   saveState();closeModal('modal-dca');
-  document.getElementById('m-dca-usd').value='';
+  document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-date').value='';
   document.getElementById('m-dca-idr').value='';
   document.getElementById('m-dca-note').value='';
   toast('✅ Transaksi ditambahkan!');renderDCA();
 }
-function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('🗑️ Dihapus');renderDCA()}
-function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('🗑️ Semua data DCA dihapus');renderDCA()}
+function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('Dihapus');renderDCA()}
+function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('Semua data DCA dihapus');renderDCA()}
+// Format angka USD dengan titik sebagai pemisah ribuan
+function fmtInputUSD(el){
+  const raw=el.value.replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  el.value=parseInt(raw,10).toLocaleString('id-ID');
+}
+
+// Ambil nilai raw dari field USD (hapus titik)
+function getRawUSD(id){
+  const v=document.getElementById(id).value.replace(/[^0-9]/g,'');
+  return v?parseFloat(v):0;
+}
+
+// Pakai harga BTC sekarang
 function fillBTCPrice(){
   if(S.btcPrice){
-    document.getElementById('m-dca-usd').value=S.btcPrice;
+    document.getElementById('m-dca-usd').value=Math.round(S.btcPrice).toLocaleString('id-ID');
     const rateEl=document.getElementById('m-dca-rate');
     if(rateEl) rateEl.value=(S.usdIdr||16000).toLocaleString('id-ID');
+  }
+}
+
+// Auto-fill harga saat tanggal berubah (fetch dari Binance)
+async function onDCADateChange(dateStr){
+  if(!dateStr) return;
+  const today=new Date().toISOString().slice(0,10);
+  if(dateStr>=today){
+    // Tanggal hari ini atau masa depan → pakai harga sekarang
+    fillBTCPrice(); return;
+  }
+  await fillBTCPriceByDate(dateStr);
+}
+
+// Fetch harga BTC historis dari Binance berdasarkan tanggal
+async function fillBTCPriceByDate(dateStr){
+  const d=dateStr||document.getElementById('m-dca-date').value;
+  if(!d){toast('Pilih tanggal dulu!',1);return;}
+  const loading=document.getElementById('m-dca-usd-loading');
+  const input=document.getElementById('m-dca-usd');
+  if(loading) loading.style.display='block';
+  try{
+    const ts=new Date(d).getTime();
+    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`;
+    const r=await fetch(url);
+    const data=await r.json();
+    if(data&&data[0]){
+      const closePrice=parseFloat(data[0][4]);
+      input.value=Math.round(closePrice).toLocaleString('id-ID');
+      // Update kurs juga jika tersedia
+      const rateEl=document.getElementById('m-dca-rate');
+      if(rateEl&&S.usdIdr) rateEl.value=S.usdIdr.toLocaleString('id-ID');
+      toast('Harga BTC '+d+' terisi otomatis');
+    } else {
+      toast('Harga historis tidak tersedia, isi manual',1);
+    }
+  }catch(e){
+    toast('Gagal ambil harga historis',1);
+  }finally{
+    if(loading) loading.style.display='none';
   }
 }
 
@@ -1544,7 +1616,7 @@ function renderPort(){
   const cards=document.getElementById('port-cards');
   const tb=document.getElementById('port-tbody');
   if(!S.port.length){
-    cards.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="emoji">📊</div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div>';
+    cards.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div>';
     tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">—</td></tr>';return;
   }
   cards.innerHTML=S.port.map(x=>{
@@ -1552,7 +1624,7 @@ function renderPort(){
     return`<div class="port-card">
       <div class="port-top">
         <div style="display:flex;align-items:center;gap:.6rem">
-          <div class="asset-icon">${ICONS[x.type]||'💼'}</div>
+          <div class="asset-icon">${ICONS[x.type]||'○'}</div>
           <div><div class="asset-name">${x.name}</div><div class="asset-ticker">${x.ticker}</div></div>
         </div>
         <button class="btn-del" onclick="delPort('${x.id}')">✕</button>
@@ -1566,7 +1638,7 @@ function renderPort(){
   tb.innerHTML=S.port.map(x=>{
     const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=pnl/inv*100;
     return`<tr>
-      <td>${ICONS[x.type]||'💼'} <strong>${x.name}</strong> <span style="color:var(--muted);font-size:.7rem">${x.ticker}</span></td>
+      <td>${ICONS[x.type]||'○'} <strong>${x.name}</strong> <span style="color:var(--muted);font-size:.7rem">${x.ticker}</span></td>
       <td>${x.qty}</td><td>${fmtIDR(x.avgPrice)}</td><td>${fmtIDR(x.currentPrice)}</td>
       <td>${fmtIDR(val)}</td>
       <td class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''} ${fmtIDR(pnl)}</td>
@@ -1589,7 +1661,7 @@ function addPort(){
   ['m-p-name','m-p-ticker','m-p-qty','m-p-avg','m-p-cur'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Aset ditambahkan!');renderPort();
 }
-function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('🗑️ Dihapus');renderPort()}
+function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('Dihapus');renderPort()}
 
 /* ══════════ SIMULATION DINAMIS ══════════ */
 let simPriceCache = {}; // cache harga per tanggal dari Binance
@@ -1653,7 +1725,7 @@ async function runSimDynamic(){
 
   // ── SELALU reset tombol, apapun yang terjadi ──
   const resetBtn=()=>{
-    if(btn){btn.disabled=false;btn.textContent='🔄 Hitung Simulasi';}
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Hitung Simulasi';}
   };
 
   const startDate=document.getElementById('s-startdate').value;
@@ -1662,7 +1734,7 @@ async function runSimDynamic(){
   const freq=document.getElementById('s-freq').value;
   const amt=getRawVal('s-amt')||500000;
   const rate=getRawVal('s-rate')||S.usdIdr||16000;
-  const curP=S.btcPrice||95000;
+  const curP=S.btcPrice;
 
   if(!startDate){toast('Pilih tanggal mulai DCA!',1);return}
   if(new Date(startDate)>=new Date(endDate)){toast('Tanggal mulai harus sebelum tanggal akhir!',1);return}
@@ -1792,11 +1864,11 @@ function renderCF(){
   q('cf-net').textContent=fmtIDR(net);q('cf-net').className='sval '+(net>=0?'pos':'neg');
   q('cf-pct').textContent=pct.toFixed(1)+'%';
   const tb=q('cf-tbody');
-  if(!S.cf.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="emoji">💰</div><h3>Belum ada transaksi</h3><p>Mulai catat keuangan kamu</p></div></td></tr>'}
+  if(!S.cf.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Belum ada transaksi</h3><p>Mulai catat keuangan kamu</p></div></td></tr>'}
   else{
     const sorted=[...S.cf].sort((a,b)=>new Date(b.date)-new Date(a.date));
     const TC={income:'bb',expense:'br',investment:'bg'};
-    const TL={income:'📥 Pemasukan',expense:'📤 Pengeluaran',investment:'📊 Investasi'};
+    const TL={income:'Pemasukan',expense:'Pengeluaran',investment:'Investasi'};
     tb.innerHTML=sorted.map(e=>`<tr><td>${e.date}</td><td style="color:var(--muted)">${e.category}</td><td>${e.desc||'—'}</td><td><span class="badge ${TC[e.type]}">${TL[e.type]}</span></td><td class="${e.type==='income'?'pos':e.type==='expense'?'neg':'acc'}">${e.type==='income'?'+':'-'} ${fmtIDR(e.amount)}</td><td><button class="btn-del" onclick="delCF('${e.id}')">✕</button></td></tr>`).join('');
   }
   // chart
@@ -1823,7 +1895,7 @@ function addCF(){
   ['m-cf-cat','m-cf-desc','m-cf-amt'].forEach(id=>document.getElementById(id).value='');
   toast('✅ Transaksi ditambahkan!');renderCF();
 }
-function delCF(id){S.cf=S.cf.filter(e=>e.id!==id);saveState();toast('🗑️ Dihapus');renderCF()}
+function delCF(id){S.cf=S.cf.filter(e=>e.id!==id);saveState();toast('Dihapus');renderCF()}
 
 /* ══════════ INIT ══════════ */
 function initApp(){
@@ -1862,7 +1934,7 @@ async function boot(){
         }catch(e){}
         // Fallback ke cache lokal
         hideLL();await enterApp(seed,data);
-        toast('📱 Data dari cache lokal');return;
+        toast('Data dari cache lokal');return;
       }
     }
   }catch(e){}
