@@ -1831,46 +1831,55 @@ async function fetchChartData(cfg){
 // Ambil harga BTC historis di tanggal tertentu
 // Primary: Kraken OHLC (data dari 2013, CORS terbuka, akurat)
 // Fallback: CoinGecko history
+// ── Cache harga historis BTC (isi saat pertama kali dibutuhkan) ──
+let _histCache=null; // [[timestamp_sec, price], ...]
+let _histCacheLoading=null; // Promise, agar tidak fetch 2x bersamaan
+
+async function getHistCache(){
+  if(_histCache) return _histCache;
+  if(_histCacheLoading) return _histCacheLoading;
+
+  _histCacheLoading=(async()=>{
+    // Gunakan PERSIS interval yang sama dengan chart 10Y yang sudah terbukti works
+    // interval=21600 (15-day candles), since = 10 tahun lalu
+    // 720 candles x 15 hari = 10800 hari = ~29 tahun → cover semua data BTC
+    const since=Math.floor(Date.now()/1000)-10*365*86400;
+    try{
+      const data=await krakenOHLC(21600, since);
+      if(data&&data.length>0){_histCache=data;return data;}
+    }catch(e){ console.warn('Kraken histCache gagal:', e.message); }
+    // Fallback: coba interval weekly (10080)
+    try{
+      const data=await krakenOHLC(10080, since);
+      if(data&&data.length>0){_histCache=data;return data;}
+    }catch(e){ console.warn('Kraken weekly histCache gagal:', e.message); }
+    return null;
+  })();
+  const result=await _histCacheLoading;
+  _histCacheLoading=null;
+  return result;
+}
+
 async function cgPriceAt(dateStr){
   const dt=new Date(dateStr);
   const tsFrom=Math.floor(dt.getTime()/1000);
-  const tsTo=tsFrom+86400; // +1 hari
 
-  // ── Sumber 1: CoinGecko market_chart/range ──
-  // Endpoint ini paling reliable, CORS terbuka dari localhost maupun domain publik
+  // ── Sumber 1: Kraken historical cache (SAMA dengan chart 10Y yang sudah works) ──
   try{
-    const url=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${tsFrom-3600}&to=${tsTo}`;
-    const r=await fetchWithTimeout(url, 15000);
-    if(r.ok){
-      const d=await r.json();
-      if(d?.prices?.length){
-        // Cari harga yang paling dekat dengan tanggal target
-        const target=tsFrom*1000;
-        let best=null,bestDiff=Infinity;
-        for(const [ts,p] of d.prices){
-          const diff=Math.abs(ts-target);
-          if(diff<bestDiff){bestDiff=diff;best=p;}
-        }
-        if(best&&best>10) return {price:best, source:'CoinGecko'};
-      }
-    }
-  }catch(e){ console.warn('CoinGecko range gagal:', e.message); }
-
-  // ── Sumber 2: Kraken OHLC harian ──
-  try{
-    const since=tsFrom-86400*2;
-    const data=await krakenOHLC(1440, since);
-    if(data&&data.length){
+    const cache=await getHistCache();
+    if(cache&&cache.length){
+      // Cari candle terdekat dengan tanggal target
       let best=null,bestDiff=Infinity;
-      for(const [ts,p] of data){
+      for(const [ts,p] of cache){
         const diff=Math.abs(ts-tsFrom);
-        if(diff<bestDiff&&diff<86400*2){bestDiff=diff;best=p;}
+        if(diff<bestDiff){bestDiff=diff;best=p;}
       }
-      if(best&&best>10) return {price:best, source:'Kraken'};
+      // Toleransi max 20 hari (cukup untuk interval 15-day candle)
+      if(best&&best>10&&bestDiff<86400*20) return {price:best, source:'Kraken'};
     }
-  }catch(e){ console.warn('Kraken history gagal:', e.message); }
+  }catch(e){ console.warn('Kraken histCache lookup gagal:', e.message); }
 
-  // ── Sumber 3: CoinGecko /history by date ──
+  // ── Sumber 2: CoinGecko /history by date (fallback) ──
   try{
     const dd=String(dt.getDate()).padStart(2,'0');
     const mm=String(dt.getMonth()+1).padStart(2,'0');
@@ -2487,40 +2496,11 @@ async function bulkFetchHistoricalPrices(dates){
   if(daysDiff<=60)  krakenInt=240;      // 4h untuk ≤2 bulan (lebih akurat)
   if(daysDiff<=14)  krakenInt=60;       // hourly untuk ≤2 minggu
 
-  // Mundur sedikit lebih jauh untuk memastikan data awal ter-cover
-  const sinceBuffer = krakenInt <= 60 ? 3600*2 : krakenInt <= 1440 ? 86400*2 : 86400*7;
-  const since=Math.floor(startDt.getTime()/1000)-sinceBuffer;
-
-  // Coba CoinGecko market_chart dulu (lebih reliable dari localhost/mobile)
-  try{
-    const cgDays=daysDiff+2;
-    const cgUrl=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${cgDays}&interval=daily`;
-    const cgR=await fetchWithTimeout(cgUrl, 15000);
-    if(cgR.ok){
-      const cgD=await cgR.json();
-      if(cgD?.prices?.length){
-        // Map setiap tanggal ke harga CoinGecko terdekat
-        missing.forEach(dateStr=>{
-          const target=new Date(dateStr).getTime();
-          let best=null,bestDiff=Infinity;
-          for(const [ts,p] of cgD.prices){
-            const diff=Math.abs(ts-target);
-            if(diff<bestDiff&&diff<86400*2*1000){bestDiff=diff;best=p;}
-          }
-          if(best&&best>10){simPriceCache[dateStr]=best;result[dateStr]=best;}
-        });
-        // Kalau semua tanggal sudah terisi dari CoinGecko, return langsung
-        const stillMissing2=missing.filter(d=>!result[d]);
-        if(stillMissing2.length===0){
-          dates.forEach(d=>{if(simPriceCache[d])result[d]=simPriceCache[d];});
-          return result;
-        }
-      }
-    }
-  }catch(eCG){ console.warn('CoinGecko bulk gagal, coba Kraken:', eCG.message); }
+  // Gunakan histCache yang sama dengan chart & DCA form (sudah terbukti works)
+  const since=Math.floor(Date.now()/1000)-10*365*86400; // tidak dipakai jika cache ada
 
   try{
-    const ohlc=await krakenOHLC(krakenInt, since);
+    const ohlc=(await getHistCache()) || await krakenOHLC(krakenInt, Math.floor(startDt.getTime()/1000)-86400*7);
     // ohlc = [[timestamp_sec, close_price], ...]
     // Map setiap tanggal ke harga Kraken terdekat
     missing.forEach(dateStr=>{
