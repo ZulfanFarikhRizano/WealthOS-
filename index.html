@@ -702,7 +702,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5T</button>
           <button class="tf-btn" data-tf="10Y" onclick="loadBTCChart('10Y')">10T</button>
         </div>
-        <div style="font-size:.65rem;color:var(--muted);text-align:right">via Binance · auto refresh 60s</div>
+        <div style="font-size:.65rem;color:var(--muted);text-align:right">via CoinGecko · auto refresh 60s</div>
       </div>
     </div>
     <div class="btc-chart-container">
@@ -1760,42 +1760,105 @@ function updateBTCDisplay(){
   safe('s-live',e=>e.textContent='$'+p.toLocaleString());
 }
 
-/* ══════════ BINANCE CORS-SAFE FETCH ══════════ */
-// Binance API langsung diblokir browser (CORS policy) kecuali dari domain Binance sendiri.
-// Solusi: gunakan proxy publik dengan fallback berantai.
-const BINANCE_PROXIES = [
-  url => `https://api.binance.com/api/v3/klines?${url}`, // langsung (works di beberapa env)
-  url => `https://corsproxy.io/?${encodeURIComponent('https://api.binance.com/api/v3/klines?'+url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.binance.com/api/v3/klines?'+url)}`,
-];
+/* ══════════ CHART DATA — Multi-source dengan fallback ══════════ */
+// Sumber 1: CoinCap API (CORS terbuka penuh, no rate limit, no API key)
+// Sumber 2: CoinGecko (fallback jika CoinCap gagal)
+// Binance API TIDAK dipakai — diblokir CORS di semua browser mobile
 
-async function binanceFetch(params){
-  let lastErr;
-  for(const proxyFn of BINANCE_PROXIES){
+const TF_CONFIG = {
+  '1D': { days:1,    ccInterval:'m5',  ccLabel:'bitcoin', label:'1 Hari',   fmt:(t)=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
+  '1W': { days:7,    ccInterval:'h1',  ccLabel:'bitcoin', label:'1 Minggu', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
+  '1M': { days:30,   ccInterval:'h6',  ccLabel:'bitcoin', label:'1 Bulan',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  '1Y': { days:365,  ccInterval:'d1',  ccLabel:'bitcoin', label:'1 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '3Y': { days:1095, ccInterval:'d1',  ccLabel:'bitcoin', label:'3 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '5Y': { days:1825, ccInterval:'d1',  ccLabel:'bitcoin', label:'5 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '10Y':{ days:3650, ccInterval:'d1',  ccLabel:'bitcoin', label:'10 Tahun', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
+};
+
+// Helper: fetch dengan timeout
+async function fetchWithTimeout(url, ms=12000){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(), ms);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
+    return r;
+  }catch(e){clearTimeout(tid);throw e;}
+}
+
+// Sumber 1: CoinCap — gratis, CORS terbuka, stabil
+async function coincapMarketChart(days, interval){
+  const end=Date.now();
+  const start=end - days*24*60*60*1000;
+  const url=`https://api.coincap.io/v2/assets/bitcoin/history?interval=${interval}&start=${start}&end=${end}`;
+  const r=await fetchWithTimeout(url, 10000);
+  if(!r.ok) throw new Error('CoinCap HTTP '+r.status);
+  const d=await r.json();
+  if(!d||!d.data||!d.data.length) throw new Error('CoinCap empty');
+  // CoinCap: [{priceUsd, time, date}, ...]
+  return d.data.map(p=>([p.time, parseFloat(p.priceUsd)]));
+}
+
+// Sumber 2: CoinGecko — fallback
+async function cgMarketChart(days){
+  const url=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${days}`;
+  const r=await fetchWithTimeout(url, 12000);
+  if(!r.ok) throw new Error('CoinGecko HTTP '+r.status);
+  const d=await r.json();
+  if(!d||!d.prices||!d.prices.length) throw new Error('CoinGecko empty');
+  return d.prices; // [[timestamp, price], ...]
+}
+
+// Master fetch chart: coba CoinCap dulu, fallback CoinGecko
+async function fetchChartData(cfg){
+  try{
+    const data=await coincapMarketChart(cfg.days, cfg.ccInterval);
+    return data;
+  }catch(e1){
+    console.warn('CoinCap gagal, coba CoinGecko:', e1.message);
     try{
-      const r = await fetch(proxyFn(params), {signal: AbortSignal.timeout(8000)});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const d = await r.json();
-      if(Array.isArray(d) && d.length) return d;
-      throw new Error('empty');
-    }catch(e){ lastErr=e; }
+      const data=await cgMarketChart(cfg.days);
+      return data;
+    }catch(e2){
+      throw new Error('Semua sumber gagal: '+e2.message);
+    }
   }
-  throw lastErr || new Error('Semua proxy gagal');
+}
+
+// Harga historis untuk DCA/simulasi — CoinCap dulu, fallback CoinGecko
+async function cgPriceAt(dateStr){
+  // Coba CoinCap: ambil data 1 hari di tanggal tersebut
+  try{
+    const dt=new Date(dateStr);
+    const start=dt.getTime();
+    const end=start+24*60*60*1000;
+    const url=`https://api.coincap.io/v2/assets/bitcoin/history?interval=h1&start=${start}&end=${end}`;
+    const r=await fetchWithTimeout(url, 8000);
+    if(r.ok){
+      const d=await r.json();
+      if(d&&d.data&&d.data.length){
+        // Ambil harga close (last point of day)
+        return parseFloat(d.data[d.data.length-1].priceUsd);
+      }
+    }
+  }catch(e){}
+  // Fallback CoinGecko history
+  const dt=new Date(dateStr);
+  const dd=String(dt.getDate()).padStart(2,'0');
+  const mm=String(dt.getMonth()+1).padStart(2,'0');
+  const yyyy=dt.getFullYear();
+  const url=`https://api.coingecko.com/api/v3/coins/bitcoin/history?date=${dd}-${mm}-${yyyy}&localization=false`;
+  const r=await fetchWithTimeout(url, 10000);
+  if(!r.ok) throw new Error('CoinGecko history HTTP '+r.status);
+  const d=await r.json();
+  const price=d?.market_data?.current_price?.usd;
+  if(!price) throw new Error('no price');
+  return price;
 }
 
 /* ══════════ BTC LIVE CHART ══════════ */
 let cBTCLive = null;
 let curTF = '1W';
-// Binance Kline intervals
-const TF_CONFIG = {
-  '1D': { interval:'1h',  limit:24,   label:'1 Hari',   fmt:(t)=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
-  '1W': { interval:'4h',  limit:42,   label:'1 Minggu', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
-  '1M': { interval:'1d',  limit:30,   label:'1 Bulan',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
-  '1Y': { interval:'3d',  limit:122,  label:'1 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '3Y': { interval:'1w',  limit:156,  label:'3 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '5Y': { interval:'1w',  limit:260,  label:'5 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '10Y':{ interval:'1w',  limit:520,  label:'10 Tahun', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
-};
 
 async function loadBTCChart(tf){
   curTF = tf;
@@ -1807,28 +1870,23 @@ async function loadBTCChart(tf){
   const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
   if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
   try{
-    // Binance API via CORS-safe proxy (direct fetch diblokir browser)
-    const klines=await binanceFetch(`symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`);
-    // Binance kline: [openTime, open, high, low, close, volume, ...]
-    const labels = klines.map(k=>cfg.fmt(k[0]));
-    const vals   = klines.map(k=>parseFloat(k[4])); // close price
-    const opens  = klines.map(k=>parseFloat(k[1]));
-    const highs  = klines.map(k=>parseFloat(k[2]));
-    const lows   = klines.map(k=>parseFloat(k[3]));
-    const vols   = klines.map(k=>parseFloat(k[5]));
+    // Multi-source: CoinCap (primary) → CoinGecko (fallback) — semua CORS terbuka
+    const prices=await fetchChartData(cfg);
+    // prices = [[timestamp, price], ...]
+    const labels = prices.map(p=>cfg.fmt(p[0]));
+    const vals   = prices.map(p=>p[1]);
     const isUp   = vals[vals.length-1] >= vals[0];
     const color  = isUp ? '#10b981' : '#ef4444';
     const colorBg= isUp ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
-    // OHLC
-    const hi=Math.max(...highs), lo=Math.min(...lows);
-    const op=opens[0], cl=vals[vals.length-1];
-    const lastVol=vols[vols.length-1];
-    const lastPrice=cl;
+    // OHLC approx dari data harga
+    const hi=Math.max(...vals), lo=Math.min(...vals);
+    const op=vals[0], cl=vals[vals.length-1];
+    const lastVol=0; // volume tidak tersedia di CoinCap history
     safe('btcc-open',  e=>e.textContent='$'+op.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('btcc-high',  e=>e.textContent='$'+hi.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('btcc-low',   e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('btcc-close', e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
-    safe('btcc-vol',   e=>e.textContent='$'+(lastVol*lastPrice/1e9).toFixed(2)+'B');
+    safe('btcc-vol',   e=>e.textContent='$'+(lastVol/1e9).toFixed(2)+'B');
     // Return periode
     const retPct=(cl-op)/op*100;
     const retUsd=cl-op;
@@ -2257,44 +2315,20 @@ async function fillBTCPriceByDate(dateStr){
   const COINGECKO_START=new Date('2013-04-28'); // CoinGecko earliest data
 
   try{
-    let price=null;
-    let source='';
-
-    if(dateObj>=BINANCE_START){
-      // === BINANCE: data akurat dari Aug 2017 ===
-      const ts=dateObj.getTime();
-      const data=await binanceFetch(`symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`);
-      if(data&&data[0]){
-        price=parseFloat(data[0][4]); // close price
-        source='Binance';
-      }
+    // CoinGecko history: data tersedia dari Apr 2013
+    const COINGECKO_START=new Date('2013-04-28');
+    if(dateObj<COINGECKO_START){
+      toast('Data sebelum Apr 2013 tidak tersedia via API. Masukkan harga manual.',1);
+      input.placeholder='Masukkan manual';
+      input.focus();
+      return;
     }
-
-    if(price===null&&dateObj>=COINGECKO_START){
-      // === COINGECKO: data dari Apr 2013 ===
-      const dd=String(dateObj.getDate()).padStart(2,'0');
-      const mm=String(dateObj.getMonth()+1).padStart(2,'0');
-      const yyyy=dateObj.getFullYear();
-      const cgDate=`${dd}-${mm}-${yyyy}`;
-      const url=`https://api.coingecko.com/api/v3/coins/bitcoin/history?date=${cgDate}&localization=false`;
-      const r=await fetch(url);
-      const data=await r.json();
-      if(data?.market_data?.current_price?.usd){
-        price=data.market_data.current_price.usd;
-        source='CoinGecko';
-      }
-    }
-
-    if(price!==null){
+    const price=await cgPriceAt(d);
+    if(price){
       input.value=Math.round(price).toLocaleString('id-ID');
       const rateEl=document.getElementById('m-dca-rate');
       if(rateEl&&S.usdIdr) rateEl.value=S.usdIdr.toLocaleString('id-ID');
-      toast(`Harga BTC ${d} dari ${source}: $${Math.round(price).toLocaleString('id-ID')}`);
-    } else if(dateObj<COINGECKO_START){
-      // Pre-2013: tidak ada API gratis
-      toast(`Data sebelum Apr 2013 tidak tersedia via API. Masukkan harga manual.`,1);
-      input.placeholder='Masukkan manual (misal: 4 untuk $4)';
-      input.focus();
+      toast(`Harga BTC ${d} dari CoinGecko: $${Math.round(price).toLocaleString('id-ID')}`);
     } else {
       toast('Harga historis tidak tersedia, coba isi manual',1);
     }
@@ -2385,13 +2419,8 @@ function syncSimInputs(){
 async function fetchBTCPriceAt(dateStr){
   if(simPriceCache[dateStr]) return simPriceCache[dateStr];
   try{
-    const ts=new Date(dateStr).getTime();
-    const d=await binanceFetch(`symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`);
-    if(d&&d[0]){
-      const price=parseFloat(d[0][4]); // close price
-      simPriceCache[dateStr]=price;
-      return price;
-    }
+    const price=await cgPriceAt(dateStr);
+    if(price){simPriceCache[dateStr]=price;return price;}
   }catch(e){}
   return null;
 }
