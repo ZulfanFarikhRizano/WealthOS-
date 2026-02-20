@@ -1420,6 +1420,12 @@ async function sbSet(seedKey, data){
 }
 
 // dbGet: ambil data akun dari Supabase
+async function sbDelete(seedKey){
+  const url=`${SB_URL}/rest/v1/accounts?seed_key=eq.${encodeURIComponent(seedKey)}`;
+  const r=await fetch(url,{method:'DELETE',headers:SB_HEADERS});
+  if(!r.ok) throw new Error('sbDelete failed: '+r.status);
+}
+
 async function dbGet(seed){
   const key=seedKey(...seed);
   const data=await sbGet(key);
@@ -2131,29 +2137,33 @@ async function confirmChangeSeed(){
     const currentData = {...S};
     // 2. Simpan ke seed baru
     await dbSet(pendingNewSeed, currentData);
-    // 3. Update cache localStorage dengan seed baru
+    // 3. Hapus seed lama dari Supabase
+    const oldSeedKey = seedKey(...curSeed);
+    try{ await sbDelete(oldSeedKey); }
+    catch(e){ console.warn('Gagal hapus seed lama (tidak kritis):', e); }
+    // 4. Update cache localStorage dengan seed baru
     localStorage.setItem('wo_cache', JSON.stringify({seed: pendingNewSeed, data: currentData}));
     localStorage.setItem('wo_theme', localStorage.getItem('wo_theme')||'dark');
-    // 4. Update session
+    // 5. Update session
     const oldSeed = [...curSeed];
     curSeed = pendingNewSeed;
     curKey = seedKey(...curSeed);
-    // 5. Tampilkan konfirmasi
+    // 6. Tampilkan konfirmasi
     const confirmedRow = document.getElementById('confirmed-seed-display');
     if(confirmedRow){
       confirmedRow.innerHTML = curSeed.map((w,i)=>
         `<div class="sw" style="border-color:var(--accent3)"><div class="sw-num">${i+1}</div>${w}</div>`
       ).join('');
     }
-    // 6. Update tampilan di nav topstrip
+    // 7. Update tampilan di nav topstrip
     const navAcct = document.getElementById('nav-acct');
     const navAcctMob = document.getElementById('nav-acct-mob');
     if(navAcct) navAcct.textContent = curSeed.join(' · ');
     if(navAcctMob) navAcctMob.textContent = curSeed.join(' · ');
-    // 7. Update modal akun
+    // 8. Update modal akun
     const seedRow = document.getElementById('acct-seed-row');
     if(seedRow) seedRow.innerHTML = curSeed.map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
-    // 8. Tampilkan step 2
+    // 9. Tampilkan step 2
     document.getElementById('change-seed-step1').style.display='none';
     document.getElementById('change-seed-step2').style.display='block';
     toast('Seed phrase berhasil diganti!');
