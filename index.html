@@ -2740,7 +2740,7 @@ boot();
 
 
 /* ══════════════════════════════════════════════════════════════════
-   EXPORT PDF v6 — Premium Design, Print-safe SVG, Cyan/Purple brand
+   EXPORT PDF v7 — Fixed SVG charts, fixed print layout
 ══════════════════════════════════════════════════════════════════ */
 async function exportPDF(){
   const p=S.btcPrice||0, r=S.usdIdr||16000;
@@ -2756,7 +2756,6 @@ async function exportPDF(){
   const btcVal=tb*p*r, dcaPnl=btcVal-ti, dcaPnlPct=ti>0?dcaPnl/ti*100:0;
   const avgBuyUSD=tb>0?ti/tb/r:0;
   const dcaAsc=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const dcaDesc=[...dcaAsc].reverse();
   let portTotal=0,portInvest=0;
   S.port.forEach(x=>{portTotal+=x.qty*x.currentPrice;portInvest+=x.qty*x.avgPrice});
   const portPnl=portTotal-portInvest,portPnlPct=portInvest>0?portPnl/portInvest*100:0;
@@ -2770,420 +2769,423 @@ async function exportPDF(){
   /* ─── FORMATTERS ─── */
   const idr=n=>{n=Math.round(n);const a=Math.abs(n),s=n<0?'-':'';if(a>=1e12)return s+'Rp '+(a/1e12).toFixed(2)+'T';if(a>=1e9)return s+'Rp '+(a/1e9).toFixed(2)+'M';if(a>=1e6)return s+'Rp '+(a/1e6).toFixed(2)+'jt';return s+'Rp '+a.toLocaleString('id-ID');};
   const pct=(n,sign=true)=>(sign&&n>=0?'+':'')+n.toFixed(2)+'%';
-  const clr=n=>n>=0?'#059669':'#dc2626';
+  const gc=n=>n>=0?'#059669':'#ef4444';
   const arr=n=>n>=0?'▲':'▼';
 
-  /* ─── PRINT-SAFE SVG CHARTS ─── */
-  /* Key: use inline styles only, no CSS classes, explicit fill/stroke on every element */
-
-  function growthSVG(W,H){
-    if(dcaAsc.length<1) return `<svg width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#f8fafc" rx="6"/><text x="${W/2}" y="${H/2+4}" text-anchor="middle" fill="#9ca3af" font-size="13" font-family="Arial,sans-serif">Belum ada data DCA</text></svg>`;
-    let cumBTC=0,cumIDR=0;
-    const pts=dcaAsc.map(e=>{cumBTC+=e.btcAmount||0;cumIDR+=e.amountIDR||0;return{val:Math.round(cumBTC*p*r),inv:Math.round(cumIDR),d:e.date};});
-    const maxV=Math.max(...pts.map(x=>Math.max(x.val,x.inv)),1);
-    const PL=68,PR=16,PT=16,PB=36,iW=W-PL-PR,iH=H-PT-PB;
-    const sx=i=>PL+(i/(Math.max(pts.length-1,1)))*iW;
-    const sy=v=>PT+iH*(1-v/maxV);
-    // Grid lines
-    const grids=[0,0.25,0.5,0.75,1].map(t=>{
-      const v=t*maxV,y=sy(v);
-      const lbl=v>=1e9?(v/1e9).toFixed(1)+'M':v>=1e6?(v/1e6).toFixed(1)+'jt':v>=1e3?(v/1e3).toFixed(0)+'rb':Math.round(v).toString();
-      return `<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="0.8"/><text x="${(PL-5).toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#6b7280" font-size="9" font-family="Arial,sans-serif">${lbl}</text>`;
-    }).join('');
-    // X labels (max 6)
-    const step=Math.max(1,Math.ceil(pts.length/6));
-    const xlbls=pts.filter((_,i)=>i%step===0||i===pts.length-1).map((_,_i,arr2)=>{
-      const origIdx=dcaAsc.indexOf(pts.filter((_,i)=>i%step===0||i===pts.length-1)[_i]);
-      const x=sx(dcaAsc.indexOf(pts.filter((_,i)=>i%step===0||i===pts.length-1)[_i]));
-      return `<text x="${x.toFixed(1)}" y="${(PT+iH+14).toFixed(1)}" text-anchor="middle" fill="#6b7280" font-size="8.5" font-family="Arial,sans-serif">${pts.filter((_,i)=>i%step===0||i===pts.length-1)[_i].d.slice(0,7)}</text>`;
-    }).join('');
-    // Area fill
-    const vPts=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.val).toFixed(1)}`).join(' ');
-    const iPts=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.inv).toFixed(1)}`).join(' ');
-    const base=PT+iH;
-    const vArea=`${PL},${base} ${vPts} ${W-PR},${base}`;
-    const iArea=`${PL},${base} ${iPts} ${W-PR},${base}`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-      <rect width="${W}" height="${H}" fill="white" rx="4"/>
-      ${grids}
-      <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${base}" stroke="#e5e7eb" stroke-width="1"/>
-      <polygon points="${vArea}" fill="rgba(5,150,105,0.10)"/>
-      <polygon points="${iArea}" fill="rgba(0,229,255,0.08)"/>
-      <polyline points="${vPts}" fill="none" stroke="#059669" stroke-width="2.2" stroke-linejoin="round"/>
-      <polyline points="${iPts}" fill="none" stroke="#00b8d9" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="5,3"/>
-      ${xlbls}
-    </svg>`;
+  /* ─── SVG CHARTS (fully self-contained, no CSS dependency) ─── */
+  function makeSVG(w,h,content){
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;width:${w}px;height:${h}px">${content}</svg>`;
   }
 
-  function pnlBarSVG(W,H){
-    if(!dcaAsc.length) return `<svg width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#f8fafc" rx="4"/><text x="${W/2}" y="${H/2+4}" text-anchor="middle" fill="#9ca3af" font-size="13" font-family="Arial,sans-serif">Belum ada data</text></svg>`;
+  function growthSVG(){
+    const W=660,H=180;
+    if(!dcaAsc.length){
+      return makeSVG(W,H,`<rect width="${W}" height="${H}" fill="#f9fafb" rx="4"/><text x="${W/2}" y="${H/2+5}" text-anchor="middle" fill="#9ca3af" font-size="12" font-family="Arial">Belum ada data DCA</text>`);
+    }
+    let cumBTC=0,cumIDR=0;
+    const pts=dcaAsc.map(e=>{
+      cumBTC+=e.btcAmount||0; cumIDR+=e.amountIDR||0;
+      return {val:Math.round(cumBTC*p*r), inv:Math.round(cumIDR), d:e.date};
+    });
+    const PL=62,PR=12,PT=12,PB=32;
+    const iW=W-PL-PR, iH=H-PT-PB;
+    const maxV=Math.max(...pts.map(x=>Math.max(x.val,x.inv)),1);
+    const sx=i=>PL+i/(Math.max(pts.length-1,1))*iW;
+    const sy=v=>PT+iH*(1-v/maxV);
+    // Grid
+    let g='';
+    [0,0.25,0.5,0.75,1].forEach(t=>{
+      const v=t*maxV,y=sy(v);
+      const lv=v>=1e6?(v/1e6).toFixed(1)+'jt':v>=1e3?(v/1e3).toFixed(0)+'rb':Math.round(v)+'';
+      g+=`<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="0.7"/>`;
+      g+=`<text x="${(PL-4).toFixed(1)}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#9ca3af" font-size="8" font-family="Arial">${lv}</text>`;
+    });
+    // X labels (pick up to 7 evenly)
+    const step=Math.max(1,Math.ceil(pts.length/7));
+    for(let i=0;i<pts.length;i++){
+      if(i%step===0||i===pts.length-1){
+        const x=sx(i);
+        g+=`<line x1="${x.toFixed(1)}" y1="${PT}" x2="${x.toFixed(1)}" y2="${(PT+iH).toFixed(1)}" stroke="#f3f4f6" stroke-width="0.7"/>`;
+        g+=`<text x="${x.toFixed(1)}" y="${(PT+iH+14).toFixed(1)}" text-anchor="middle" fill="#9ca3af" font-size="8" font-family="Arial">${pts[i].d.slice(0,7)}</text>`;
+      }
+    }
+    // Area + lines
+    const vp=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.val).toFixed(1)}`).join(' ');
+    const ip=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.inv).toFixed(1)}`).join(' ');
+    const base=(PT+iH).toFixed(1);
+    const vArea=`${PL},${base} ${vp} ${(W-PR).toFixed(1)},${base}`;
+    const iArea=`${PL},${base} ${ip} ${(W-PR).toFixed(1)},${base}`;
+    return makeSVG(W,H,`
+      <rect width="${W}" height="${H}" fill="white"/>
+      <rect x="${PL}" y="${PT}" width="${iW}" height="${iH}" fill="#fafeff"/>
+      ${g}
+      <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${base}" stroke="#d1d5db" stroke-width="1"/>
+      <polygon points="${iArea}" fill="#e0f9ff" opacity="0.6"/>
+      <polygon points="${vArea}" fill="#d1fae5" opacity="0.7"/>
+      <polyline points="${ip}" fill="none" stroke="#06b6d4" stroke-width="1.8" stroke-dasharray="5,3"/>
+      <polyline points="${vp}" fill="none" stroke="#059669" stroke-width="2.2"/>
+    `);
+  }
+
+  function pnlBarSVG(){
+    const W=660,H=110;
+    if(!dcaAsc.length){
+      return makeSVG(W,H,`<rect width="${W}" height="${H}" fill="#f9fafb" rx="4"/><text x="${W/2}" y="${H/2+5}" text-anchor="middle" fill="#9ca3af" font-size="12" font-family="Arial">Belum ada data</text>`);
+    }
     const pnls=dcaAsc.map(e=>(e.btcAmount||0)*p*r-e.amountIDR);
     const maxA=Math.max(...pnls.map(Math.abs),1);
-    const PL=12,PR=12,PT=12,PB=12,iW=W-PL-PR,iH=(H-PT-PB)/2,midY=PT+iH;
-    const bW=Math.max(4,Math.min(18,(iW/pnls.length)*0.6));
-    const bars=pnls.map((v,i)=>{
-      const x=PL+(i/(Math.max(pnls.length-1,1)))*(iW-bW);
-      const h=Math.abs(v)/maxA*iH;
+    const PL=12,PR=12,PT=10,PB=10;
+    const iW=W-PL-PR, iH=(H-PT-PB)/2, midY=PT+iH;
+    const n=pnls.length;
+    const bW=Math.max(3,Math.min(16,iW/n*0.6));
+    let bars='';
+    pnls.forEach((v,i)=>{
+      const x=PL+(i/(Math.max(n-1,1)))*(iW-bW);
+      const h=Math.max(Math.abs(v)/maxA*iH,2);
       const c=v>=0?'#059669':'#ef4444';
       const y=v>=0?midY-h:midY;
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bW.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" fill="${c}" rx="2" opacity="0.85"/>`;
-    }).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-      <rect width="${W}" height="${H}" fill="white" rx="4"/>
-      <line x1="${PL}" y1="${midY}" x2="${W-PR}" y2="${midY}" stroke="#d1d5db" stroke-width="1.2"/>
-      <text x="${PL+2}" y="${PT+10}" fill="#059669" font-size="8" font-family="Arial,sans-serif" font-weight="bold">UNTUNG</text>
-      <text x="${PL+2}" y="${H-3}" fill="#ef4444" font-size="8" font-family="Arial,sans-serif" font-weight="bold">RUGI</text>
+      bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bW.toFixed(1)}" height="${h.toFixed(1)}" fill="${c}" rx="2" opacity="0.8"/>`;
+    });
+    return makeSVG(W,H,`
+      <rect width="${W}" height="${H}" fill="white"/>
+      <line x1="${PL}" y1="${midY.toFixed(1)}" x2="${W-PR}" y2="${midY.toFixed(1)}" stroke="#d1d5db" stroke-width="1.5"/>
+      <text x="${PL+2}" y="${PT+9}" fill="#059669" font-size="8" font-family="Arial" font-weight="bold">▲ UNTUNG</text>
+      <text x="${PL+2}" y="${H-2}" fill="#ef4444" font-size="8" font-family="Arial" font-weight="bold">▼ RUGI</text>
       ${bars}
-    </svg>`;
+    `);
   }
 
-  /* ─── PAGE TEMPLATE ─── */
-  const PG=(content,pg,tot)=>`<div class="pg">
-    <div class="pg-hdr">
-      <div class="pg-hdr-bg"></div>
-      <div class="pg-hdr-inner">
-        <div class="logo-wrap">
-          <span class="logo-w">Wealth</span><span class="logo-os">OS</span>
-          <div class="logo-sub">Financial Command Center</div>
-        </div>
-        <div class="pg-hdr-right">
-          <div class="pg-report-title">LAPORAN KEUANGAN</div>
-          <div class="pg-meta">Per ${dateStr}</div>
-          <div class="pg-meta">Akun: ${seedDisplay}</div>
-        </div>
-      </div>
+  /* ─── HTML TEMPLATE ─── */
+  const css=`
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;background:#cbd5e1}
+
+/* SAVE BAR */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:999;height:56px;
+  background:linear-gradient(90deg,#0891b2,#7c3aed);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.topbar-left .t1{font-weight:800;font-size:14px;color:#fff}
+.topbar-left .t2{font-size:9.5px;color:rgba(255,255,255,.7);margin-top:1px}
+.btn-pdf{background:#fff;color:#0891b2;border:none;border-radius:9px;
+  padding:9px 20px;font-size:13px;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.btn-pdf:hover{background:#ecfeff}
+@media print{.topbar{display:none!important}}
+
+/* PAGES */
+.wrap{padding:72px 16px 16px}
+.pg{width:210mm;margin:0 auto 20px;background:#fff;
+  box-shadow:0 4px 24px rgba(0,0,0,.15);
+  page-break-after:always;break-after:page;
+  display:flex;flex-direction:column;overflow:hidden}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  body{background:#fff!important}
+  .wrap{padding:0!important}
+  .pg{width:100%!important;margin:0!important;box-shadow:none!important;min-height:100vh;page-break-after:always;break-after:page}
+  svg{display:block!important;overflow:visible!important}
+  @page{size:A4 portrait;margin:0}
+}
+
+/* PAGE HEADER */
+.ph{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;
+  background:linear-gradient(90deg,#0891b2 0%,#06b6d4 45%,#7c3aed 100%);
+  flex-shrink:0}
+.ph-logo-main{font-size:19px;font-weight:900;letter-spacing:-.3px}
+.ph-logo-w{color:#fff}
+.ph-logo-os{color:#bae6fd}
+.ph-logo-sub{font-size:8px;color:rgba(255,255,255,.65);letter-spacing:.06em;margin-top:1px}
+.ph-right{text-align:right}
+.ph-title{font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.05em}
+.ph-meta{font-size:8px;color:rgba(255,255,255,.75);margin-top:1.5px}
+
+/* PAGE BODY + FOOTER */
+.pb{flex:1;padding:12px 15px 6px}
+.pf{padding:5px 15px 6px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:7.5px;color:#9ca3af;flex-shrink:0}
+
+/* SECTION */
+.s{margin-bottom:6px;margin-top:11px}
+.s:first-child{margin-top:0}
+.s-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0891b2;
+  border-bottom:2px solid #bae6fd;padding-bottom:3px;padding-left:8px;position:relative}
+.s-t::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#0891b2,#7c3aed);border-radius:2px}
+.s-sub{font-size:8.5px;color:#6b7280;margin-top:2px;padding-left:8px}
+
+/* CARDS */
+.c4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+.card{border-radius:7px;padding:8px 10px;border:1px solid #e5e7eb;background:#fff;border-top-width:3px}
+.card-l{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:4px;font-weight:700}
+.card-v{font-size:13px;font-weight:800;color:#111;line-height:1.2;word-break:break-all}
+.card-s{font-size:8.5px;margin-top:3px}
+
+/* TABLE */
+.t{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:9px}
+.t thead tr{background:linear-gradient(90deg,#0891b2,#0e7490)}
+.t th{padding:5px 7px;font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:#fff;font-weight:700;text-align:left;white-space:nowrap}
+.t td{padding:4.5px 7px;border-bottom:1px solid #f0f4f8;color:#374151;vertical-align:middle}
+.t tbody tr:nth-child(even) td{background:#f8fbff}
+.t tfoot td{background:#eff6ff!important;font-weight:700;font-size:9.5px;border-top:2px solid #bfdbfe;padding:5px 7px;color:#1e40af}
+.kl{color:#6b7280;width:25%}.vl{width:25%}
+.fw{font-weight:700}.er{text-align:center;color:#9ca3af;padding:14px!important;font-style:italic}
+
+/* CHART */
+.leg{display:flex;gap:12px;margin:3px 0 5px 2px}
+.li{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#374151}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.cb{border:1px solid #e5e7eb;border-radius:5px;overflow:hidden;margin-bottom:8px;background:#fff;line-height:0}
+
+/* CF */
+.cf4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+.cfc{border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;background:#fff}
+.cfl{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:4px;font-weight:700}
+.cfv{font-size:14px;font-weight:800;color:#111}
+
+/* COLORS */
+.g{color:#059669!important}.r{color:#ef4444!important}.c{color:#06b6d4!important}.m{color:#6b7280!important}
+`;
+
+  /* PAGE BUILDERS */
+  const PH=(pg,tot)=>`<div class="ph">
+    <div>
+      <div class="ph-logo-main"><span class="ph-logo-w">Wealth</span><span class="ph-logo-os">OS</span></div>
+      <div class="ph-logo-sub">Financial Command Center</div>
     </div>
-    <div class="pg-body">${content}</div>
-    <div class="pg-ftr">
-      <span>WealthOS — Laporan Keuangan Konfidensial</span>
-      <span>Generate: ${dateStr} ${timeStr} WIB &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</span>
-      <span>Halaman ${pg} dari ${tot}</span>
+    <div class="ph-right">
+      <div class="ph-title">LAPORAN KEUANGAN</div>
+      <div class="ph-meta">Per ${dateStr}</div>
+      <div class="ph-meta">Akun: ${seedDisplay} &nbsp;·&nbsp; Hal. ${pg}/${tot}</div>
     </div>
   </div>`;
 
-  const SEC=(title,sub='')=>`<div class="sec"><div class="sec-ttl">${title}</div>${sub?`<div class="sec-sub">${sub}</div>`:''}</div>`;
-
-  const CARD=(accent,label,value,sub='',subClass='')=>`<div class="card" style="border-top:3px solid ${accent}">
-    <div class="card-lbl">${label}</div>
-    <div class="card-val">${value}</div>
-    ${sub?`<div class="card-sub ${subClass}">${sub}</div>`:''}
+  const PF=(pg,tot)=>`<div class="pf">
+    <span>WealthOS — Laporan Keuangan Konfidensial</span>
+    <span>Generate: ${dateStr} ${timeStr} WIB &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</span>
+    <span>Halaman ${pg} dari ${tot}</span>
   </div>`;
 
-  const TBL=(heads,body,foot='')=>`<table class="tbl">
+  const SEC=(t,s='')=>`<div class="s"><div class="s-t">${t}</div>${s?`<div class="s-sub">${s}</div>`:''}</div>`;
+
+  const CARD=(color,label,val,sub='',sc='')=>`<div class="card" style="border-top-color:${color}">
+    <div class="card-l">${label}</div>
+    <div class="card-v">${val}</div>
+    ${sub?`<div class="card-s ${sc}">${sub}</div>`:''}
+  </div>`;
+
+  const TBL=(heads,rows,foot='')=>`<table class="t">
     <thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-    <tbody>${body}</tbody>
+    <tbody>${rows}</tbody>
     ${foot?`<tfoot><tr>${foot}</tr></tfoot>`:''}
   </table>`;
 
-  /* ══ PAGE 1 — IKHTISAR ══ */
-  const P1=PG(`
-    ${SEC('I. IKHTISAR KEUANGAN','Ringkasan posisi keuangan per '+dateStr)}
-    <div class="cards4">
-      ${CARD('#059669','TOTAL NILAI PORTOFOLIO',idr(grandTotal),arr(grandPnl)+' '+pct(grandPnlPct)+' dari modal',grandPnl>=0?'pos':'neg')}
-      ${CARD('#00b8d9','TOTAL MODAL DIINVESTASIKAN',idr(totalInvest),'DCA + Aset lainnya','muted')}
-      ${CARD('#f59e0b','UNREALIZED P&amp;L','<span class="'+(grandPnl>=0?'pos':'neg')+'">'+(grandPnl>=0?'+':'')+idr(grandPnl)+'</span>',pct(grandPnlPct)+' return keseluruhan',grandPnl>=0?'pos':'neg')}
-      ${CARD('#7c3aed','KAS BERSIH',idr(cfNet),'Pemasukan - pengeluaran - investasi','muted')}
+  const TOT=6;
+
+  /* PAGE 1 */
+  const P1=`<div class="pg">
+    ${PH(1,TOT)}
+    <div class="pb">
+      ${SEC('I. Ikhtisar Keuangan','Ringkasan posisi keuangan per '+dateStr)}
+      <div class="c4">
+        ${CARD('#059669','Total Nilai Portofolio',idr(grandTotal),arr(grandPnl)+' '+pct(grandPnlPct)+' dari modal',grandPnl>=0?'g':'r')}
+        ${CARD('#06b6d4','Total Modal Diinvestasikan',idr(totalInvest),'DCA + Aset lainnya','m')}
+        ${CARD('#f59e0b','Unrealized P&L','<span class="'+(grandPnl>=0?'g':'r')+'">'+(grandPnl>=0?'+':'')+idr(grandPnl)+'</span>',pct(grandPnlPct)+' return keseluruhan',grandPnl>=0?'g':'r')}
+        ${CARD('#7c3aed','Kas Bersih',idr(cfNet),'Pemasukan - pengeluaran - investasi','m')}
+      </div>
+      ${SEC('II. Rincian Per Kategori')}
+      ${TBL(
+        ['Kategori','Modal Masuk','Nilai Sekarang','P&L (IDR)','Return'],
+        `<tr><td class="fw">Bitcoin DCA</td><td>${idr(ti)}</td><td>${idr(btcVal)}</td><td class="${dcaPnl>=0?'g':'r'}">${dcaPnl>=0?'+':''} ${idr(dcaPnl)}</td><td class="${dcaPnl>=0?'g':'r'}">${pct(dcaPnlPct)}</td></tr>
+         <tr><td class="fw">Portofolio Aset</td><td>${idr(portInvest)}</td><td>${idr(portTotal)}</td><td class="${portPnl>=0?'g':'r'}">${portPnl>=0?'+':''} ${idr(portPnl)}</td><td class="${portPnl>=0?'g':'r'}">${pct(portPnlPct)}</td></tr>
+         <tr><td class="fw">Arus Kas Bersih</td><td>${idr(cfInc)}</td><td>—</td><td class="${cfNet>=0?'g':'r'}">${cfNet>=0?'+ ':''}${idr(cfNet)}</td><td>—</td></tr>`,
+        `<td class="fw">TOTAL</td><td class="fw">${idr(totalInvest)}</td><td class="fw">${idr(grandTotal)}</td><td class="fw ${grandPnl>=0?'g':'r'}">${grandPnl>=0?'+':''} ${idr(grandPnl)}</td><td class="fw ${grandPnl>=0?'g':'r'}">${pct(grandPnlPct)}</td>`
+      )}
+      ${SEC('III. Informasi Bitcoin Live')}
+      <table class="t">
+        <tbody>
+          <tr><td class="kl">Harga BTC saat ini</td><td class="fw" style="color:#f59e0b">$${p.toLocaleString('en-US')} USD</td><td class="kl">Kurs USD/IDR</td><td>Rp ${Math.round(r).toLocaleString('id-ID')}</td></tr>
+          <tr><td class="kl">Perubahan 24 jam</td><td class="fw ${(S.btcChange||0)>=0?'g':'r'}">${arr(S.btcChange||0)} ${pct(S.btcChange||0,false)}</td><td class="kl">BTC dalam IDR</td><td>${idr(p*r)}</td></tr>
+          <tr><td class="kl">Avg Buy Price (DCA)</td><td class="fw">$${Math.round(avgBuyUSD).toLocaleString('en-US')}</td><td class="kl">Total BTC diperoleh</td><td class="fw" style="color:#f59e0b">${tb.toFixed(8)} BTC</td></tr>
+        </tbody>
+      </table>
     </div>
-    ${SEC('II. RINCIAN PER KATEGORI')}
-    ${TBL(
-      ['KATEGORI','MODAL MASUK','NILAI SEKARANG','P&L (IDR)','RETURN'],
-      `<tr><td class="fw">Bitcoin DCA</td><td>${idr(ti)}</td><td>${idr(btcVal)}</td><td class="${clr(dcaPnl)==='#059669'?'pos':'neg'}">${dcaPnl>=0?'+':''} ${idr(dcaPnl)}</td><td class="${clr(dcaPnl)==='#059669'?'pos':'neg'}">${pct(dcaPnlPct)}</td></tr>
-       <tr><td class="fw">Portofolio Aset</td><td>${idr(portInvest)}</td><td>${idr(portTotal)}</td><td class="${clr(portPnl)==='#059669'?'pos':'neg'}">${portPnl>=0?'+':''} ${idr(portPnl)}</td><td class="${clr(portPnl)==='#059669'?'pos':'neg'}">${pct(portPnlPct)}</td></tr>
-       <tr><td class="fw">Arus Kas Bersih</td><td>${idr(cfInc)}</td><td>—</td><td class="${clr(cfNet)==='#059669'?'pos':'neg'}">${cfNet>=0?'+ ':''} ${idr(cfNet)}</td><td>—</td></tr>`,
-      `<td class="fw">TOTAL</td><td class="fw">${idr(totalInvest)}</td><td class="fw">${idr(grandTotal)}</td><td class="fw ${grandPnl>=0?'pos':'neg'}">${grandPnl>=0?'+':''} ${idr(grandPnl)}</td><td class="fw ${grandPnl>=0?'pos':'neg'}">${pct(grandPnlPct)}</td>`
-    )}
-    ${SEC('III. INFORMASI BITCOIN LIVE')}
-    <table class="tbl info-tbl">
-      <tbody>
-        <tr><td class="kl">Harga BTC saat ini</td><td class="vl fw" style="color:#f59e0b">$${p.toLocaleString('en-US')} USD</td><td class="kl">Kurs USD/IDR</td><td class="vl">Rp ${Math.round(r).toLocaleString('id-ID')}</td></tr>
-        <tr><td class="kl">Perubahan 24 jam</td><td class="vl fw" style="color:${clr(S.btcChange||0)}">${arr(S.btcChange||0)} ${pct(S.btcChange||0,false)}</td><td class="kl">BTC dalam IDR</td><td class="vl">${idr(p*r)}</td></tr>
-        <tr><td class="kl">Avg Buy Price (DCA)</td><td class="vl fw">$${Math.round(avgBuyUSD).toLocaleString('en-US')}</td><td class="kl">Total BTC diperoleh</td><td class="vl fw" style="color:#f59e0b">${tb.toFixed(8)} BTC</td></tr>
-      </tbody>
-    </table>
-  `,1,6);
+    ${PF(1,TOT)}
+  </div>`;
 
-  /* ══ PAGE 2 — CHARTS ══ */
-  const P2=PG(`
-    ${SEC('IV. GRAFIK PERTUMBUHAN PORTOFOLIO DCA','Nilai portofolio vs modal yang diinvestasikan sepanjang waktu')}
-    <div class="leg"><span class="li"><span class="ld" style="background:#059669"></span>Nilai Portofolio</span><span class="li"><span class="ld" style="background:#00b8d9"></span>Modal Masuk</span></div>
-    <div class="chart-box">${growthSVG(680,195)}</div>
-    ${SEC('V. P&L PER ENTRY DCA','Untung/rugi tiap transaksi berdasarkan harga BTC terkini')}
-    <div class="leg"><span class="li"><span class="ld" style="background:#059669"></span>Untung</span><span class="li"><span class="ld" style="background:#ef4444"></span>Rugi</span></div>
-    <div class="chart-box">${pnlBarSVG(680,130)}</div>
-  `,2,6);
+  /* PAGE 2 — CHARTS */
+  const P2=`<div class="pg">
+    ${PH(2,TOT)}
+    <div class="pb">
+      ${SEC('IV. Grafik Pertumbuhan Portofolio DCA','Nilai portofolio vs modal yang diinvestasikan sepanjang waktu')}
+      <div class="leg">
+        <span class="li"><span class="ld" style="background:#059669"></span>Nilai Portofolio</span>
+        <span class="li"><span class="ld" style="background:#06b6d4;opacity:.7"></span>Modal Masuk</span>
+      </div>
+      <div class="cb">${growthSVG()}</div>
+      ${SEC('V. P&L Per Entry DCA','Untung/rugi tiap transaksi berdasarkan harga BTC terkini')}
+      <div class="leg">
+        <span class="li"><span class="ld" style="background:#059669"></span>Untung</span>
+        <span class="li"><span class="ld" style="background:#ef4444"></span>Rugi</span>
+      </div>
+      <div class="cb">${pnlBarSVG()}</div>
+    </div>
+    ${PF(2,TOT)}
+  </div>`;
 
-  /* ══ PAGE 3 — DCA STATS + TABLE ══ */
-  const dcaBody=dcaAsc.map((e,i)=>{
+  /* PAGE 3 — DCA */
+  const dcaRows=dcaAsc.map((e,i)=>{
     const cv=(e.btcAmount||0)*p*r,pnl=cv-e.amountIDR,pp=e.amountIDR>0?pnl/e.amountIDR*100:0;
     return `<tr>
-      <td style="color:#6b7280;text-align:center">${i+1}</td>
+      <td style="text-align:center;color:#9ca3af">${i+1}</td>
       <td>${e.date}</td>
       <td style="text-align:right">$${Math.round(e.priceUSD||0).toLocaleString('en-US')}</td>
       <td style="text-align:right">${idr(e.amountIDR)}</td>
       <td style="text-align:right;color:#f59e0b">${(e.btcAmount||0).toFixed(8)}</td>
       <td style="text-align:right">${idr(cv)}</td>
-      <td style="text-align:right" class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''} ${idr(Math.abs(pnl))}</td>
-      <td style="text-align:center"><span style="padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;background:${pnl>=0?'rgba(5,150,105,.12)':'rgba(239,68,68,.12)'};color:${pnl>=0?'#059669':'#ef4444'}">${pct(pp)}</span></td>
+      <td style="text-align:right" class="${pnl>=0?'g':'r'}">${pnl>=0?'+':''} ${idr(Math.abs(pnl))}</td>
+      <td style="text-align:center"><span style="padding:2px 5px;border-radius:3px;font-size:8.5px;font-weight:700;background:${pnl>=0?'#dcfce7':'#fee2e2'};color:${pnl>=0?'#059669':'#ef4444'}">${pct(pp)}</span></td>
     </tr>`;
   }).join('');
 
-  const P3=PG(`
-    ${SEC('VI. STATISTIK DCA BITCOIN')}
-    <div class="cards4">
-      ${CARD('#00b8d9','TOTAL INVESTASI',idr(ti),'','muted')}
-      ${CARD('#059669','NILAI SEKARANG',idr(btcVal),(dcaPnl>=0?'+':'')+idr(dcaPnl),dcaPnl>=0?'pos':'neg')}
-      ${CARD('#f59e0b','AVERAGE BUY PRICE','$'+Math.round(avgBuyUSD).toLocaleString('en-US'),'','muted')}
-      ${CARD('#7c3aed','TOTAL BTC',tb.toFixed(8),'BTC diperoleh','muted')}
+  const P3=`<div class="pg">
+    ${PH(3,TOT)}
+    <div class="pb">
+      ${SEC('VI. Statistik DCA Bitcoin')}
+      <div class="c4">
+        ${CARD('#06b6d4','Total Investasi',idr(ti),'','m')}
+        ${CARD('#059669','Nilai Sekarang',idr(btcVal),(dcaPnl>=0?'+':'')+idr(dcaPnl),dcaPnl>=0?'g':'r')}
+        ${CARD('#f59e0b','Average Buy Price','$'+Math.round(avgBuyUSD).toLocaleString('en-US'),'','m')}
+        ${CARD('#7c3aed','Total BTC',tb.toFixed(8),'BTC diperoleh','m')}
+      </div>
+      ${SEC('VII. Histori Transaksi DCA')}
+      ${TBL(
+        ['#','Tanggal','Harga BTC','Modal IDR','BTC','Nilai Kini','P&L','Return'],
+        dcaAsc.length?dcaRows:'<tr><td colspan="8" class="er">Belum ada transaksi DCA</td></tr>',
+        dcaAsc.length?`<td></td><td class="fw">TOTAL</td><td style="text-align:right" class="fw">$${Math.round(avgBuyUSD).toLocaleString('en-US')}</td><td style="text-align:right" class="fw">${idr(ti)}</td><td style="text-align:right;color:#f59e0b" class="fw">${tb.toFixed(8)}</td><td style="text-align:right" class="fw">${idr(btcVal)}</td><td style="text-align:right" class="fw ${dcaPnl>=0?'g':'r'}">${dcaPnl>=0?'+':''} ${idr(Math.abs(dcaPnl))}</td><td style="text-align:center" class="fw ${dcaPnl>=0?'g':'r'}">${pct(dcaPnlPct)}</td>`:''
+      )}
     </div>
-    ${SEC('VII. HISTORI TRANSAKSI DCA')}
-    ${TBL(
-      ['#','TANGGAL','HARGA BTC','MODAL IDR','BTC','NILAI KINI','P&L','RETURN'],
-      dcaAsc.length?dcaBody:'<tr><td colspan="8" class="empty-row">Belum ada transaksi DCA</td></tr>',
-      `<td></td><td class="fw">TOTAL</td><td style="text-align:right" class="fw">$${Math.round(avgBuyUSD).toLocaleString('en-US')}</td><td style="text-align:right" class="fw">${idr(ti)}</td><td style="text-align:right;color:#f59e0b" class="fw">${tb.toFixed(8)}</td><td style="text-align:right" class="fw">${idr(btcVal)}</td><td style="text-align:right" class="fw ${dcaPnl>=0?'pos':'neg'}">${dcaPnl>=0?'+':''} ${idr(Math.abs(dcaPnl))}</td><td style="text-align:center" class="fw ${dcaPnl>=0?'pos':'neg'}">${pct(dcaPnlPct)}</td>`
-    )}
-  `,3,6);
+    ${PF(3,TOT)}
+  </div>`;
 
-  /* ══ PAGE 4 — PORTOFOLIO ══ */
-  const portBody=S.port.map(x=>{
+  /* PAGE 4 — PORTFOLIO */
+  const portRows=S.port.map(x=>{
     const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=inv>0?pnl/inv*100:0;
-    const aloc=portTotal>0?(val/portTotal*100).toFixed(1):'0';
     return `<tr>
-      <td><span class="fw">${x.name}</span> <span style="color:#9ca3af;font-size:9px">${x.ticker||''}</span></td>
+      <td><span class="fw">${x.name}</span> <span style="color:#9ca3af;font-size:8.5px">${x.ticker||''}</span></td>
       <td style="color:#6b7280">${x.type||'—'}</td>
       <td style="text-align:right">${x.qty}</td>
       <td style="text-align:right">${idr(x.avgPrice)}</td>
       <td style="text-align:right">${idr(x.currentPrice)}</td>
       <td style="text-align:right">${idr(val)}</td>
-      <td style="text-align:right" class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''} ${idr(Math.abs(pnl))}</td>
-      <td style="text-align:center"><span style="padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;background:${pnl>=0?'rgba(5,150,105,.12)':'rgba(239,68,68,.12)'};color:${pnl>=0?'#059669':'#ef4444'}">${pct(pp)}</span></td>
-      <td style="text-align:right;color:#7c3aed">${aloc}%</td>
+      <td style="text-align:right" class="${pnl>=0?'g':'r'}">${pnl>=0?'+':''} ${idr(Math.abs(pnl))}</td>
+      <td style="text-align:center"><span style="padding:2px 5px;border-radius:3px;font-size:8.5px;font-weight:700;background:${pnl>=0?'#dcfce7':'#fee2e2'};color:${pnl>=0?'#059669':'#ef4444'}">${pct(pp)}</span></td>
     </tr>`;
   }).join('');
 
-  const P4=PG(`
-    ${SEC('VIII. PORTOFOLIO ASET LAINNYA')}
-    <div class="cards4">
-      ${CARD('#00b8d9','TOTAL NILAI ASET',idr(portTotal),'','muted')}
-      ${CARD('#f59e0b','TOTAL MODAL',idr(portInvest),'','muted')}
-      ${CARD('#059669','UNREALIZED P&L','<span class="'+(portPnl>=0?'pos':'neg')+'">'+(portPnl>=0?'+':'')+idr(portPnl)+'</span>',pct(portPnlPct),portPnl>=0?'pos':'neg')}
-      ${CARD('#7c3aed','JUMLAH ASET',S.port.length+' aset','instrumen','muted')}
+  const P4=`<div class="pg">
+    ${PH(4,TOT)}
+    <div class="pb">
+      ${SEC('VIII. Portofolio Aset Lainnya')}
+      <div class="c4">
+        ${CARD('#06b6d4','Total Nilai Aset',idr(portTotal),'','m')}
+        ${CARD('#f59e0b','Total Modal',idr(portInvest),'','m')}
+        ${CARD('#059669','Unrealized P&L','<span class="'+(portPnl>=0?'g':'r')+'">'+(portPnl>=0?'+':'')+idr(portPnl)+'</span>',pct(portPnlPct),portPnl>=0?'g':'r')}
+        ${CARD('#7c3aed','Jumlah Aset',S.port.length+' aset','instrumen','m')}
+      </div>
+      ${SEC('IX. Detail Aset')}
+      ${TBL(
+        ['Nama','Tipe','Qty','Avg Buy','Harga Kini','Nilai','P&L','Return'],
+        S.port.length?portRows:'<tr><td colspan="8" class="er">Belum ada aset di portofolio</td></tr>',
+        S.port.length?`<td colspan="5" class="fw">TOTAL PORTOFOLIO</td><td style="text-align:right" class="fw">${idr(portTotal)}</td><td style="text-align:right" class="fw ${portPnl>=0?'g':'r'}">${portPnl>=0?'+':''} ${idr(Math.abs(portPnl))}</td><td style="text-align:center" class="fw ${portPnl>=0?'g':'r'}">${pct(portPnlPct)}</td>`:''
+      )}
     </div>
-    ${SEC('IX. DETAIL ASET')}
-    ${TBL(
-      ['NAMA','TIPE','QTY','AVG BUY','HARGA KINI','NILAI','P&L','RETURN','ALOKASI'],
-      S.port.length?portBody:'<tr><td colspan="9" class="empty-row">Belum ada aset di portofolio</td></tr>',
-      S.port.length?`<td colspan="5" class="fw">TOTAL PORTOFOLIO</td><td style="text-align:right" class="fw">${idr(portTotal)}</td><td style="text-align:right" class="fw ${portPnl>=0?'pos':'neg'}">${portPnl>=0?'+':''} ${idr(Math.abs(portPnl))}</td><td style="text-align:center" class="fw ${portPnl>=0?'pos':'neg'}">${pct(portPnlPct)}</td><td style="text-align:right;color:#7c3aed" class="fw">100%</td>`:''
-    )}
-  `,4,6);
+    ${PF(4,TOT)}
+  </div>`;
 
-  /* ══ PAGE 5 — ARUS KAS ══ */
-  const cfBody=cfDesc.map(e=>{
+  /* PAGE 5 — CASHFLOW */
+  const cfRows=cfDesc.map(e=>{
     const TL={income:'Pemasukan',expense:'Pengeluaran',investment:'Investasi'};
-    const TC={income:'#059669',expense:'#ef4444',investment:'#00b8d9'};
-    const TBG={income:'rgba(5,150,105,.10)',expense:'rgba(239,68,68,.10)',investment:'rgba(0,184,217,.10)'};
+    const TC={income:'#059669',expense:'#ef4444',investment:'#06b6d4'};
+    const TB={income:'#dcfce7',expense:'#fee2e2',investment:'#e0f9ff'};
     return `<tr>
       <td>${e.date}</td>
-      <td><span style="padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;background:${TBG[e.type]||'#f3f4f6'};color:${TC[e.type]||'#374151'}">${TL[e.type]||e.type}</span></td>
+      <td><span style="padding:2px 6px;border-radius:3px;font-size:8.5px;font-weight:700;background:${TB[e.type]||'#f3f4f6'};color:${TC[e.type]||'#374151'}">${TL[e.type]||e.type}</span></td>
       <td>${e.category}</td>
       <td style="color:#6b7280">${e.desc||'—'}</td>
-      <td style="text-align:right" class="${e.type==='income'?'pos':e.type==='expense'?'neg':'acc'}">${e.type==='income'?'+ ':'- '}${idr(e.amount)}</td>
+      <td style="text-align:right" class="${e.type==='income'?'g':e.type==='expense'?'r':'c'}">${e.type==='income'?'+ ':'- '}${idr(e.amount)}</td>
     </tr>`;
   }).join('');
 
-  const P5=PG(`
-    ${SEC('X. ARUS KAS (CASHFLOW)')}
-    <div class="cf4">
-      <div class="cf-card" style="border-left:4px solid #059669"><div class="cfl">TOTAL PEMASUKAN</div><div class="cfv pos">${idr(cfInc)}</div></div>
-      <div class="cf-card" style="border-left:4px solid #ef4444"><div class="cfl">TOTAL PENGELUARAN</div><div class="cfv neg">${idr(cfExp)}</div></div>
-      <div class="cf-card" style="border-left:4px solid #00b8d9"><div class="cfl">TOTAL INVESTASI</div><div class="cfv acc">${idr(cfInv)}</div></div>
-      <div class="cf-card" style="border-left:4px solid ${cfNet>=0?'#059669':'#ef4444'}"><div class="cfl">SALDO BERSIH</div><div class="cfv ${cfNet>=0?'pos':'neg'}">${cfNet>=0?'+':''} ${idr(cfNet)}</div></div>
+  const P5=`<div class="pg">
+    ${PH(5,TOT)}
+    <div class="pb">
+      ${SEC('X. Arus Kas (Cashflow)')}
+      <div class="cf4">
+        <div class="cfc" style="border-left:3px solid #059669"><div class="cfl">Total Pemasukan</div><div class="cfv g">${idr(cfInc)}</div></div>
+        <div class="cfc" style="border-left:3px solid #ef4444"><div class="cfl">Total Pengeluaran</div><div class="cfv r">${idr(cfExp)}</div></div>
+        <div class="cfc" style="border-left:3px solid #06b6d4"><div class="cfl">Total Investasi</div><div class="cfv c">${idr(cfInv)}</div></div>
+        <div class="cfc" style="border-left:3px solid ${cfNet>=0?'#059669':'#ef4444'}"><div class="cfl">Saldo Bersih</div><div class="cfv ${cfNet>=0?'g':'r'}">${cfNet>=0?'+':''}${idr(cfNet)}</div></div>
+      </div>
+      ${SEC('XI. Rincian Transaksi Kas')}
+      ${TBL(
+        ['Tanggal','Tipe','Kategori','Deskripsi','Jumlah'],
+        cfDesc.length?cfRows:'<tr><td colspan="5" class="er">Belum ada transaksi kas</td></tr>'
+      )}
     </div>
-    ${SEC('XI. RINCIAN TRANSAKSI KAS')}
-    ${TBL(
-      ['TANGGAL','TIPE','KATEGORI','DESKRIPSI','JUMLAH'],
-      cfDesc.length?cfBody:'<tr><td colspan="5" class="empty-row">Belum ada transaksi kas</td></tr>'
-    )}
-  `,5,6);
+    ${PF(5,TOT)}
+  </div>`;
 
-  /* ══ PAGE 6 — RINGKASAN + DISCLAIMER ══ */
-  const P6=PG(`
-    ${SEC('XII. RINGKASAN AKHIR & KONSOLIDASI')}
-    <div class="cards4">
-      ${CARD('#059669','TOTAL ASET KESELURUHAN',idr(grandTotal),(grandPnl>=0?'+':'')+idr(grandPnl)+' ('+pct(grandPnlPct)+')',grandPnl>=0?'pos':'neg')}
-      ${CARD('#00b8d9','TOTAL MODAL SELURUHNYA',idr(totalInvest),'DCA + Aset + Investasi','muted')}
-      ${CARD('#f59e0b','BITCOIN DCA',idr(btcVal),tb.toFixed(8)+' BTC · avg $'+Math.round(avgBuyUSD).toLocaleString('en-US'),'muted')}
-      ${CARD('#7c3aed','PORTOFOLIO ASET',idr(portTotal),S.port.length+' instrumen','muted')}
-    </div>
-    <div class="cards4" style="margin-top:8px">
-      ${CARD('#059669','KAS BERSIH',idr(cfNet),'Pemasukan - Pengeluaran - Investasi',cfNet>=0?'pos':'neg')}
-      ${CARD('#f59e0b','TOTAL PEMASUKAN',idr(cfInc),'','pos')}
-      ${CARD('#ef4444','TOTAL PENGELUARAN',idr(cfExp),'','neg')}
-      ${CARD('#00b8d9','TOTAL INV. KAS',idr(cfInv),'','acc')}
-    </div>
-    <div style="margin-top:14px;background:#fffbeb;border:1px solid #fef08a;border-radius:8px;padding:13px 16px">
-      <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:6px">⚠ DISCLAIMER</div>
-      <div style="font-size:10px;line-height:1.9;color:#374151">
-        Laporan ini dibuat otomatis oleh WealthOS untuk keperluan dokumentasi pribadi. Data portofolio berdasarkan harga Bitcoin real-time saat laporan digenerate dan dapat berbeda dengan harga saat ini.<br>
-        Dokumen ini <strong>bukan merupakan rekomendasi investasi</strong>. Nilai investasi dapat naik maupun turun. Selalu lakukan riset mandiri (DYOR) dan konsultasikan dengan penasihat keuangan sebelum membuat keputusan investasi.<br>
-        <span style="color:#6b7280">WealthOS — Laporan Keuangan Konfidensial — ${dateStr}</span>
+  /* PAGE 6 — RINGKASAN */
+  const P6=`<div class="pg">
+    ${PH(6,TOT)}
+    <div class="pb">
+      ${SEC('XII. Ringkasan Akhir & Konsolidasi')}
+      <div class="c4">
+        ${CARD('#059669','Total Aset Keseluruhan',idr(grandTotal),(grandPnl>=0?'+':'')+idr(grandPnl)+' ('+pct(grandPnlPct)+')',grandPnl>=0?'g':'r')}
+        ${CARD('#06b6d4','Total Modal Seluruhnya',idr(totalInvest),'DCA + Aset + Investasi','m')}
+        ${CARD('#f59e0b','Bitcoin DCA',idr(btcVal),tb.toFixed(8)+' BTC · avg $'+Math.round(avgBuyUSD).toLocaleString('en-US'),'m')}
+        ${CARD('#7c3aed','Portofolio Aset',idr(portTotal),S.port.length+' instrumen','m')}
+      </div>
+      <div class="c4" style="margin-top:6px">
+        ${CARD('#059669','Kas Bersih',idr(cfNet),'Pemasukan - Pengeluaran - Investasi',cfNet>=0?'g':'r')}
+        ${CARD('#f59e0b','Total Pemasukan',idr(cfInc),'','g')}
+        ${CARD('#ef4444','Total Pengeluaran',idr(cfExp),'','r')}
+        ${CARD('#06b6d4','Total Inv. Kas',idr(cfInv),'','c')}
+      </div>
+      <div style="margin-top:12px;background:#fffbeb;border:1px solid #fef08a;border-left:4px solid #f59e0b;border-radius:6px;padding:11px 14px">
+        <div style="font-size:10.5px;font-weight:800;color:#92400e;margin-bottom:5px">⚠ Disclaimer</div>
+        <div style="font-size:9.5px;line-height:1.85;color:#374151">
+          Laporan ini dibuat otomatis oleh WealthOS untuk keperluan dokumentasi pribadi. Data portofolio berdasarkan harga Bitcoin real-time saat laporan digenerate.<br>
+          Dokumen ini <strong>bukan merupakan rekomendasi investasi</strong>. Nilai investasi dapat naik maupun turun. Selalu lakukan riset mandiri (DYOR).<br>
+          <span style="color:#9ca3af;font-size:8.5px">WealthOS — Laporan Keuangan Konfidensial — ${dateStr}</span>
+        </div>
       </div>
     </div>
-  `,6,6);
+    ${PF(6,TOT)}
+  </div>`;
 
-  /* ══ FULL HTML DOC ══ */
+  /* ASSEMBLE HTML */
   const HTML=`<!DOCTYPE html>
-<html lang="id">
-<head>
+<html lang="id"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WealthOS — Laporan ${dateStr}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111827}
-body{background:#d1d5db}
-
-/* ── SAVE BAR (screen only) ── */
-.save-bar{
-  position:fixed;top:0;left:0;right:0;z-index:9999;
-  background:linear-gradient(90deg,#0891b2 0%,#7c3aed 100%);
-  padding:10px 20px;
-  display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 3px 16px rgba(0,0,0,.35);
-}
-.save-info-title{color:#fff;font-weight:800;font-size:14px;letter-spacing:.02em}
-.save-info-sub{color:rgba(255,255,255,.75);font-size:10.5px;margin-top:1px}
-.save-info-hint{color:rgba(255,255,255,.55);font-size:9.5px;margin-top:2px}
-.btn-save{
-  background:#fff;color:#0891b2;border:none;border-radius:10px;
-  padding:11px 24px;font-size:13px;font-weight:800;cursor:pointer;
-  display:flex;align-items:center;gap:8px;flex-shrink:0;
-  box-shadow:0 2px 12px rgba(0,0,0,.25);transition:all .2s;
-}
-.btn-save:hover{background:#ecfeff;transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.3)}
-@media print{.save-bar{display:none!important}}
-
-/* ── PAGE WRAPPER ── */
-.pages-wrap{padding:68px 20px 20px}
-
-/* ── A4 PAGE ── */
-.pg{
-  width:210mm;min-height:297mm;background:#fff;
-  margin:0 auto 24px;padding:0;
-  box-shadow:0 6px 30px rgba(0,0,0,.18);
-  border-radius:4px;overflow:hidden;
-  display:flex;flex-direction:column;
-  page-break-after:always;
-}
-@media print{
-  html,body{background:#fff!important}
-  .pages-wrap{padding:0!important}
-  .pg{width:100%!important;margin:0!important;box-shadow:none!important;border-radius:0!important;min-height:100vh;page-break-after:always}
-  @page{size:A4 portrait;margin:0}
-  svg{display:block!important}
-}
-
-/* ── PAGE HEADER ── */
-.pg-hdr{position:relative;height:54px;flex-shrink:0;overflow:hidden}
-.pg-hdr-bg{
-  position:absolute;inset:0;
-  background:linear-gradient(135deg,#0891b2 0%,#06b6d4 40%,#7c3aed 100%);
-}
-.pg-hdr-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:10px 16px 8px}
-.logo-wrap{}
-.logo-w{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.5px}
-.logo-os{font-size:20px;font-weight:900;color:#e0f2fe;letter-spacing:-.5px}
-.logo-sub{font-size:8px;color:rgba(255,255,255,.7);letter-spacing:.08em;margin-top:1px}
-.pg-hdr-right{text-align:right}
-.pg-report-title{font-size:12px;font-weight:800;color:#fff;letter-spacing:.06em}
-.pg-meta{font-size:8.5px;color:rgba(255,255,255,.8);margin-top:1px}
-
-/* ── BODY & FOOTER ── */
-.pg-body{flex:1;padding:14px 16px 8px}
-.pg-ftr{
-  padding:6px 16px 7px;
-  border-top:1px solid #e5e7eb;
-  display:flex;justify-content:space-between;
-  font-size:8px;color:#9ca3af;flex-shrink:0;
-}
-
-/* ── SECTION ── */
-.sec{margin-bottom:8px;margin-top:10px}
-.sec:first-child{margin-top:0}
-.sec-ttl{
-  font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
-  color:#0891b2;padding-bottom:4px;
-  border-bottom:2px solid #e0f2fe;
-  display:flex;align-items:center;gap:6px;
-}
-.sec-ttl::before{content:'';display:inline-block;width:3px;height:12px;background:linear-gradient(180deg,#0891b2,#7c3aed);border-radius:2px;flex-shrink:0}
-.sec-sub{font-size:9px;color:#6b7280;margin-top:2px;padding-left:9px}
-
-/* ── CARDS ── */
-.cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
-.card{
-  border:1px solid #e5e7eb;border-radius:8px;padding:9px 11px;
-  background:linear-gradient(145deg,#fff,#fafbff);
-}
-.card-lbl{font-size:7.5px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:5px;font-weight:700}
-.card-val{font-size:14px;font-weight:800;color:#111827;line-height:1.15;word-break:break-all}
-.card-sub{font-size:9px;margin-top:4px}
-
-/* ── TABLE ── */
-.tbl{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:10px}
-.tbl thead tr{background:linear-gradient(90deg,#0891b2,#0e7490)}
-.tbl th{padding:6px 7px;text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;color:#fff;font-weight:700;white-space:nowrap}
-.tbl td{padding:5px 7px;border-bottom:1px solid #f0f4f8;color:#374151;vertical-align:middle}
-.tbl tbody tr:nth-child(even) td{background:#f8fbff}
-.tbl tbody tr:hover td{background:#eff6ff}
-.tbl tfoot tr{background:linear-gradient(90deg,#eff6ff,#f0ebff)!important}
-.tbl tfoot td{font-weight:700;font-size:10px;border-top:2px solid #bfdbfe;padding:6px 7px;color:#1e40af}
-.info-tbl td{padding:6px 8px}
-.kl{color:#6b7280;font-size:9.5px;width:26%}
-.vl{font-size:10px;width:24%}
-.fw{font-weight:700}
-.empty-row{text-align:center;color:#9ca3af;padding:16px!important;font-style:italic}
-
-/* ── CHART ── */
-.leg{display:flex;gap:12px;margin-bottom:5px;margin-top:4px;padding-left:2px}
-.li{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#374151}
-.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.chart-box{border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:10px;background:#fff}
-.chart-box svg{display:block}
-
-/* ── CASHFLOW ── */
-.cf4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
-.cf-card{border:1px solid #e5e7eb;border-radius:7px;padding:10px 11px;background:#fafbff}
-.cfl{font-size:7.5px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:5px;font-weight:700}
-.cfv{font-size:15px;font-weight:800;color:#111827}
-
-/* ── COLORS ── */
-.pos{color:#059669!important}
-.neg{color:#ef4444!important}
-.acc{color:#00b8d9!important}
-.muted{color:#6b7280!important}
-</style>
-</head>
-<body>
-
-<div class="save-bar">
-  <div>
-    <div class="save-info-title">📊 WealthOS — Laporan Keuangan</div>
-    <div class="save-info-sub">${dateStr} &nbsp;·&nbsp; Akun: ${seedDisplay} &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</div>
-    <div class="save-info-hint">Klik tombol di kanan → pilih "Save as PDF" / "Simpan sebagai PDF"</div>
+<style>${css}</style>
+</head><body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="t1">📊 WealthOS — Laporan Keuangan</div>
+    <div class="t2">${dateStr} &nbsp;·&nbsp; Akun: ${seedDisplay} &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</div>
   </div>
-  <button class="btn-save" onclick="window.print()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  <button class="btn-pdf" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Simpan PDF
   </button>
 </div>
+<div class="wrap">${P1}${P2}${P3}${P4}${P5}${P6}</div>
+</body></html>`;
 
-<div class="pages-wrap">
-${P1}${P2}${P3}${P4}${P5}${P6}
-</div>
-</body>
-</html>`;
-
-  /* ─── OPEN/DOWNLOAD ─── */
+  /* DELIVER */
   const blob=new Blob([HTML],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const win=window.open(url,'_blank');
@@ -3199,6 +3201,7 @@ ${P1}${P2}${P3}${P4}${P5}${P6}
     toast('📥 File laporan diunduh — buka lalu klik Simpan PDF');
   }
 }
+
 </script>
 </body>
 </html>
