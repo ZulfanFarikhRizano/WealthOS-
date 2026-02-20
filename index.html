@@ -769,7 +769,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <!-- SIMULATION -->
 <div id="page-simulation" class="page">
-  <div class="ph"><h1>Simulasi DCA</h1><p>Harga historis real dari Binance — bukan estimasi</p></div>
+  <div class="ph"><h1>Simulasi DCA</h1><p>Harga historis real dari Kraken/CoinGecko — bukan estimasi</p></div>
 
   <!-- PARAMETER PANEL -->
   <div class="sim-param-card">
@@ -786,7 +786,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="fg">
           <label class="fl">Tanggal Mulai DCA</label>
           <input type="date" class="fi" id="s-startdate" max="" oninput="">
-          <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Harga diambil langsung dari Binance</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.25rem">Harga diambil dari Kraken atau CoinGecko</div>
         </div>
         <div class="fg">
           <label class="fl">Tanggal Akhir</label>
@@ -1828,26 +1828,63 @@ async function fetchChartData(cfg){
 }
 
 // Harga historis untuk DCA/simulasi — CoinGecko history by date
+// Ambil harga BTC historis di tanggal tertentu
+// Primary: Kraken OHLC (data dari 2013, CORS terbuka, akurat)
+// Fallback: CoinGecko history
 async function cgPriceAt(dateStr){
   const dt=new Date(dateStr);
-  const dd=String(dt.getDate()).padStart(2,'0');
-  const mm=String(dt.getMonth()+1).padStart(2,'0');
-  const yyyy=dt.getFullYear();
-  // Coba CoinGecko history
+  const tsFrom=Math.floor(dt.getTime()/1000);
+  const tsTo=tsFrom+86400; // +1 hari
+
+  // ── Sumber 1: CoinGecko market_chart/range ──
+  // Endpoint ini paling reliable, CORS terbuka dari localhost maupun domain publik
   try{
+    const url=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=${tsFrom-3600}&to=${tsTo}`;
+    const r=await fetchWithTimeout(url, 15000);
+    if(r.ok){
+      const d=await r.json();
+      if(d?.prices?.length){
+        // Cari harga yang paling dekat dengan tanggal target
+        const target=tsFrom*1000;
+        let best=null,bestDiff=Infinity;
+        for(const [ts,p] of d.prices){
+          const diff=Math.abs(ts-target);
+          if(diff<bestDiff){bestDiff=diff;best=p;}
+        }
+        if(best&&best>10) return {price:best, source:'CoinGecko'};
+      }
+    }
+  }catch(e){ console.warn('CoinGecko range gagal:', e.message); }
+
+  // ── Sumber 2: Kraken OHLC harian ──
+  try{
+    const since=tsFrom-86400*2;
+    const data=await krakenOHLC(1440, since);
+    if(data&&data.length){
+      let best=null,bestDiff=Infinity;
+      for(const [ts,p] of data){
+        const diff=Math.abs(ts-tsFrom);
+        if(diff<bestDiff&&diff<86400*2){bestDiff=diff;best=p;}
+      }
+      if(best&&best>10) return {price:best, source:'Kraken'};
+    }
+  }catch(e){ console.warn('Kraken history gagal:', e.message); }
+
+  // ── Sumber 3: CoinGecko /history by date ──
+  try{
+    const dd=String(dt.getDate()).padStart(2,'0');
+    const mm=String(dt.getMonth()+1).padStart(2,'0');
+    const yyyy=dt.getFullYear();
     const url=`https://api.coingecko.com/api/v3/coins/bitcoin/history?date=${dd}-${mm}-${yyyy}&localization=false`;
-    const r=await fetchWithTimeout(url, 12000);
+    const r=await fetchWithTimeout(url, 15000);
     if(r.ok){
       const d=await r.json();
       const price=d?.market_data?.current_price?.usd;
-      if(price) return price;
+      if(price&&price>10) return {price, source:'CoinGecko'};
     }
-  }catch(e){}
-  // Fallback: ambil dari Kraken OHLC harian di tanggal itu
-  const since=Math.floor(dt.getTime()/1000)-3600;
-  const data=await krakenOHLC(1440, since);
-  if(data&&data.length) return data[0][1];
-  throw new Error('Tidak ada data harga untuk tanggal ini');
+  }catch(e){ console.warn('CoinGecko history gagal:', e.message); }
+
+  throw new Error('Semua sumber gagal untuk tanggal '+dateStr);
 }
 
 /* ══════════ BTC LIVE CHART ══════════ */
@@ -2276,7 +2313,7 @@ function fillBTCPrice(){
   }
 }
 
-// Auto-fill harga saat tanggal berubah (fetch dari Binance)
+// Auto-fill harga saat tanggal berubah (fetch dari Kraken/CoinGecko)
 async function onDCADateChange(dateStr){
   if(!dateStr) return;
   const today=new Date().toISOString().slice(0,10);
@@ -2296,39 +2333,43 @@ async function onDCADateChange(dateStr){
   await fillBTCPriceByDate(dateStr);
 }
 
-// Fetch harga BTC historis dari Binance berdasarkan tanggal
+// Fetch harga BTC historis berdasarkan tanggal (Kraken primary, CoinGecko fallback)
 async function fillBTCPriceByDate(dateStr){
   const d=dateStr||document.getElementById('m-dca-date').value;
   if(!d){toast('Pilih tanggal dulu!',1);return;}
   const loading=document.getElementById('m-dca-usd-loading');
   const input=document.getElementById('m-dca-usd');
+
+  // ⚠️ KOSONGKAN field dulu supaya user tahu sedang loading (tidak tampilkan harga lama)
+  input.value='';
+  input.placeholder='Mengambil harga...';
   if(loading){loading.style.display='block';}
 
   const dateObj=new Date(d);
-  const BINANCE_START=new Date('2017-08-17'); // Binance listing date
-  const COINGECKO_START=new Date('2013-04-28'); // CoinGecko earliest data
 
   try{
-    // CoinGecko history: data tersedia dari Apr 2013
-    const COINGECKO_START=new Date('2013-04-28');
-    if(dateObj<COINGECKO_START){
+    const DATA_START=new Date('2013-04-28'); // CoinGecko earliest data
+    if(dateObj<DATA_START){
+      input.placeholder='Masukkan manual (data pre-Apr 2013 tidak tersedia)';
       toast('Data sebelum Apr 2013 tidak tersedia via API. Masukkan harga manual.',1);
-      input.placeholder='Masukkan manual';
       input.focus();
       return;
     }
-    const price=await cgPriceAt(d);
-    if(price){
-      input.value=Math.round(price).toLocaleString('id-ID');
+    const result=await cgPriceAt(d);
+    if(result&&result.price&&result.price>10){
+      input.value=Math.round(result.price).toLocaleString('id-ID');
+      input.placeholder='';
       const rateEl=document.getElementById('m-dca-rate');
       if(rateEl&&S.usdIdr) rateEl.value=S.usdIdr.toLocaleString('id-ID');
-      toast(`Harga BTC ${d} dari CoinGecko: $${Math.round(price).toLocaleString('id-ID')}`);
+      toast(`✅ Harga BTC ${d} dari ${result.source}: $${Math.round(result.price).toLocaleString('en-US')}`);
     } else {
-      toast('Harga historis tidak tersedia, coba isi manual',1);
+      input.placeholder='Masukkan manual';
+      toast('Harga historis tidak ditemukan, isi manual',1);
     }
   }catch(e){
     console.error('fillBTCPriceByDate error:',e);
-    toast('Gagal ambil harga historis',1);
+    input.placeholder='Gagal ambil harga, isi manual';
+    toast('Gagal ambil harga historis. Isi manual atau coba lagi.',1);
   }finally{
     if(loading) loading.style.display='none';
   }
@@ -2389,7 +2430,7 @@ function addPort(){
 function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('Dihapus');renderPort()}
 
 /* ══════════ SIMULATION DINAMIS ══════════ */
-let simPriceCache = {}; // cache harga per tanggal dari Binance
+let simPriceCache = {}; // cache harga per tanggal
 
 function syncSimInputs(){
   const lv=document.getElementById('s-live');
@@ -2409,14 +2450,117 @@ function syncSimInputs(){
   if(ed) ed.max=today;
 }
 
-// Ambil harga BTC di tanggal tertentu dari Binance (kline harian)
+// Ambil harga BTC di tanggal tertentu (dari cache atau cgPriceAt)
 async function fetchBTCPriceAt(dateStr){
   if(simPriceCache[dateStr]) return simPriceCache[dateStr];
   try{
-    const price=await cgPriceAt(dateStr);
-    if(price){simPriceCache[dateStr]=price;return price;}
+    const result=await cgPriceAt(dateStr);
+    const price=result?.price||result; // handle both {price,source} and raw number
+    if(price&&price>10){simPriceCache[dateStr]=price;return price;}
   }catch(e){}
   return null;
+}
+
+// Bulk fetch harga historis: 1 request Kraken untuk seluruh rentang tanggal
+// Jauh lebih efisien dan menghindari rate limit
+async function bulkFetchHistoricalPrices(dates){
+  if(!dates||!dates.length) return {};
+  const result={};
+
+  // Cek cache dulu
+  const missing=dates.filter(d=>!simPriceCache[d]);
+  if(!missing.length){
+    dates.forEach(d=>{ result[d]=simPriceCache[d]; });
+    return result;
+  }
+
+  // Hitung rentang tanggal
+  const sortedMissing=[...missing].sort();
+  const startDt=new Date(sortedMissing[0]);
+  const endDt=new Date(sortedMissing[sortedMissing.length-1]);
+  const daysDiff=Math.ceil((endDt-startDt)/(1000*86400))+2;
+
+  // Pilih interval Kraken berdasarkan jumlah hari
+  // Kraken max 720 candles per request, interval dalam menit
+  let krakenInt=1440; // daily default
+  if(daysDiff>720) krakenInt=10080;     // weekly untuk >2 tahun
+  if(daysDiff<=60)  krakenInt=240;      // 4h untuk ≤2 bulan (lebih akurat)
+  if(daysDiff<=14)  krakenInt=60;       // hourly untuk ≤2 minggu
+
+  // Mundur sedikit lebih jauh untuk memastikan data awal ter-cover
+  const sinceBuffer = krakenInt <= 60 ? 3600*2 : krakenInt <= 1440 ? 86400*2 : 86400*7;
+  const since=Math.floor(startDt.getTime()/1000)-sinceBuffer;
+
+  // Coba CoinGecko market_chart dulu (lebih reliable dari localhost/mobile)
+  try{
+    const cgDays=daysDiff+2;
+    const cgUrl=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${cgDays}&interval=daily`;
+    const cgR=await fetchWithTimeout(cgUrl, 15000);
+    if(cgR.ok){
+      const cgD=await cgR.json();
+      if(cgD?.prices?.length){
+        // Map setiap tanggal ke harga CoinGecko terdekat
+        missing.forEach(dateStr=>{
+          const target=new Date(dateStr).getTime();
+          let best=null,bestDiff=Infinity;
+          for(const [ts,p] of cgD.prices){
+            const diff=Math.abs(ts-target);
+            if(diff<bestDiff&&diff<86400*2*1000){bestDiff=diff;best=p;}
+          }
+          if(best&&best>10){simPriceCache[dateStr]=best;result[dateStr]=best;}
+        });
+        // Kalau semua tanggal sudah terisi dari CoinGecko, return langsung
+        const stillMissing2=missing.filter(d=>!result[d]);
+        if(stillMissing2.length===0){
+          dates.forEach(d=>{if(simPriceCache[d])result[d]=simPriceCache[d];});
+          return result;
+        }
+      }
+    }
+  }catch(eCG){ console.warn('CoinGecko bulk gagal, coba Kraken:', eCG.message); }
+
+  try{
+    const ohlc=await krakenOHLC(krakenInt, since);
+    // ohlc = [[timestamp_sec, close_price], ...]
+    // Map setiap tanggal ke harga Kraken terdekat
+    missing.forEach(dateStr=>{
+      const target=new Date(dateStr).getTime()/1000;
+      // Cari candle terdekat
+      let best=null, bestDiff=Infinity;
+      for(const [ts, price] of ohlc){
+        const diff=Math.abs(ts-target);
+        if(diff<bestDiff){bestDiff=diff;best=price;}
+        if(ts>target+86400*2) break; // sudah melewati tanggal
+      }
+      if(best&&best>100){
+        simPriceCache[dateStr]=best;
+        result[dateStr]=best;
+      }
+    });
+    // Yang masih belum dapat dari Kraken, set null (akan diisi individual fallback)
+    const stillMissing=missing.filter(d=>!result[d]);
+    if(stillMissing.length>0){
+      console.warn('Beberapa tanggal tidak ditemukan di Kraken bulk, coba individual:', stillMissing.length);
+    }
+  }catch(e){
+    console.warn('Kraken bulk fetch gagal:', e.message);
+    // Fallback: individual CoinGecko (tapi delay agar tidak rate limit)
+    for(let i=0;i<missing.length;i++){
+      const d=missing[i];
+      try{
+        const r2=await cgPriceAt(d);
+        const p=r2?.price||r2;
+        if(p&&p>10){simPriceCache[d]=p;result[d]=p;}
+      }catch(e2){}
+      if(i%5===4) await new Promise(r=>setTimeout(r,1100)); // delay setiap 5 req
+    }
+  }
+
+  // Isi tanggal yang di-cache
+  dates.forEach(d=>{
+    if(simPriceCache[d]) result[d]=simPriceCache[d];
+  });
+  return result;
 }
 
 // Generate daftar tanggal DCA berdasarkan frekuensi
@@ -2457,30 +2601,36 @@ async function runSimDynamic(){
   if(new Date(startDate)>=new Date(endDate)){toast('Tanggal mulai harus sebelum tanggal akhir!',1);return}
 
   // Disable tombol
-  if(btn){btn.disabled=true;btn.textContent='⏳ Mengambil data Binance...';}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Mengambil data historis...';}
   if(status){status.style.display='block';status.style.color='var(--muted)';status.textContent='Mengambil data historis...';}
 
   try{
     const dates=generateDCAdates(startDate,endDate,freq);
     const total=dates.length;
-    const prices=new Array(total).fill(null);
-    const batchSize=10;
 
-    // Fetch paralel per batch
-    for(let i=0;i<total;i+=batchSize){
-      const batch=dates.slice(i,i+batchSize);
-      const results=await Promise.all(batch.map(d=>fetchBTCPriceAt(d)));
-      results.forEach((p,j)=>{prices[i+j]=p;});
-      if(status) status.textContent=`Mengambil data: ${Math.min(i+batchSize,total)}/${total} tanggal...`;
-      if(i+batchSize<total) await new Promise(r=>setTimeout(r,180));
-    }
+    // Bulk fetch: 1 request Kraken untuk semua tanggal sekaligus
+    if(status) status.textContent=`Mengambil ${total} data harga sekaligus...`;
+    const priceMap=await bulkFetchHistoricalPrices(dates);
+
+    // Isi array prices dari map
+    const prices=dates.map(d=>priceMap[d]||null);
 
     // Hitung simulasi
     let tb=0,ti=0;
     const rows=[],cl=[],cv=[],ci=[],validPeriods=[];
 
-    dates.forEach((dateStr,i)=>{
-      const price=prices[i]||curP;
+    // Filter periode yang harganya berhasil didapat (skip jika null)
+    const validDates=dates.filter((_,i)=>prices[i]&&prices[i]>100);
+    const validPrices=prices.filter(p=>p&&p>100);
+
+    if(validDates.length===0){
+      if(status){status.style.color='var(--danger)';status.textContent='⚠️ Gagal mendapatkan data harga historis. Cek koneksi internet.';}
+      toast('Gagal ambil data harga historis',1);
+      resetBtn();return;
+    }
+
+    validDates.forEach((dateStr,i)=>{
+      const price=validPrices[i];
       const bought=amt/rate/price;
       tb+=bought;ti+=amt;
       const val=tb*curP*rate,pnl=val-ti,pp=pnl/ti*100;
@@ -2494,8 +2644,8 @@ async function runSimDynamic(){
         <td>${fmtIDR(val)}</td>
         <td class="${pnl>=0?'pos':'neg'}"><span class="badge ${pnl>=0?'bg':'br'}">${fmtPct(pp)}</span></td>
       </tr>`);
-      const step=Math.max(1,Math.floor(dates.length/60));
-      if(i%step===0||i===dates.length-1){
+      const step=Math.max(1,Math.floor(validDates.length/60));
+      if(i%step===0||i===validDates.length-1){
         cl.push(dateStr.substring(0,7));
         cv.push(+(val/1e6).toFixed(2));
         ci.push(+(ti/1e6).toFixed(2));
@@ -2522,13 +2672,13 @@ async function runSimDynamic(){
       {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
     ]);
 
-    if(status){status.style.color='var(--accent3)';status.textContent=`✅ ${validPeriods.length} periode · ${dates[0]} → ${dates[dates.length-1]} · harga real Binance`;}
+    if(status){status.style.color='var(--accent3)';status.textContent=`✅ ${validPeriods.length} periode · ${validDates[0]} → ${validDates[validDates.length-1]} · harga Kraken/CoinGecko`;}
     toast('✅ Simulasi selesai!');
 
   }catch(err){
     console.error('runSimDynamic error:',err);
     if(status){status.style.color='var(--danger)';status.textContent='⚠️ Gagal — cek koneksi dan coba lagi';}
-    toast('Gagal ambil data Binance',1);
+    toast('Gagal ambil data historis',1);
   }finally{
     // SELALU aktifkan tombol kembali, apapun yang terjadi
     resetBtn();
