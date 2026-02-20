@@ -1760,6 +1760,29 @@ function updateBTCDisplay(){
   safe('s-live',e=>e.textContent='$'+p.toLocaleString());
 }
 
+/* ══════════ BINANCE CORS-SAFE FETCH ══════════ */
+// Binance API langsung diblokir browser (CORS policy) kecuali dari domain Binance sendiri.
+// Solusi: gunakan proxy publik dengan fallback berantai.
+const BINANCE_PROXIES = [
+  url => `https://api.binance.com/api/v3/klines?${url}`, // langsung (works di beberapa env)
+  url => `https://corsproxy.io/?${encodeURIComponent('https://api.binance.com/api/v3/klines?'+url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.binance.com/api/v3/klines?'+url)}`,
+];
+
+async function binanceFetch(params){
+  let lastErr;
+  for(const proxyFn of BINANCE_PROXIES){
+    try{
+      const r = await fetch(proxyFn(params), {signal: AbortSignal.timeout(8000)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const d = await r.json();
+      if(Array.isArray(d) && d.length) return d;
+      throw new Error('empty');
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr || new Error('Semua proxy gagal');
+}
+
 /* ══════════ BTC LIVE CHART ══════════ */
 let cBTCLive = null;
 let curTF = '1W';
@@ -1784,12 +1807,8 @@ async function loadBTCChart(tf){
   const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
   if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
   try{
-    // Binance API — gratis, no key, reliable untuk semua timeframe
-    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`;
-    const r=await fetch(url);
-    if(!r.ok) throw new Error('Binance error '+r.status);
-    const klines=await r.json();
-    if(!klines||!klines.length) throw new Error('no data');
+    // Binance API via CORS-safe proxy (direct fetch diblokir browser)
+    const klines=await binanceFetch(`symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`);
     // Binance kline: [openTime, open, high, low, close, volume, ...]
     const labels = klines.map(k=>cfg.fmt(k[0]));
     const vals   = klines.map(k=>parseFloat(k[4])); // close price
@@ -2244,9 +2263,7 @@ async function fillBTCPriceByDate(dateStr){
     if(dateObj>=BINANCE_START){
       // === BINANCE: data akurat dari Aug 2017 ===
       const ts=dateObj.getTime();
-      const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`;
-      const r=await fetch(url);
-      const data=await r.json();
+      const data=await binanceFetch(`symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`);
       if(data&&data[0]){
         price=parseFloat(data[0][4]); // close price
         source='Binance';
@@ -2369,10 +2386,7 @@ async function fetchBTCPriceAt(dateStr){
   if(simPriceCache[dateStr]) return simPriceCache[dateStr];
   try{
     const ts=new Date(dateStr).getTime();
-    const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`;
-    const r=await fetch(url);
-    if(!r.ok) throw new Error();
-    const d=await r.json();
+    const d=await binanceFetch(`symbol=BTCUSDT&interval=1d&startTime=${ts}&limit=1`);
     if(d&&d[0]){
       const price=parseFloat(d[0][4]); // close price
       simPriceCache[dateStr]=price;
