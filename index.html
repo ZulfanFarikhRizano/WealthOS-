@@ -1317,8 +1317,6 @@ body{transition:background .4s ease,color .3s ease}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 /* ══════════ WORD LIST ══════════ */
 const W = [
@@ -2742,25 +2740,15 @@ boot();
 
 
 /* ══════════════════════════════════════════════════════════════════
-   EXPORT PDF v4 — jsPDF native .pdf download (works on mobile)
+   EXPORT PDF v5 — HTML Blob (tampilan indah) + tombol Simpan PDF di dalam laporan
 ══════════════════════════════════════════════════════════════════ */
 async function exportPDF(){
-  if(!window.jspdf){toast('⚠️ Library PDF belum siap, coba lagi',1);return;}
-  const {jsPDF} = window.jspdf;
-
-  toast('⏳ Membuat PDF...');
-  // Beri waktu toast muncul
-  await new Promise(r=>setTimeout(r,100));
-
-  try{
-  /* ─── DATA ─── */
   const p=S.btcPrice||0, r=S.usdIdr||16000;
   const now=new Date();
   const dateStr=now.toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
   const timeStr=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
   const acctHash = await sha256(curSeed ? curSeed.join('-') : '');
   const seedDisplay = acctHash ? 'ACCT-' + acctHash.slice(0,8).toUpperCase() : '—';
-  const fname = `WealthOS-${now.toISOString().slice(0,10)}.pdf`;
 
   /* ─── KALKULASI ─── */
   let ti=0,tb=0;
@@ -2768,11 +2756,10 @@ async function exportPDF(){
   const btcVal=tb*p*r, dcaPnl=btcVal-ti, dcaPnlPct=ti>0?dcaPnl/ti*100:0;
   const avgBuyUSD=tb>0?ti/tb/r:0;
   const dcaAsc=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
-
+  const dcaDesc=[...dcaAsc].reverse();
   let portTotal=0,portInvest=0;
   S.port.forEach(x=>{portTotal+=x.qty*x.currentPrice;portInvest+=x.qty*x.avgPrice});
   const portPnl=portTotal-portInvest, portPnlPct=portInvest>0?portPnl/portInvest*100:0;
-
   let cfInc=0,cfExp=0,cfInv=0;
   S.cf.forEach(e=>{
     if(e.type==='income')cfInc+=e.amount;
@@ -2780,433 +2767,430 @@ async function exportPDF(){
     else cfInv+=e.amount;
   });
   const cfNet=cfInc-cfExp-cfInv;
+  const cfDesc=[...S.cf].sort((a,b)=>new Date(b.date)-new Date(a.date));
   const grandTotal=btcVal+portTotal;
   const totalInvest=ti+portInvest;
   const grandPnl=grandTotal-totalInvest;
   const grandPnlPct=totalInvest>0?grandPnl/totalInvest*100:0;
 
   /* ─── FORMAT HELPERS ─── */
-  const fIDR=n=>{
+  const idr=n=>{
     n=Math.round(n);
     if(Math.abs(n)>=1e12)return'Rp '+(n/1e12).toFixed(2)+'T';
     if(Math.abs(n)>=1e9) return'Rp '+(n/1e9).toFixed(2)+'M';
     if(Math.abs(n)>=1e6) return'Rp '+(n/1e6).toFixed(2)+'jt';
-    return'Rp '+Math.abs(n).toLocaleString('id-ID');
+    return'Rp '+n.toLocaleString('id-ID');
   };
-  const fPct=(n,sign=true)=>(sign&&n>=0?'+':'')+n.toFixed(2)+'%';
-  const fUSD=n=>'$'+Math.round(n).toLocaleString('en-US');
-  const sign=n=>n>=0?'+':'-';
+  const pct=(n,sign=true)=>(sign&&n>=0?'+':'')+n.toFixed(2)+'%';
+  const clr=(n,pos='#059669',neg='#dc2626')=>n>=0?pos:neg;
 
-  /* ─── jsPDF SETUP ─── */
-  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
-  const W=210, H=297;
-  const ML=14, MR=14, MT=14, MB=14;
-  const CW=W-ML-MR; // content width = 182mm
-
-  // Colors
-  const C_BLUE=[8,145,178];
-  const C_PURPLE=[124,58,237];
-  const C_GREEN=[5,150,105];
-  const C_RED=[220,38,38];
-  const C_ORANGE=[245,158,11];
-  const C_GRAY=[107,114,128];
-  const C_LGRAY=[229,231,235];
-  const C_WHITE=[255,255,255];
-  const C_BLACK=[17,24,39];
-  const C_BG=[248,250,252];
-
-  let pageNum=0;
-  const TOTAL_PAGES=4;
-
-  /* ─── HELPERS ─── */
-  function setFont(style='normal', size=10, color=C_BLACK){
-    doc.setFont('helvetica', style);
-    doc.setFontSize(size);
-    doc.setTextColor(...color);
-  }
-  function fillRect(x,y,w,h,color){
-    doc.setFillColor(...color);
-    doc.rect(x,y,w,h,'F');
-  }
-  function drawLine(x1,y1,x2,y2,color=C_LGRAY,lw=0.3){
-    doc.setDrawColor(...color);
-    doc.setLineWidth(lw);
-    doc.line(x1,y1,x2,y2);
-  }
-
-  function pageHeader(){
-    pageNum++;
-    // Gradient header bar via two rects
-    fillRect(ML,MT,CW*0.55,7,C_BLUE);
-    fillRect(ML+CW*0.55,MT,CW*0.45,7,C_PURPLE);
-    // Logo
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(13);
-    doc.setTextColor(...C_WHITE);
-    doc.text('WealthOS',ML+2,MT+5);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    doc.text('Financial Command Center',ML+2,MT+5+3.5);
-    // Right side
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.text('LAPORAN KEUANGAN',W-MR,MT+3,{align:'right'});
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...C_WHITE);
-    doc.text(`Per ${dateStr}`,W-MR,MT+6,{align:'right'});
-    return MT+7+4; // y after header
+  /* ─── SVG CHART: GROWTH ─── */
+  function growthChart(W,H){
+    if(dcaAsc.length<2) return emptyChart('Belum ada data DCA',W,H);
+    let cumBTC=0,cumIDR=0;
+    const pts=dcaAsc.map(e=>{
+      cumBTC+=e.btcAmount||0; cumIDR+=e.amountIDR||0;
+      return{val:Math.round(cumBTC*p*r),inv:Math.round(cumIDR),d:e.date};
+    });
+    const maxV=Math.max(...pts.map(x=>x.val),...pts.map(x=>x.inv),1);
+    const PL=72,PR=20,PT=20,PB=44,iW=W-PL-PR,iH=H-PT-PB;
+    const sx=i=>PL+(i/(pts.length-1||1))*iW;
+    const sy=v=>PT+iH-(v/maxV)*iH;
+    const vLine=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.val).toFixed(1)}`).join(' ');
+    const iLine=pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.inv).toFixed(1)}`).join(' ');
+    const vArea=`${PL},${PT+iH} `+pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.val).toFixed(1)}`).join(' ') +` ${PL+iW},${PT+iH}`;
+    const iArea=`${PL},${PT+iH} `+pts.map((x,i)=>`${sx(i).toFixed(1)},${sy(x.inv).toFixed(1)}`).join(' ') +` ${PL+iW},${PT+iH}`;
+    const ticks=[0,.25,.5,.75,1].map(t=>{
+      const v=Math.round(t*maxV),y=sy(v).toFixed(1);
+      const lbl=v>=1e9?(v/1e9).toFixed(1)+'M':v>=1e6?(v/1e6).toFixed(1)+'jt':v>=1000?(v/1000).toFixed(0)+'rb':v;
+      return `<line x1="${PL}" y1="${y}" x2="${PL+iW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>
+<text x="${(PL-4).toFixed(1)}" y="${(parseFloat(y)+3.5).toFixed(1)}" text-anchor="end" fill="#6b7280" font-size="9" font-family="Arial">${lbl}</text>`;
+    }).join('');
+    const step=Math.max(1,Math.floor(pts.length/6));
+    const xlabels=pts.filter((_,i)=>i%step===0||i===pts.length-1).map((x,_,arr)=>{
+      const i=pts.indexOf(x);
+      return `<text x="${sx(i).toFixed(1)}" y="${PT+iH+14}" text-anchor="middle" fill="#6b7280" font-size="9" font-family="Arial">${x.d.slice(0,7)}</text>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <rect width="${W}" height="${H}" fill="white"/>
+      ${ticks}
+      <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+iH}" stroke="#e5e7eb" stroke-width="1"/>
+      <polygon points="${vArea}" fill="rgba(5,150,105,0.12)"/>
+      <polygon points="${iArea}" fill="rgba(59,130,246,0.08)"/>
+      <polyline points="${vLine}" fill="none" stroke="#059669" stroke-width="2.5" stroke-linejoin="round"/>
+      <polyline points="${iLine}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-dasharray="5,3"/>
+      ${xlabels}
+    </svg>`;
   }
 
-  function pageFooter(y){
-    drawLine(ML,H-MB-4,W-MR,H-MB-4,C_LGRAY,0.3);
-    setFont('normal',7.5,C_GRAY);
-    doc.text('WealthOS — Laporan Keuangan Konfidensial',ML,H-MB-1.5);
-    doc.text(`Akun: ${seedDisplay}  ·  BTC ${fUSD(p)}  ·  ${dateStr} ${timeStr}`,W/2,H-MB-1.5,{align:'center'});
-    doc.text(`Halaman ${pageNum} dari ${TOTAL_PAGES}`,W-MR,H-MB-1.5,{align:'right'});
+  function dcaPnlBar(W,H){
+    if(dcaAsc.length===0) return emptyChart('Belum ada data',W,H);
+    const pnls=dcaAsc.map(e=>e.btcAmount*p*r - e.amountIDR);
+    const maxA=Math.max(...pnls.map(Math.abs),1);
+    const PL=16,PR=16,PT=16,PB=16,iW=W-PL-PR,iH=(H-PT-PB)/2,midY=PT+iH;
+    const bW=Math.max(3,Math.min(20,(iW/pnls.length)*0.55));
+    const bars=pnls.map((pnl,i)=>{
+      const x=PL+(i/(pnls.length-1||1))*(iW-bW);
+      const h=Math.abs(pnl)/maxA*iH;
+      const c=pnl>=0?'#059669':'#dc2626';
+      const y=pnl>=0?midY-h:midY;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bW}" height="${h.toFixed(1)}" fill="${c}" rx="1.5" opacity=".85"/>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <rect width="${W}" height="${H}" fill="white"/>
+      <line x1="${PL}" y1="${midY}" x2="${PL+iW}" y2="${midY}" stroke="#d1d5db" stroke-width="1.5"/>
+      <text x="${PL}" y="${PT+10}" fill="#059669" font-size="9" font-family="Arial">Untung</text>
+      <text x="${PL}" y="${H-4}" fill="#dc2626" font-size="9" font-family="Arial">Rugi</text>
+      ${bars}
+    </svg>`;
   }
 
-  function sectionTitle(x,y,title){
-    setFont('bold',9.5,C_BLUE);
-    doc.text(title,x,y);
-    drawLine(x,y+1,W-MR,y+1,C_BLUE,0.4);
-    return y+5;
+  function emptyChart(msg,W,H){
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#f9fafb" rx="4"/><text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#9ca3af" font-size="12" font-family="Arial">${msg}</text></svg>`;
   }
 
-  function summaryCard(x,y,w,h,accent,label,value,sub,subColor=C_GRAY){
-    fillRect(x,y,w,h,C_BG);
-    drawLine(x,y,x,y+h,accent,1.5);
-    setFont('bold',6.5,C_GRAY);
-    doc.text(label.toUpperCase(),x+3,y+5);
-    setFont('bold',13,C_BLACK);
-    doc.text(value,x+3,y+12);
-    if(sub){setFont('normal',8,subColor);doc.text(sub,x+3,y+17);}
-  }
+  /* ─── PAGE WRAPPER ─── */
+  const page=(content,pageNum,total)=>`
+  <div class="a4page">
+    <div class="hdr">
+      <div class="hdr-left">
+        <div class="logo">Wealth<span>OS</span></div>
+        <div class="logo-sub">Financial Command Center</div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-title">LAPORAN KEUANGAN</div>
+        <div class="hdr-meta">Per ${dateStr}</div>
+        <div class="hdr-meta">Akun: ${seedDisplay}</div>
+      </div>
+    </div>
+    <div class="hdr-line"></div>
+    <div class="content">${content}</div>
+    <div class="ftr-line"></div>
+    <div class="ftr">
+      <span>WealthOS — Laporan Keuangan Konfidensial</span>
+      <span>Digenerate: ${dateStr}, ${timeStr} WIB &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</span>
+      <span>Halaman ${pageNum} dari ${total}</span>
+    </div>
+  </div>`;
 
-  /* ══════════════════════════════════════
-     PAGE 1 — IKHTISAR + BTC INFO
-  ══════════════════════════════════════ */
-  let y = pageHeader();
+  const sec=(title,sub='')=>`<div class="sec-hdr"><div class="sec-title">${title}</div>${sub?`<div class="sec-sub">${sub}</div>`:''}</div>`;
+  const ledger=(headers,rows,footer=null)=>`
+    <table class="ledger">
+      <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+      ${footer?`<tfoot><tr>${footer}</tr></tfoot>`:''}
+    </table>`;
 
-  // Section title
-  y = sectionTitle(ML,y,'I. IKHTISAR KEUANGAN');
-  setFont('normal',8,C_GRAY);
-  doc.text(`Ringkasan posisi keuangan per ${dateStr}`,ML,y-1);
-  y+=2;
+  /* ─── PAGES ─── */
+  const T=6;
 
-  // 4 summary cards
-  const cW=(CW-3)/2, cH=20;
-  summaryCard(ML,      y, cW, cH, C_GREEN,  'TOTAL NILAI PORTOFOLIO', fIDR(grandTotal),
-    `${sign(grandPnl)}${fPct(grandPnlPct)} dari modal`, grandPnl>=0?C_GREEN:C_RED);
-  summaryCard(ML+cW+3, y, cW, cH, C_BLUE,   'TOTAL MODAL DIINVESTASIKAN', fIDR(totalInvest),'DCA + Aset lainnya');
-  y+=cH+3;
-  summaryCard(ML,      y, cW, cH, C_ORANGE, 'UNREALIZED P&L', (grandPnl>=0?'+':'-')+fIDR(Math.abs(grandPnl)),
-    fPct(grandPnlPct)+' return keseluruhan', grandPnl>=0?C_GREEN:C_RED);
-  summaryCard(ML+cW+3, y, cW, cH, C_PURPLE, 'KAS BERSIH', fIDR(cfNet),'Pemasukan - pengeluaran - investasi');
-  y+=cH+6;
+  const P1=page(`
+    ${sec('I. IKHTISAR KEUANGAN','Ringkasan posisi keuangan per '+dateStr)}
+    <div class="summary-grid">
+      <div class="sum-card acc-green"><div class="sum-label">TOTAL NILAI PORTOFOLIO</div><div class="sum-val">${idr(grandTotal)}</div><div class="sum-sub ${grandPnl>=0?'tg':'tr'}">${grandPnl>=0?'▲':'▼'} ${pct(grandPnlPct)} dari modal</div></div>
+      <div class="sum-card acc-blue"><div class="sum-label">TOTAL MODAL DIINVESTASIKAN</div><div class="sum-val">${idr(totalInvest)}</div><div class="sum-sub tgr">DCA + Aset lainnya</div></div>
+      <div class="sum-card acc-orange"><div class="sum-label">UNREALIZED P&amp;L</div><div class="sum-val ${grandPnl>=0?'tg':'tr'}">${grandPnl>=0?'+':''} ${idr(grandPnl)}</div><div class="sum-sub ${grandPnl>=0?'tg':'tr'}">${pct(grandPnlPct)} return keseluruhan</div></div>
+      <div class="sum-card acc-purple"><div class="sum-label">KAS BERSIH</div><div class="sum-val">${idr(cfNet)}</div><div class="sum-sub tgr">Pemasukan - pengeluaran - investasi</div></div>
+    </div>
+    ${sec('II. RINCIAN PER KATEGORI')}
+    ${ledger(
+      ['KATEGORI','MODAL MASUK','NILAI SEKARANG','P&L (IDR)','RETURN'],
+      `<tr><td><b>Bitcoin DCA</b></td><td>${idr(ti)}</td><td>${idr(btcVal)}</td><td class="${clr(dcaPnl,'tg','tr')}">${dcaPnl>=0?'+':''} ${idr(dcaPnl)}</td><td class="${clr(dcaPnl,'tg','tr')}">${pct(dcaPnlPct)}</td></tr>
+       <tr><td><b>Portofolio Aset</b></td><td>${idr(portInvest)}</td><td>${idr(portTotal)}</td><td class="${clr(portPnl,'tg','tr')}">${portPnl>=0?'+':''} ${idr(portPnl)}</td><td class="${clr(portPnl,'tg','tr')}">${pct(portPnlPct)}</td></tr>
+       <tr><td><b>Arus Kas Bersih</b></td><td>${idr(cfInc)}</td><td>—</td><td class="${clr(cfNet,'tg','tr')}">${idr(cfNet)}</td><td>—</td></tr>`,
+      `<td><b>TOTAL</b></td><td><b>${idr(totalInvest)}</b></td><td><b>${idr(grandTotal)}</b></td><td class="${clr(grandPnl,'tg','tr')}"><b>${grandPnl>=0?'+':''} ${idr(grandPnl)}</b></td><td class="${clr(grandPnl,'tg','tr')}"><b>${pct(grandPnlPct)}</b></td>`
+    )}
+    ${sec('III. INFORMASI BITCOIN LIVE')}
+    <table class="ledger">
+      <tbody>
+        <tr><td class="kl">Harga BTC saat ini</td><td class="vl"><b>$${p.toLocaleString('en-US')} USD</b></td><td class="kl">Kurs USD/IDR</td><td class="vl">Rp ${Math.round(r).toLocaleString('id-ID')}</td></tr>
+        <tr><td class="kl">Perubahan 24 jam</td><td class="vl ${(S.btcChange||0)>=0?'tg':'tr'}">${(S.btcChange||0)>=0?'▲ +':'▼ '}${pct(S.btcChange||0,false)}</td><td class="kl">BTC dalam IDR</td><td class="vl">${idr(p*r)}</td></tr>
+        <tr><td class="kl">Rata-rata harga beli (DCA)</td><td class="vl"><b>$${Math.round(avgBuyUSD).toLocaleString('en-US')}</b></td><td class="kl">Total BTC diperoleh</td><td class="vl"><b>${tb.toFixed(8)} BTC</b></td></tr>
+      </tbody>
+    </table>
+  `,1,T);
 
-  // Section II - Rincian per kategori
-  y = sectionTitle(ML,y,'II. RINCIAN PER KATEGORI');
-  y+=1;
-  doc.autoTable({
-    startY:y,
-    margin:{left:ML,right:MR},
-    head:[['KATEGORI','MODAL MASUK','NILAI SEKARANG','P&L (IDR)','RETURN']],
-    body:[
-      ['Bitcoin DCA', fIDR(ti), fIDR(btcVal),
-        (dcaPnl>=0?'+':'-')+fIDR(Math.abs(dcaPnl)), fPct(dcaPnlPct)],
-      ['Portofolio Aset', fIDR(portInvest), fIDR(portTotal),
-        (portPnl>=0?'+':'-')+fIDR(Math.abs(portPnl)), fPct(portPnlPct)],
-      ['Arus Kas Bersih', fIDR(cfInc), '—', fIDR(cfNet),'—'],
-    ],
-    foot:[['TOTAL', fIDR(totalInvest), fIDR(grandTotal),
-      (grandPnl>=0?'+':'-')+fIDR(Math.abs(grandPnl)), fPct(grandPnlPct)]],
-    styles:{fontSize:9, cellPadding:3},
-    headStyles:{fillColor:C_BLUE, textColor:C_WHITE, fontStyle:'bold', fontSize:8},
-    footStyles:{fillColor:[239,246,255], textColor:C_BLACK, fontStyle:'bold'},
-    alternateRowStyles:{fillColor:C_BG},
-    columnStyles:{
-      0:{fontStyle:'bold'},
-      2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},
-    },
-    didParseCell:(d)=>{
-      if(d.section==='body'){
-        const v=d.cell.raw;
-        if(v&&v.toString().startsWith('+'))d.cell.styles.textColor=C_GREEN;
-        else if(v&&v.toString().startsWith('-')&&!v.toString().startsWith('-'+'Rp 0'))d.cell.styles.textColor=C_RED;
-      }
-    }
-  });
-  y = doc.lastAutoTable.finalY + 6;
+  const P2=page(`
+    ${sec('IV. GRAFIK PERTUMBUHAN PORTOFOLIO DCA','Nilai portofolio vs modal yang diinvestasikan sepanjang waktu')}
+    <div class="legend-row"><span class="li"><span class="ld" style="background:#059669"></span>Nilai Portofolio</span><span class="li"><span class="ld" style="background:#3b82f6"></span>Modal Masuk</span></div>
+    <div class="chart-box">${growthChart(700,200)}</div>
+    ${sec('V. P&amp;L PER ENTRY DCA','Untung/rugi tiap transaksi berdasarkan harga BTC terkini')}
+    <div class="legend-row"><span class="li"><span class="ld" style="background:#059669"></span>Untung</span><span class="li"><span class="ld" style="background:#dc2626"></span>Rugi</span></div>
+    <div class="chart-box">${dcaPnlBar(700,130)}</div>
+  `,2,T);
 
-  // Section III - BTC Live
-  y = sectionTitle(ML,y,'III. INFORMASI BITCOIN LIVE');
-  y+=1;
-  const btcRows=[
-    ['Harga BTC saat ini', fUSD(p), 'Kurs USD/IDR', 'Rp '+Math.round(r).toLocaleString('id-ID')],
-    ['Perubahan 24 jam', (S.btcChange>=0?'▲ +':'▼ ')+fPct(S.btcChange||0,false), 'BTC dalam IDR', fIDR(p*r)],
-    ['Rata-rata harga beli (DCA)', fUSD(avgBuyUSD), 'Total BTC diperoleh', tb.toFixed(8)+' BTC'],
-  ];
-  doc.autoTable({
-    startY:y,
-    margin:{left:ML,right:MR},
-    body:btcRows.map(r=>[r[0],r[1],r[2],r[3]]),
-    styles:{fontSize:9, cellPadding:2.5},
-    alternateRowStyles:{fillColor:C_BG},
-    columnStyles:{0:{fontStyle:'bold',cellWidth:48},1:{cellWidth:38},2:{fontStyle:'bold',cellWidth:48},3:{}},
-    theme:'plain',
-  });
+  // DCA stats
+  const dcaTotalVal=tb*p*r;
+  const p3body=dcaAsc.map((e,i)=>{
+    const cv=(e.btcAmount||0)*p*r, pnl=cv-e.amountIDR, pp=e.amountIDR>0?pnl/e.amountIDR*100:0;
+    return `<tr>
+      <td style="color:#6b7280">${i+1}</td>
+      <td>${e.date}</td>
+      <td>$${Math.round(e.priceUSD||0).toLocaleString('en-US')}</td>
+      <td>${idr(e.amountIDR)}</td>
+      <td style="color:#f59e0b">${(e.btcAmount||0).toFixed(8)}</td>
+      <td>${idr(cv)}</td>
+      <td class="${clr(pnl,'tg','tr')}">${pnl>=0?'+':''} ${idr(pnl)}</td>
+      <td><span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;background:${pnl>=0?'rgba(5,150,105,.12)':'rgba(220,38,38,.12)'};color:${pnl>=0?'#059669':'#dc2626'}">${pct(pp)}</span></td>
+    </tr>`;
+  }).join('');
 
-  pageFooter(H-MB);
+  const P3=page(`
+    ${sec('VI. STATISTIK DCA BITCOIN')}
+    <div class="summary-grid">
+      <div class="sum-card acc-blue"><div class="sum-label">TOTAL INVESTASI</div><div class="sum-val">${idr(ti)}</div></div>
+      <div class="sum-card acc-green"><div class="sum-label">NILAI SEKARANG</div><div class="sum-val">${idr(btcVal)}</div><div class="sum-sub ${clr(dcaPnl,'tg','tr')}">${dcaPnl>=0?'+':''} ${idr(dcaPnl)}</div></div>
+      <div class="sum-card acc-orange"><div class="sum-label">AVERAGE BUY PRICE</div><div class="sum-val">$${Math.round(avgBuyUSD).toLocaleString('en-US')}</div></div>
+      <div class="sum-card acc-purple"><div class="sum-label">TOTAL BTC DIPEROLEH</div><div class="sum-val">${tb.toFixed(8)}</div><div class="sum-sub tgr">BTC</div></div>
+    </div>
+    ${sec('VII. HISTORI TRANSAKSI DCA')}
+    ${ledger(
+      ['#','TANGGAL','HARGA BTC','MODAL IDR','BTC','NILAI KINI','P&L','RETURN %'],
+      dcaAsc.length?p3body:'<tr><td colspan="8" class="er">Belum ada transaksi DCA</td></tr>',
+      `<td></td><td><b>TOTAL</b></td><td><b>$${Math.round(avgBuyUSD).toLocaleString('en-US')}</b></td><td><b>${idr(ti)}</b></td><td><b>${tb.toFixed(8)}</b></td><td><b>${idr(btcVal)}</b></td><td class="${clr(dcaPnl,'tg','tr')}"><b>${dcaPnl>=0?'+':''} ${idr(dcaPnl)}</b></td><td class="${clr(dcaPnl,'tg','tr')}"><b>${pct(dcaPnlPct)}</b></td>`
+    )}
+  `,3,T);
 
-  /* ══════════════════════════════════════
-     PAGE 2 — DCA TRACKER
-  ══════════════════════════════════════ */
-  doc.addPage();
-  y = pageHeader();
+  // Portfolio
+  const portBody=S.port.map(x=>{
+    const val=x.qty*x.currentPrice, inv=x.qty*x.avgPrice, pnl=val-inv, pp=inv>0?pnl/inv*100:0;
+    const tot=portTotal>0?(val/portTotal*100).toFixed(1):'0';
+    return `<tr>
+      <td><b>${x.name}</b> <span style="color:#6b7280;font-size:9px">${x.ticker}</span></td>
+      <td>${x.type}</td><td>${x.qty}</td>
+      <td>${idr(x.avgPrice)}</td><td>${idr(x.currentPrice)}</td>
+      <td>${idr(val)}</td>
+      <td class="${clr(pnl,'tg','tr')}">${pnl>=0?'+':''} ${idr(pnl)}</td>
+      <td><span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;background:${pnl>=0?'rgba(5,150,105,.12)':'rgba(220,38,38,.12)'};color:${pnl>=0?'#059669':'#dc2626'}">${pct(pp)}</span></td>
+      <td>${tot}%</td>
+    </tr>`;
+  }).join('');
 
-  y = sectionTitle(ML,y,'IV. DCA BITCOIN — RINGKASAN');
-  y+=1;
+  const P4=page(`
+    ${sec('VIII. PORTOFOLIO ASET LAINNYA')}
+    <div class="summary-grid">
+      <div class="sum-card acc-blue"><div class="sum-label">TOTAL NILAI ASET</div><div class="sum-val">${idr(portTotal)}</div></div>
+      <div class="sum-card acc-orange"><div class="sum-label">TOTAL MODAL</div><div class="sum-val">${idr(portInvest)}</div></div>
+      <div class="sum-card acc-green"><div class="sum-label">UNREALIZED P&amp;L</div><div class="sum-val ${clr(portPnl,'tg','tr')}">${portPnl>=0?'+':''} ${idr(portPnl)}</div><div class="sum-sub ${clr(portPnl,'tg','tr')}">${pct(portPnlPct)}</div></div>
+      <div class="sum-card acc-purple"><div class="sum-label">JUMLAH ASET</div><div class="sum-val">${S.port.length}</div><div class="sum-sub tgr">instrumen</div></div>
+    </div>
+    ${sec('IX. DETAIL ASET')}
+    ${ledger(
+      ['NAMA','TIPE','QTY','AVG BUY','HARGA KINI','NILAI','P&L','RETURN','ALOKASI'],
+      S.port.length?portBody:'<tr><td colspan="9" class="er">Belum ada aset di portofolio</td></tr>',
+      S.port.length?`<td colspan="5"><b>TOTAL PORTOFOLIO</b></td><td><b>${idr(portTotal)}</b></td><td class="${clr(portPnl,'tg','tr')}"><b>${portPnl>=0?'+':''} ${idr(portPnl)}</b></td><td class="${clr(portPnl,'tg','tr')}"><b>${pct(portPnlPct)}</b></td><td>100%</td>`:null
+    )}
+  `,4,T);
 
-  // DCA summary cards
-  const dca4=[
-    [C_BLUE,   'TOTAL INVESTASI',     fIDR(ti),''],
-    [C_GREEN,  'NILAI SEKARANG',      fIDR(btcVal), (dcaPnl>=0?'+':'-')+fIDR(Math.abs(dcaPnl))],
-    [C_ORANGE, 'AVERAGE BUY PRICE',   fUSD(avgBuyUSD),''],
-    [C_PURPLE, 'TOTAL BTC',           tb.toFixed(8)+' BTC',''],
-  ];
-  const dc4W=(CW-4.5)/4;
-  dca4.forEach((c,i)=>{
-    summaryCard(ML+i*(dc4W+1.5), y, dc4W, 18, c[0], c[1], c[2], c[3],
-      i===1?(dcaPnl>=0?C_GREEN:C_RED):C_GRAY);
-  });
-  y+=22;
-
-  // DCA P&L indicator
-  setFont('bold',9,dcaPnl>=0?C_GREEN:C_RED);
-  doc.text(`Total P&L: ${dcaPnl>=0?'+':'-'}${fIDR(Math.abs(dcaPnl))}  (${fPct(dcaPnlPct)})`,ML,y);
-  y+=6;
-
-  // DCA table
-  y = sectionTitle(ML,y,'V. HISTORI TRANSAKSI DCA');
-  y+=1;
-
-  const dcaRows=dcaAsc.map((e,i)=>{
-    const cv=e.btcAmount*(p||0)*r;
-    const pnl=cv-e.amountIDR;
-    const pp=e.amountIDR>0?pnl/e.amountIDR*100:0;
-    return [
-      i+1,
-      e.date,
-      fUSD(e.priceUSD||0),
-      fIDR(e.amountIDR),
-      (e.btcAmount||0).toFixed(8),
-      fIDR(cv),
-      (pnl>=0?'+':'-')+fIDR(Math.abs(pnl)),
-      fPct(pp),
-    ];
-  });
-
-  doc.autoTable({
-    startY:y,
-    margin:{left:ML,right:MR},
-    head:[['#','TANGGAL','HARGA BTC','MODAL IDR','BTC','NILAI KINI','P&L','RETURN%']],
-    body:dcaRows.length>0?dcaRows:[['—','Belum ada data','','','','','','']],
-    styles:{fontSize:8, cellPadding:2.2},
-    headStyles:{fillColor:C_BLUE,textColor:C_WHITE,fontStyle:'bold',fontSize:7.5},
-    alternateRowStyles:{fillColor:C_BG},
-    columnStyles:{
-      0:{halign:'center',cellWidth:7},
-      1:{cellWidth:22},
-      2:{halign:'right',cellWidth:24},
-      3:{halign:'right',cellWidth:24},
-      4:{halign:'right',cellWidth:24},
-      5:{halign:'right',cellWidth:24},
-      6:{halign:'right',cellWidth:26},
-      7:{halign:'right',cellWidth:18},
-    },
-    didParseCell:(d)=>{
-      if(d.section==='body'&&d.column.index===6){
-        const v=d.cell.raw?.toString()||'';
-        if(v.startsWith('+'))d.cell.styles.textColor=C_GREEN;
-        else if(v.startsWith('-'))d.cell.styles.textColor=C_RED;
-      }
-      if(d.section==='body'&&d.column.index===7){
-        const v=parseFloat(d.cell.raw)||0;
-        d.cell.styles.textColor=v>=0?C_GREEN:C_RED;
-      }
-    },
-    foot:[['','TOTAL',fUSD(avgBuyUSD),fIDR(ti),tb.toFixed(8),fIDR(btcVal),
-      (dcaPnl>=0?'+':'-')+fIDR(Math.abs(dcaPnl)),fPct(dcaPnlPct)]],
-    footStyles:{fillColor:[239,246,255],textColor:C_BLACK,fontStyle:'bold',fontSize:8},
-  });
-
-  pageFooter(H-MB);
-
-  /* ══════════════════════════════════════
-     PAGE 3 — PORTOFOLIO ASET
-  ══════════════════════════════════════ */
-  doc.addPage();
-  y = pageHeader();
-
-  y = sectionTitle(ML,y,'VI. PORTOFOLIO ASET LAINNYA');
-  y+=1;
-
-  // Portfolio summary
-  const pSumCards=[
-    [C_BLUE,  'TOTAL NILAI',     fIDR(portTotal),''],
-    [C_ORANGE,'TOTAL MODAL',     fIDR(portInvest),''],
-    [C_GREEN, 'UNREALIZED P&L',  (portPnl>=0?'+':'-')+fIDR(Math.abs(portPnl)),fPct(portPnlPct)],
-    [C_PURPLE,'JUMLAH ASET',     S.port.length+' aset',''],
-  ];
-  const ps4W=(CW-4.5)/4;
-  pSumCards.forEach((c,i)=>{
-    summaryCard(ML+i*(ps4W+1.5),y,ps4W,18,c[0],c[1],c[2],c[3],
-      i===2?(portPnl>=0?C_GREEN:C_RED):C_GRAY);
-  });
-  y+=22;
-
-  const portRows=S.port.map(x=>{
-    const val=x.qty*x.currentPrice, inv=x.qty*x.avgPrice;
-    const pnl=val-inv, pp=inv>0?pnl/inv*100:0;
-    return [
-      x.name+(x.ticker?` (${x.ticker})`:''),
-      x.type,
-      x.qty,
-      fIDR(x.avgPrice),
-      fIDR(x.currentPrice),
-      fIDR(val),
-      (pnl>=0?'+':'-')+fIDR(Math.abs(pnl)),
-      fPct(pp),
-    ];
-  });
-
-  doc.autoTable({
-    startY:y,
-    margin:{left:ML,right:MR},
-    head:[['NAMA ASET','TIPE','QTY','AVG BUY','HARGA KINI','NILAI','P&L','RETURN%']],
-    body:portRows.length>0?portRows:[['—','Belum ada aset','','','','','','']],
-    styles:{fontSize:8.5,cellPadding:2.5},
-    headStyles:{fillColor:C_PURPLE,textColor:C_WHITE,fontStyle:'bold',fontSize:8},
-    alternateRowStyles:{fillColor:C_BG},
-    columnStyles:{
-      0:{fontStyle:'bold'},
-      2:{halign:'right',cellWidth:18},
-      3:{halign:'right',cellWidth:26},
-      4:{halign:'right',cellWidth:26},
-      5:{halign:'right',cellWidth:26},
-      6:{halign:'right',cellWidth:28},
-      7:{halign:'right',cellWidth:18},
-    },
-    didParseCell:(d)=>{
-      if(d.section==='body'&&d.column.index===6){
-        const v=d.cell.raw?.toString()||'';
-        if(v.startsWith('+'))d.cell.styles.textColor=C_GREEN;
-        else if(v.startsWith('-'))d.cell.styles.textColor=C_RED;
-      }
-      if(d.section==='body'&&d.column.index===7){
-        const v=parseFloat(d.cell.raw)||0;
-        d.cell.styles.textColor=v>=0?C_GREEN:C_RED;
-      }
-    },
-    foot:portRows.length>0?[['TOTAL','','',fIDR(portInvest),'',fIDR(portTotal),
-      (portPnl>=0?'+':'-')+fIDR(Math.abs(portPnl)),fPct(portPnlPct)]]:undefined,
-    footStyles:{fillColor:[246,240,255],textColor:C_BLACK,fontStyle:'bold',fontSize:8.5},
-  });
-
-  pageFooter(H-MB);
-
-  /* ══════════════════════════════════════
-     PAGE 4 — ARUS KAS
-  ══════════════════════════════════════ */
-  doc.addPage();
-  y = pageHeader();
-
-  y = sectionTitle(ML,y,'VII. ARUS KAS (CASHFLOW)');
-  y+=1;
-
-  // CF summary cards
-  const cf4=[
-    [C_GREEN, 'TOTAL PEMASUKAN',  fIDR(cfInc),''],
-    [C_RED,   'TOTAL PENGELUARAN',fIDR(cfExp),''],
-    [C_BLUE,  'TOTAL INVESTASI',  fIDR(cfInv),''],
-    [cfNet>=0?C_GREEN:C_RED, 'SALDO BERSIH', fIDR(cfNet), cfInc>0?'Rasio inv: '+(cfInv/cfInc*100).toFixed(1)+'%':''],
-  ];
-  const cf4W=(CW-4.5)/4;
-  cf4.forEach((c,i)=>{
-    summaryCard(ML+i*(cf4W+1.5),y,cf4W,18,c[0],c[1],c[2],c[3],
-      i===3?(cfNet>=0?C_GREEN:C_RED):C_GRAY);
-  });
-  y+=22;
-
-  // CF transactions table
-  y = sectionTitle(ML,y,'VIII. RINCIAN TRANSAKSI KAS');
-  y+=1;
-
-  const cfSorted=[...S.cf].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const cfRows=cfSorted.map(e=>{
+  // Cashflow
+  const cfBody=cfDesc.map(e=>{
     const tl={income:'Pemasukan',expense:'Pengeluaran',investment:'Investasi'};
+    const tc={income:'tg',expense:'tr',investment:'ta'};
     const sign=e.type==='income'?'+':'-';
-    return[e.date, tl[e.type]||e.type, e.category, e.desc||'—', sign+fIDR(e.amount)];
-  });
+    return `<tr>
+      <td>${e.date}</td>
+      <td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:${e.type==='income'?'rgba(5,150,105,.12)':e.type==='expense'?'rgba(220,38,38,.12)':'rgba(59,130,246,.12)'};color:${e.type==='income'?'#059669':e.type==='expense'?'#dc2626':'#3b82f6'}">${tl[e.type]||e.type}</span></td>
+      <td>${e.category}</td>
+      <td>${e.desc||'—'}</td>
+      <td class="${tc[e.type]||''}" style="text-align:right">${sign} ${idr(e.amount)}</td>
+    </tr>`;
+  }).join('');
 
-  doc.autoTable({
-    startY:y,
-    margin:{left:ML,right:MR},
-    head:[['TANGGAL','TIPE','KATEGORI','DESKRIPSI','JUMLAH']],
-    body:cfRows.length>0?cfRows:[['—','Belum ada transaksi','','','']],
-    styles:{fontSize:8.5,cellPadding:2.5},
-    headStyles:{fillColor:C_GREEN,textColor:C_WHITE,fontStyle:'bold',fontSize:8},
-    alternateRowStyles:{fillColor:C_BG},
-    columnStyles:{
-      0:{cellWidth:24},
-      1:{cellWidth:26},
-      2:{cellWidth:32},
-      3:{},
-      4:{halign:'right',cellWidth:34},
-    },
-    didParseCell:(d)=>{
-      if(d.section==='body'&&d.column.index===4){
-        const v=d.cell.raw?.toString()||'';
-        if(v.startsWith('+'))d.cell.styles.textColor=C_GREEN;
-        else if(v.startsWith('-'))d.cell.styles.textColor=C_RED;
-      }
-      if(d.section==='body'&&d.column.index===1){
-        const v=d.cell.raw?.toString()||'';
-        if(v==='Pemasukan')d.cell.styles.textColor=C_GREEN;
-        else if(v==='Pengeluaran')d.cell.styles.textColor=C_RED;
-        else d.cell.styles.textColor=C_BLUE;
-      }
-    },
-  });
+  const P5=page(`
+    ${sec('X. ARUS KAS (CASHFLOW)')}
+    <div class="cf-grid">
+      <div class="cf-card" style="border-left-color:#059669"><div class="cfl">TOTAL PEMASUKAN</div><div class="cfv tg">${idr(cfInc)}</div></div>
+      <div class="cf-card" style="border-left-color:#dc2626"><div class="cfl">TOTAL PENGELUARAN</div><div class="cfv tr">${idr(cfExp)}</div></div>
+      <div class="cf-card" style="border-left-color:#3b82f6"><div class="cfl">TOTAL INVESTASI</div><div class="cfv" style="color:#3b82f6">${idr(cfInv)}</div></div>
+      <div class="cf-card" style="border-left-color:${cfNet>=0?'#059669':'#dc2626'}"><div class="cfl">SALDO BERSIH</div><div class="cfv ${clr(cfNet,'tg','tr')}">${cfNet>=0?'+':''} ${idr(cfNet)}</div></div>
+    </div>
+    ${sec('XI. TRANSAKSI KAS')}
+    ${ledger(
+      ['TANGGAL','TIPE','KATEGORI','DESKRIPSI','JUMLAH'],
+      cfDesc.length?cfBody:'<tr><td colspan="5" class="er">Belum ada transaksi kas</td></tr>'
+    )}
+  `,5,T);
 
-  y = doc.lastAutoTable.finalY + 8;
+  const P6=page(`
+    ${sec('XII. RINGKASAN AKHIR')}
+    <div class="summary-grid">
+      <div class="sum-card acc-green"><div class="sum-label">TOTAL ASET KESELURUHAN</div><div class="sum-val">${idr(grandTotal)}</div><div class="sum-sub ${clr(grandPnl,'tg','tr')}">${grandPnl>=0?'+':''} ${idr(grandPnl)} (${pct(grandPnlPct)})</div></div>
+      <div class="sum-card acc-blue"><div class="sum-label">TOTAL MODAL SELURUHNYA</div><div class="sum-val">${idr(totalInvest)}</div></div>
+      <div class="sum-card acc-orange"><div class="sum-label">BITCOIN DCA</div><div class="sum-val">${idr(btcVal)}</div><div class="sum-sub tgr">${tb.toFixed(8)} BTC · avg $${Math.round(avgBuyUSD).toLocaleString('en-US')}</div></div>
+      <div class="sum-card acc-purple"><div class="sum-label">PORTOFOLIO ASET</div><div class="sum-val">${idr(portTotal)}</div><div class="sum-sub tgr">${S.port.length} instrumen</div></div>
+    </div>
+    <div class="mt14">
+      <div class="disclaimer">
+        <p><b>⚠ Disclaimer</b></p>
+        <p>Laporan ini dibuat otomatis oleh WealthOS untuk keperluan pribadi dan dokumentasi. Data portofolio berdasarkan harga Bitcoin real-time pada saat laporan digenerate dan dapat berbeda dengan harga aktual saat ini.</p>
+        <p>Dokumen ini <b>bukan merupakan rekomendasi investasi</b>. Nilai investasi dapat naik maupun turun. Selalu lakukan riset mandiri (DYOR) dan konsultasikan dengan penasihat keuangan sebelum membuat keputusan investasi.</p>
+      </div>
+    </div>
+  `,6,T);
 
-  // Disclaimer box
-  if(y < H-MB-35){
-    fillRect(ML,y,CW,28,C_BG);
-    drawLine(ML,y,ML,y+28,C_ORANGE,1.5);
-    setFont('bold',8,C_ORANGE);
-    doc.text('⚠  DISCLAIMER',ML+3,y+6);
-    setFont('normal',7.5,C_GRAY);
-    const disc=[
-      'Laporan ini dibuat otomatis oleh WealthOS untuk keperluan pribadi.',
-      'Data berdasarkan harga BTC real-time saat laporan digenerate.',
-      'Bukan merupakan rekomendasi investasi. Investasi mengandung risiko.',
-      'Selalu lakukan riset mandiri sebelum mengambil keputusan finansial.',
-    ];
-    disc.forEach((line,i)=>doc.text('• '+line,ML+3,y+11+i*4.5));
+  /* ─── FULL HTML ─── */
+  const html=`<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WealthOS — Laporan Keuangan ${dateStr}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#e5e7eb;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111827}
+
+  /* ── SAVE BUTTON BAR (screen only, hidden on print) ── */
+  .save-bar{
+    position:fixed;top:0;left:0;right:0;z-index:9999;
+    background:linear-gradient(135deg,#0891b2,#7c3aed);
+    padding:10px 20px;
+    display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 12px rgba(0,0,0,.3);
+  }
+  .save-bar-title{color:white;font-weight:700;font-size:14px}
+  .save-bar-sub{color:rgba(255,255,255,.8);font-size:11px;margin-top:1px}
+  .btn-save{
+    background:white;color:#0891b2;
+    border:none;border-radius:8px;
+    padding:10px 22px;font-size:13px;font-weight:800;
+    cursor:pointer;display:flex;align-items:center;gap:8px;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+    transition:all .2s;white-space:nowrap;
+  }
+  .btn-save:hover{background:#f0f9ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+  .btn-save:active{transform:translateY(0)}
+  .save-hint{color:rgba(255,255,255,.7);font-size:10px;margin-top:3px}
+  body.printing .save-bar{display:none!important}
+  @media print{.save-bar{display:none!important}}
+
+  /* ── A4 PAGE ── */
+  .pages-wrap{padding:70px 20px 20px}
+  .a4page{
+    width:210mm;min-height:297mm;
+    background:white;margin:0 auto 20px;
+    padding:14mm 14mm 10mm;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
+    display:flex;flex-direction:column;
+    page-break-after:always;
+  }
+  @media print{
+    body{background:white}
+    .pages-wrap{padding:0}
+    .a4page{width:100%;margin:0;box-shadow:none;min-height:100vh;padding:10mm 13mm 8mm;page-break-after:always}
+    @page{size:A4 portrait;margin:0}
   }
 
-  pageFooter(H-MB);
+  /* HEADER */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+  .hdr-left{}
+  .logo{font-size:18px;font-weight:900;color:#0891b2;letter-spacing:-.5px}
+  .logo span{color:#7c3aed}
+  .logo-sub{font-size:8.5px;color:#6b7280;letter-spacing:.03em;margin-top:1px}
+  .hdr-right{text-align:right}
+  .hdr-title{font-size:13px;font-weight:800;color:#111827;letter-spacing:.04em}
+  .hdr-meta{font-size:9.5px;color:#6b7280;margin-top:2px}
+  .hdr-line{height:3px;background:linear-gradient(90deg,#0891b2,#7c3aed);border-radius:2px;margin-bottom:12px}
 
-  /* ─── DOWNLOAD ─── */
-  doc.save(fname);
-  toast('✅ PDF berhasil diunduh: '+fname);
+  /* FOOTER */
+  .ftr-line{height:1px;background:#e5e7eb;margin-top:auto;padding-top:12px;margin-bottom:6px}
+  .ftr{display:flex;justify-content:space-between;font-size:8.5px;color:#9ca3af}
+  .content{flex:1}
 
-  }catch(err){
-    console.error('PDF error:',err);
-    toast('❌ Gagal buat PDF: '+err.message,1);
+  /* SECTION */
+  .sec-hdr{margin-bottom:8px}
+  .sec-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#1e40af;border-bottom:1.5px solid #dbeafe;padding-bottom:4px}
+  .sec-sub{font-size:9.5px;color:#6b7280;margin-top:2px}
+
+  /* SUMMARY CARDS */
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;margin-bottom:14px}
+  .sum-card{border:1px solid #e5e7eb;border-radius:7px;padding:10px 12px;position:relative;overflow:hidden;padding-left:16px}
+  .sum-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+  .acc-green::before{background:#059669}.acc-blue::before{background:#3b82f6}
+  .acc-orange::before{background:#f59e0b}.acc-purple::before{background:#7c3aed}
+  .sum-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:5px;font-weight:700}
+  .sum-val{font-size:18px;font-weight:800;color:#111827;line-height:1.1}
+  .sum-sub{font-size:9.5px;margin-top:3px}
+
+  /* LEDGER TABLE */
+  .ledger{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:6px;margin-bottom:12px}
+  .ledger thead tr{background:#f8fafc}
+  .ledger th{padding:6px 7px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#374151;border-bottom:1.5px solid #e5e7eb;font-weight:700;white-space:nowrap}
+  .ledger td{padding:5.5px 7px;border-bottom:1px solid #f3f4f6;color:#374151;vertical-align:top}
+  .ledger td.kl{color:#6b7280;font-size:10px;width:30%}
+  .ledger td.vl{font-size:10.5px;width:20%}
+  .ledger tr:last-child td{border-bottom:none}
+  .ledger tr:nth-child(even) td{background:#fafafa}
+  .ledger tfoot tr{background:#eff6ff!important}
+  .ledger tfoot td{font-weight:700;font-size:10.5px;border-top:1.5px solid #bfdbfe;padding:7px}
+  .er{text-align:center;color:#9ca3af;padding:18px!important;font-style:italic}
+
+  /* CHART */
+  .chart-box{border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;background:white;margin-top:4px;margin-bottom:10px}
+  .legend-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;margin-bottom:4px}
+  .li{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:#374151}
+  .ld{display:inline-block;width:10px;height:10px;border-radius:2px}
+
+  /* CASHFLOW */
+  .cf-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-top:6px;margin-bottom:12px}
+  .cf-card{border:1px solid #e5e7eb;border-left-width:4px;border-radius:6px;padding:9px 10px}
+  .cfl{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:4px;font-weight:700}
+  .cfv{font-size:15px;font-weight:800;color:#111827}
+
+  /* DISCLAIMER */
+  .disclaimer{background:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:12px 14px;font-size:10px;line-height:1.85;color:#374151}
+  .disclaimer p{margin-bottom:5px}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .mt14{margin-top:14px}
+
+  /* COLORS */
+  .tg{color:#059669!important}.tr{color:#dc2626!important}
+  .ta{color:#3b82f6!important}.tgr{color:#6b7280!important}
+</style>
+</head>
+<body>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <div>
+    <div class="save-bar-title">📄 WealthOS — Laporan Keuangan</div>
+    <div class="save-bar-sub">${dateStr} &nbsp;·&nbsp; Akun: ${seedDisplay}</div>
+    <div class="save-hint">Klik tombol di kanan untuk simpan sebagai PDF →</div>
+  </div>
+  <button class="btn-save" onclick="savePDF()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Simpan PDF
+  </button>
+</div>
+
+<div class="pages-wrap">
+${P1}${P2}${P3}${P4}${P5}${P6}
+</div>
+
+<script>
+function savePDF(){
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('printing'),2000);
+}
+<\/script>
+</body>
+</html>`;
+
+  /* ─── OPEN via Blob ─── */
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(win){
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+    toast('📄 Laporan dibuka! Klik tombol "Simpan PDF" di halaman tersebut');
+  } else {
+    // Fallback: download .html
+    const a=document.createElement('a');
+    a.href=url; a.download=`WealthOS-Laporan-${now.toISOString().slice(0,10)}.html`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    toast('📥 File laporan diunduh — buka lalu klik Simpan PDF');
   }
 }
 </script>
