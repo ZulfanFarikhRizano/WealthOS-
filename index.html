@@ -23,6 +23,16 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden;max-width:100vw}
 body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+/* Smooth transitions hanya untuk elemen yang membutuhkan */
+.stat-card,.card,.modal,.fi,.btn,.btn-primary,.btn-ghost,.btn-del,
+.login-box,.btc-badge,.acct-badge,.theme-toggle,
+nav,.nav-topstrip,.bottom-nav,
+.bnav-item,.bnav-label,.bnav-icon,
+[data-theme="light"] .stat-card,[data-theme="light"] .card{
+  transition:background-color .3s ease,border-color .3s ease,
+    color .3s ease,box-shadow .3s ease,opacity .3s ease;
+}
+
 
 /* ── GRID BG ── */
 .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -52,7 +62,7 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 .login-logo span{color:var(--text)}
 .login-tagline{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:1.5rem;line-height:1.5}
 .ltabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:1.5rem;gap:2px}
-.ltab{flex:1;display:flex;align-items:center;justify-content:center;gap:.35rem;text-align:center;padding:.6rem .3rem;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);transition:all .2s;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.ltab{flex:1;display:flex;align-items:center;justify-content:center;gap:.35rem;text-align:center;padding:.6rem .3rem;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);transition:color .2s,background .2s;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .ltab.active{background:var(--accent);color:var(--bg)}
 
 /* seed display */
@@ -87,18 +97,18 @@ body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-he
 .check-box{
   width:20px;height:20px;border:2px solid var(--border);border-radius:5px;
   display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;font-size:.8rem;
+  transition:background .2s,border-color .2s;flex-shrink:0;font-size:.8rem;
 }
 .check-box.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .check-label{font-size:.8rem;color:var(--muted);line-height:1.4}
 .lbtn{
   width:100%;padding:.95rem;border-radius:10px;background:var(--accent);color:var(--bg);
   border:none;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;
-  cursor:pointer;transition:all .2s;letter-spacing:.02em;margin-top:.5rem;
+  cursor:pointer;transition:background .2s,border-color .2s,color .2s;letter-spacing:.02em;margin-top:.5rem;
 }
 .lbtn:hover:not(:disabled){background:#33eaff;box-shadow:var(--glow2);transform:translateY(-1px)}
 .lbtn:disabled{opacity:.45;cursor:not-allowed}
-.lbtn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text);width:100%;padding:.7rem;border-radius:10px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:.5rem}
+.lbtn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text);width:100%;padding:.7rem;border-radius:10px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s;margin-bottom:.5rem}
 .lbtn-ghost:hover{border-color:var(--accent);color:var(--accent)}
 .lerr{color:var(--danger);font-size:.8rem;text-align:center;margin:.5rem 0;display:none}
 .lloading{display:none;align-items:center;justify-content:center;gap:.7rem;padding:1rem;color:var(--muted);font-size:.84rem}
@@ -127,20 +137,20 @@ nav{
 [data-theme="light"] .nav-logo span{color:var(--accent)}
 .nav-tabs{display:flex;overflow-x:auto;flex:1;scrollbar-width:none;-ms-overflow-style:none}
 .nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{padding:.85rem .9rem;cursor:pointer;font-size:.75rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-tab{padding:.85rem .9rem;cursor:pointer;font-size:.75rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .btc-badge{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-family:'Space Mono',monospace;font-size:.7rem;white-space:nowrap}
 .live-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-.acct-badge{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;cursor:pointer;transition:all .2s;white-space:nowrap;max-width:140px;overflow:hidden}
+.acct-badge{display:flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;cursor:pointer;transition:background .2s,border-color .2s;white-space:nowrap;max-width:140px;overflow:hidden}
 .acct-badge:hover{border-color:var(--accent);color:var(--accent)}
 .acct-dot{width:6px;height:6px;background:var(--accent3);border-radius:50%;flex-shrink:0}
 
 /* ── PAGES ── */
 .page{display:none;padding:1.2rem;position:relative;z-index:1;max-width:1400px;margin:0 auto}
-.page.active{display:block;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1;transform:translateY(0)}}
 
 /* ── COMMON ── */
 .ph{margin-bottom:1.2rem}
@@ -177,7 +187,7 @@ nav{
 .tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:600px}
 th{background:var(--surface2);padding:.85rem 1.1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:.85rem 1.1rem;border-bottom:1px solid rgba(30,45,69,.5);font-family:'Space Mono',monospace;font-size:.8rem;white-space:nowrap}
+td{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:.8rem;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(0,229,255,.02)}
 .badge{display:inline-block;padding:.18rem .55rem;border-radius:4px;font-size:.68rem;font-weight:700;letter-spacing:.04em}
@@ -261,7 +271,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .setup-link:hover{text-decoration:underline}
 
 
-.sync-bar{position:fixed;bottom:1.5rem;left:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .85rem;font-size:.72rem;color:var(--muted);z-index:150;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;transition:bottom .2s}
+.sync-bar{position:fixed;bottom:calc(110px + env(safe-area-inset-bottom,0px));left:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;font-size:.7rem;color:var(--muted);z-index:201;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;transition:bottom .2s}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);flex-shrink:0}
 .sdot.syncing{background:var(--accent4);animation:pulse 1s infinite}
 .sdot.err{background:var(--danger)}
@@ -367,25 +377,26 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   bottom:calc(16px + env(safe-area-inset-bottom,0px));
   left:50%;transform:translateX(-50%);
   z-index:200;
+  will-change:transform;
   width:calc(100% - 32px);
   max-width:480px;
   border-radius:28px;
   border:none;
   padding:0;
-  /* Base glass - akan di-override per theme */
-  background:rgba(15,20,40,0.65);
-  backdrop-filter:blur(40px) saturate(1.8) brightness(1.1);
-  -webkit-backdrop-filter:blur(40px) saturate(1.8) brightness(1.1);
+  /* Base glass dark - transparan */
+  background:rgba(5,8,20,0.28);
+  backdrop-filter:blur(52px) saturate(1.8) brightness(1.2);
+  -webkit-backdrop-filter:blur(52px) saturate(1.8) brightness(1.2);
   box-shadow:
-    0 8px 32px rgba(0,0,0,.45),
-    0 2px 8px rgba(0,0,0,.3),
-    0 0 0 1px rgba(255,255,255,.08) inset,
-    0 1px 0 rgba(255,255,255,.12) inset;
+    0 8px 32px rgba(0,0,0,.25),
+    0 2px 8px rgba(0,0,0,.15),
+    0 0 0 1px rgba(255,255,255,.07) inset,
+    0 1px 0 rgba(255,255,255,.1) inset;
 }
 .bnav-items{display:flex;align-items:stretch;border-radius:28px;overflow:hidden;padding:4px 6px}
 .bnav-item{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:.55rem .3rem .5rem;gap:.15rem;cursor:pointer;
+  padding:.45rem .2rem .42rem;gap:.12rem;cursor:pointer;
   color:rgba(255,255,255,0.45);
   transition:color .25s ease, background .25s ease;
   border:none;background:none;
@@ -401,7 +412,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 }
 .bnav-item .bnav-label{
   transition:color .25s ease, letter-spacing .25s ease, font-weight .1s;
-  font-size:.6rem;letter-spacing:.04em;font-weight:600;
+  font-size:.48rem;letter-spacing:.02em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:clip;
 }
 .bnav-item.active{color:var(--accent)}
 .bnav-item.active::before{
@@ -600,12 +611,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <span id="nav-btc-mob" style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--accent4)">—</span>
     <span id="nav-chg-mob" style="font-size:.62rem;color:var(--muted)"></span>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()" style="width:42px;height:24px;flex-shrink:0" title="Toggle theme">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" style="flex-shrink:0">
     <div class="theme-toggle-icons">
-      <svg class="icon-sun" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-      <svg class="icon-moon" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </div>
-    <div class="theme-toggle-thumb" style="width:16px;height:16px;top:3px;left:2px"></div>
+    <div class="theme-toggle-thumb"></div>
   </button>
   <button onclick="showAcct()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.35rem;font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Akun</button>
 </div>
@@ -633,7 +644,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
       <div class="theme-toggle-icons">
         <svg class="icon-sun" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        <svg class="icon-moon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-moon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </div>
       <div class="theme-toggle-thumb"></div>
     </button>
@@ -894,6 +905,40 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
 </div>
 
+<!-- MODAL GANTI SEED -->
+<div class="overlay" id="modal-change-seed">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title" style="display:flex;align-items:center;gap:.5rem">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+      Ganti Seed Phrase
+    </div>
+    <div id="change-seed-step1">
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:1rem;margin-bottom:1.2rem;font-size:.8rem;line-height:1.6;color:var(--text)">
+        ⚠️ <strong>Perhatian!</strong> Seed phrase lama akan tidak aktif. Pastikan kamu mencatat seed baru sebelum menutup halaman ini. Data akun tetap aman.
+      </div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:1.2rem">Seed phrase saat ini:</div>
+      <div class="seed-row" id="old-seed-display" style="margin-bottom:1.2rem;opacity:.6;pointer-events:none"></div>
+      <div style="font-size:.82rem;color:var(--text);margin-bottom:.6rem;font-weight:600">Seed phrase baru:</div>
+      <div class="seed-row" id="new-seed-display" style="margin-bottom:1.2rem"></div>
+      <button class="btn" style="width:100%;background:rgba(0,229,255,.1);border:1px solid var(--accent);color:var(--accent);margin-bottom:.8rem;border-radius:8px;padding:.65rem;font-size:.8rem;font-family:Syne,sans-serif;font-weight:700" onclick="regenerateNewSeed()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;margin-right:.3rem"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        Generate Ulang
+      </button>
+      <div style="display:flex;gap:.7rem">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-change-seed')">Batal</button>
+        <button class="btn btn-primary" style="flex:1" id="btn-confirm-seed" onclick="confirmChangeSeed()">Konfirmasi Ganti</button>
+      </div>
+    </div>
+    <div id="change-seed-step2" style="display:none;text-align:center;padding:1rem 0">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">✅</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.4rem">Seed Phrase Berhasil Diganti!</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:1.2rem">Catat seed baru ini dan jangan bagikan ke siapapun.</div>
+      <div class="seed-row" id="confirmed-seed-display" style="margin-bottom:1.2rem"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="closeModal('modal-change-seed');closeModal('modal-acct')">Selesai</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-port">
   <div class="modal">
     <div class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:.4rem"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Tambah Aset</div>
@@ -965,6 +1010,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
+      <button class="btn btn-ghost" style="flex:1;border-color:var(--accent4);color:var(--accent4)" onclick="showChangeSeed()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:.3rem"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        Ganti Seed
+      </button>
       <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem" onclick="doLogout()" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
     </div>
   </div>
@@ -982,37 +1031,44 @@ body{transition:background .4s ease,color .3s ease}
 
 /* ── THEME TOGGLE ── */
 .theme-toggle{
-  position:relative;width:52px;height:28px;
-  background:var(--surface2);border:1.5px solid var(--border);
-  border-radius:100px;cursor:pointer;flex-shrink:0;
+  position:relative;
+  width:52px;height:28px;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:100px;
+  cursor:pointer;flex-shrink:0;
   padding:0;outline:none;
+  display:inline-flex;align-items:center;
 }
 .theme-toggle:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
 .theme-toggle-thumb{
-  position:absolute;top:3px;left:3px;
+  position:absolute;
+  top:50%;left:4px;
+  transform:translateY(-50%);
   width:20px;height:20px;border-radius:50%;
   background:var(--muted);
-  transition:transform .4s cubic-bezier(.34,1.56,.64,1), background .3s ease;
-  display:flex;align-items:center;justify-content:center;
+  transition:left .4s cubic-bezier(.34,1.56,.64,1), background .3s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;
+  will-change:left;
 }
-[data-theme="light"] .theme-toggle-thumb{transform:translateX(24px);background:#f59e0b}
+[data-theme="light"] .theme-toggle-thumb{left:28px !important;transform:translateY(-50%) !important;background:#f59e0b}
 [data-theme="light"] .theme-toggle{background:#fef9c3;border-color:#fcd34d}
 [data-theme="light"] .theme-toggle:hover{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.15)}
 .theme-toggle-icons{
   position:absolute;inset:0;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 6px;pointer-events:none;
+  padding:0 7px;pointer-events:none;
+  z-index:1;
 }
 .theme-toggle-icons svg{transition:opacity .3s ease}
-.icon-moon{opacity:.8}
+.icon-moon{opacity:.9;stroke:#ffffff !important;fill:none !important;color:#ffffff}
 .icon-sun{opacity:.2}
 [data-theme="light"] .icon-moon{opacity:.2}
 [data-theme="light"] .icon-sun{opacity:.9}
 
 /* ── LIGHT MODE OVERRIDES ── */
 [data-theme="light"] nav{background:var(--nav-bg);box-shadow:0 2px 16px rgba(0,0,0,.08)}
-[data-theme="light"] .bottom-nav{background:var(--nav-bg);box-shadow:0 -2px 16px rgba(0,0,0,.08)}
+[data-theme="light"] .bottom-nav{background:rgba(200,215,240,0.22) !important;backdrop-filter:blur(56px) saturate(2.4) brightness(1.1) !important;-webkit-backdrop-filter:blur(56px) saturate(2.4) brightness(1.1) !important;box-shadow:0 8px 32px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.05),0 0 0 1px rgba(255,255,255,.6) inset,0 2px 0 rgba(255,255,255,.85) inset !important}
 [data-theme="light"] .nav-topstrip{background:var(--nav-bg)}
 [data-theme="light"] .stat-card{box-shadow:var(--card-shadow);background:var(--surface)}
 [data-theme="light"] .card{box-shadow:var(--card-shadow)}
@@ -1154,15 +1210,14 @@ body{transition:background .4s ease,color .3s ease}
 
 /* === LIGHT MODE: liquid glass nav === */
 [data-theme="light"] .bottom-nav{
-  background:rgba(220,230,245,0.45) !important;
-  backdrop-filter:blur(48px) saturate(2.2) brightness(1.08) !important;
-  -webkit-backdrop-filter:blur(48px) saturate(2.2) brightness(1.08) !important;
+  background:rgba(210,225,245,0.28) !important;
+  backdrop-filter:blur(52px) saturate(2.5) brightness(1.1) !important;
+  -webkit-backdrop-filter:blur(52px) saturate(2.5) brightness(1.1) !important;
   box-shadow:
-    0 8px 32px rgba(0,0,0,.12),
-    0 2px 8px rgba(0,0,0,.08),
-    0 0 0 1px rgba(255,255,255,.75) inset,
-    0 2px 0 rgba(255,255,255,.95) inset,
-    0 -1px 0 rgba(0,0,0,.04) inset !important;
+    0 8px 32px rgba(0,0,0,.08),
+    0 2px 8px rgba(0,0,0,.05),
+    0 0 0 1px rgba(255,255,255,.65) inset,
+    0 2px 0 rgba(255,255,255,.85) inset !important;
 }
 [data-theme="light"] .bnav-item{color:rgba(0,0,0,0.45)}
 [data-theme="light"] .bnav-item.active{color:var(--accent)}
@@ -1284,6 +1339,17 @@ body{transition:background .4s ease,color .3s ease}
   border-bottom:1px solid rgba(255,255,255,.06);
   box-shadow:0 2px 20px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.04) inset;
 }
+
+/* ── SCROLL PERFORMANCE FIX ── */
+#app{position:relative;min-height:100vh}
+
+/* ── TABLE LIGHT MODE ── */
+[data-theme="light"] td{border-bottom:1px solid rgba(0,0,0,.08)}
+[data-theme="light"] th{background:rgba(0,0,0,.03);border-bottom:1px solid rgba(0,0,0,.1)}
+[data-theme="light"] .tbl-wrap{background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.1)}
+[data-theme="light"] tr:last-child td{border-bottom:none}
+[data-theme="light"] .fi{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);color:var(--text)}
+[data-theme="light"] select.fi option{background:#fff;color:#000}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -2022,6 +2088,83 @@ function getRawUSD(id){
 }
 
 // Pakai harga BTC sekarang
+/* ══════════ GANTI SEED PHRASE ══════════ */
+let pendingNewSeed = null;
+
+function showChangeSeed(){
+  // Tutup modal-acct dulu, baru buka modal-change-seed
+  closeModal('modal-acct');
+  setTimeout(()=>{
+    // Tampilkan seed lama
+    const oldRow = document.getElementById('old-seed-display');
+    if(oldRow && curSeed){
+      oldRow.innerHTML = curSeed.map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
+    }
+    // Generate seed baru otomatis
+    regenerateNewSeed();
+    // Reset ke step 1
+    document.getElementById('change-seed-step1').style.display='block';
+    document.getElementById('change-seed-step2').style.display='none';
+    openModal('modal-change-seed');
+  }, 200);
+}
+
+function regenerateNewSeed(){
+  pendingNewSeed = rnd3();
+  const newRow = document.getElementById('new-seed-display');
+  if(newRow){
+    newRow.innerHTML = pendingNewSeed.map((w,i)=>
+      `<div class="sw" style="border-color:var(--accent3);box-shadow:0 0 8px rgba(16,185,129,.2)">
+        <div class="sw-num">${i+1}</div>${w}
+      </div>`
+    ).join('');
+  }
+}
+
+async function confirmChangeSeed(){
+  if(!pendingNewSeed || !curSeed) return;
+  const btn = document.getElementById('btn-confirm-seed');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+  try{
+    // 1. Ambil data saat ini
+    const currentData = {...S};
+    // 2. Simpan ke seed baru
+    await dbSet(pendingNewSeed, currentData);
+    // 3. Update cache localStorage dengan seed baru
+    localStorage.setItem('wo_cache', JSON.stringify({seed: pendingNewSeed, data: currentData}));
+    localStorage.setItem('wo_theme', localStorage.getItem('wo_theme')||'dark');
+    // 4. Update session
+    const oldSeed = [...curSeed];
+    curSeed = pendingNewSeed;
+    curKey = seedKey(...curSeed);
+    // 5. Tampilkan konfirmasi
+    const confirmedRow = document.getElementById('confirmed-seed-display');
+    if(confirmedRow){
+      confirmedRow.innerHTML = curSeed.map((w,i)=>
+        `<div class="sw" style="border-color:var(--accent3)"><div class="sw-num">${i+1}</div>${w}</div>`
+      ).join('');
+    }
+    // 6. Update tampilan di nav topstrip
+    const navAcct = document.getElementById('nav-acct');
+    const navAcctMob = document.getElementById('nav-acct-mob');
+    if(navAcct) navAcct.textContent = curSeed.join(' · ');
+    if(navAcctMob) navAcctMob.textContent = curSeed.join(' · ');
+    // 7. Update modal akun
+    const seedRow = document.getElementById('acct-seed-row');
+    if(seedRow) seedRow.innerHTML = curSeed.map((w,i)=>`<div class="sw"><div class="sw-num">${i+1}</div>${w}</div>`).join('');
+    // 8. Tampilkan step 2
+    document.getElementById('change-seed-step1').style.display='none';
+    document.getElementById('change-seed-step2').style.display='block';
+    toast('Seed phrase berhasil diganti!');
+    pendingNewSeed = null;
+  }catch(e){
+    toast('Gagal menyimpan seed baru: '+e.message, 1);
+    btn.disabled = false;
+    btn.textContent = 'Konfirmasi Ganti';
+  }
+}
+
 /* ══════════ THEME ══════════ */
 function initTheme(){
   // Cek localStorage dulu, lalu system preference
