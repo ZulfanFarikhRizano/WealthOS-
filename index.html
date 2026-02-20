@@ -702,7 +702,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5T</button>
           <button class="tf-btn" data-tf="10Y" onclick="loadBTCChart('10Y')">10T</button>
         </div>
-        <div style="font-size:.65rem;color:var(--muted);text-align:right">via CoinGecko · auto refresh 60s</div>
+        <div style="font-size:.65rem;color:var(--muted);text-align:right">via Kraken · auto refresh 60s</div>
       </div>
     </div>
     <div class="btc-chart-container">
@@ -1760,19 +1760,19 @@ function updateBTCDisplay(){
   safe('s-live',e=>e.textContent='$'+p.toLocaleString());
 }
 
-/* ══════════ CHART DATA — Multi-source dengan fallback ══════════ */
-// Sumber 1: CoinCap API (CORS terbuka penuh, no rate limit, no API key)
-// Sumber 2: CoinGecko (fallback jika CoinCap gagal)
-// Binance API TIDAK dipakai — diblokir CORS di semua browser mobile
+/* ══════════ CHART DATA — Kraken OHLC (CORS terbuka penuh) ══════════ */
+// Kraken Public API: CORS terbuka, no API key, no rate limit, data lengkap
+// Interval Kraken (menit): 1,5,15,30,60,240,1440,10080,21600
+// Fallback: CoinGecko simple price untuk harga historis DCA
 
 const TF_CONFIG = {
-  '1D': { days:1,    ccInterval:'m5',  ccLabel:'bitcoin', label:'1 Hari',   fmt:(t)=>new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
-  '1W': { days:7,    ccInterval:'h1',  ccLabel:'bitcoin', label:'1 Minggu', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
-  '1M': { days:30,   ccInterval:'h6',  ccLabel:'bitcoin', label:'1 Bulan',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
-  '1Y': { days:365,  ccInterval:'d1',  ccLabel:'bitcoin', label:'1 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '3Y': { days:1095, ccInterval:'d1',  ccLabel:'bitcoin', label:'3 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '5Y': { days:1825, ccInterval:'d1',  ccLabel:'bitcoin', label:'5 Tahun',  fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '10Y':{ days:3650, ccInterval:'d1',  ccLabel:'bitcoin', label:'10 Tahun', fmt:(t)=>new Date(t).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
+  '1D': { krakenInterval:60,    krakenSince:()=>Math.floor(Date.now()/1000)-86400,         label:'1 Hari',   fmt:(t)=>new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
+  '1W': { krakenInterval:240,   krakenSince:()=>Math.floor(Date.now()/1000)-7*86400,        label:'1 Minggu', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
+  '1M': { krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-30*86400,       label:'1 Bulan',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  '1Y': { krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-365*86400,      label:'1 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '3Y': { krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-3*365*86400,    label:'3 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '5Y': { krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-5*365*86400,    label:'5 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '10Y':{ krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,   label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
 };
 
 // Helper: fetch dengan timeout
@@ -1786,74 +1786,68 @@ async function fetchWithTimeout(url, ms=12000){
   }catch(e){clearTimeout(tid);throw e;}
 }
 
-// Sumber 1: CoinCap — gratis, CORS terbuka, stabil
-async function coincapMarketChart(days, interval){
-  const end=Date.now();
-  const start=end - days*24*60*60*1000;
-  const url=`https://api.coincap.io/v2/assets/bitcoin/history?interval=${interval}&start=${start}&end=${end}`;
-  const r=await fetchWithTimeout(url, 10000);
-  if(!r.ok) throw new Error('CoinCap HTTP '+r.status);
+// Kraken OHLC — CORS terbuka, response: {result:{XBTUSD:[[time,open,high,low,close,vwap,volume,count],...]}}
+async function krakenOHLC(interval, since){
+  const url=`https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=${interval}&since=${since}`;
+  const r=await fetchWithTimeout(url, 12000);
+  if(!r.ok) throw new Error('Kraken HTTP '+r.status);
   const d=await r.json();
-  if(!d||!d.data||!d.data.length) throw new Error('CoinCap empty');
-  // CoinCap: [{priceUsd, time, date}, ...]
-  return d.data.map(p=>([p.time, parseFloat(p.priceUsd)]));
+  if(d.error&&d.error.length) throw new Error('Kraken: '+d.error[0]);
+  const pair=d.result&&(d.result['XXBTZUSD']||d.result['XBTUSD']);
+  if(!pair||!pair.length) throw new Error('Kraken empty');
+  // Format: [[timestamp, open, high, low, close, vwap, volume, count], ...]
+  // timestamp dalam detik
+  return pair.map(k=>([parseInt(k[0]), parseFloat(k[4])])); // [timestamp_sec, close_price]
 }
 
-// Sumber 2: CoinGecko — fallback
+// CoinGecko market_chart sebagai fallback
 async function cgMarketChart(days){
   const url=`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${days}`;
-  const r=await fetchWithTimeout(url, 12000);
+  const r=await fetchWithTimeout(url, 15000);
   if(!r.ok) throw new Error('CoinGecko HTTP '+r.status);
   const d=await r.json();
   if(!d||!d.prices||!d.prices.length) throw new Error('CoinGecko empty');
-  return d.prices; // [[timestamp, price], ...]
+  // CoinGecko timestamp dalam ms, konversi ke detik supaya konsisten
+  return d.prices.map(p=>([Math.floor(p[0]/1000), p[1]]));
 }
 
-// Master fetch chart: coba CoinCap dulu, fallback CoinGecko
+// Master fetch: Kraken (primary) → CoinGecko (fallback)
 async function fetchChartData(cfg){
   try{
-    const data=await coincapMarketChart(cfg.days, cfg.ccInterval);
+    const data=await krakenOHLC(cfg.krakenInterval, cfg.krakenSince());
     return data;
   }catch(e1){
-    console.warn('CoinCap gagal, coba CoinGecko:', e1.message);
+    console.warn('Kraken gagal ('+e1.message+'), fallback CoinGecko...');
     try{
-      const data=await cgMarketChart(cfg.days);
-      return data;
+      const days=Math.round((Date.now()/1000 - cfg.krakenSince())/86400);
+      return await cgMarketChart(days);
     }catch(e2){
-      throw new Error('Semua sumber gagal: '+e2.message);
+      throw new Error('Kraken: '+e1.message+' | CoinGecko: '+e2.message);
     }
   }
 }
 
-// Harga historis untuk DCA/simulasi — CoinCap dulu, fallback CoinGecko
+// Harga historis untuk DCA/simulasi — CoinGecko history by date
 async function cgPriceAt(dateStr){
-  // Coba CoinCap: ambil data 1 hari di tanggal tersebut
-  try{
-    const dt=new Date(dateStr);
-    const start=dt.getTime();
-    const end=start+24*60*60*1000;
-    const url=`https://api.coincap.io/v2/assets/bitcoin/history?interval=h1&start=${start}&end=${end}`;
-    const r=await fetchWithTimeout(url, 8000);
-    if(r.ok){
-      const d=await r.json();
-      if(d&&d.data&&d.data.length){
-        // Ambil harga close (last point of day)
-        return parseFloat(d.data[d.data.length-1].priceUsd);
-      }
-    }
-  }catch(e){}
-  // Fallback CoinGecko history
   const dt=new Date(dateStr);
   const dd=String(dt.getDate()).padStart(2,'0');
   const mm=String(dt.getMonth()+1).padStart(2,'0');
   const yyyy=dt.getFullYear();
-  const url=`https://api.coingecko.com/api/v3/coins/bitcoin/history?date=${dd}-${mm}-${yyyy}&localization=false`;
-  const r=await fetchWithTimeout(url, 10000);
-  if(!r.ok) throw new Error('CoinGecko history HTTP '+r.status);
-  const d=await r.json();
-  const price=d?.market_data?.current_price?.usd;
-  if(!price) throw new Error('no price');
-  return price;
+  // Coba CoinGecko history
+  try{
+    const url=`https://api.coingecko.com/api/v3/coins/bitcoin/history?date=${dd}-${mm}-${yyyy}&localization=false`;
+    const r=await fetchWithTimeout(url, 12000);
+    if(r.ok){
+      const d=await r.json();
+      const price=d?.market_data?.current_price?.usd;
+      if(price) return price;
+    }
+  }catch(e){}
+  // Fallback: ambil dari Kraken OHLC harian di tanggal itu
+  const since=Math.floor(dt.getTime()/1000)-3600;
+  const data=await krakenOHLC(1440, since);
+  if(data&&data.length) return data[0][1];
+  throw new Error('Tidak ada data harga untuk tanggal ini');
 }
 
 /* ══════════ BTC LIVE CHART ══════════ */
@@ -1870,9 +1864,9 @@ async function loadBTCChart(tf){
   const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
   if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
   try{
-    // Multi-source: CoinCap (primary) → CoinGecko (fallback) — semua CORS terbuka
+    // Kraken OHLC (primary) → CoinGecko (fallback) — semua CORS terbuka
     const prices=await fetchChartData(cfg);
-    // prices = [[timestamp, price], ...]
+    // prices = [[timestamp_seconds, price], ...]
     const labels = prices.map(p=>cfg.fmt(p[0]));
     const vals   = prices.map(p=>p[1]);
     const isUp   = vals[vals.length-1] >= vals[0];
