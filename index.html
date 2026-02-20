@@ -2881,9 +2881,11 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   display:flex;flex-direction:column;overflow:hidden}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
-  body{background:#fff!important}
-  .wrap{padding:0!important}
-  .pg{width:100%!important;margin:0!important;box-shadow:none!important;min-height:100vh;page-break-after:always;break-after:page}
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
+  .wrap{padding:0!important;margin:0!important}
+  .pg{width:210mm!important;height:297mm!important;min-height:unset!important;max-height:297mm!important;margin:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important;overflow:hidden!important;page-break-after:always!important;break-after:page!important;page-break-inside:avoid!important;break-inside:avoid!important;display:flex!important;flex-direction:column!important}
+  .pg:last-child{page-break-after:auto!important;break-after:auto!important}
+  .pb{flex:1!important;overflow:hidden!important;min-height:0!important}
   svg{display:block!important;overflow:visible!important}
   @page{size:A4 portrait;margin:0}
 }
