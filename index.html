@@ -880,6 +880,69 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="stat-card"><div class="slabel">Average Buy Price</div><div class="sval gld" id="dca-avg">$0</div></div>
     <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="dca-btc">0 BTC</div></div>
   </div>
+  <!-- DCA BTC LIVE CHART -->
+  <div class="btc-chart-wrap" id="dca-btc-chart-wrap">
+    <div class="btc-chart-header">
+      <div class="btc-price-display">
+        <div class="btc-price-big" id="dca-btcc-price">$—</div>
+        <div class="btc-price-idr" id="dca-btcc-idr">≈ Rp —</div>
+        <div class="btc-change-badge up" id="dca-btcc-badge">— %</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
+        <div class="tf-btns" id="dca-tf-btns">
+          <button class="tf-btn" data-tf="1D" onclick="loadDCABTCChart('1D')">1Hr</button>
+          <button class="tf-btn active" data-tf="1W" onclick="loadDCABTCChart('1W')">1Mg</button>
+          <button class="tf-btn" data-tf="1M" onclick="loadDCABTCChart('1M')">1Bl</button>
+          <button class="tf-btn" data-tf="1Y" onclick="loadDCABTCChart('1Y')">1Th</button>
+          <button class="tf-btn" data-tf="3Y" onclick="loadDCABTCChart('3Y')">3Th</button>
+        </div>
+        <div style="font-size:.65rem;color:var(--muted);text-align:right">via Kraken · live</div>
+      </div>
+    </div>
+    <!-- Legend avg line -->
+    <div id="dca-avg-legend" style="display:none;align-items:center;gap:1.2rem;margin-bottom:.7rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;font-family:'Space Mono',monospace">
+        <div style="width:24px;height:2px;background:#f59e0b;border-radius:2px"></div>
+        <span style="color:var(--muted)">Avg Buy</span>
+        <span id="dca-avg-val-legend" style="color:#f59e0b;font-weight:700">$0</span>
+      </div>
+      <div id="dca-avg-gap-badge" style="font-size:.72rem;padding:.15rem .55rem;border-radius:5px;font-family:'Space Mono',monospace;font-weight:700"></div>
+    </div>
+    <div class="btc-chart-container" style="position:relative">
+      <div class="btc-chart-loading" id="dca-btcc-loading">
+        <div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+        Memuat chart...
+      </div>
+      <canvas id="c-dca-btclive"></canvas>
+      <!-- Price labels OKX style - liquid glass -->
+      <div id="dca-label-current" style="display:none;position:absolute;right:0;transform:translateY(-50%);pointer-events:none;z-index:10">
+        <div style="display:flex;align-items:center;gap:0">
+          <div id="dca-label-current-line" style="width:14px;height:1px;background:#10b981;opacity:.7;flex-shrink:0"></div>
+          <div id="dca-label-current-val" style="font-family:'Space Mono',monospace;font-size:.58rem;font-weight:700;padding:.18rem .45rem;border-radius:4px;white-space:nowrap;letter-spacing:.02em;backdrop-filter:blur(8px) saturate(1.4);-webkit-backdrop-filter:blur(8px) saturate(1.4);background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.45);color:#10b981;box-shadow:0 2px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)">$—</div>
+        </div>
+      </div>
+      <div id="dca-label-avg" style="display:none;position:absolute;right:0;transform:translateY(-50%);pointer-events:none;z-index:10">
+        <div style="display:flex;align-items:center;gap:0">
+          <div style="width:14px;height:1px;background:#f59e0b;opacity:.7;flex-shrink:0"></div>
+          <div id="dca-label-avg-val" style="font-family:'Space Mono',monospace;font-size:.58rem;font-weight:700;padding:.18rem .45rem;border-radius:4px;white-space:nowrap;letter-spacing:.02em;backdrop-filter:blur(8px) saturate(1.4);-webkit-backdrop-filter:blur(8px) saturate(1.4);background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.45);color:#f59e0b;box-shadow:0 2px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)">$—</div>
+        </div>
+      </div>
+      <div id="dca-label-pnl" style="display:none;position:absolute;right:0;transform:translateY(-50%);pointer-events:none;z-index:9">
+        <div style="display:flex;align-items:center;gap:0">
+          <div style="width:14px;height:1px;background:rgba(255,255,255,.15);flex-shrink:0"></div>
+          <div id="dca-label-pnl-val" style="font-family:'Space Mono',monospace;font-size:.52rem;font-weight:600;padding:.14rem .38rem;border-radius:4px;white-space:nowrap;letter-spacing:.02em;backdrop-filter:blur(8px) saturate(1.4);-webkit-backdrop-filter:blur(8px) saturate(1.4);background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="btc-ohlc" id="dca-btcc-ohlc">
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Open</div><div class="btc-ohlc-val" id="dca-btcc-open">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">High</div><div class="btc-ohlc-val pos" id="dca-btcc-high">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Low</div><div class="btc-ohlc-val neg" id="dca-btcc-low">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">Close</div><div class="btc-ohlc-val acc" id="dca-btcc-close">—</div></div>
+      <div class="btc-ohlc-item"><div class="btc-ohlc-label">vs Avg Buy</div><div class="btc-ohlc-val" id="dca-btcc-vs-avg">—</div></div>
+    </div>
+  </div>
+
   <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
   <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Histori</div>
     <div style="display:flex;gap:.5rem">
@@ -1797,8 +1860,8 @@ async function doLogout(){
   document.getElementById('iw1').value='';
   document.getElementById('iw2').value='';
   document.getElementById('iw3').value='';
-  [cAlloc,cPNL,cDCA,cSim,cCF].forEach(c=>{if(c)try{c.destroy()}catch(e){}});
-  cAlloc=cPNL=cDCA=cSim=cCF=null;
+  [cAlloc,cPNL,cDCA,cSim,cCF,cDCABTCLive].forEach(c=>{if(c)try{c.destroy()}catch(e){}});
+  cAlloc=cPNL=cDCA=cSim=cCF=cDCABTCLive=null;
   doGenerate();
 }
 
@@ -2221,6 +2284,18 @@ function updateBTCLiveDisplay(){
   });
 }
 
+function updateDCABTCDisplay(){
+  const p=S.btcPrice||0,ch=S.btcChange||0,r=S.usdIdr||16000;
+  const isUp=ch>=0;
+  const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
+  safe('dca-btcc-price',e=>e.textContent='$'+p.toLocaleString('en-US',{maximumFractionDigits:0}));
+  safe('dca-btcc-idr',e=>e.textContent='≈ '+new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(p*r));
+  safe('dca-btcc-badge',e=>{
+    e.textContent=(isUp?'▲ +':'▼ ')+ch.toFixed(2)+'% (24h)';
+    e.className='btc-change-badge '+(isUp?'up':'dn');
+  });
+}
+
 function updateChartsInPlace(){
   const p=S.btcPrice,r=S.usdIdr;
   if(cDCA?.data){
@@ -2243,6 +2318,223 @@ function updateChartsInPlace(){
 
 /* ══════════ CHARTS ══════════ */
 let cAlloc=null,cPNL=null,cDCA=null,cSim=null,cCF=null;
+let cDCABTCLive=null,curDCATF='1W';
+
+async function loadDCABTCChart(tf){
+  curDCATF=tf;
+  document.querySelectorAll('#dca-tf-btns .tf-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tf===tf);
+  });
+  const cfg=TF_CONFIG[tf];
+  const loading=document.getElementById('dca-btcc-loading');
+  const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
+  if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
+  try{
+    const prices=await fetchChartData(cfg);
+    const labels=prices.map(p=>cfg.fmt(p[0]));
+    const vals=prices.map(p=>p[1]);
+    const isUp=vals[vals.length-1]>=vals[0];
+    const color=isUp?'#10b981':'#ef4444';
+    const colorBg=isUp?'rgba(16,185,129,':'rgba(239,68,68,';
+    const hi=Math.max(...vals),lo=Math.min(...vals);
+    const op=vals[0],cl=vals[vals.length-1];
+    safe('dca-btcc-open',e=>e.textContent='$'+op.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('dca-btcc-high',e=>e.textContent='$'+hi.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('dca-btcc-low',e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
+    safe('dca-btcc-close',e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
+    // Average buy price line
+    const avgUSD=S.dca.length?S.dca.reduce((s,e)=>s+e.priceUSD*e.amountIDR,0)/S.dca.reduce((s,e)=>s+e.amountIDR,0):0;
+    const avgLegend=document.getElementById('dca-avg-legend');
+    if(avgUSD>0){
+      if(avgLegend)avgLegend.style.display='flex';
+      safe('dca-avg-val-legend',e=>e.textContent='$'+avgUSD.toLocaleString('en-US',{maximumFractionDigits:0}));
+      const gap=((cl-avgUSD)/avgUSD*100);
+      const gapUp=gap>=0;
+      safe('dca-avg-gap-badge',e=>{
+        e.textContent=(gapUp?'▲ +':'▼ ')+gap.toFixed(2)+'% dari avg buy';
+        e.style.color=gapUp?'#10b981':'#ef4444';
+        e.style.background=gapUp?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)';
+        e.style.border=`1px solid ${gapUp?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'}`;
+      });
+      safe('dca-btcc-vs-avg',e=>{
+        e.textContent=(gapUp?'+':'')+gap.toFixed(2)+'%';
+        e.style.color=gapUp?'#10b981':'#ef4444';
+      });
+    }else{
+      if(avgLegend)avgLegend.style.display='none';
+    }
+    if(cDCABTCLive){cDCABTCLive.destroy();cDCABTCLive=null;['dca-label-current','dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
+    const ctx=document.getElementById('c-dca-btclive');
+    if(!ctx){if(loading)loading.style.display='none';return;}
+    const datasets=[{
+      label:'BTC/USD',
+      data:vals,
+      borderColor:color,
+      borderWidth:2,
+      pointRadius:0,
+      pointHoverRadius:4,
+      pointHoverBackgroundColor:color,
+      fill:true,
+      backgroundColor:(ctx2)=>{
+        const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);
+        g.addColorStop(0,colorBg+'0.25)');
+        g.addColorStop(1,colorBg+'0.01)');
+        return g;
+      },
+      tension:.35,
+    }];
+    // Add individual entry lines
+    if(S.dca.length){
+      S.dca.forEach((e,i)=>{
+        const entryPrice=e.priceUSD;
+        if(entryPrice>=lo*0.98&&entryPrice<=hi*1.02){
+          datasets.push({
+            label:`Entry #${i+1} $${Math.round(entryPrice).toLocaleString('en-US')}`,
+            data:vals.map(()=>entryPrice),
+            borderColor:'rgba(245,158,11,0.25)',
+            borderWidth:1,
+            borderDash:[3,4],
+            pointRadius:0,
+            fill:false,
+            tension:0,
+          });
+        }
+      });
+      // Main avg line
+      if(avgUSD>0){
+        datasets.push({
+          label:'Avg Buy $'+Math.round(avgUSD).toLocaleString('en-US'),
+          data:vals.map(()=>avgUSD),
+          borderColor:'#f59e0b',
+          borderWidth:2,
+          borderDash:[8,4],
+          pointRadius:0,
+          fill:false,
+          tension:0,
+        });
+      }
+    }
+    cDCABTCLive=new Chart(ctx.getContext('2d'),{
+      type:'line',
+      data:{labels,datasets},
+      options:{
+        animation:false,
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{
+            display:avgUSD>0,
+            labels:{
+              filter:item=>item.datasetIndex===0||(avgUSD>0&&item.text&&item.text.startsWith('Avg')),
+              color:'#64748b',
+              font:{size:9,family:'Space Mono'},
+              boxWidth:16,
+              boxHeight:2,
+              padding:12,
+            }
+          },
+          tooltip:{
+            backgroundColor:'rgba(11,17,32,.97)',
+            borderColor:color,
+            borderWidth:1,
+            titleColor:'#94a3b8',
+            titleFont:{family:'Space Mono',size:10},
+            bodyColor:color,
+            bodyFont:{family:'Space Mono',size:13,weight:'bold'},
+            padding:10,
+            callbacks:{
+              label:ctx2=>{
+                if(ctx2.datasetIndex===0){
+                  const price=ctx2.parsed.y;
+                  const retPct=((price-vals[0])/vals[0]*100);
+                  const retSign=retPct>=0?'+':'';
+                  return[` $${price.toLocaleString('en-US',{maximumFractionDigits:0})}`,`  ${retSign}${retPct.toFixed(2)}% vs awal`];
+                }
+                if(avgUSD>0&&ctx2.dataset.label&&ctx2.dataset.label.startsWith('Avg')){
+                  const price=ctx2.parsed.y;
+                  const diff=((vals[ctx2.dataIndex]-price)/price*100);
+                  const sign=diff>=0?'+':'';
+                  return[` Avg Buy: $${price.toLocaleString('en-US',{maximumFractionDigits:0})}`,`  Harga Kini ${sign}${diff.toFixed(2)}% dari avg`];
+                }
+                return null;
+              },
+              labelColor:(ctx2)=>{
+                if(ctx2.datasetIndex===0){const r=((ctx2.parsed.y-vals[0])/vals[0]*100);const c=r>=0?'#10b981':'#ef4444';return{borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:3};}
+                if(ctx2.dataset.label&&ctx2.dataset.label.startsWith('Avg')) return{borderColor:'#f59e0b',backgroundColor:'#f59e0b',borderWidth:2,borderRadius:3};
+                return null;
+              }
+            }
+          }
+        },
+        scales:{
+          x:{ticks:{color:'#475569',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}},
+          y:{position:'right',ticks:{color:'#475569',font:{size:9},callback:v=>'$'+v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'})},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}}
+        }
+      },
+      plugins:[{
+        id:'dcaPriceLabels',
+        afterDraw(chart){
+          const yScale=chart.scales.y;
+          if(!yScale)return;
+          const chartArea=chart.chartArea;
+          // Current price label
+          const curEl=document.getElementById('dca-label-current');
+          const curValEl=document.getElementById('dca-label-current-val');
+          if(curEl&&curValEl&&cl){
+            const yPx=yScale.getPixelForValue(cl);
+            const inRange=yPx>=chartArea.top&&yPx<=chartArea.bottom;
+            curEl.style.display=inRange?'block':'none';
+            curEl.style.top=yPx+'px';
+            const priceColor=isUp?'#10b981':'#ef4444';
+            const priceBg=isUp?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)';
+            const priceBorder=isUp?'rgba(16,185,129,.45)':'rgba(239,68,68,.45)';
+            const lineEl=document.getElementById('dca-label-current-line');
+            if(lineEl)lineEl.style.background=priceColor;
+            curValEl.style.color=priceColor;
+            curValEl.style.background=priceBg;
+            curValEl.style.borderColor=priceBorder;
+            curValEl.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0});
+          }
+          // Avg buy label
+          const avgEl=document.getElementById('dca-label-avg');
+          const avgValEl=document.getElementById('dca-label-avg-val');
+          if(avgEl&&avgValEl&&avgUSD>0){
+            const yPx=yScale.getPixelForValue(avgUSD);
+            const inRange=yPx>=chartArea.top&&yPx<=chartArea.bottom;
+            avgEl.style.display=inRange?'block':'none';
+            avgEl.style.top=yPx+'px';
+            avgValEl.textContent='$'+avgUSD.toLocaleString('en-US',{maximumFractionDigits:0});
+          }else if(avgEl){avgEl.style.display='none';}
+          // PnL badge — between current price and avg, only if gap is big enough
+          const pnlEl=document.getElementById('dca-label-pnl');
+          const pnlValEl=document.getElementById('dca-label-pnl-val');
+          if(pnlEl&&pnlValEl&&avgUSD>0&&cl){
+            const yCur=yScale.getPixelForValue(cl);
+            const yAvg=yScale.getPixelForValue(avgUSD);
+            const midY=(yCur+yAvg)/2;
+            const gapPx=Math.abs(yCur-yAvg);
+            const inRange=midY>=chartArea.top&&midY<=chartArea.bottom&&gapPx>22;
+            pnlEl.style.display=inRange?'block':'none';
+            pnlEl.style.top=midY+'px';
+            const gap=((cl-avgUSD)/avgUSD*100);
+            const gapUp=gap>=0;
+            pnlValEl.textContent=(gapUp?'+':'')+gap.toFixed(1)+'%';
+            pnlValEl.style.color=gapUp?'rgba(16,185,129,.95)':'rgba(239,68,68,.95)';
+            pnlValEl.style.background=gapUp?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)';
+            pnlValEl.style.borderColor=gapUp?'rgba(16,185,129,.35)':'rgba(239,68,68,.35)';
+          }else if(pnlEl){pnlEl.style.display='none';}
+        }
+      }]
+    });
+    if(!avgUSD){['dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
+  }catch(e){
+    console.warn('DCA BTC chart error:',e);
+    if(loading){loading.innerHTML=`<div style="text-align:center"><div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div><button onclick="loadDCABTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">↺ Coba Lagi</button></div>`;loading.style.display='flex';}
+    return;
+  }
+  if(loading)loading.style.display='none';
+}
 const CO={animation:false,responsive:true,maintainAspectRatio:false};
 const TK={color:'#64748b',font:{size:10}};
 const getGR=()=>({color:document.documentElement.getAttribute('data-theme')==='light'?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.03)'});
@@ -2329,8 +2621,11 @@ function refreshDCAStats(){
 }
 function renderDCA(){
   refreshDCAStats();
+  updateDCABTCDisplay();
   const p=S.btcPrice,r=S.usdIdr||16000;
   if(!p){setTimeout(renderDCA,600);return;}
+  // Load DCA BTC live chart
+  loadDCABTCChart(curDCATF);
   const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
   const tb=document.getElementById('dca-tbody');
   if(!sorted.length){
