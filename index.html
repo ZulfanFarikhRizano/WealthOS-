@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WealthOS — Financial Command Center</title>
+<title>z-wealth · Bitcoin DCA Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -122,6 +122,54 @@ nav{
 }
 .nav-logo{font-size:1.1rem;font-weight:800;color:var(--accent);letter-spacing:-.02em;padding:.85rem 0;margin-right:.3rem;white-space:nowrap;text-shadow:var(--glow);transition:color .3s}
 .nav-logo span{color:var(--text);transition:color .3s}
+
+/* ── Z-WEALTH LOGO ── */
+.nav-logo{position:relative;display:inline-flex;align-items:center}
+.zw-z{
+  color:var(--accent);
+  font-style:italic;
+  font-weight:900;
+  letter-spacing:-.04em;
+  font-size:1.25rem;
+  text-shadow:0 0 22px rgba(0,229,255,.7),0 0 6px rgba(0,229,255,.4);
+  position:relative;
+}
+.zw-z::after{
+  content:'';
+  position:absolute;
+  bottom:-3px;left:0;
+  width:110%;height:2px;
+  background:linear-gradient(90deg,var(--accent),rgba(0,229,255,.15));
+  border-radius:2px;
+}
+.zw-hyphen{
+  color:rgba(0,229,255,.4);
+  font-weight:300;
+  font-size:1rem;
+  margin:0 1px;
+  letter-spacing:0;
+}
+.zw-wealth{
+  color:#f0f9ff;
+  font-weight:800;
+  letter-spacing:-.03em;
+  font-size:1.25rem;
+}
+[data-theme="light"] .zw-z{text-shadow:0 0 16px rgba(0,100,180,.5)}
+[data-theme="light"] .zw-z::after{background:linear-gradient(90deg,var(--accent),rgba(0,100,180,.1))}
+[data-theme="light"] .zw-hyphen{color:rgba(0,100,180,.35)}
+[data-theme="light"] .zw-wealth{color:#0f172a}
+
+/* Login logo */
+.login-logo .zw-z{font-size:2.4rem;font-style:italic;font-weight:900;color:var(--accent);text-shadow:0 0 40px rgba(0,229,255,.7),0 0 10px rgba(0,229,255,.5);letter-spacing:-.04em;position:relative}
+.login-logo .zw-z::after{content:'';position:absolute;bottom:-4px;left:0;width:115%;height:2.5px;background:linear-gradient(90deg,var(--accent),transparent);border-radius:2px}
+.login-logo .zw-hyphen{font-size:2rem;color:rgba(0,229,255,.35);font-weight:300;margin:0 2px}
+.login-logo .zw-wealth{font-size:2.4rem;font-weight:800;color:#f0f9ff;letter-spacing:-.03em}
+
+/* PDF logo overrides */
+.ph-logo-z{color:#00c8ff;font-style:italic;font-weight:900;font-size:20px;letter-spacing:-.02em}
+.ph-logo-hyphen{color:rgba(0,200,255,.3);font-weight:300;font-size:18px;margin:0 1px}
+.ph-logo-wealth{color:#bae6fd;font-weight:800;font-size:20px;letter-spacing:-.02em}
 [data-theme="light"] .nav-logo{color:var(--accent)}
 [data-theme="light"] .nav-logo .wealth-text{
   color:#fff;
@@ -353,10 +401,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     0 0 0 1px rgba(255,255,255,.07) inset,
     0 1px 0 rgba(255,255,255,.1) inset;
 }
-.bnav-items{display:flex;align-items:stretch;border-radius:28px;overflow:hidden;padding:4px 6px}
+.bnav-items{display:flex;align-items:stretch;border-radius:28px;overflow:hidden;padding:5px 8px;gap:2px}
 .bnav-item{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:.45rem .2rem .42rem;gap:.12rem;cursor:pointer;
+  padding:.5rem .15rem .45rem;gap:.14rem;cursor:pointer;
   color:rgba(255,255,255,0.45);
   transition:color .25s ease, background .25s ease;
   border:none;background:none;
@@ -364,6 +412,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   -webkit-tap-highlight-color:transparent;
   position:relative;
   border-radius:22px;
+  overflow:hidden;
 }
 .bnav-item:active{background:rgba(255,255,255,.06);transform:scale(.95)}
 .bnav-item .bnav-icon{
@@ -389,8 +438,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   letter-spacing:.08em;
 }
 
-.bnav-icon{font-size:1.25rem;line-height:1}
-.bnav-label{font-size:.58rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.bnav-icon{font-size:1.5rem;line-height:1;display:flex;align-items:center;justify-content:center}
+.bnav-label{font-size:.52rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1;white-space:nowrap}
 /* Top nav account+logout strip on mobile */
 .nav-topstrip{
   display:none;
@@ -491,6 +540,115 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   opacity:1;
   transform:translateY(-1px);
 }
+
+/* ══ ACCOUNT MODAL — LIQUID GLASS ══ */
+.modal-acct-glass{
+  background:rgba(10,16,32,0.55);
+  backdrop-filter:blur(48px) saturate(1.8) brightness(1.15);
+  -webkit-backdrop-filter:blur(48px) saturate(1.8) brightness(1.15);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.55),
+    0 0 0 1px rgba(0,229,255,0.06) inset,
+    0 1px 0 rgba(255,255,255,0.12) inset;
+}
+[data-theme="light"] .modal-acct-glass{
+  background:rgba(240,248,255,0.75);
+  backdrop-filter:blur(48px) saturate(2) brightness(1.05);
+  -webkit-backdrop-filter:blur(48px) saturate(2) brightness(1.05);
+  border:1px solid rgba(186,230,253,0.8);
+  box-shadow:
+    0 24px 64px rgba(0,80,160,.18),
+    0 0 0 1px rgba(255,255,255,0.9) inset;
+}
+[data-theme="light"] .acct-seed-box{
+  background:rgba(224,242,255,0.6)!important;
+  border-color:rgba(14,165,233,.2)!important;
+}
+[data-theme="light"] .acct-stats{
+  background:rgba(241,249,255,0.8)!important;
+  border-color:rgba(186,230,253,.5)!important;
+}
+[data-theme="light"] .acct-stat-sep{background:rgba(186,230,253,.6)!important}
+[data-theme="light"] .acct-title{color:#0284c7!important}
+[data-theme="light"] .acct-title-icon{background:rgba(14,165,233,.1)!important;border-color:rgba(14,165,233,.2)!important;color:#0284c7!important}
+[data-theme="light"] .acct-x{background:rgba(0,0,0,.04)!important;border-color:rgba(0,0,0,.08)!important;color:#64748b!important}
+.acct-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.3rem}
+.acct-title{display:flex;align-items:center;gap:.5rem;font-size:1.05rem;font-weight:800;color:var(--accent);letter-spacing:.02em}
+.acct-title-icon{width:30px;height:30px;border-radius:8px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+[data-theme="light"] .acct-title-icon{background:rgba(0,136,204,.1);border-color:rgba(0,136,204,.25)}
+.acct-x{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px;cursor:pointer;color:var(--muted);display:flex;align-items:center;transition:all .2s}
+.acct-x:hover{background:rgba(255,255,255,.12);color:var(--text)}
+[data-theme="light"] .acct-x{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.1)}
+
+/* Seed box */
+.acct-seed-box{
+  background:rgba(0,229,255,.04);
+  border:1px solid rgba(0,229,255,.12);
+  border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem;
+}
+[data-theme="light"] .acct-seed-box{
+  background:rgba(0,136,204,.04);
+  border-color:rgba(0,136,204,.15);
+}
+.acct-seed-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:.6rem}
+.acct-seed-warn{display:flex;align-items:flex-start;gap:.4rem;font-size:.7rem;color:var(--muted);margin-top:.65rem;line-height:1.55}
+.acct-seed-warn svg{flex-shrink:0;margin-top:1px;color:var(--accent4)}
+
+/* Stats row */
+.acct-stats{display:flex;align-items:stretch;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;margin-bottom:.9rem;overflow:hidden}
+[data-theme="light"] .acct-stats{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.07)}
+.acct-stat{flex:1;padding:.9rem .5rem;text-align:center}
+.acct-stat-sep{width:1px;background:rgba(255,255,255,.07);margin:10px 0}
+[data-theme="light"] .acct-stat-sep{background:rgba(0,0,0,.08)}
+.acct-stat-l{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.3rem}
+.acct-stat-v{font-size:1.4rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)}
+
+/* Sync */
+.acct-sync{font-size:.7rem;color:var(--muted);text-align:center;margin-bottom:.9rem;opacity:.7}
+
+/* Multi-device badge */
+.acct-mdev{
+  display:flex;align-items:center;gap:.7rem;
+  padding:.75rem 1rem;
+  background:rgba(16,185,129,.07);
+  border:1px solid rgba(16,185,129,.18);
+  border-radius:12px;margin-bottom:1.1rem;
+}
+[data-theme="light"] .acct-mdev{background:rgba(5,150,105,.06);border-color:rgba(5,150,105,.2)}
+.acct-mdev-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.6);flex-shrink:0}
+.acct-mdev-t{font-size:.76rem;font-weight:700;color:#10b981;margin-bottom:.15rem}
+.acct-mdev-s{font-size:.68rem;color:var(--muted);line-height:1.4}
+
+/* Action buttons */
+.acct-btns{display:flex;gap:.55rem}
+.acct-btns .btn{
+  flex:1;
+  background:transparent!important;
+  border-width:1.5px!important;
+  border-style:solid!important;
+  border-radius:12px!important;
+  padding:.7rem .4rem!important;
+  font-weight:700!important;
+  font-size:.82rem!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:.35rem!important;
+  cursor:pointer!important;
+  transition:background .2s,opacity .2s!important;
+}
+.acct-btns .btn-ghost{
+  border-color:rgba(148,163,184,.35)!important;
+  color:var(--text)!important;
+}
+.acct-btns .btn-ghost:hover{background:rgba(148,163,184,.1)!important}
+.acct-btn-seed{border-color:var(--accent4)!important;color:var(--accent4)!important}
+.acct-btn-seed:hover{background:rgba(245,158,11,.08)!important}
+.acct-btn-out{border-color:var(--danger)!important;color:var(--danger)!important}
+.acct-btn-out:hover{background:rgba(239,68,68,.08)!important}
+[data-theme="light"] .acct-btns .btn-ghost{border-color:rgba(100,116,139,.3)!important;color:#334155!important}
+
+/* ══ BOTTOM NAV IMPROVEMENTS ══ */
+.bnav-item svg{width:22px;height:22px}
+
 </style>
 </head>
 <body>
@@ -502,7 +660,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ══════════ LOGIN SCREEN ══════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">Wealth<span>OS</span></div>
+    <div class="login-logo"><span class="zw-z">z</span><span class="zw-hyphen">-</span><span class="zw-wealth">wealth</span></div>
     <div class="login-tagline">Financial Command Center · Login dengan 3 kata seed phrase</div>
 
     <div class="ltabs">
@@ -583,7 +741,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <nav>
-  <div class="nav-logo"><span class="wealth-text">Wealth</span><span>OS</span></div>
+  <div class="nav-logo"><span class="zw-z">z</span><span class="zw-hyphen">-</span><span class="zw-wealth">wealth</span></div>
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
     <div class="nav-tab" onclick="showPage('dca')">DCA Tracker</div>
@@ -621,19 +779,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="bottom-nav" id="bottom-nav">
   <div class="bnav-items" style="position:relative"><div id="bnav-indicator"></div>
     <button class="bnav-item active" data-page="dashboard" onclick="showPage('dashboard')">
-      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg></span><span class="bnav-label">Dashboard</span>
+      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="8" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg></span><span class="bnav-label">Home</span>
     </button>
     <button class="bnav-item" data-page="dca" onclick="showPage('dca')">
       <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M15 8.5c-.83-1-2-1.5-3-1.5-2.21 0-4 1.79-4 4s1.79 4 4 4c1 0 2.17-.5 3-1.5"/><path d="M9 12h7"/></svg></span><span class="bnav-label">DCA</span>
     </button>
     <button class="bnav-item" data-page="portfolio" onclick="showPage('portfolio')">
-      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span><span class="bnav-label">Portofolio</span>
+      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span><span class="bnav-label">Porto</span>
     </button>
     <button class="bnav-item" data-page="simulation" onclick="showPage('simulation')">
       <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span><span class="bnav-label">Simulasi</span>
     </button>
     <button class="bnav-item" data-page="cashflow" onclick="showPage('cashflow')">
-      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="bnav-label">Arus Kas</span>
+      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="bnav-label">Kas</span>
     </button>
   </div>
 </div>
@@ -705,7 +863,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- DCA -->
 <div id="page-dca" class="page">
   <div class="ph"><h1>DCA Tracker</h1><p>Catat setiap pembelian Bitcoin kamu</p></div>
-  <div class="sec-hdr"><div class="sec-title">Ringkasan</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-dca')">+ Tambah Transaksi</button></div>
+  <div class="sec-hdr">
+    <div class="sec-title">Ringkasan</div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="showShareCard()" style="display:inline-flex;align-items:center;gap:.4rem;border-color:rgba(0,229,255,.3);color:var(--accent)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Bagikan Posisi
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-dca')">+ Tambah Transaksi</button>
+    </div>
+  </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="slabel">Total Investasi</div><div class="sval" id="dca-invest">Rp 0</div></div>
     <div class="stat-card"><div class="slabel">Nilai Sekarang</div><div class="sval acc" id="dca-val">Rp 0</div></div>
@@ -947,39 +1114,35 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <div class="overlay" id="modal-acct">
-  <div class="modal">
-    <div class="modal-title" style="display:flex;align-items:center;gap:.5rem"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Info Akun</div>
-    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem">
-      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem">Seed Phrase</div>
+  <div class="modal modal-acct-glass">
+    <div class="acct-hdr">
+      <div class="acct-title">
+        <div class="acct-title-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        Info Akun
+      </div>
+      <button class="acct-x" onclick="closeModal('modal-acct')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="acct-seed-box">
+      <div class="acct-seed-lbl">SEED PHRASE</div>
       <div class="seed-row" id="acct-seed-row" style="margin:0"></div>
-      <div style="font-size:.72rem;color:var(--muted);margin-top:.7rem;line-height:1.5">⚠️ Jangan bagikan ke siapapun. Gunakan untuk login dari device lain.</div>
+      <div class="acct-seed-warn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Jangan bagikan ke siapapun. Gunakan untuk login dari device lain.</div>
     </div>
-    <div style="display:flex;gap:.7rem;margin-bottom:1rem">
-      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
-        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">DCA</div>
-        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-dca">0</div>
-      </div>
-      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
-        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">Aset</div>
-        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-port">0</div>
-      </div>
-      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.9rem;text-align:center">
-        <div style="font-size:.68rem;color:var(--muted);margin-bottom:.2rem">Transaksi</div>
-        <div style="font-size:1.3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)" id="acct-cf">0</div>
-      </div>
+    <div class="acct-stats">
+      <div class="acct-stat"><div class="acct-stat-l">DCA</div><div class="acct-stat-v" id="acct-dca">0</div></div>
+      <div class="acct-stat-sep"></div>
+      <div class="acct-stat"><div class="acct-stat-l">Aset</div><div class="acct-stat-v" id="acct-port">0</div></div>
+      <div class="acct-stat-sep"></div>
+      <div class="acct-stat"><div class="acct-stat-l">Transaksi</div><div class="acct-stat-v" id="acct-cf">0</div></div>
     </div>
-    <div id="acct-sync" style="font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.1rem">—</div>
-    <div style="margin-bottom:.8rem;padding:.7rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;text-align:center">
-      <div style="font-size:.72rem;color:var(--accent3);font-weight:700">Login multi-device aktif</div>
-      <div style="font-size:.68rem;color:var(--muted);margin-top:.3rem">Cukup masukkan 3 kata seed phrase di device manapun</div>
+    <div id="acct-sync" class="acct-sync">—</div>
+    <div class="acct-mdev">
+      <div class="acct-mdev-dot"></div>
+      <div><div class="acct-mdev-t">Login multi-device aktif</div><div class="acct-mdev-s">Cukup masukkan 3 kata seed phrase di device manapun</div></div>
     </div>
-    <div style="display:flex;gap:.7rem;flex-wrap:wrap">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn btn-ghost" style="flex:1;border-color:var(--accent4);color:var(--accent4)" onclick="showChangeSeed()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:.3rem"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-        Ganti Seed
-      </button>
-      <button class="btn-del" style="flex:1;border-radius:8px;padding:.65rem;display:inline-flex;align-items:center;gap:.4rem" onclick="doLogout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
+    <div class="acct-btns">
+      <button class="btn btn-ghost" onclick="closeModal('modal-acct')">Tutup</button>
+      <button class="btn acct-btn-seed" onclick="showChangeSeed()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Ganti Seed</button>
+      <button class="btn acct-btn-out" onclick="doLogout()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
     </div>
   </div>
 </div>
@@ -2895,10 +3058,11 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   padding:10px 16px;
   background:linear-gradient(90deg,#0891b2 0%,#06b6d4 45%,#7c3aed 100%);
   flex-shrink:0}
-.ph-logo-main{font-size:19px;font-weight:900;letter-spacing:-.3px}
-.ph-logo-w{color:#fff}
-.ph-logo-os{color:#bae6fd}
-.ph-logo-sub{font-size:8px;color:rgba(255,255,255,.65);letter-spacing:.06em;margin-top:1px}
+.ph-logo-main{font-size:0;display:flex;align-items:baseline;gap:0}
+.ph-logo-z{color:#00e5ff;font-style:italic;font-weight:900;font-size:23px;letter-spacing:-.03em;text-shadow:0 0 10px rgba(0,229,255,.5)}
+.ph-logo-hyphen{color:rgba(0,229,255,.4);font-weight:300;font-size:17px;margin:0 1px}
+.ph-logo-wealth{color:#fff;font-weight:800;font-size:23px;letter-spacing:-.02em}
+.ph-logo-sub{font-size:7.5px;color:rgba(255,255,255,.55);letter-spacing:.08em;margin-top:2px}
 .ph-right{text-align:right}
 .ph-title{font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.05em}
 .ph-meta{font-size:8px;color:rgba(255,255,255,.75);margin-top:1.5px}
@@ -2951,8 +3115,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   /* PAGE BUILDERS */
   const PH=(pg,tot)=>`<div class="ph">
     <div>
-      <div class="ph-logo-main"><span class="ph-logo-w">Wealth</span><span class="ph-logo-os">OS</span></div>
-      <div class="ph-logo-sub">Financial Command Center</div>
+      <div class="ph-logo-main"><span class="ph-logo-z">z</span><span class="ph-logo-hyphen">-</span><span class="ph-logo-wealth">wealth</span></div>
+      <div class="ph-logo-sub">z-wealth.netlify.app</div>
     </div>
     <div class="ph-right">
       <div class="ph-title">LAPORAN KEUANGAN</div>
@@ -2962,7 +3126,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   </div>`;
 
   const PF=(pg,tot)=>`<div class="pf">
-    <span>WealthOS — Laporan Keuangan Konfidensial</span>
+    <span>z-wealth.netlify.app · Laporan Konfidensial</span>
     <span>Generate: ${dateStr} ${timeStr} WIB &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</span>
     <span>Halaman ${pg} dari ${tot}</span>
   </div>`;
@@ -3157,9 +3321,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
       <div style="margin-top:12px;background:#fffbeb;border:1px solid #fef08a;border-left:4px solid #f59e0b;border-radius:6px;padding:11px 14px">
         <div style="font-size:10.5px;font-weight:800;color:#92400e;margin-bottom:5px">⚠ Disclaimer</div>
         <div style="font-size:9.5px;line-height:1.85;color:#374151">
-          Laporan ini dibuat otomatis oleh WealthOS untuk keperluan dokumentasi pribadi. Data portofolio berdasarkan harga Bitcoin real-time saat laporan digenerate.<br>
+          Laporan ini dibuat otomatis oleh z-wealth untuk keperluan dokumentasi pribadi. Data portofolio berdasarkan harga Bitcoin real-time saat laporan digenerate.<br>
           Dokumen ini <strong>bukan merupakan rekomendasi investasi</strong>. Nilai investasi dapat naik maupun turun. Selalu lakukan riset mandiri (DYOR).<br>
-          <span style="color:#9ca3af;font-size:8.5px">WealthOS — Laporan Keuangan Konfidensial — ${dateStr}</span>
+          <span style="color:#9ca3af;font-size:8.5px">z-wealth — Laporan Keuangan Konfidensial — ${dateStr}</span>
         </div>
       </div>
     </div>
@@ -3171,12 +3335,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
 <html lang="id"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WealthOS — Laporan ${dateStr}</title>
+<title>z-wealth — Laporan ${dateStr}</title>
 <style>${css}</style>
 </head><body>
 <div class="topbar">
   <div class="topbar-left">
-    <div class="t1">📊 WealthOS — Laporan Keuangan</div>
+    <div class="t1"><span style="color:#00c8ff;font-style:italic;font-weight:900">z</span><span style="color:rgba(255,255,255,.85)">-wealth</span> &nbsp;—&nbsp; Laporan Keuangan</div>
     <div class="t2">${dateStr} &nbsp;·&nbsp; Akun: ${seedDisplay} &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</div>
   </div>
   <button class="btn-pdf" onclick="window.print()">
@@ -3197,13 +3361,331 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   } else {
     const a=document.createElement('a');
     a.href=url;
-    a.download=`WealthOS-${now.toISOString().slice(0,10)}.html`;
+    a.download=`z-wealth-laporan-${now.toISOString().slice(0,10)}.html`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
     toast('📥 File laporan diunduh — buka lalu klik Simpan PDF');
   }
 }
 
-</script>
+
+
+/* ══════════════════════════════════════════════════════════════════
+   SHARE CARD — Canvas-based JPG generator (Bybit-style, DCA context)
+══════════════════════════════════════════════════════════════════ */
+function showShareCard(){
+  if(!S.dca.length){toast('Tambahkan transaksi DCA dulu',1);return;}
+  if(!S.btcPrice){toast('Menunggu data harga BTC...',1);return;}
+
+  const modal=document.getElementById('modal-share');
+  modal.style.display='flex';
+  // slight delay so modal is visible before heavy canvas draw
+  setTimeout(drawShareCard,80);
+}
+
+function closeShareModal(){
+  document.getElementById('modal-share').style.display='none';
+}
+
+/* ── z-wealth canvas logo renderer ── */
+function drawZWealthLogo(ctx, x, y, size, accentColor){
+  ctx.save();
+  const s = size;
+
+  /* Underscore/bar behind z — design element */
+  const barH = s * 0.07;
+  const barY = y + barH;
+  const grad = ctx.createLinearGradient(x, barY, x + s * 4.2, barY);
+  grad.addColorStop(0, accentColor);
+  grad.addColorStop(0.5, 'rgba(0,200,255,0.3)');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, barY, s * 4.2, barH);
+
+  /* "z" — italic 900, glowing */
+  ctx.font = `italic 900 ${s}px "Segoe UI",Arial,sans-serif`;
+  ctx.shadowColor = accentColor;
+  ctx.shadowBlur = s * 0.7;
+  ctx.fillStyle = accentColor;
+  ctx.fillText('z', x, y);
+  const zW = ctx.measureText('z').width;
+  ctx.shadowBlur = 0;
+
+  /* "-" hyphen — very dim, thin */
+  ctx.font = `300 ${Math.round(s * 0.7)}px "Segoe UI",Arial,sans-serif`;
+  ctx.fillStyle = 'rgba(0,200,255,0.35)';
+  const hx = x + zW + s * 0.04;
+  ctx.fillText('-', hx, y - s * 0.06);
+  const hW = ctx.measureText('-').width;
+
+  /* "wealth" — regular weight, white */
+  ctx.font = `700 ${s}px "Segoe UI",Arial,sans-serif`;
+  ctx.fillStyle = '#f0f9ff';
+  ctx.fillText('wealth', hx + hW + s * 0.02, y);
+
+  ctx.restore();
+}
+
+function drawShareCard(){
+  const p=S.btcPrice||0, r=S.usdIdr||16000;
+  let ti=0,tb=0;
+  S.dca.forEach(e=>{ti+=e.amountIDR||0;tb+=e.btcAmount||0});
+  const cv=tb*p*r, pnl=cv-ti, pp=ti>0?pnl/ti*100:0;
+  const avg=tb>0?ti/tb/r:0;
+  const isProfit=pnl>=0;
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  const since=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date||'—';
+
+  /* ── CANVAS 1080×1350 ── */
+  const W=1080,H=1350;
+  const cv2=document.getElementById('share-canvas');
+  cv2.width=W;cv2.height=H;
+  const ctx=cv2.getContext('2d');
+
+  /* helper: rounded rect path */
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  /* ── 1. BACKGROUND ── */
+  ctx.fillStyle='#07090f';
+  ctx.fillRect(0,0,W,H);
+
+  /* Subtle red grid (like Bybit) */
+  ctx.strokeStyle=isProfit?'rgba(0,200,255,0.04)':'rgba(220,30,50,0.05)';
+  ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=54){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=54){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  /* Large radial glow bottom-right (Bybit style) */
+  const glowC=isProfit?'rgba(0,180,255,0.10)':'rgba(220,30,50,0.12)';
+  const grd=ctx.createRadialGradient(W*0.82,H*0.72,0,W*0.82,H*0.72,W*0.75);
+  grd.addColorStop(0,glowC);grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+
+  /* Diagonal decorative lines */
+  ctx.save();ctx.globalAlpha=0.05;
+  ctx.strokeStyle=isProfit?'#00c8ff':'#dd1e32';ctx.lineWidth=1.5;
+  for(let i=0;i<12;i++){
+    const oy=H*0.35+i*120;
+    ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(W*0.6,oy-240);ctx.stroke();
+  }
+  ctx.restore();
+
+  /* ── 2. TOP ACCENT BAR ── */
+  const accentColor=isProfit?'#00c8ff':'#dd1e32';
+  const accentGrd=ctx.createLinearGradient(0,0,W,0);
+  accentGrd.addColorStop(0,accentColor);
+  accentGrd.addColorStop(0.6,isProfit?'rgba(0,200,255,0.3)':'rgba(220,30,50,0.3)');
+  accentGrd.addColorStop(1,'transparent');
+  ctx.fillStyle=accentGrd;ctx.fillRect(0,0,W,4);
+
+  /* ── 3. HEADER: LOGO + DATE ── */
+  const PAD=80;
+
+  /* z-wealth logo */
+  drawZWealthLogo(ctx,PAD,108,54,accentColor);
+
+  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.8)';
+  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.65)';
+  ctx.fillText('z-wealth.netlify.app',PAD,165);
+
+  /* Date right */
+  ctx.textAlign='right';
+  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.7)';
+  ctx.fillText(dateStr+' '+timeStr,W-PAD,110);
+  ctx.textAlign='left';
+
+  /* ── 4. PAIR BADGE ── */
+  const pairY=260;
+  ctx.font='800 82px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='#f8fafc';
+  ctx.fillText('BTC / IDR',PAD,pairY);
+
+  /* DCA tag */
+  const pw=ctx.measureText('BTC / IDR').width;
+  const tx=PAD+pw+32,ty=pairY-66,tw=148,th=52;
+  const tagBg=isProfit?'rgba(0,200,255,0.12)':'rgba(220,30,50,0.15)';
+  ctx.fillStyle=tagBg;
+  ctx.strokeStyle=isProfit?'rgba(0,200,255,0.5)':'rgba(220,30,50,0.5)';
+  ctx.lineWidth=1.5;
+  rr(tx,ty,tw,th,10);ctx.fill();ctx.stroke();
+  ctx.font='700 28px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle=accentColor;
+  const tl='DCA';
+  ctx.fillText(tl,tx+tw/2-ctx.measureText(tl).width/2,ty+36);
+
+  /* ── 5. THIN SEPARATOR ── */
+  const sepY=310;
+  const sepGrd=ctx.createLinearGradient(PAD,sepY,W-PAD,sepY);
+  sepGrd.addColorStop(0,isProfit?'rgba(0,200,255,0.5)':'rgba(220,30,50,0.5)');
+  sepGrd.addColorStop(1,'transparent');
+  ctx.strokeStyle=sepGrd;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,sepY);ctx.lineTo(W-PAD,sepY);ctx.stroke();
+
+  /* ── 6. ROI LABEL ── */
+  ctx.font='500 36px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.85)';
+  ctx.fillText('ROI',PAD,390);
+
+  /* ── 7. ROI GIANT NUMBER ── */
+  const roiStr=(isProfit?'+':'')+pp.toFixed(2)+'%';
+  /* Measure to auto-size */
+  ctx.font='900 200px "Segoe UI",Arial,sans-serif';
+  let roiFontSize=200;
+  while(ctx.measureText(roiStr).width>W-PAD*2-40&&roiFontSize>100){
+    roiFontSize-=10;
+    ctx.font=`900 ${roiFontSize}px "Segoe UI",Arial,sans-serif`;
+  }
+  ctx.shadowColor=accentColor;ctx.shadowBlur=80;
+  ctx.fillStyle=accentColor;
+  ctx.fillText(roiStr,PAD,390+roiFontSize*0.85);
+  ctx.shadowBlur=0;
+  const roiBottom=390+roiFontSize*0.85;
+
+  /* ── 8. ENTRY / CURRENT PRICE ── */
+  const statY=roiBottom+80;
+  function drawKV(label,value,x,y){
+    ctx.font='400 30px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle='rgba(148,163,184,0.8)';
+    ctx.fillText(label,x,y);
+    ctx.font='700 48px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle='#f1f5f9';
+    ctx.fillText(value,x,y+58);
+  }
+  drawKV('Harga Entry (Avg)','$'+Math.round(avg).toLocaleString('en-US'),PAD,statY);
+  drawKV('Harga Saat Ini','$'+Math.round(p).toLocaleString('en-US'),580,statY);
+
+  /* ── 9. SECONDARY STATS ── */
+  const stat2Y=statY+160;
+  drawKV('Total BTC',tb.toFixed(6)+' BTC',PAD,stat2Y);
+  drawKV('Transaksi DCA',S.dca.length+' kali',580,stat2Y);
+
+  /* ── 10. PERFORMANCE BAR ── */
+  const barY=stat2Y+150, barH=10, barX=PAD, barW=W-PAD*2;
+  /* Track */
+  ctx.fillStyle='rgba(255,255,255,0.06)';rr(barX,barY,barW,barH,5);ctx.fill();
+  /* Fill */
+  const pctFill=Math.min(Math.max((pp+100)/200,0.01),1);
+  const barFill=ctx.createLinearGradient(barX,barY,barX+barW*pctFill,barY);
+  if(isProfit){barFill.addColorStop(0,'#0369a1');barFill.addColorStop(1,'#00c8ff');}
+  else{barFill.addColorStop(0,'#7f1d1d');barFill.addColorStop(1,'#dd1e32');}
+  ctx.fillStyle=barFill;rr(barX,barY,barW*pctFill,barH,5);ctx.fill();
+  /* Labels */
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.5)';
+  ctx.fillText('-100%',barX,barY+34);
+  ctx.textAlign='center';ctx.fillText('0%',barX+barW/2,barY+34);
+  ctx.textAlign='right';ctx.fillText('+100%',barX+barW,barY+34);
+  ctx.textAlign='left';
+
+  /* ── 11. STATUS CARD ── */
+  const cardY=barY+80,cardH=180,cardW=W-PAD*2,cardX=PAD;
+  const cBg=isProfit?'rgba(0,200,255,0.06)':'rgba(220,30,50,0.07)';
+  const cBorder=isProfit?'rgba(0,200,255,0.2)':'rgba(220,30,50,0.25)';
+  ctx.fillStyle=cBg;ctx.strokeStyle=cBorder;ctx.lineWidth=1.5;
+  rr(cardX,cardY,cardW,cardH,18);ctx.fill();ctx.stroke();
+
+  /* Dot */
+  ctx.fillStyle=accentColor;
+  ctx.beginPath();ctx.arc(cardX+42,cardY+cardH/2,11,0,Math.PI*2);ctx.fill();
+
+  /* Status text */
+  ctx.font='800 38px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle=accentColor;
+  ctx.fillText(isProfit?'POSISI PROFIT':'POSISI RUGI',cardX+72,cardY+cardH/2-12);
+  ctx.font='400 28px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.75)';
+  ctx.fillText('DCA sejak '+since+' · Unrealized P&L',cardX+72,cardY+cardH/2+32);
+
+  /* ── 12. BOTTOM WATERMARK ── */
+  const botY=H-80;
+  ctx.font='700 30px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(0,200,255,0.4)';
+  /* z-wealth watermark */
+  ctx.globalAlpha=0.55;
+  drawZWealthLogo(ctx,PAD,botY,30,accentColor);
+  ctx.globalAlpha=1;
+  ctx.textAlign='right';
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.4)';
+  ctx.fillText('z-wealth.netlify.app · Bukan rekomendasi investasi',W-PAD,botY);
+  ctx.textAlign='left';
+
+  /* Bottom accent line */
+  const bLineGrd=ctx.createLinearGradient(PAD,botY+18,W-PAD,botY+18);
+  bLineGrd.addColorStop(0,'transparent');
+  bLineGrd.addColorStop(0.3,isProfit?'rgba(0,200,255,0.25)':'rgba(220,30,50,0.25)');
+  bLineGrd.addColorStop(0.7,isProfit?'rgba(124,58,237,0.25)':'rgba(220,30,50,0.15)');
+  bLineGrd.addColorStop(1,'transparent');
+  ctx.strokeStyle=bLineGrd;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,botY+18);ctx.lineTo(W-PAD,botY+18);ctx.stroke();
+}
+
+/* helper used elsewhere */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function downloadShareCard(){
+  const canvas=document.getElementById('share-canvas');
+  const link=document.createElement('a');
+  const now=new Date();
+  link.download='z-wealth-DCA-'+now.toISOString().slice(0,10)+'.jpg';
+  link.href=canvas.toDataURL('image/jpeg',0.96);
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+  toast('Kartu berhasil disimpan');
+}
+
+
+</script>>
+
+<!-- SHARE CARD MODAL -->
+<div id="modal-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.90);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#07090f;border:1px solid rgba(0,200,255,0.15);border-radius:20px;padding:1.6rem;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(0,200,255,0.08)">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem">
+      <div>
+        <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI DCA</div>
+        <div style="font-size:.7rem;color:rgba(148,163,184,.6);margin-top:2px;letter-spacing:.04em">z-wealth.netlify.app</div>
+      </div>
+      <button onclick="closeShareModal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#64748b;cursor:pointer;padding:7px;display:flex;align-items:center;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Canvas preview -->
+    <div style="border-radius:14px;overflow:hidden;margin-bottom:1.3rem;box-shadow:0 12px 48px rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.04)">
+      <canvas id="share-canvas" style="display:block;width:100%;height:auto"></canvas>
+    </div>
+
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.15),transparent);margin-bottom:1.2rem"></div>
+
+    <!-- Download button -->
+    <button onclick="downloadShareCard()" style="width:100%;background:linear-gradient(135deg,#0369a1,#00c8ff);border:none;border-radius:12px;padding:.95rem;color:#fff;font-weight:800;font-size:.9rem;cursor:pointer;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;gap:.55rem;box-shadow:0 4px 20px rgba(0,200,255,.25);transition:all .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      SIMPAN SEBAGAI JPG
+    </button>
+
+    <div style="text-align:center;margin-top:.8rem;font-size:.67rem;color:rgba(100,116,139,.5);letter-spacing:.04em">1080 × 1350 px · JPEG · Siap diposting</div>
+  </div>
+</div>
 </body>
 </html>
