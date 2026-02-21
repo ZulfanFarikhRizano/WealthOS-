@@ -880,6 +880,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="stat-card"><div class="slabel">Average Buy Price</div><div class="sval gld" id="dca-avg">$0</div></div>
     <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="dca-btc">0 BTC</div></div>
   </div>
+  <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
+
   <!-- DCA BTC LIVE CHART -->
   <div class="btc-chart-wrap" id="dca-btc-chart-wrap">
     <div class="btc-chart-header">
@@ -943,7 +945,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
   </div>
 
-  <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
   <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Histori</div>
     <div style="display:flex;gap:.5rem">
       <button class="btn btn-ghost btn-sm" onclick="clearDCA()" style="display:inline-flex;align-items:center;gap:.35rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg> Hapus Semua</button>
@@ -2014,6 +2015,7 @@ async function fetchBTC(){
     updateBTCDisplay();
   }
   updateBTCLiveDisplay();
+  updateDCABTCDisplay();
 }
 function updateBTCDisplay(){
   const p=S.btcPrice,ch=S.btcChange||0;
@@ -2313,7 +2315,7 @@ function updateChartsInPlace(){
   // refresh stat numbers on visible pages
   const ap=document.querySelector('.page.active');
   if(ap?.id==='page-dashboard')refreshDashStats();
-  if(ap?.id==='page-dca')refreshDCAStats();
+  if(ap?.id==='page-dca'){refreshDCAStats();updateDCABTCDisplay();if(cDCABTCLive)cDCABTCLive.update('none');}
 }
 
 /* ══════════ CHARTS ══════════ */
@@ -2326,6 +2328,7 @@ async function loadDCABTCChart(tf){
     b.classList.toggle('active',b.dataset.tf===tf);
   });
   const cfg=TF_CONFIG[tf];
+  if(!cfg){console.warn('loadDCABTCChart: unknown tf',tf);return;}
   const loading=document.getElementById('dca-btcc-loading');
   const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
   if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
@@ -2343,6 +2346,7 @@ async function loadDCABTCChart(tf){
     safe('dca-btcc-low',e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('dca-btcc-close',e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
     // Avg buy price — sama persis dengan refreshDCAStats: totalIDR / totalBTC / kurs
+    const r=S.usdIdr||16000;
     const totalBTC=S.dca.reduce((s,e)=>s+e.btcAmount,0);
     const totalIDR=S.dca.reduce((s,e)=>s+e.amountIDR,0);
     const avgUSD=totalBTC>0?totalIDR/totalBTC/r:0;
