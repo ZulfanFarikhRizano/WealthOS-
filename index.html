@@ -2,8 +2,34 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>z-wealth · Bitcoin DCA Tracker</title>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#00e5ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="z-wealth">
+<meta name="application-name" content="z-wealth">
+<meta name="msapplication-TileColor" content="#050810">
+<meta name="msapplication-tap-highlight" content="no">
+
+<!-- SEO & Open Graph -->
+<meta name="description" content="Catat dan pantau investasi Bitcoin DCA kamu secara real-time">
+<meta property="og:title" content="z-wealth · Bitcoin DCA Tracker">
+<meta property="og:description" content="Catat dan pantau investasi Bitcoin DCA kamu secara real-time">
+<meta property="og:type" content="website">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Icons -->
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -750,6 +776,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="nav-tab" onclick="showPage('cashflow')">Arus Kas</div>
   </div>
   <div class="nav-right-desktop" style="display:flex;align-items:center;gap:.6rem;margin-left:auto">
+    <!-- PWA Install Button -->
+    <button id="pwa-install-btn" onclick="triggerPWAInstall()" title="Install sebagai App" style="display:none;align-items:center;gap:.35rem;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(124,58,237,.15));border:1px solid rgba(0,229,255,.35);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install App
+    </button>
     <div class="acct-badge" onclick="showAcct()" title="Info Akun">
       <div class="acct-dot"></div>
       <span id="nav-acct" style="font-family:'Space Mono',monospace;font-size:.72rem;overflow:hidden;text-overflow:ellipsis">—</span>
@@ -2044,13 +2075,20 @@ const TF_CONFIG = {
 };
 
 async function fetchWithTimeout(url, ms=12000){
-  const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(), ms);
+  // Gunakan AbortSignal.timeout jika tersedia (modern browser)
+  // Fallback ke manual AbortController tanpa postMessage
   try{
-    const r=await fetch(url,{signal:ctrl.signal});
-    clearTimeout(tid);
-    return r;
-  }catch(e){clearTimeout(tid);throw e;}
+    if(typeof AbortSignal !== 'undefined' && AbortSignal.timeout){
+      const r=await fetch(url,{signal:AbortSignal.timeout(ms)});
+      return r;
+    }
+  }catch(e){
+    // Jika AbortSignal.timeout tidak support, lanjut ke fallback
+    if(e.name!=='TimeoutError'&&e.name!=='AbortError') throw e;
+    throw e;
+  }
+  // Fallback: fetch tanpa timeout (hindari AbortController clone error)
+  return await fetch(url);
 }
 
 async function krakenOHLC(interval, since){
@@ -3952,8 +3990,61 @@ function downloadShareCard(){
   toast('Kartu berhasil disimpan');
 }
 
+// ── PWA SERVICE WORKER REGISTRATION ──
+// Hanya daftarkan SW di domain yang benar (bukan preview/localhost tanpa sw.js)
+const _swAllowed = !window.location.hostname.includes('claudeusercontent.com') &&
+                   !window.location.hostname.includes('claude.ai');
+if ('serviceWorker' in navigator && _swAllowed) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[PWA] Service Worker registered:', reg.scope);
+        // Check for updates
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available — show toast
+              setTimeout(() => toast('🔄 Update tersedia! Refresh untuk versi terbaru.'), 1000);
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
 
-</script>>
+// ── PWA INSTALL PROMPT ──
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install button if exists
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  toast('✅ z-wealth berhasil diinstall!');
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+function triggerPWAInstall() {
+  if (!deferredInstallPrompt) {
+    toast('Buka di browser untuk install sebagai app 📱', 2);
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(result => {
+    if (result.outcome === 'accepted') toast('✅ z-wealth sedang diinstall...');
+    deferredInstallPrompt = null;
+  });
+}
+
+</script>
+
 
 <!-- SHARE CARD MODAL -->
 <div id="modal-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.90);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem">

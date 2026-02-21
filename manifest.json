@@ -1,0 +1,45 @@
+{
+  "name": "z-wealth · Bitcoin DCA Tracker",
+  "short_name": "z-wealth",
+  "description": "Catat dan pantau investasi Bitcoin DCA kamu secara real-time",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050810",
+  "theme_color": "#00e5ff",
+  "lang": "id",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "DCA Tracker",
+      "short_name": "DCA",
+      "description": "Tambah transaksi DCA baru",
+      "url": "/?page=dca",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Portofolio",
+      "short_name": "Porto",
+      "description": "Lihat portofolio kamu",
+      "url": "/?page=portfolio",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
