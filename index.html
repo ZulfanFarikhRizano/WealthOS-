@@ -2342,8 +2342,10 @@ async function loadDCABTCChart(tf){
     safe('dca-btcc-high',e=>e.textContent='$'+hi.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('dca-btcc-low',e=>e.textContent='$'+lo.toLocaleString('en-US',{maximumFractionDigits:0}));
     safe('dca-btcc-close',e=>e.textContent='$'+cl.toLocaleString('en-US',{maximumFractionDigits:0}));
-    // Average buy price line
-    const avgUSD=S.dca.length?S.dca.reduce((s,e)=>s+e.priceUSD*e.amountIDR,0)/S.dca.reduce((s,e)=>s+e.amountIDR,0):0;
+    // Avg buy price — sama persis dengan refreshDCAStats: totalIDR / totalBTC / kurs
+    const totalBTC=S.dca.reduce((s,e)=>s+e.btcAmount,0);
+    const totalIDR=S.dca.reduce((s,e)=>s+e.amountIDR,0);
+    const avgUSD=totalBTC>0?totalIDR/totalBTC/r:0;
     const avgLegend=document.getElementById('dca-avg-legend');
     if(avgUSD>0){
       if(avgLegend)avgLegend.style.display='flex';
