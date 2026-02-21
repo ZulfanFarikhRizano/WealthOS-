@@ -863,7 +863,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- DCA -->
 <div id="page-dca" class="page">
   <div class="ph"><h1>DCA Tracker</h1><p>Catat setiap pembelian Bitcoin kamu</p></div>
-  <div class="sec-hdr">
+  <div class="sec-hdr" style="gap:1.2rem">
     <div class="sec-title">Ringkasan</div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="btn btn-ghost btn-sm" onclick="showShareCard()" style="display:inline-flex;align-items:center;gap:.4rem;border-color:rgba(0,229,255,.3);color:var(--accent)">
@@ -3568,8 +3568,7 @@ function drawShareCard(){
 
   /* ── 9. SECONDARY STATS ── */
   const stat2Y=statY+160;
-  drawKV('Total BTC',tb.toFixed(6)+' BTC',PAD,stat2Y);
-  drawKV('Transaksi DCA',S.dca.length+' kali',580,stat2Y);
+  drawKV('Transaksi DCA',S.dca.length+' kali',PAD,stat2Y);
 
   /* ── 10. PERFORMANCE BAR ── */
   const barY=stat2Y+150, barH=10, barX=PAD, barW=W-PAD*2;
