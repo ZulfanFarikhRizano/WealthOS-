@@ -2806,7 +2806,6 @@ async function enterApp(seed,data){
   S.dca=data.dca||data.dcaEntries||[];
   S.port=data.port||data.portfolioItems||[];
   S.cf=data.cf||data.cashflowItems||[];
-  // Cache: store seed locally for session restore (only stored on client device)
   localStorage.setItem('wo_cache',JSON.stringify({seed,data:{dca:S.dca,port:S.port,cf:S.cf}}));
   document.getElementById('nav-acct').textContent=seed.join(' · ');
   const mob=document.getElementById('nav-acct-mob');if(mob)mob.textContent=seed.join(' · ');
@@ -2816,6 +2815,26 @@ async function enterApp(seed,data){
   setSyncStatus('synced');
   lastSync=new Date();
   initApp();
+
+  // ── Init chat notif segera setelah login (tidak perlu tunggu buka halaman chat) ──
+  setTimeout(async () => {
+    try {
+      // Init Supabase client untuk chat jika belum
+      if (!chatSB) {
+        const lib = window.supabase || window.Supabase;
+        if (lib) chatSB = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      if (chatSB && !window._globalNotifReady) {
+        window._globalNotifReady = true;
+        subscribeGlobalChatNotif();
+      }
+    } catch(e) {}
+
+    // Minta izin notifikasi (butuh user gesture — gunakan toast klik)
+    if ('Notification' in window && Notification.permission === 'default') {
+      showNotifPermissionPrompt();
+    }
+  }, 1500);
 }
 
 function showLL(m){
@@ -6404,9 +6423,12 @@ const ChatNotif = (() => {
 
   // ── Browser Push Notification ──
   function requestPushPermission() {
+    // Dipanggil dari user gesture — langsung minta izin
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
-      Notification.requestPermission();
+      Notification.requestPermission().then(perm => {
+        if (perm === 'granted') toast('✅ Notifikasi aktif!', 0);
+      });
     }
   }
 
@@ -6501,7 +6523,7 @@ const ChatNotif = (() => {
     }
     if (roomEl) roomEl.textContent = roomData?.name || 'Chat';
     if (senderEl) senderEl.textContent = msg.sender_code || 'anon';
-    if (textEl) textEl.textContent = msg.content || '';
+    if (textEl) textEl.textContent = msg.content || (msg.media_url ? '📎 Mengirim media' : '...');
 
     // Reset & animate
     toast.classList.remove('show');
@@ -6581,7 +6603,8 @@ const ChatNotif = (() => {
 
     // Browser push notif (saat tab tidak aktif)
     const pushTitle = `💬 ${roomData?.name || 'Chat'}`;
-    const pushBody = `${msg.sender_code}: ${msg.content?.slice(0, 60) || ''}`;
+    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '📎 Media' : '...');
+    const pushBody = `${msg.sender_code}: ${msgPreview}`;
     sendPushNotif(pushTitle, pushBody, msg.room_id, roomData);
   }
 
@@ -6595,8 +6618,55 @@ const ChatNotif = (() => {
     requestPushPermission();
   }
 
-  return { onNewMessage, resetUnread, init, playSound };
+  return { onNewMessage, resetUnread, init, playSound, requestPushPermission };
 })();
+
+// ── Prompt izin notifikasi (non-intrusive banner) ──
+function showNotifPermissionPrompt() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+
+  // Buat banner di bagian bawah
+  const banner = document.createElement('div');
+  banner.id = 'notif-permission-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:calc(5rem + env(safe-area-inset-bottom,0px));left:50%;
+    transform:translateX(-50%) translateY(80px);
+    z-index:8000;width:calc(100% - 2rem);max-width:400px;
+    background:rgba(10,16,30,0.95);backdrop-filter:blur(24px);
+    border:1px solid rgba(0,229,255,0.3);border-radius:16px;
+    padding:.9rem 1.1rem;display:flex;align-items:center;gap:.8rem;
+    box-shadow:0 8px 32px rgba(0,0,0,.5);
+    transition:transform .4s cubic-bezier(.34,1.2,.64,1);
+  `;
+  banner.innerHTML = `
+    <span style="font-size:1.4rem">🔔</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.82rem;font-weight:700;color:#e2e8f0;margin-bottom:.2rem">Aktifkan Notifikasi Chat</div>
+      <div style="font-size:.72rem;color:rgba(148,163,184,.8)">Agar dapat notif pesan baru dari komunitas</div>
+    </div>
+    <button onclick="
+      if(window.ChatNotif) ChatNotif.requestPushPermission();
+      document.getElementById('notif-permission-banner')?.remove();
+    " style="background:var(--accent);color:#000;border:none;border-radius:10px;padding:.45rem .9rem;font-size:.78rem;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">Izinkan</button>
+    <button onclick="document.getElementById('notif-permission-banner')?.remove()"
+      style="background:rgba(255,255,255,.08);color:rgba(148,163,184,.7);border:none;border-radius:10px;padding:.45rem .6rem;font-size:.78rem;cursor:pointer;flex-shrink:0">✕</button>
+  `;
+  document.body.appendChild(banner);
+  // Slide up
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      banner.style.transform = 'translateX(-50%) translateY(0)';
+    });
+  });
+  // Auto dismiss setelah 12 detik
+  setTimeout(() => {
+    if (banner.parentNode) {
+      banner.style.transform = 'translateX(-50%) translateY(80px)';
+      setTimeout(() => banner.remove(), 400);
+    }
+  }, 12000);
+}
 
 // ── PATCH: subscribeRoom — patch ini TIDAK DIPAKAI (notif via global channel) ──
 // subscribeRoom tetap menggunakan definisi original di atas
