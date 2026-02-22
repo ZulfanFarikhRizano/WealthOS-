@@ -30,7 +30,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
@@ -48,7 +48,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden;max-width:100vw}
-body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
 /* Smooth transitions hanya untuk elemen yang membutuhkan */
 .stat-card,.card,.modal,.fi,.btn,.btn-primary,.btn-ghost,.btn-del,
 .login-box,.btc-badge,.acct-badge,.theme-toggle,
@@ -128,12 +128,12 @@ nav,.nav-topstrip,.bottom-nav,
 .check-label{font-size:.8rem;color:var(--muted);line-height:1.4}
 .lbtn{
   width:100%;padding:.95rem;border-radius:10px;background:var(--accent);color:var(--bg);
-  border:none;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;
+  border:none;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:800;
   cursor:pointer;transition:background .2s,border-color .2s,color .2s;letter-spacing:.02em;margin-top:.5rem;
 }
 .lbtn:hover:not(:disabled){background:#33eaff;box-shadow:var(--glow2);transform:translateY(-1px)}
 .lbtn:disabled{opacity:.45;cursor:not-allowed}
-.lbtn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text);width:100%;padding:.7rem;border-radius:10px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s;margin-bottom:.5rem}
+.lbtn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text);width:100%;padding:.7rem;border-radius:10px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s;margin-bottom:.5rem}
 .lbtn-ghost:hover{border-color:var(--accent);color:var(--accent)}
 .lerr{color:var(--danger);font-size:.8rem;text-align:center;margin:.5rem 0;display:none}
 .lloading{display:none;align-items:center;justify-content:center;gap:.7rem;padding:1rem;color:var(--muted);font-size:.84rem}
@@ -241,13 +241,13 @@ nav{
 .pos{color:var(--accent3)}.neg{color:var(--danger)}.acc{color:var(--accent)}.gld{color:var(--accent4)}
 
 /* ── BUTTONS ── */
-.btn{padding:.65rem 1.3rem;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.03em;cursor:pointer;border:none;transition:all .2s}
+.btn{padding:.65rem 1.3rem;border-radius:8px;font-family:'Inter',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.03em;cursor:pointer;border:none;transition:all .2s}
 .btn-primary{background:var(--accent);color:var(--bg)}
 .btn-primary:hover{background:#33eaff;box-shadow:var(--glow2);transform:translateY(-1px)}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
 .btn-sm{padding:.38rem .8rem;font-size:.75rem}
-.btn-del{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:.35rem .7rem;font-size:.72rem;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:all .2s}
+.btn-del{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:.35rem .7rem;font-size:.72rem;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;transition:all .2s}
 .btn-del:hover{background:var(--danger);color:#fff}
 
 /* ── CHART AREA ── */
@@ -371,9 +371,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 }
 
 /* ── LOGOUT BTN ── */
-.logout-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.logout-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .logout-btn:hover{border-color:var(--danger);color:var(--danger)}
-.export-pdf-btn{background:transparent;border:1px solid rgba(0,229,255,.3);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;color:var(--accent);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.export-pdf-btn{background:transparent;border:1px solid rgba(0,229,255,.3);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;color:var(--accent);cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .export-pdf-btn:hover{background:rgba(0,229,255,.1);border-color:var(--accent);box-shadow:var(--glow)}
 @media(max-width:640px){.logout-txt{display:none}.logout-btn{padding:.4rem .55rem;font-size:.82rem}.export-txt{display:none}.export-pdf-btn{padding:.4rem .55rem;font-size:.82rem}}
 
@@ -434,7 +434,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   color:rgba(255,255,255,0.45);
   transition:color .25s ease, background .25s ease;
   border:none;background:none;
-  font-family:'Syne',sans-serif;
+  font-family:'Inter',sans-serif;
   -webkit-tap-highlight-color:transparent;
   position:relative;
   border-radius:22px;
@@ -500,7 +500,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .sim-param-toggle{
   width:100%;display:flex;align-items:center;justify-content:space-between;
   padding:1rem 1.2rem;background:none;border:none;color:var(--text);
-  font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
   text-align:left;
 }
 .sim-param-toggle:hover{background:rgba(0,229,255,.04)}
@@ -686,7 +686,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- ══════════ LOGIN SCREEN ══════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo"><span class="zw-z">z</span><span class="zw-hyphen">-</span><span class="zw-wealth">wealth</span></div>
+    <div class="login-logo"><img src="icon-512.png" alt="z-wealth" style="width:90px;height:90px;border-radius:20px;display:block;margin:0 auto"></div>
     <div class="login-tagline">Financial Command Center · Login dengan 3 kata seed phrase</div>
 
     <div class="ltabs">
@@ -762,8 +762,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div class="theme-toggle-thumb"></div>
   </button>
-  <button onclick="exportPDF()" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.35);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--accent);display:flex;align-items:center;gap:.3rem;font-size:.65rem;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>PDF</button>
-  <button onclick="showAcct()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.35rem;font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Akun</button>
+  <button onclick="exportPDF()" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.35);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--accent);display:flex;align-items:center;gap:.3rem;font-size:.65rem;font-family:'Inter',sans-serif;font-weight:800;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>PDF</button>
+  <button onclick="showAcct()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.35rem;font-size:.65rem;font-family:'Inter',sans-serif;font-weight:700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Akun</button>
 </div>
 
 <nav>
@@ -777,7 +777,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
   <div class="nav-right-desktop" style="display:flex;align-items:center;gap:.6rem;margin-left:auto">
     <!-- PWA Install Button -->
-    <button id="pwa-install-btn" onclick="triggerPWAInstall()" title="Install sebagai App" style="display:none;align-items:center;gap:.35rem;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(124,58,237,.15));border:1px solid rgba(0,229,255,.35);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s">
+    <button id="pwa-install-btn" onclick="triggerPWAInstall()" title="Install sebagai App" style="display:none;align-items:center;gap:.35rem;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(124,58,237,.15));border:1px solid rgba(0,229,255,.35);border-radius:8px;padding:.4rem .7rem;font-size:.7rem;font-family:'Inter',sans-serif;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Install App
     </button>
@@ -838,24 +838,145 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="d-btcamt">0 BTC</div><div class="ssub" id="d-btcidr">Rp 0</div></div>
     <div class="stat-card"><div class="slabel">DCA Entries</div><div class="sval acc" id="d-entries">0</div><div class="ssub" id="d-avg">Avg: $0</div></div>
   </div>
+
+  <!-- ── FEATURE SHORTCUT BUTTONS ── -->
+  <style>
+    .feat-btn {
+      position:relative;overflow:hidden;cursor:pointer;border:none;
+      border-radius:22px;padding:1.15rem 1rem 1rem;text-align:left;
+      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+      transition:transform .18s ease,box-shadow .18s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .feat-btn:active{transform:scale(.96);}
+    /* glass shine overlay */
+    .feat-btn::before{
+      content:'';position:absolute;inset:0;border-radius:22px;
+      background:linear-gradient(145deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,.06) 38%,transparent 60%);
+      pointer-events:none;z-index:1;
+    }
+    /* top border highlight (glass rim) */
+    .feat-btn::after{
+      content:'';position:absolute;inset:0;border-radius:22px;
+      border:1px solid rgba(255,255,255,.32);
+      border-bottom-color:rgba(255,255,255,.08);
+      border-right-color:rgba(255,255,255,.08);
+      pointer-events:none;z-index:2;
+    }
+    .feat-btn .fb-blob{
+      position:absolute;bottom:-28px;right:-24px;
+      width:100px;height:100px;border-radius:50%;
+      filter:blur(22px);opacity:.55;pointer-events:none;z-index:0;
+    }
+    .feat-btn .fb-dot3{
+      position:absolute;top:9px;right:10px;z-index:3;
+      width:28px;height:28px;border-radius:50%;
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center;
+      gap:2px;
+    }
+    .feat-btn .fb-dot3 span{
+      display:block;width:3px;height:3px;border-radius:50%;
+      background:rgba(255,255,255,.9);
+    }
+    .feat-btn .fb-icon{
+      position:relative;z-index:3;
+      width:38px;height:38px;border-radius:12px;
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center;
+      margin-bottom:.65rem;
+    }
+    .feat-btn .fb-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+    .feat-btn .fb-label{
+      position:relative;z-index:3;
+      font-size:.8rem;font-weight:800;color:#fff;line-height:1.3;
+      letter-spacing:.01em;text-shadow:0 1px 6px rgba(0,0,0,.25);
+    }
+  </style>
+
+  <div style="margin-bottom:1.5rem">
+    <div style="font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:.8rem;padding-left:.1rem">Fitur</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+
+      <!-- 1. Ganti Tema Warna -->
+      <button class="feat-btn" onclick="showComingSoon('Ganti Tema Warna')" style="
+        background:linear-gradient(145deg,rgba(124,58,237,.55) 0%,rgba(168,85,247,.45) 50%,rgba(236,72,153,.4) 100%);
+        box-shadow:0 10px 40px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#a855f7"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20M12 2c-2.76 4-2.76 12 0 20M12 2c2.76 4 2.76 12 0 20"/></svg>
+        </div>
+        <div class="fb-label">Ganti Tema<br>Warna</div>
+      </button>
+
+      <!-- 2. Prediksi AI -->
+      <button class="feat-btn" onclick="showComingSoon('Prediksi AI')" style="
+        background:linear-gradient(145deg,rgba(8,145,178,.55) 0%,rgba(6,182,212,.45) 50%,rgba(34,211,238,.4) 100%);
+        box-shadow:0 10px 40px rgba(8,145,178,.5),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#22d3ee"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><path d="M9 14h.01M15 14h.01M9.5 17.5c.83.67 2 1 2.5 1s1.67-.33 2.5-1"/></svg>
+        </div>
+        <div class="fb-label">Prediksi AI<br>Masa Depan</div>
+      </button>
+
+      <!-- 3. Chat -->
+      <button class="feat-btn" onclick="showComingSoon('Fitur Chat')" style="
+        background:linear-gradient(145deg,rgba(5,150,105,.55) 0%,rgba(16,185,129,.45) 50%,rgba(52,211,153,.4) 100%);
+        box-shadow:0 10px 40px rgba(5,150,105,.5),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#34d399"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        </div>
+        <div class="fb-label">Chat &amp;<br>Komunitas</div>
+      </button>
+
+      <!-- 4. Price Alert & DCA Reminder -->
+      <button class="feat-btn" onclick="showComingSoon('Price Alert & Pengingat DCA')" style="
+        background:linear-gradient(145deg,rgba(217,119,6,.55) 0%,rgba(245,158,11,.45) 50%,rgba(251,191,36,.4) 100%);
+        box-shadow:0 10px 40px rgba(217,119,6,.5),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#fbbf24"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
+        </div>
+        <div class="fb-label">Price Alert &amp;<br>Pengingat DCA</div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Coming Soon Popup -->
+  <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
+    <div id="coming-soon-box" onclick="event.stopPropagation()" style="background:rgba(15,20,35,.92);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:2rem 1.8rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1);position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.2) 0%,transparent 60%);pointer-events:none"></div>
+      <div style="font-size:3rem;margin-bottom:.8rem;position:relative">🚀</div>
+      <div style="font-size:1.1rem;font-weight:800;color:#f1f5f9;margin-bottom:.4rem;position:relative">Segera Hadir!</div>
+      <div id="coming-soon-name" style="font-size:.78rem;color:var(--accent);font-weight:700;letter-spacing:.05em;margin-bottom:.8rem;position:relative"></div>
+      <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem;position:relative">Fitur ini sedang dalam pengembangan.<br>Nantikan update selanjutnya! 🎉</div>
+      <button onclick="hideComingSoon()" style="background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:12px;padding:.75rem 2rem;color:#fff;font-weight:800;font-size:.88rem;cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 20px rgba(124,58,237,.4)">Oke, Ditunggu!</button>
+    </div>
+  </div>
   <!-- PWA INSTALL BANNER -->
   <div id="pwa-install-banner" style="display:block;margin-bottom:1.2rem;border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#091428 100%);border:1px solid rgba(0,229,255,.2);box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(0,229,255,.08)">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(0,229,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(124,58,237,.06) 0%,transparent 60%);pointer-events:none"></div>
     <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none"></div>
     <div style="position:relative;display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;flex-wrap:wrap">
-      <div style="flex-shrink:0;width:48px;height:48px;border-radius:12px;background:#080808;border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(0,229,255,.15)">
-        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="100" height="100" rx="20" fill="#080808"/>
-          <text x="12" y="58" font-family="Arial Black,sans-serif" font-weight="900" font-size="52" fill="white" letter-spacing="-2">Z</text>
-          <polyline points="18,78 38,78 44,86 56,68 78,46" fill="none" stroke="#00C8FF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-          <polygon points="78,46 66,50 72,62" fill="#00C8FF"/>
-        </svg>
-      </div>
+      <img src="icon-512.png" alt="z-wealth" style="flex-shrink:0;width:48px;height:48px;border-radius:12px;display:block">
       <div style="flex:1;min-width:140px">
-        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;color:#f0f9ff;line-height:1.2">Install z-wealth App</div>
+        <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:.95rem;color:#f0f9ff;line-height:1.2">Install z-wealth App</div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Akses lebih cepat dari homescreen HP kamu</div>
       </div>
-      <button onclick="triggerPWAInstall()" id="pwa-banner-btn" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(0,229,255,.1));border:1px solid rgba(0,229,255,.55);border-radius:10px;padding:.6rem 1.2rem;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;color:#00e5ff;cursor:pointer;white-space:nowrap;box-shadow:0 0 14px rgba(0,229,255,.2)">
+      <button onclick="triggerPWAInstall()" id="pwa-banner-btn" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(0,229,255,.1));border:1px solid rgba(0,229,255,.55);border-radius:10px;padding:.6rem 1.2rem;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:800;color:#00e5ff;cursor:pointer;white-space:nowrap;box-shadow:0 0 14px rgba(0,229,255,.2)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Install App
       </button>
@@ -906,6 +1027,117 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <span style="font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700" id="btcc-return-usd">—</span>
         <span style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;padding:.2rem .7rem;border-radius:6px" id="btcc-return-pct">—</span>
       </div>
+    </div>
+  </div>
+
+  <!-- FEAR & GREED INDEX — LIQUID GLASS -->
+  <style>
+    #fng-wrap {
+      position:relative;overflow:hidden;
+      background:rgba(255,255,255,.04);
+      backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.13);
+      border-bottom-color:rgba(255,255,255,.05);
+      border-right-color:rgba(255,255,255,.05);
+      border-radius:24px;
+      box-shadow:0 16px 48px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18);
+      padding:1.2rem;margin-bottom:1.2rem;
+    }
+    #fng-wrap::before {
+      content:'';position:absolute;inset:0;border-radius:24px;
+      background:linear-gradient(145deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.02) 40%,transparent 70%);
+      pointer-events:none;
+    }
+    /* colored glow blobs behind gauge */
+    #fng-glow-left  { position:absolute;top:10px;left:-20px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,.25),transparent 70%);filter:blur(24px);pointer-events:none; }
+    #fng-glow-right { position:absolute;top:10px;right:-20px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(34,197,94,.2),transparent 70%);filter:blur(24px);pointer-events:none; }
+    /* history cards glass */
+    .fng-hist-card {
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,.14);
+      border-bottom-color:rgba(255,255,255,.04);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 16px rgba(0,0,0,.2);
+      padding:.75rem .6rem;text-align:center;
+      position:relative;overflow:hidden;
+    }
+    .fng-hist-card::before {
+      content:'';position:absolute;top:0;left:0;right:0;height:40%;
+      background:linear-gradient(180deg,rgba(255,255,255,.1),transparent);
+      border-radius:16px 16px 0 0;pointer-events:none;
+    }
+    /* zone bar glass pill */
+    .fng-zone-bar {
+      border-radius:100px;overflow:hidden;height:7px;display:flex;
+      margin-bottom:.65rem;
+      box-shadow:0 2px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.2);
+    }
+  </style>
+
+  <div class="chart-wrap" id="fng-wrap" style="margin-bottom:1.2rem">
+    <div id="fng-glow-left"></div>
+    <div id="fng-glow-right"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;position:relative">
+      <div class="sec-title" style="margin:0">Fear &amp; Greed Index</div>
+      <span id="fng-updated" style="font-size:.62rem;color:var(--muted);font-family:'Space Mono',monospace">—</span>
+    </div>
+
+    <!-- Gauge centered -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.3rem;position:relative">
+      <!-- Glass arc container — the colored arc lives inside this -->
+      <div style="position:relative;width:260px;height:148px">
+        <!-- Outer glass ring (decorative halo) -->
+        <div style="
+          position:absolute;left:50%;top:0;transform:translateX(-50%);
+          width:248px;height:124px;
+          border-radius:124px 124px 0 0;
+          border:1px solid rgba(255,255,255,.18);
+          border-bottom:none;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 40px rgba(255,255,255,.03);
+          pointer-events:none;
+          background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,transparent 60%);
+        "></div>
+        <canvas id="c-fng-gauge" width="260" height="148" style="display:block;position:relative;z-index:1"></canvas>
+        <!-- Value overlaid -->
+        <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:2">
+          <div id="fng-value" style="font-family:'Inter',sans-serif;font-size:3.2rem;font-weight:900;line-height:1;letter-spacing:-.04em;text-shadow:0 2px 20px rgba(0,0,0,.4)">—</div>
+          <div id="fng-label" style="font-size:.65rem;font-weight:800;letter-spacing:.12em;margin-top:.2rem;text-shadow:0 1px 8px rgba(0,0,0,.4)">LOADING...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History row: 3 glass cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:1.2rem;position:relative">
+      <div class="fng-hist-card">
+        <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;position:relative">Kemarin</div>
+        <div id="fng-yesterday-val" style="font-family:'Inter',sans-serif;font-size:1.4rem;font-weight:900;line-height:1;position:relative">—</div>
+        <div id="fng-yesterday-lbl" style="font-size:.58rem;font-weight:700;letter-spacing:.06em;margin-top:.25rem;color:var(--muted);position:relative">—</div>
+      </div>
+      <div class="fng-hist-card">
+        <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;position:relative">7 Hari lalu</div>
+        <div id="fng-week-val" style="font-family:'Inter',sans-serif;font-size:1.4rem;font-weight:900;line-height:1;position:relative">—</div>
+        <div id="fng-week-lbl" style="font-size:.58rem;font-weight:700;letter-spacing:.06em;margin-top:.25rem;color:var(--muted);position:relative">—</div>
+      </div>
+      <div class="fng-hist-card">
+        <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;position:relative">30 Hari lalu</div>
+        <div id="fng-month-val" style="font-family:'Inter',sans-serif;font-size:1.4rem;font-weight:900;line-height:1;position:relative">—</div>
+        <div id="fng-month-lbl" style="font-size:.58rem;font-weight:700;letter-spacing:.06em;margin-top:.25rem;color:var(--muted);position:relative">—</div>
+      </div>
+    </div>
+
+    <!-- Zone bar (glass pill) -->
+    <div class="fng-zone-bar" style="position:relative">
+      <div style="flex:24;background:linear-gradient(90deg,#dc2626,#ef4444)"></div>
+      <div style="flex:20;background:linear-gradient(90deg,#ea580c,#f97316)"></div>
+      <div style="flex:11;background:linear-gradient(90deg,#ca8a04,#eab308)"></div>
+      <div style="flex:19;background:linear-gradient(90deg,#65a30d,#84cc16)"></div>
+      <div style="flex:26;background:linear-gradient(90deg,#16a34a,#22c55e)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:.55rem;color:var(--muted);font-family:'Space Mono',monospace;position:relative">
+      <span>Extreme Fear</span><span>Fear</span><span>Neutral</span><span>Greed</span><span>Extreme Greed</span>
     </div>
   </div>
 
@@ -1173,7 +1405,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="seed-row" id="old-seed-display" style="margin-bottom:1.2rem;opacity:.6;pointer-events:none"></div>
       <div style="font-size:.82rem;color:var(--text);margin-bottom:.6rem;font-weight:600">Seed phrase baru:</div>
       <div class="seed-row" id="new-seed-display" style="margin-bottom:1.2rem"></div>
-      <button class="btn" style="width:100%;background:rgba(0,229,255,.1);border:1px solid var(--accent);color:var(--accent);margin-bottom:.8rem;border-radius:8px;padding:.65rem;font-size:.8rem;font-family:Syne,sans-serif;font-weight:700" onclick="regenerateNewSeed()">
+      <button class="btn" style="width:100%;background:rgba(0,229,255,.1);border:1px solid var(--accent);color:var(--accent);margin-bottom:.8rem;border-radius:8px;padding:.65rem;font-size:.8rem;font-family:Inter,sans-serif;font-weight:700" onclick="regenerateNewSeed()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:middle;margin-right:.3rem"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
         Generate Ulang
       </button>
@@ -1256,6 +1488,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="acct-stat"><div class="acct-stat-l">Transaksi</div><div class="acct-stat-v" id="acct-cf">0</div></div>
     </div>
     <div id="acct-sync" class="acct-sync">—</div>
+    <div id="acct-sync-cloud-status" style="display:none;font-size:.72rem;color:var(--muted);text-align:center;margin-top:.3rem"></div>
     <div class="acct-mdev">
       <div class="acct-mdev-dot"></div>
       <div><div class="acct-mdev-t">Login multi-device aktif</div><div class="acct-mdev-s">Cukup masukkan 3 kata seed phrase di device manapun</div></div>
@@ -1992,7 +2225,7 @@ function showPage(id){
     if(isActive) activeBtn=b;
   });
   animateNavIndicator(activeBtn);
-  if(id==='dashboard')renderDash();
+  if(id==='dashboard'){renderDash(); fetchFearGreed();}
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
   if(id==='simulation'){syncSimInputs()}
@@ -2329,7 +2562,7 @@ async function loadBTCChart(tf){
     if(loading){
       loading.innerHTML=`<div style="text-align:center">
         <div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div>
-        <button onclick="loadBTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">↺ Coba Lagi</button>
+        <button onclick="loadBTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↺ Coba Lagi</button>
       </div>`;
       loading.style.display='flex';
     }
@@ -2600,7 +2833,7 @@ async function loadDCABTCChart(tf){
     if(!avgUSD){['dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
   }catch(e){
     console.warn('DCA BTC chart error:',e);
-    if(loading){loading.innerHTML=`<div style="text-align:center"><div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div><button onclick="loadDCABTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">↺ Coba Lagi</button></div>`;loading.style.display='flex';}
+    if(loading){loading.innerHTML=`<div style="text-align:center"><div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div><button onclick="loadDCABTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↺ Coba Lagi</button></div>`;loading.style.display='flex';}
     return;
   }
   if(loading)loading.style.display='none';
@@ -2608,7 +2841,7 @@ async function loadDCABTCChart(tf){
 const CO={animation:false,responsive:true,maintainAspectRatio:false};
 const TK={color:'#64748b',font:{size:10}};
 const getGR=()=>({color:document.documentElement.getAttribute('data-theme')==='light'?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.03)'});
-const LG={color:'#94a3b8',font:{family:'Syne',size:11}};
+const LG={color:'#94a3b8',font:{family:'Inter',size:11}};
 
 function mkLineChart(id,labels,datasets){
   const GR=getGR();
@@ -2621,6 +2854,201 @@ function mkBarChart(id,labels,datasets){
   const ctx=document.getElementById(id).getContext('2d');
   return new Chart(ctx,{type:'bar',data:{labels,datasets},
     options:{...CO,plugins:{legend:{labels:LG}},scales:{x:{ticks:TK,grid:GR},y:{ticks:TK,grid:GR}}}});
+}
+
+/* ══════════ FEAR & GREED INDEX ══════════ */
+function fngColor(v){
+  if(v<=24) return '#ef4444';
+  if(v<=44) return '#f97316';
+  if(v<=55) return '#eab308';
+  if(v<=74) return '#84cc16';
+  return '#22c55e';
+}
+function fngLabel(v){
+  if(v<=24) return 'EXTREME FEAR';
+  if(v<=44) return 'FEAR';
+  if(v<=55) return 'NEUTRAL';
+  if(v<=74) return 'GREED';
+  return 'EXTREME GREED';
+}
+
+function drawFngGauge(value){
+  const canvas = document.getElementById('c-fng-gauge');
+  if(!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = 260, H = 148;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const cy = H - 22;
+  const R  = 96;
+  const SW = 18; // stroke width (thicker = more glass-like)
+
+  // ── 1. Outer glow track (shadow behind arc) ──
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(0,0,0,.35)';
+  ctx.lineWidth = SW + 8;
+  ctx.lineCap = 'butt';
+  ctx.stroke();
+
+  // ── 2. Track base (dark glass base) ──
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,.06)';
+  ctx.lineWidth = SW + 2;
+  ctx.lineCap = 'butt';
+  ctx.stroke();
+
+  // ── 3. Colored zone segments ──
+  const colors = ['#ef4444','#f97316','#eab308','#84cc16','#22c55e'];
+  const stops  = [0, 25, 45, 55, 75, 100];
+  for(let i = 0; i < stops.length-1; i++){
+    const aS = Math.PI + (stops[i]/100)*Math.PI;
+    const aE = Math.PI + (stops[i+1]/100)*Math.PI;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, aS, aE);
+    ctx.strokeStyle = colors[i];
+    ctx.lineWidth = SW;
+    ctx.lineCap = 'butt';
+    // subtle glow per segment
+    ctx.shadowColor = colors[i];
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── 4. Glass shimmer highlight (top edge of arc = light reflection) ──
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 2*Math.PI);
+  const shineGrad = ctx.createLinearGradient(cx - R, cy, cx + R, cy - R);
+  shineGrad.addColorStop(0,   'rgba(255,255,255,0)');
+  shineGrad.addColorStop(0.3, 'rgba(255,255,255,.28)');
+  shineGrad.addColorStop(0.5, 'rgba(255,255,255,.15)');
+  shineGrad.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.strokeStyle = shineGrad;
+  ctx.lineWidth = SW * 0.45;
+  ctx.lineCap = 'butt';
+  ctx.stroke();
+
+  // ── 5. Inner shadow line (bottom edge of arc = depth) ──
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, Math.PI, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(0,0,0,.3)';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'butt';
+  // offset inward
+  ctx.save();
+  ctx.arc(cx, cy, R - SW/2 + 1, Math.PI, 2*Math.PI);
+  ctx.strokeStyle = 'rgba(0,0,0,.25)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // ── 6. Needle glow tip ──
+  const needleAngle = Math.PI + (value/100)*Math.PI;
+  const needleLen = R - 5;
+  const tipX = cx + (R - SW/2) * Math.cos(needleAngle);
+  const tipY = cy + (R - SW/2) * Math.sin(needleAngle);
+
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, 9, 0, 2*Math.PI);
+  ctx.fillStyle = fngColor(value);
+  ctx.shadowColor = fngColor(value);
+  ctx.shadowBlur = 22;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // inner white core on tip
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, 4, 0, 2*Math.PI);
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fill();
+
+  // ── 7. Needle line ──
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + needleLen*Math.cos(needleAngle), cy + needleLen*Math.sin(needleAngle));
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.shadowColor = 'rgba(255,255,255,.7)';
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // ── 8. Center hub (glass ball) ──
+  const hubGrad = ctx.createRadialGradient(cx-2, cy-2, 1, cx, cy, 8);
+  hubGrad.addColorStop(0, 'rgba(255,255,255,.95)');
+  hubGrad.addColorStop(1, 'rgba(200,210,230,.6)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, 2*Math.PI);
+  ctx.fillStyle = hubGrad;
+  ctx.shadowColor = 'rgba(255,255,255,.5)';
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // ── 9. Min/Max labels ──
+  ctx.font = `700 10px 'Space Mono', monospace`;
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText('0',   cx - R - 2, cy + 18);
+  ctx.fillText('100', cx + R + 4, cy + 18);
+}
+
+async function fetchFearGreed(){
+  try {
+    const res = await fetch('https://api.alternative.me/fng/?limit=32&format=json',
+      {signal: AbortSignal.timeout(8000)});
+    const json = await res.json();
+    const data = json.data;
+    if(!data || !data.length) return;
+
+    const cur   = parseInt(data[0].value);
+    const yest  = parseInt(data[1]?.value  ?? data[0].value);
+    const week  = parseInt(data[7]?.value  ?? data[0].value);
+    const month = parseInt(data[30]?.value ?? data[0].value);
+    const ts    = data[0].timestamp;
+
+    // Draw gauge
+    drawFngGauge(cur);
+
+    // Main value + label
+    const valEl = document.getElementById('fng-value');
+    const lblEl = document.getElementById('fng-label');
+    if(valEl){ valEl.textContent = cur; valEl.style.color = fngColor(cur); }
+    if(lblEl){ lblEl.textContent = fngLabel(cur); lblEl.style.color = fngColor(cur); }
+
+    // History cards
+    const setCard = (valId, lblId, v) => {
+      const ve = document.getElementById(valId);
+      const le = document.getElementById(lblId);
+      const c  = fngColor(v);
+      if(ve){ ve.textContent = v; ve.style.color = c; }
+      if(le){ le.textContent = fngLabel(v); le.style.color = c; }
+    };
+    setCard('fng-yesterday-val','fng-yesterday-lbl', yest);
+    setCard('fng-week-val',     'fng-week-lbl',      week);
+    setCard('fng-month-val',    'fng-month-lbl',     month);
+
+    // Timestamp
+    const upEl = document.getElementById('fng-updated');
+    if(upEl){
+      const d = new Date(parseInt(ts)*1000);
+      upEl.textContent = d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' · alternative.me';
+    }
+  } catch(e){
+    console.warn('Fear & Greed fetch failed:', e);
+  }
 }
 
 /* ══════════ DASHBOARD ══════════ */
@@ -2663,7 +3091,7 @@ function renderDash(){
   cAlloc=new Chart(ctx1,{type:'doughnut',data:{
     labels:dcaVal>0||ptot>0?['Bitcoin DCA','Aset Lain']:['Kosong'],
     datasets:[{data:dcaVal>0||ptot>0?[dcaVal,ptot]:[1],backgroundColor:['#F7931A','#7c3aed'],borderWidth:0,hoverOffset:4}]
-  },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Syne',size:12}}}}}});
+  },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12}}}}}});
 
   // PNL chart
   const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -3218,6 +3646,7 @@ function initApp(){
   const today=new Date().toISOString().split('T')[0];
   ['m-dca-date','m-cf-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
   fetchBTC().then(()=>{renderDash();});
+  fetchFearGreed();
   loadBTCChart('1W');
   // Clear existing intervals before setting new ones (prevents leak on re-login)
   if(_fetchBTCInterval) clearInterval(_fetchBTCInterval);
@@ -3858,13 +4287,12 @@ function drawShareCard(){
   /* z-wealth logo */
   drawZWealthLogo(ctx,PAD,108,54,accentColor);
 
-  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.8)';
-  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.65)';
-  ctx.fillText('z-wealth.netlify.app',PAD,165);
+  /* Domain — mepet ke logo, hanya 6px gap di bawah baseline logo */
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.55)';
+  ctx.fillText('z-wealth.netlify.app',PAD,138);
 
-  /* Date right */
+  /* Date right — sejajar dengan logo */
   ctx.textAlign='right';
   ctx.font='400 26px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle='rgba(148,163,184,0.7)';
@@ -3872,7 +4300,7 @@ function drawShareCard(){
   ctx.textAlign='left';
 
   /* ── 4. PAIR BADGE ── */
-  const pairY=260;
+  const pairY=240;
   ctx.font='800 82px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle='#f8fafc';
   ctx.fillText('BTC / IDR',PAD,pairY);
@@ -3891,7 +4319,7 @@ function drawShareCard(){
   ctx.fillText(tl,tx+tw/2-ctx.measureText(tl).width/2,ty+36);
 
   /* ── 5. THIN SEPARATOR ── */
-  const sepY=310;
+  const sepY=290;
   const sepGrd=ctx.createLinearGradient(PAD,sepY,W-PAD,sepY);
   sepGrd.addColorStop(0,isProfit?'rgba(0,200,255,0.5)':'rgba(220,30,50,0.5)');
   sepGrd.addColorStop(1,'transparent');
@@ -3901,11 +4329,10 @@ function drawShareCard(){
   /* ── 6. ROI LABEL ── */
   ctx.font='500 36px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle='rgba(148,163,184,0.85)';
-  ctx.fillText('ROI',PAD,390);
+  ctx.fillText('ROI',PAD,360);
 
   /* ── 7. ROI GIANT NUMBER ── */
   const roiStr=(isProfit?'+':'')+pp.toFixed(2)+'%';
-  /* Measure to auto-size */
   ctx.font='900 200px "Segoe UI",Arial,sans-serif';
   let roiFontSize=200;
   while(ctx.measureText(roiStr).width>W-PAD*2-40&&roiFontSize>100){
@@ -3914,38 +4341,83 @@ function drawShareCard(){
   }
   ctx.shadowColor=accentColor;ctx.shadowBlur=80;
   ctx.fillStyle=accentColor;
-  ctx.fillText(roiStr,PAD,390+roiFontSize*0.85);
+  ctx.fillText(roiStr,PAD,360+roiFontSize*0.85);
   ctx.shadowBlur=0;
-  const roiBottom=390+roiFontSize*0.85;
+  const roiBottom=360+roiFontSize*0.85;
 
-  /* ── 8. ENTRY / CURRENT PRICE ── */
-  const statY=roiBottom+80;
-  function drawKV(label,value,x,y){
-    ctx.font='400 30px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle='rgba(148,163,184,0.8)';
-    ctx.fillText(label,x,y);
-    ctx.font='700 48px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle='#f1f5f9';
-    ctx.fillText(value,x,y+58);
+  /* ── 8. STAT CARDS GRID 2×2 (glass style) ── */
+  const gridY = roiBottom + 60;
+  const gridGap = 24;
+  const cardW2 = (W - PAD*2 - gridGap) / 2;
+  const cardH2 = 195;
+  const accentLine = isProfit ? '#00c8ff' : '#dd1e32';
+
+  function drawStatCard(label, value, cx2, cy2, valueColor){
+    // Glass background
+    ctx.save();
+    const cardBg = ctx.createLinearGradient(cx2, cy2, cx2, cy2+cardH2);
+    cardBg.addColorStop(0,'rgba(255,255,255,0.07)');
+    cardBg.addColorStop(1,'rgba(255,255,255,0.02)');
+    ctx.fillStyle = cardBg;
+    rr(cx2, cy2, cardW2, cardH2, 20); ctx.fill();
+
+    // Border glass (subtle white)
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+    ctx.lineWidth = 1.5;
+    rr(cx2, cy2, cardW2, cardH2, 20); ctx.stroke();
+
+    // Shine top edge
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx2+20, cy2+1);
+    ctx.lineTo(cx2+cardW2-20, cy2+1);
+    ctx.stroke();
+
+    // Accent left border line (colored, subtle)
+    const acLineGrd = ctx.createLinearGradient(cx2, cy2, cx2, cy2+cardH2);
+    acLineGrd.addColorStop(0, isProfit?'rgba(0,200,255,0.7)':'rgba(220,30,50,0.7)');
+    acLineGrd.addColorStop(1, 'transparent');
+    ctx.strokeStyle = acLineGrd;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx2+1.5, cy2+20);
+    ctx.lineTo(cx2+1.5, cy2+cardH2-20);
+    ctx.stroke();
+
+    // Label
+    ctx.font = '400 26px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle = 'rgba(148,163,184,0.75)';
+    ctx.fillText(label, cx2+36, cy2+60);
+
+    // Value
+    ctx.font = '800 52px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle = valueColor || '#f1f5f9';
+    ctx.fillText(value, cx2+36, cy2+140);
+
+    ctx.restore();
   }
-  drawKV('Harga Entry (Avg)','$'+Math.round(avg).toLocaleString('en-US'),PAD,statY);
-  drawKV('Harga Saat Ini','$'+Math.round(p).toLocaleString('en-US'),580,statY);
 
-  /* ── 9. SECONDARY STATS ── */
-  const stat2Y=statY+160;
-  drawKV('Transaksi DCA',S.dca.length+' kali',PAD,stat2Y);
+  const colL = PAD;
+  const colR = PAD + cardW2 + gridGap;
+  const row1 = gridY;
+  const row2 = gridY + cardH2 + gridGap;
 
-  /* ── 10. PERFORMANCE BAR ── */
-  const barY=stat2Y+150, barH=10, barX=PAD, barW=W-PAD*2;
-  /* Track */
+  drawStatCard('Harga Entry', '$'+Math.round(avg).toLocaleString('en-US'), colL, row1, '#f1f5f9');
+  drawStatCard('Harga Kini',  '$'+Math.round(p).toLocaleString('en-US'),   colR, row1, isProfit?accentColor:'#ef4444');
+  drawStatCard('DCA Sejak',   since,                                         colL, row2, '#f1f5f9');
+  drawStatCard('Transaksi',   S.dca.length+' kali',                          colR, row2, '#f1f5f9');
+
+  const tableBottom = row2 + cardH2;
+
+  /* ── 9. PERFORMANCE BAR ── */
+  const barY=tableBottom+60, barH=10, barX=PAD, barW=W-PAD*2;
   ctx.fillStyle='rgba(255,255,255,0.06)';rr(barX,barY,barW,barH,5);ctx.fill();
-  /* Fill */
   const pctFill=Math.min(Math.max((pp+100)/200,0.01),1);
   const barFill=ctx.createLinearGradient(barX,barY,barX+barW*pctFill,barY);
   if(isProfit){barFill.addColorStop(0,'#0369a1');barFill.addColorStop(1,'#00c8ff');}
   else{barFill.addColorStop(0,'#7f1d1d');barFill.addColorStop(1,'#dd1e32');}
   ctx.fillStyle=barFill;rr(barX,barY,barW*pctFill,barH,5);ctx.fill();
-  /* Labels */
   ctx.font='400 24px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle='rgba(148,163,184,0.5)';
   ctx.fillText('-100%',barX,barY+34);
@@ -3953,18 +4425,14 @@ function drawShareCard(){
   ctx.textAlign='right';ctx.fillText('+100%',barX+barW,barY+34);
   ctx.textAlign='left';
 
-  /* ── 11. STATUS CARD ── */
+  /* ── 10. STATUS CARD ── */
   const cardY=barY+80,cardH=180,cardW=W-PAD*2,cardX=PAD;
   const cBg=isProfit?'rgba(0,200,255,0.06)':'rgba(220,30,50,0.07)';
   const cBorder=isProfit?'rgba(0,200,255,0.2)':'rgba(220,30,50,0.25)';
   ctx.fillStyle=cBg;ctx.strokeStyle=cBorder;ctx.lineWidth=1.5;
   rr(cardX,cardY,cardW,cardH,18);ctx.fill();ctx.stroke();
-
-  /* Dot */
   ctx.fillStyle=accentColor;
   ctx.beginPath();ctx.arc(cardX+42,cardY+cardH/2,11,0,Math.PI*2);ctx.fill();
-
-  /* Status text */
   ctx.font='800 38px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle=accentColor;
   ctx.fillText(isProfit?'POSISI PROFIT':'POSISI RUGI',cardX+72,cardY+cardH/2-12);
@@ -3972,28 +4440,24 @@ function drawShareCard(){
   ctx.fillStyle='rgba(148,163,184,0.75)';
   ctx.fillText('DCA sejak '+since+' · Unrealized P&L',cardX+72,cardY+cardH/2+32);
 
-  /* ── 12. BOTTOM WATERMARK ── */
+  /* ── 11. BOTTOM ACCENT LINE + TEXT ── */
   const botY=H-80;
-  ctx.font='700 30px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(0,200,255,0.4)';
-  /* z-wealth watermark */
-  ctx.globalAlpha=0.55;
-  drawZWealthLogo(ctx,PAD,botY,30,accentColor);
-  ctx.globalAlpha=1;
-  ctx.textAlign='right';
-  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.4)';
-  ctx.fillText('z-wealth.netlify.app · Bukan rekomendasi investasi',W-PAD,botY);
-  ctx.textAlign='left';
 
-  /* Bottom accent line */
-  const bLineGrd=ctx.createLinearGradient(PAD,botY+18,W-PAD,botY+18);
+  /* Accent line */
+  const bLineGrd=ctx.createLinearGradient(PAD,botY,W-PAD,botY);
   bLineGrd.addColorStop(0,'transparent');
   bLineGrd.addColorStop(0.3,isProfit?'rgba(0,200,255,0.25)':'rgba(220,30,50,0.25)');
   bLineGrd.addColorStop(0.7,isProfit?'rgba(124,58,237,0.25)':'rgba(220,30,50,0.15)');
   bLineGrd.addColorStop(1,'transparent');
   ctx.strokeStyle=bLineGrd;ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(PAD,botY+18);ctx.lineTo(W-PAD,botY+18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(PAD,botY);ctx.lineTo(W-PAD,botY);ctx.stroke();
+
+  /* "Not financial advice" — below the line */
+  ctx.textAlign='center';
+  ctx.font='400 22px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,0.28)';
+  ctx.fillText('Not financial advice',W/2,botY+42);
+  ctx.textAlign='left';
 }
 
 /* helper used elsewhere */
@@ -4014,6 +4478,18 @@ function downloadShareCard(){
   link.href=canvas.toDataURL('image/jpeg',0.96);
   document.body.appendChild(link);link.click();document.body.removeChild(link);
   toast('Kartu berhasil disimpan');
+}
+
+// ── COMING SOON POPUP ──
+function showComingSoon(name) {
+  const overlay = document.getElementById('coming-soon-overlay');
+  const nameEl = document.getElementById('coming-soon-name');
+  if(nameEl) nameEl.textContent = name;
+  if(overlay) { overlay.style.display = 'flex'; }
+}
+function hideComingSoon() {
+  const overlay = document.getElementById('coming-soon-overlay');
+  if(overlay) overlay.style.display = 'none';
 }
 
 // ── PWA SERVICE WORKER REGISTRATION ──
@@ -4045,53 +4521,73 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  // Show install button in nav
   const btn = document.getElementById('pwa-install-btn');
   if (btn) btn.style.display = 'flex';
-  // Show dashboard banner (only if not dismissed before)
-  if (!localStorage.getItem('pwa-banner-dismissed')) {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.style.display = 'block';
-  }
+  // Banner sudah tampil permanen, tidak perlu show lagi
 });
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
   toast('✅ z-wealth berhasil diinstall! Buka dari homescreen ya 🚀');
+  // Simpan status installed
+  try { localStorage.setItem('pwa-installed', '1'); } catch(e) {}
+  // Sembunyikan banner dengan animasi
+  hidePWABanner();
   const btn = document.getElementById('pwa-install-btn');
   if (btn) btn.style.display = 'none';
-  // Ganti tombol jadi sudah terinstall
-  const banner = document.getElementById('pwa-install-banner');
-  const bannerBtn = document.getElementById('pwa-banner-btn');
-  if (bannerBtn) {
-    bannerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Terinstall!';
-    bannerBtn.style.background = 'linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.1))';
-    bannerBtn.style.borderColor = 'rgba(16,185,129,.55)';
-    bannerBtn.style.color = '#10b981';
-    bannerBtn.style.cursor = 'default';
-    bannerBtn.onclick = null;
-  }
 });
 
-function dismissPWABanner() {
+function hidePWABanner(animated = true) {
   const banner = document.getElementById('pwa-install-banner');
-  if (banner) {
-    banner.style.transition = 'opacity .3s, transform .3s';
+  if (!banner) return;
+  if (animated) {
+    banner.style.transition = 'opacity .4s, transform .4s, max-height .4s, margin .4s, padding .4s';
     banner.style.opacity = '0';
-    banner.style.transform = 'translateY(-8px)';
-    setTimeout(() => banner.style.display = 'none', 300);
+    banner.style.transform = 'translateY(-6px)';
+    banner.style.maxHeight = '0';
+    banner.style.marginBottom = '0';
+    banner.style.overflow = 'hidden';
+    setTimeout(() => banner.style.display = 'none', 420);
+  } else {
+    banner.style.display = 'none';
   }
-  try { localStorage.setItem('pwa-banner-dismissed', '1'); } catch(e) {}
 }
+
+function checkPWABanner() {
+  // Cek 1: Sudah berjalan sebagai PWA (standalone mode) → sembunyikan
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true
+    || document.referrer.includes('android-app://');
+  if (isStandalone) { hidePWABanner(false); return; }
+
+  // Cek 2: Sudah pernah install → sembunyikan
+  try {
+    if (localStorage.getItem('pwa-installed') === '1') { hidePWABanner(false); return; }
+  } catch(e) {}
+
+  // Cek 3: Browser tidak support install (misal iOS Safari, Firefox) → sembunyikan
+  // Banner tetap tampil untuk Chrome/Edge Android yang support
+}
+
+// Jalankan cek saat halaman load
+window.addEventListener('load', () => { checkPWABanner(); });
+
+// Dengarkan perubahan display mode (misal user buka dari homescreen)
+window.matchMedia('(display-mode: standalone)').addEventListener('change', e => {
+  if (e.matches) hidePWABanner(false);
+});
 
 function triggerPWAInstall() {
   if (!deferredInstallPrompt) {
-    toast('Buka di browser untuk install sebagai app 📱', 2);
+    toast('Buka di Chrome/Edge browser untuk install sebagai app 📱');
     return;
   }
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.then(result => {
-    if (result.outcome === 'accepted') toast('✅ z-wealth sedang diinstall...');
+    if (result.outcome === 'accepted') {
+      toast('✅ z-wealth sedang diinstall...');
+      try { localStorage.setItem('pwa-installed', '1'); } catch(e) {}
+    }
     deferredInstallPrompt = null;
   });
 }
@@ -4099,36 +4595,129 @@ function triggerPWAInstall() {
 </script>
 
 
-<!-- SHARE CARD MODAL -->
-<div id="modal-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.90);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#07090f;border:1px solid rgba(0,200,255,0.15);border-radius:20px;padding:1.6rem;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(0,200,255,0.08)">
+<!-- SHARE CARD MODAL — LIQUID GLASS -->
+<style>
+  #modal-share-inner {
+    position:relative;
+    background:rgba(7,9,15,.55);
+    backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+    border-radius:28px;
+    padding:1.6rem;
+    width:100%;max-width:420px;max-height:92vh;overflow-y:auto;
+    /* Multi-layer glass border */
+    border:1px solid rgba(255,255,255,.18);
+    border-bottom-color:rgba(255,255,255,.06);
+    border-right-color:rgba(255,255,255,.06);
+    box-shadow:
+      0 32px 80px rgba(0,0,0,.7),
+      0 0 0 1px rgba(0,200,255,.12),
+      inset 0 1px 0 rgba(255,255,255,.22),
+      inset 0 -1px 0 rgba(255,255,255,.04);
+  }
+  /* Top shine */
+  #modal-share-inner::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:55%;
+    border-radius:28px 28px 0 0;
+    background:linear-gradient(175deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.03) 50%,transparent 100%);
+    pointer-events:none;
+  }
+  /* Ambient cyan glow top-right */
+  #modal-share-inner::after {
+    content:'';position:absolute;top:-40px;right:-40px;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,200,255,.18),transparent 70%);
+    filter:blur(20px);pointer-events:none;z-index:0;
+  }
+  /* Canvas container glass frame */
+  #share-canvas-wrap {
+    position:relative;
+    border-radius:18px;
+    overflow:hidden;
+    margin-bottom:1.3rem;
+    border:1px solid rgba(255,255,255,.14);
+    border-bottom-color:rgba(255,255,255,.05);
+    box-shadow:
+      0 16px 48px rgba(0,0,0,.6),
+      inset 0 1px 0 rgba(255,255,255,.2),
+      inset 0 0 0 1px rgba(0,200,255,.06);
+  }
+  /* thin rainbow top accent line */
+  #share-canvas-wrap::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
+    background:linear-gradient(90deg,rgba(124,58,237,.7),rgba(0,200,255,.9),rgba(16,185,129,.5));
+    pointer-events:none;
+  }
+  /* glass shine on canvas */
+  #share-canvas-wrap::after {
+    content:'';position:absolute;top:0;left:0;right:0;height:30%;z-index:2;
+    background:linear-gradient(180deg,rgba(255,255,255,.08),transparent);
+    pointer-events:none;
+  }
+  /* Close button glass */
+  #share-close-btn {
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.15);
+    border-bottom-color:rgba(255,255,255,.04);
+    border-radius:12px;
+    color:#94a3b8;cursor:pointer;
+    padding:8px;display:flex;align-items:center;
+    transition:all .2s;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+    backdrop-filter:blur(8px);
+  }
+  #share-close-btn:hover { background:rgba(255,255,255,.13);color:#e2e8f0; }
+  /* Download button liquid */
+  #share-download-btn {
+    width:100%;
+    background:linear-gradient(135deg,rgba(3,105,161,.8),rgba(0,200,255,.75));
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(0,200,255,.45);
+    border-top-color:rgba(0,200,255,.7);
+    border-radius:14px;padding:.95rem;
+    color:#fff;font-weight:800;font-size:.9rem;
+    cursor:pointer;letter-spacing:.06em;
+    display:flex;align-items:center;justify-content:center;gap:.55rem;
+    box-shadow:0 8px 28px rgba(0,200,255,.3),inset 0 1px 0 rgba(255,255,255,.25);
+    transition:all .2s;position:relative;overflow:hidden;
+  }
+  #share-download-btn::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:50%;
+    background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);
+    border-radius:14px 14px 0 0;pointer-events:none;
+  }
+  #share-download-btn:hover { opacity:.88;transform:translateY(-1px);box-shadow:0 12px 36px rgba(0,200,255,.4),inset 0 1px 0 rgba(255,255,255,.25); }
+  #share-download-btn:active { transform:scale(.98); }
+</style>
+
+<div id="modal-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:1rem">
+  <div id="modal-share-inner">
 
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;position:relative;z-index:1">
       <div>
         <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI DCA</div>
-        <div style="font-size:.7rem;color:rgba(148,163,184,.6);margin-top:2px;letter-spacing:.04em">z-wealth.netlify.app</div>
+        <div style="font-size:.68rem;color:rgba(148,163,184,.55);margin-top:3px;letter-spacing:.05em">z-wealth.netlify.app</div>
       </div>
-      <button onclick="closeShareModal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#64748b;cursor:pointer;padding:7px;display:flex;align-items:center;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+      <button id="share-close-btn" onclick="closeShareModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
 
-    <!-- Canvas preview -->
-    <div style="border-radius:14px;overflow:hidden;margin-bottom:1.3rem;box-shadow:0 12px 48px rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.04)">
-      <canvas id="share-canvas" style="display:block;width:100%;height:auto"></canvas>
+    <!-- Canvas preview (glass framed) -->
+    <div id="share-canvas-wrap" style="position:relative;z-index:1">
+      <canvas id="share-canvas" style="display:block;width:100%;height:auto;position:relative;z-index:1"></canvas>
     </div>
 
     <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,0.15),transparent);margin-bottom:1.2rem"></div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,.2),rgba(124,58,237,.15),transparent);margin-bottom:1.2rem;position:relative;z-index:1"></div>
 
     <!-- Download button -->
-    <button onclick="downloadShareCard()" style="width:100%;background:linear-gradient(135deg,#0369a1,#00c8ff);border:none;border-radius:12px;padding:.95rem;color:#fff;font-weight:800;font-size:.9rem;cursor:pointer;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;gap:.55rem;box-shadow:0 4px 20px rgba(0,200,255,.25);transition:all .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+    <button id="share-download-btn" onclick="downloadShareCard()" style="position:relative;z-index:1">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       SIMPAN SEBAGAI JPG
     </button>
 
-    <div style="text-align:center;margin-top:.8rem;font-size:.67rem;color:rgba(100,116,139,.5);letter-spacing:.04em">1080 × 1350 px · JPEG · Siap diposting</div>
+    <div style="text-align:center;margin-top:.75rem;font-size:.65rem;color:rgba(100,116,139,.45);letter-spacing:.05em;position:relative;z-index:1">1080 × 1350 px · JPEG · Siap diposting</div>
   </div>
 </div>
 </body>
