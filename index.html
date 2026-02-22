@@ -5615,7 +5615,6 @@ async function sendMessage() {
   if (!content && !chatState.pendingMedia) return;
   if (!chatState.currentRoomId || !chatSB) return;
 
-  // Disable send button during upload
   const sendBtn = document.getElementById('chat-send-btn');
   if (sendBtn) sendBtn.classList.add('uploading');
 
@@ -5626,38 +5625,42 @@ async function sendMessage() {
     // Upload media jika ada
     if (chatState.pendingMedia) {
       const file = chatState.pendingMedia;
-      const ext = file.name.split('.').pop();
+      const rawExt = file.name ? file.name.split('.').pop() : '';
+      const ext = (rawExt && rawExt.length <= 5 ? rawExt : (file.type.split('/')[1] || 'jpg')).toLowerCase();
       const fileName = `chat/${chatState.currentRoomId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      toast(`Upload... ${file.name} (${(file.size/1024).toFixed(0)}kb, ${file.type})`, 0);
       const { data, error: upErr } = await chatSB.storage
         .from('chat-media')
         .upload(fileName, file, { cacheControl:'3600', upsert:false });
       if (upErr) {
-        toast('Gagal upload media: ' + (upErr.message || upErr), 1);
+        toast('Upload gagal: ' + (upErr.message || JSON.stringify(upErr)), 1);
         if (sendBtn) sendBtn.classList.remove('uploading');
         return;
       }
+      toast('Upload OK, kirim pesan...', 0);
       const { data: urlData } = chatSB.storage.from('chat-media').getPublicUrl(fileName);
       media_url = urlData?.publicUrl;
       media_type = file.type;
       cancelUpload();
     }
 
+    // Kirim hanya field yang pasti ada — hindari kolom yang belum ada
     const msg = {
       room_id: chatState.currentRoomId,
       sender_code: chatState.myCode,
       content: content || null,
-      reply_to: chatState.replyTo || null,
-      reply_text: chatState.replyText || null,
-      media_url: media_url || null,
-      media_type: media_type || null,
     };
+    if (media_url) { msg.media_url = media_url; msg.media_type = media_type; }
+    if (chatState.replyTo) { msg.reply_to = chatState.replyTo; msg.reply_text = chatState.replyText; }
 
     inp.value = '';
     inp.style.height = '';
     cancelReply();
 
     const { error } = await chatSB.from('messages').insert(msg);
-    if (error) toast('Gagal kirim pesan', 1);
+    if (error) toast('DB error: ' + (error.message || error.code || JSON.stringify(error)), 1);
+  } catch(e) {
+    toast('Error: ' + (e.message || String(e)), 1);
   } finally {
     if (sendBtn) sendBtn.classList.remove('uploading');
   }
