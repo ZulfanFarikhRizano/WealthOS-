@@ -838,6 +838,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="stat-card"><div class="slabel">Total BTC</div><div class="sval" id="d-btcamt">0 BTC</div><div class="ssub" id="d-btcidr">Rp 0</div></div>
     <div class="stat-card"><div class="slabel">DCA Entries</div><div class="sval acc" id="d-entries">0</div><div class="ssub" id="d-avg">Avg: $0</div></div>
   </div>
+  <!-- PWA INSTALL BANNER -->
+  <div id="pwa-install-banner" style="display:block;margin-bottom:1.2rem;border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#091428 100%);border:1px solid rgba(0,229,255,.2);box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(0,229,255,.08)">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(0,229,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(124,58,237,.06) 0%,transparent 60%);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;flex-wrap:wrap">
+      <div style="flex-shrink:0;width:48px;height:48px;border-radius:12px;background:#080808;border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(0,229,255,.15)">
+        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" rx="20" fill="#080808"/>
+          <text x="12" y="58" font-family="Arial Black,sans-serif" font-weight="900" font-size="52" fill="white" letter-spacing="-2">Z</text>
+          <polyline points="18,78 38,78 44,86 56,68 78,46" fill="none" stroke="#00C8FF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <polygon points="78,46 66,50 72,62" fill="#00C8FF"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;color:#f0f9ff;line-height:1.2">Install z-wealth App</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Akses lebih cepat dari homescreen HP kamu</div>
+      </div>
+      <button onclick="triggerPWAInstall()" id="pwa-banner-btn" style="display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(0,229,255,.1));border:1px solid rgba(0,229,255,.55);border-radius:10px;padding:.6rem 1.2rem;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;color:#00e5ff;cursor:pointer;white-space:nowrap;box-shadow:0 0 14px rgba(0,229,255,.2)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Install App
+      </button>
+    </div>
+    <div style="height:2px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.6),rgba(124,58,237,.5),transparent)"></div>
+  </div>
+
+
   <!-- BTC LIVE CHART -->
   <div class="btc-chart-wrap">
     <div class="btc-chart-header">
@@ -4019,17 +4045,44 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  // Show install button if exists
+  // Show install button in nav
   const btn = document.getElementById('pwa-install-btn');
   if (btn) btn.style.display = 'flex';
+  // Show dashboard banner (only if not dismissed before)
+  if (!localStorage.getItem('pwa-banner-dismissed')) {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.style.display = 'block';
+  }
 });
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  toast('✅ z-wealth berhasil diinstall!');
+  toast('✅ z-wealth berhasil diinstall! Buka dari homescreen ya 🚀');
   const btn = document.getElementById('pwa-install-btn');
   if (btn) btn.style.display = 'none';
+  // Ganti tombol jadi sudah terinstall
+  const banner = document.getElementById('pwa-install-banner');
+  const bannerBtn = document.getElementById('pwa-banner-btn');
+  if (bannerBtn) {
+    bannerBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Terinstall!';
+    bannerBtn.style.background = 'linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.1))';
+    bannerBtn.style.borderColor = 'rgba(16,185,129,.55)';
+    bannerBtn.style.color = '#10b981';
+    bannerBtn.style.cursor = 'default';
+    bannerBtn.onclick = null;
+  }
 });
+
+function dismissPWABanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) {
+    banner.style.transition = 'opacity .3s, transform .3s';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-8px)';
+    setTimeout(() => banner.style.display = 'none', 300);
+  }
+  try { localStorage.setItem('pwa-banner-dismissed', '1'); } catch(e) {}
+}
 
 function triggerPWAInstall() {
   if (!deferredInstallPrompt) {
