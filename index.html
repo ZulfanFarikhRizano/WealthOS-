@@ -31,6 +31,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
   --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
@@ -411,7 +412,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   bottom:calc(16px + env(safe-area-inset-bottom,0px));
   left:50%;transform:translateX(-50%);
   z-index:200;
-  will-change:transform;
+  will-change:transform, opacity;
   width:calc(100% - 32px);
   max-width:480px;
   border-radius:28px;
@@ -426,6 +427,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     0 2px 8px rgba(0,0,0,.15),
     0 0 0 1px rgba(255,255,255,.07) inset,
     0 1px 0 rgba(255,255,255,.1) inset;
+  transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .3s ease;
+}
+.bottom-nav.bnav-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
 }
 .bnav-items{display:flex;align-items:stretch;border-radius:28px;overflow:hidden;padding:5px 8px;gap:2px}
 .bnav-item{
@@ -485,7 +492,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   .nav-topstrip{display:flex}
   nav{padding:0 1rem;min-height:44px}
   .nav-logo{font-size:1rem;padding:.7rem 0}
-  #app .page{padding-bottom:calc(7rem + env(safe-area-inset-bottom,0))}
+  #app .page:not(#page-chat){padding-bottom:calc(7rem + env(safe-area-inset-bottom,0))}
 }
 /* Desktop: bottom nav & topstrip hidden, normal nav */
 @media(min-width:641px){
@@ -827,6 +834,115 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════
+     CHAT IN-APP NOTIFICATION TOAST
+══════════════════════════════════════════ -->
+<div id="chat-notif-toast" style="
+  position:fixed;
+  top:1rem;
+  left:50%;
+  transform:translateX(-50%) translateY(-120px);
+  z-index:9990;
+  width:calc(100% - 2rem);
+  max-width:400px;
+  transition:transform .4s cubic-bezier(.34,1.3,.64,1), opacity .4s ease;
+  opacity:0;
+  pointer-events:none;
+">
+  <div style="
+    background:rgba(10,16,30,0.92);
+    backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+    border:1px solid rgba(0,229,255,0.25);
+    border-top:1.5px solid rgba(0,229,255,0.5);
+    border-radius:20px;
+    padding:.85rem 1.1rem;
+    display:flex;align-items:center;gap:.9rem;
+    box-shadow:0 12px 48px rgba(0,0,0,.5),0 0 0 1px rgba(0,229,255,.08) inset;
+    cursor:pointer;
+    position:relative;overflow:hidden;
+  " onclick="chatNotifClick()">
+    <!-- Shine -->
+    <div style="position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(255,255,255,.06),transparent);border-radius:20px 20px 0 0;pointer-events:none"></div>
+    <!-- Avatar -->
+    <div id="chat-notif-avatar" style="
+      width:42px;height:42px;border-radius:13px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.1rem;font-weight:800;color:#fff;
+      background:linear-gradient(135deg,#00b4d8,#0096c7);
+      box-shadow:0 4px 16px rgba(0,180,220,.4);
+      position:relative;z-index:1;
+    ">#</div>
+    <!-- Text -->
+    <div style="flex:1;min-width:0;position:relative;z-index:1">
+      <div id="chat-notif-room" style="font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div id="chat-notif-sender" style="font-size:.7rem;font-weight:600;color:rgba(148,163,184,.7);font-family:'Space Mono',monospace;margin-bottom:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div id="chat-notif-text" style="font-size:.85rem;color:#e2e8f0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    </div>
+    <!-- Icon -->
+    <div style="flex-shrink:0;color:rgba(0,229,255,.5);position:relative;z-index:1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <!-- Progress bar -->
+    <div id="chat-notif-progress" style="position:absolute;bottom:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),rgba(0,229,255,.3));border-radius:0 0 20px 20px;width:100%;transform-origin:left;transition:transform linear;"></div>
+  </div>
+</div>
+
+<style>
+/* Unread badge di bnav icon */
+.bnav-chat-badge {
+  position:absolute;
+  top:2px;right:50%;
+  transform:translateX(calc(50% + 8px));
+  min-width:18px;height:18px;
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  color:#fff;border-radius:100px;
+  font-size:.55rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 4px;
+  border:2px solid rgba(5,8,20,0.5);
+  box-shadow:0 2px 8px rgba(239,68,68,.5);
+  opacity:0;transform:translateX(calc(50% + 8px)) scale(0);
+  transition:opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+  z-index:5;
+}
+.bnav-chat-badge.show {
+  opacity:1;
+  transform:translateX(calc(50% + 8px)) scale(1);
+}
+
+/* Unread dot di feat-btn dan nav desktop */
+.chat-unread-dot {
+  display:inline-block;
+  width:8px;height:8px;
+  background:var(--danger);
+  border-radius:50%;
+  box-shadow:0 0 8px rgba(239,68,68,.7);
+  margin-left:.3rem;
+  vertical-align:middle;
+  animation:chat-dot-pulse 1.5s ease infinite;
+}
+@keyframes chat-dot-pulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(.7)}
+}
+
+/* Chat notif toast show state */
+#chat-notif-toast.show {
+  animation: notif-bounce .45s cubic-bezier(.34,1.2,.64,1) forwards;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Bounce animation on new msg */
+@keyframes notif-bounce {
+  0%   { transform: translateX(-50%) translateY(-120px); opacity: 0; }
+  60%  { transform: translateX(-50%) translateY(6px); }
+  80%  { transform: translateX(-50%) translateY(-3px); }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+</style>
+
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
   <div class="ph"><h1>Command Center</h1><p id="dash-date"></p></div>
@@ -927,7 +1043,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </button>
 
       <!-- 3. Chat -->
-      <button class="feat-btn" onclick="showComingSoon('Fitur Chat')" style="
+      <button class="feat-btn" onclick="showPage('chat')" style="
         background:linear-gradient(145deg,rgba(5,150,105,.55) 0%,rgba(16,185,129,.45) 50%,rgba(52,211,153,.4) 100%);
         box-shadow:0 10px 40px rgba(5,150,105,.5),inset 0 1px 0 rgba(255,255,255,.2);
       ">
@@ -1353,6 +1469,479 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div class="chart-wrap"><div class="sec-title">Cashflow Bulanan</div><div class="chart-container"><canvas id="c-cf"></canvas></div></div>
   <div class="sec-hdr" style="margin-top:1rem"><div class="sec-title">Transaksi</div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Tipe</th><th>Jumlah</th><th></th></tr></thead><tbody id="cf-tbody"></tbody></table></div>
+</div>
+
+<!-- ══════════ CHAT PAGE ══════════ -->
+<div id="page-chat" class="page">
+
+<style>
+/* ── CHAT PAGE GLOBAL ── */
+#page-chat {
+  padding:0 !important;
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 80px);
+  overflow:hidden;
+  position:relative;
+}
+@media(max-width:640px){
+  #page-chat {
+    /* Saat chat aktif, bottom-nav disembunyikan → pakai full height dikurangi top nav saja */
+    height:calc(100dvh - 44px);
+  }
+}
+
+/* ── CHAT SCREENS ── */
+.chat-screen { display:none; flex-direction:column; height:100%; }
+.chat-screen.active { display:flex; }
+
+/* ── GLASS CARD BASE ── */
+.cg {
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);
+  border-bottom-color:rgba(255,255,255,.04);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 24px rgba(0,0,0,.25);
+}
+
+/* ── ROOM LIST SCREEN ── */
+#chat-rooms-screen {
+  padding:1rem;
+  overflow-y:auto;
+  gap:.75rem;
+}
+.chat-topbar {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.9rem 1rem .5rem;
+  position:sticky;top:0;z-index:10;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent);
+}
+.chat-topbar-title {
+  font-size:1.2rem;font-weight:800;letter-spacing:-.02em;
+}
+.chat-fab {
+  display:flex;align-items:center;gap:.4rem;
+  padding:.5rem 1rem;border-radius:100px;border:none;cursor:pointer;
+  font-size:.78rem;font-weight:700;letter-spacing:.04em;
+  color:#fff;
+  background:linear-gradient(135deg,rgba(16,185,129,.7),rgba(5,150,105,.8));
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(52,211,153,.4);
+  box-shadow:0 4px 20px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:all .2s;
+}
+.chat-fab:hover { transform:translateY(-1px);box-shadow:0 8px 28px rgba(16,185,129,.45); }
+
+/* Room item */
+.room-item {
+  display:flex;align-items:center;gap:.85rem;
+  padding:.85rem 1rem;border-radius:18px;cursor:pointer;
+  transition:all .18s;position:relative;overflow:hidden;
+}
+.room-item:active { transform:scale(.98); }
+.room-item::before {
+  content:'';position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(145deg,rgba(255,255,255,.1) 0%,transparent 60%);
+  opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.room-item:hover::before { opacity:1; }
+
+.room-avatar {
+  width:50px;height:50px;border-radius:16px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;font-weight:800;color:#fff;
+  position:relative;
+}
+.room-avatar::after {
+  content:'';position:absolute;inset:0;border-radius:16px;
+  border:1px solid rgba(255,255,255,.25);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
+}
+.room-info { flex:1;min-width:0; }
+.room-name { font-size:.9rem;font-weight:700;margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.room-preview { font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.room-meta { display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0; }
+.room-time { font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace; }
+.room-badge { background:var(--accent);color:var(--bg);border-radius:100px;font-size:.6rem;font-weight:800;padding:.15rem .45rem;min-width:18px;text-align:center; }
+
+.section-label {
+  font-size:.62rem;font-weight:700;letter-spacing:.12em;color:var(--muted);
+  text-transform:uppercase;padding:.5rem .2rem .3rem;margin-top:.3rem;
+}
+
+/* ── CHAT ROOM SCREEN ── */
+#chat-room-screen { display:none; }
+#chat-room-screen.active { display:flex; }
+
+.room-header {
+  display:flex;align-items:center;gap:.85rem;
+  padding:.85rem 1rem;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(5,8,16,.6);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  flex-shrink:0;
+}
+.room-header-back {
+  width:36px;height:36px;border-radius:12px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;color:var(--text);
+  transition:all .18s;flex-shrink:0;
+}
+.room-header-back:hover { background:rgba(255,255,255,.15); }
+.room-header-avatar {
+  width:40px;height:40px;border-radius:13px;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:1rem;color:#fff;flex-shrink:0;
+  border:1px solid rgba(255,255,255,.2);
+}
+.room-header-info { flex:1;min-width:0; }
+.room-header-name { font-size:.95rem;font-weight:800; }
+.room-header-sub { font-size:.68rem;color:var(--muted); }
+
+/* Messages area */
+.messages-area {
+  flex:1;overflow-y:auto;padding:.75rem 1rem;
+  display:flex;flex-direction:column;gap:.4rem;
+  scroll-behavior:smooth;
+}
+.messages-area::-webkit-scrollbar { width:3px; }
+.messages-area::-webkit-scrollbar-track { background:transparent; }
+.messages-area::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:99px; }
+
+/* Message bubbles */
+.msg-row { display:flex;gap:.55rem;align-items:flex-end;max-width:82%;animation:msgIn .2s ease; }
+.msg-row.mine { align-self:flex-end;flex-direction:row-reverse; }
+.msg-row.theirs { align-self:flex-start; }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.msg-avatar {
+  width:28px;height:28px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:800;color:#fff;
+  border:1px solid rgba(255,255,255,.15);
+}
+.msg-bubble-wrap { display:flex;flex-direction:column;gap:.2rem; }
+.msg-sender-name { font-size:.6rem;color:var(--muted);padding:0 .5rem;font-weight:600; }
+.msg-row.mine .msg-sender-name { text-align:right;color:rgba(0,229,255,.7); }
+
+.msg-bubble {
+  padding:.6rem .9rem;border-radius:18px;font-size:.85rem;line-height:1.5;
+  position:relative;word-break:break-word;
+}
+.msg-row.mine .msg-bubble {
+  background:linear-gradient(135deg,rgba(0,180,220,.55),rgba(0,229,255,.4));
+  border:1px solid rgba(0,229,255,.35);
+  border-bottom-right-radius:5px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 4px 20px rgba(0,229,255,.2),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.msg-row.theirs .msg-bubble {
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-bottom-left-radius:5px;
+  backdrop-filter:blur(12px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+}
+.msg-time { font-size:.58rem;color:rgba(255,255,255,.3);text-align:right;padding:0 .3rem; }
+
+/* Reply bubble */
+.msg-reply-ref {
+  background:rgba(255,255,255,.05);border-left:2px solid var(--accent);
+  border-radius:8px;padding:.3rem .6rem;margin-bottom:.35rem;
+  font-size:.72rem;color:var(--muted);
+}
+
+/* Date separator */
+.msg-date-sep {
+  text-align:center;font-size:.62rem;color:var(--muted);
+  font-family:'Space Mono',monospace;
+  padding:.5rem 1rem;margin:.4rem auto;
+  background:rgba(255,255,255,.04);border-radius:100px;
+  border:1px solid rgba(255,255,255,.07);
+  letter-spacing:.06em;
+}
+
+/* System message */
+.msg-system {
+  text-align:center;font-size:.7rem;color:var(--muted);
+  padding:.3rem;font-style:italic;
+}
+
+/* Input area */
+.chat-input-area {
+  padding:.75rem 1rem;
+  border-top:1px solid rgba(255,255,255,.07);
+  background:rgba(5,8,16,.5);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  flex-shrink:0;
+}
+.reply-preview {
+  display:none;align-items:center;gap:.5rem;
+  background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);
+  border-radius:10px;padding:.4rem .7rem;margin-bottom:.5rem;font-size:.75rem;
+}
+.reply-preview.show { display:flex; }
+.reply-preview-text { flex:1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.reply-cancel { background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0; }
+
+.chat-input-row {
+  display:flex;gap:.6rem;align-items:flex-end;
+}
+.chat-input {
+  flex:1;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:.7rem 1rem;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:.88rem;
+  outline:none;resize:none;max-height:120px;min-height:44px;
+  line-height:1.45;transition:border-color .2s;
+  backdrop-filter:blur(8px);
+}
+.chat-input:focus { border-color:rgba(0,229,255,.4);box-shadow:0 0 0 3px rgba(0,229,255,.08); }
+.chat-input::placeholder { color:var(--muted); }
+.chat-send-btn {
+  width:44px;height:44px;border-radius:14px;border:none;cursor:pointer;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(0,180,220,.7),rgba(0,229,255,.6));
+  border:1px solid rgba(0,229,255,.4);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(0,229,255,.3),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:all .18s;color:#fff;
+}
+.chat-send-btn:hover { transform:scale(1.05);box-shadow:0 6px 24px rgba(0,229,255,.4); }
+.chat-send-btn:active { transform:scale(.95); }
+
+/* ── NEW ROOM MODAL ── */
+#chat-new-room-modal {
+  position:fixed;inset:0;z-index:900;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(16px);
+  display:none;align-items:flex-end;justify-content:center;
+  padding-bottom:0;
+}
+#chat-new-room-modal.open { display:flex; }
+.new-room-sheet {
+  width:100%;max-width:500px;
+  background:rgba(10,14,25,.92);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid rgba(255,255,255,.15);
+  border-bottom:none;
+  border-radius:28px 28px 0 0;
+  padding:1.2rem 1.4rem 2rem;
+  box-shadow:0 -24px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18);
+  animation:slideUp .3s cubic-bezier(.32,.72,0,1);
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle { width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 auto .9rem; }
+.sheet-title { font-size:1rem;font-weight:800;margin-bottom:1.1rem; }
+
+.room-type-tabs {
+  display:flex;gap:.5rem;margin-bottom:1rem;
+  background:rgba(255,255,255,.04);border-radius:14px;padding:4px;
+}
+.room-type-tab {
+  flex:1;padding:.55rem;border-radius:11px;border:none;cursor:pointer;
+  font-size:.78rem;font-weight:700;color:var(--muted);background:transparent;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.3rem;
+}
+.room-type-tab.active { background:var(--accent);color:var(--bg); }
+
+.sheet-field {
+  margin-bottom:.8rem;
+}
+.sheet-label { font-size:.72rem;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.35rem; }
+.sheet-input {
+  width:100%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);border-radius:12px;
+  padding:.7rem .9rem;color:var(--text);font-family:'Inter',sans-serif;
+  font-size:.88rem;outline:none;transition:border-color .2s;
+}
+.sheet-input:focus { border-color:rgba(0,229,255,.4); }
+
+.color-picker-row {
+  display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.35rem;
+}
+.color-dot {
+  width:32px;height:32px;border-radius:10px;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;flex-shrink:0;
+}
+.color-dot.selected { border-color:#fff;transform:scale(1.15); }
+
+.sheet-btn {
+  width:100%;padding:.85rem;border-radius:14px;border:none;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.9rem;font-weight:800;
+  letter-spacing:.04em;margin-top:.3rem;
+  background:linear-gradient(135deg,rgba(16,185,129,.7),rgba(5,150,105,.8));
+  color:#fff;border:1px solid rgba(52,211,153,.35);
+  box-shadow:0 6px 24px rgba(16,185,129,.3),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:all .2s;
+}
+.sheet-btn:hover { opacity:.9;transform:translateY(-1px); }
+
+/* DM invite code display */
+.dm-code-box {
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);
+  border-radius:12px;padding:.8rem 1rem;margin-bottom:.8rem;display:none;
+}
+.dm-code-box.show { display:block; }
+.dm-code-label { font-size:.68rem;color:var(--muted);margin-bottom:.3rem; }
+.dm-code-val { font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--accent); }
+
+/* User code badge */
+.my-code-badge {
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:100px;padding:.3rem .7rem;font-family:'Space Mono',monospace;
+  font-size:.7rem;color:var(--muted);cursor:pointer;transition:all .2s;
+}
+.my-code-badge:hover { border-color:var(--accent);color:var(--accent); }
+
+/* Online indicator */
+.online-dot { width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px rgba(34,197,94,.6); }
+
+/* Empty state */
+.chat-empty {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;padding:2rem;text-align:center;gap:.7rem;
+}
+.chat-empty-icon { font-size:2.5rem;opacity:.4; }
+.chat-empty-text { font-size:.85rem;color:var(--muted);line-height:1.6; }
+
+/* Loading skeleton */
+.msg-skeleton {
+  height:44px;border-radius:14px;background:rgba(255,255,255,.04);
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:.4} 50%{opacity:.8} }
+</style>
+
+<!-- ══ ROOM LIST SCREEN ══ -->
+<div id="chat-rooms-screen" class="chat-screen active">
+  <div class="chat-topbar">
+    <div>
+      <div class="chat-topbar-title">💬 Chat</div>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:1px">Anonim · terenkripsi</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div class="my-code-badge" onclick="copyMyCode()" title="Kode kamu">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span id="chat-my-code-label">anon-····</span>
+      </div>
+      <button class="chat-fab" onclick="openNewRoomModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Baru
+      </button>
+    </div>
+  </div>
+
+  <div style="padding:0 1rem;flex:1;overflow-y:auto">
+    <div class="section-label">📢 Publik</div>
+    <div id="public-rooms-list"></div>
+
+    <div class="section-label" style="margin-top:.8rem">👥 Grup Saya</div>
+    <div id="group-rooms-list">
+      <div class="chat-empty" style="padding:1rem 0">
+        <div class="chat-empty-icon">👥</div>
+        <div class="chat-empty-text">Belum ada grup.<br>Buat grup baru!</div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:.8rem">✉️ Pesan Pribadi</div>
+    <div id="dm-rooms-list">
+      <div class="chat-empty" style="padding:1rem 0">
+        <div class="chat-empty-icon">✉️</div>
+        <div class="chat-empty-text">Belum ada DM.<br>Masukkan kode anonim teman!</div>
+      </div>
+    </div>
+    <div style="height:1rem"></div>
+  </div>
+</div>
+
+<!-- ══ ACTIVE ROOM SCREEN ══ -->
+<div id="chat-room-screen" class="chat-screen">
+  <div class="room-header">
+    <button class="room-header-back" onclick="chatGoBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="room-header-avatar" id="room-header-avatar"></div>
+    <div class="room-header-info">
+      <div class="room-header-name" id="room-header-name">—</div>
+      <div class="room-header-sub" id="room-header-sub">—</div>
+    </div>
+    <div class="online-dot" title="Online"></div>
+  </div>
+
+  <div class="messages-area" id="messages-area">
+    <div class="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      <div class="chat-empty-text">Belum ada pesan.<br>Jadilah yang pertama!</div>
+    </div>
+  </div>
+
+  <!-- Reply preview -->
+  <div class="reply-preview" id="reply-preview">
+    <div style="color:var(--accent);font-size:.7rem;font-weight:700;white-space:nowrap">↩ Balas</div>
+    <div class="reply-preview-text" id="reply-preview-text"></div>
+    <button class="reply-cancel" onclick="cancelReply()">✕</button>
+  </div>
+
+  <div class="chat-input-area">
+    <div class="reply-preview" id="reply-preview-bar" style="display:none"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="Ketik pesan..." rows="1"
+        onkeydown="chatInputKeydown(event)" oninput="autoGrow(this)"></textarea>
+      <button class="chat-send-btn" onclick="sendMessage()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end page-chat -->
+
+<!-- ══ NEW ROOM MODAL ══ -->
+<div id="chat-new-room-modal" onclick="closeNewRoomModal(event)">
+  <div class="new-room-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Buat Room Baru</div>
+
+    <div class="room-type-tabs">
+      <button class="room-type-tab active" onclick="setRoomType('group',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Grup
+      </button>
+      <button class="room-type-tab" onclick="setRoomType('dm',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        DM Pribadi
+      </button>
+    </div>
+
+    <!-- GROUP fields -->
+    <div id="group-fields">
+      <div class="sheet-field">
+        <div class="sheet-label">Nama Grup</div>
+        <input class="sheet-input" id="new-room-name" placeholder="Contoh: Komunitas BTC">
+      </div>
+      <div class="sheet-field">
+        <div class="sheet-label">Deskripsi (opsional)</div>
+        <input class="sheet-input" id="new-room-desc" placeholder="Tentang grup ini...">
+      </div>
+      <div class="sheet-field">
+        <div class="sheet-label">Warna Avatar</div>
+        <div class="color-picker-row" id="color-picker"></div>
+      </div>
+    </div>
+
+    <!-- DM fields -->
+    <div id="dm-fields" style="display:none">
+      <div class="sheet-field">
+        <div class="sheet-label">Kode Anonim Teman</div>
+        <input class="sheet-input" id="dm-target-code" placeholder="anon-xxxxxx">
+      </div>
+      <div class="dm-code-box" id="dm-my-code-box">
+        <div class="dm-code-label">Kode anonim kamu (bagikan ke teman):</div>
+        <div class="dm-code-val" id="dm-my-code-display">—</div>
+      </div>
+    </div>
+
+    <button class="sheet-btn" id="create-room-btn" onclick="createRoom()">Buat Room</button>
+  </div>
 </div>
 
 </div><!-- end #app -->
@@ -2004,7 +2593,7 @@ let curSeed=null, lastSync=null, syncTmr=null;
 const SVG_CLK='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 
 /* ══════════ LOGIN ══════════ */
-let genSeed=null, confirmed=true;
+let genSeed=null, confirmed=false;
 
 function switchTab(t){
   document.getElementById('tab-new').style.display=t==='new'?'block':'none';
@@ -2139,6 +2728,14 @@ async function doLogout(){
   if(!confirm('Logout? Pastikan sudah menyimpan seed phrase!'))return;
   // Clear any pending sync
   if(syncTmr){clearTimeout(syncTmr);syncTmr=null;}
+  // Clear all intervals agar tidak leak
+  if(_fetchBTCInterval){clearInterval(_fetchBTCInterval);_fetchBTCInterval=null;}
+  if(_chartRefreshInterval){clearInterval(_chartRefreshInterval);_chartRefreshInterval=null;}
+  // Unsubscribe chat realtime
+  if(chatState?.msgSubscription && chatSB){
+    try{chatSB.removeChannel(chatState.msgSubscription);}catch(e){}
+    chatState.msgSubscription=null;
+  }
   curSeed=null;lastSync=null;
   S.dca=[];S.port=[];S.cf=[];
   localStorage.removeItem('wo_cache');
@@ -2225,6 +2822,23 @@ function showPage(id){
     if(isActive) activeBtn=b;
   });
   animateNavIndicator(activeBtn);
+
+  // ── Auto-hide bottom nav saat di halaman chat ──
+  const bnav = document.getElementById('bottom-nav');
+  if(bnav){
+    if(id === 'chat'){
+      bnav.classList.add('bnav-hidden');
+    } else {
+      bnav.classList.remove('bnav-hidden');
+    }
+  }
+
+  // ── Chat: init + reset unread badge ──
+  if(id === 'chat'){
+    initChat();
+    if(window.ChatNotif) ChatNotif.resetUnread();
+  }
+
   if(id==='dashboard'){renderDash(); fetchFearGreed();}
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
@@ -3662,11 +4276,8 @@ function initApp(){
 
 async function boot(){
   doGenerate();
-  // Saat pertama boot, auto-konfirmasi agar UX smooth (user belum klik generate ulang)
-  confirmed=true;
-  const chk=document.getElementById('chk');
-  chk.className='check-box on';chk.textContent='✓';
-  document.getElementById('btn-create').disabled=false;
+  // Checkbox harus dicentang manual oleh user (keamanan seed phrase)
+  confirmed=false;
 
   // Try auto-login from cache
   try{
@@ -4480,7 +5091,536 @@ function downloadShareCard(){
   toast('Kartu berhasil disimpan');
 }
 
-// ── COMING SOON POPUP ──
+// ══════════════════════════════════════════════
+// CHAT ENGINE — Supabase Realtime
+// ══════════════════════════════════════════════
+
+// ── CONFIG: ISI DENGAN SUPABASE PROJECT KAMU ──
+const SUPABASE_URL = 'https://kpikyqafapclyirpqflp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c';
+
+const PUBLIC_ROOM_ID = '00000000-0000-0000-0000-000000000001';
+const AVATAR_COLORS = [
+  '#00e5ff','#7c3aed','#10b981','#f59e0b','#ef4444',
+  '#ec4899','#06b6d4','#8b5cf6','#f97316','#22c55e'
+];
+
+let chatState = {
+  myCode: null,
+  myColor: null,
+  currentRoomId: null,
+  currentRoomName: '',
+  currentRoomType: '',
+  replyTo: null,
+  replyText: '',
+  rooms: [],
+  msgSubscription: null,
+  newRoomType: 'group',
+  newRoomColor: AVATAR_COLORS[0],
+};
+
+let chatSB = null;
+
+// ── INIT SUPABASE ──
+function initSupabase() {
+  try {
+    // Supabase v2 UMD: window.supabase.createClient
+    const lib = window.supabase || window.Supabase;
+    if (lib && lib.createClient) {
+      chatSB = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return true;
+    }
+    return false;
+  } catch(e) {
+    console.warn('Supabase init error:', e);
+    return false;
+  }
+}
+
+// ── INIT CHAT — dengan retry jika CDN belum load ──
+let _chatInitTries = 0;
+async function initChat() {
+  // Sudah terkoneksi sebelumnya
+  if (chatSB) { await chatBoot(); return; }
+
+  // Show loading indicator on first try
+  if (_chatInitTries === 0) showChatLoading();
+
+  // Coba init
+  if (initSupabase()) { await chatBoot(); return; }
+
+  // CDN belum load — tunggu max 5 detik lalu retry
+  _chatInitTries++;
+  if (_chatInitTries < 10) {
+    setTimeout(initChat, 500);
+  } else {
+    _chatInitTries = 0;
+    showChatOffline();
+  }
+}
+
+function showChatLoading() {
+  // Tampilkan loading di atas content yang ada, tidak replace seluruh DOM
+  const screen = document.getElementById('chat-rooms-screen');
+  if (!screen) return;
+  // Hapus loading lama jika ada
+  const old = screen.querySelector('.chat-loading-overlay');
+  if (old) old.remove();
+  const div = document.createElement('div');
+  div.className = 'chat-loading-overlay';
+  div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;background:rgba(5,8,16,.85);backdrop-filter:blur(8px);z-index:99;border-radius:inherit';
+  div.innerHTML = `<div style="width:36px;height:36px;border:3px solid rgba(0,229,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div class="chat-empty-text">Memuat chat...</div>`;
+  screen.style.position = 'relative';
+  screen.appendChild(div);
+}
+
+function hideChatLoading() {
+  const screen = document.getElementById('chat-rooms-screen');
+  if (!screen) return;
+  const ov = screen.querySelector('.chat-loading-overlay');
+  if (ov) ov.remove();
+}
+
+async function chatBoot() {
+  if (!chatSB) { hideChatLoading(); showChatOffline(); return; }
+  // Reset tries on success
+  _chatInitTries = 0;
+  // Get or create anon identity
+  let code = localStorage.getItem('chat_code');
+  let color = localStorage.getItem('chat_color');
+  if (!code) {
+    code = 'anon-' + Math.random().toString(36).slice(2,8);
+    color = AVATAR_COLORS[Math.floor(Math.random()*AVATAR_COLORS.length)];
+    localStorage.setItem('chat_code', code);
+    localStorage.setItem('chat_color', color);
+    // Register in DB
+    await chatSB.from('anon_users').upsert({ code, avatar_color: color }, { onConflict: 'code' });
+  }
+  chatState.myCode = code;
+  chatState.myColor = color;
+
+  // Show code in UI
+  const lbl = document.getElementById('chat-my-code-label');
+  if (lbl) lbl.textContent = code;
+  const dmDisp = document.getElementById('dm-my-code-display');
+  if (dmDisp) dmDisp.textContent = code;
+
+  // Build color picker
+  buildColorPicker();
+
+  // Load rooms
+  await loadRooms();
+  hideChatLoading();
+
+  // ── Init notification system ──
+  if (window.ChatNotif) {
+    ChatNotif.init();
+    setTimeout(() => subscribeGlobalChatNotif(), 800);
+  }
+}
+
+function showChatOffline() {
+  const screen = document.getElementById('chat-rooms-screen');
+  if (!screen) return;
+  screen.innerHTML = `
+    <div class="chat-empty" style="height:60vh;justify-content:center;flex-direction:column">
+      <div class="chat-empty-icon">⏳</div>
+      <div class="chat-empty-text" style="color:var(--text)">
+        <strong>Menghubungkan ke server...</strong><br><br>
+        Pastikan koneksi internet aktif.<br>
+        <button onclick="initChat()" style="
+          margin-top:1rem;padding:.6rem 1.4rem;border-radius:12px;border:none;
+          background:var(--accent);color:var(--bg);font-weight:700;cursor:pointer;
+          font-family:'Inter',sans-serif;font-size:.85rem;">
+          🔄 Coba Lagi
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── LOAD ALL ROOMS ──
+async function loadRooms() {
+  if (!chatSB) return;
+
+  // Reset dulu agar tidak duplikat saat dipanggil ulang
+  const groupEl = document.getElementById('group-rooms-list');
+  const dmEl = document.getElementById('dm-rooms-list');
+  if (groupEl) groupEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon">👥</div><div class="chat-empty-text">Belum ada grup.<br>Buat grup baru!</div></div>';
+  if (dmEl) dmEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon">✉️</div><div class="chat-empty-text">Belum ada DM.<br>Masukkan kode anonim teman!</div></div>';
+
+  // Public rooms
+  const { data: publicRooms } = await chatSB
+    .from('chat_rooms').select('*').eq('type','public').order('created_at');
+
+  renderRoomList('public-rooms-list', publicRooms || []);
+
+  // My group rooms (where I'm a member)
+  const { data: myMemberships } = await chatSB
+    .from('room_members').select('room_id').eq('user_code', chatState.myCode);
+
+  if (myMemberships?.length) {
+    const ids = myMemberships.map(m => m.room_id);
+    const { data: groupRooms } = await chatSB
+      .from('chat_rooms').select('*').eq('type','group').in('id', ids);
+    const { data: dmRooms } = await chatSB
+      .from('chat_rooms').select('*').eq('type','dm').in('id', ids);
+
+    if (groupRooms?.length) renderRoomList('group-rooms-list', groupRooms);
+    if (dmRooms?.length) renderRoomList('dm-rooms-list', dmRooms);
+  }
+}
+
+function renderRoomList(containerId, rooms) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rooms.length) return;
+  el.innerHTML = rooms.map(r => `
+    <div class="room-item cg" onclick="openRoom('${r.id}','${escHtml(r.name)}','${r.type}','${r.avatar_color}')">
+      <div class="room-avatar" style="background:${r.avatar_color}">
+        ${r.type==='public'?'#':r.type==='dm'?'@':r.name?.charAt(0)?.toUpperCase()||'G'}
+      </div>
+      <div class="room-info">
+        <div class="room-name">${escHtml(r.name)}</div>
+        <div class="room-preview">${r.description || (r.type==='dm'?'Pesan pribadi':'Tap untuk chat')}</div>
+      </div>
+      <div class="room-meta">
+        <div class="room-time">${r.type==='public'?'publik':''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── OPEN ROOM ──
+async function openRoom(roomId, name, type, color) {
+  chatState.currentRoomId = roomId;
+  chatState.currentRoomName = name;
+  chatState.currentRoomType = type;
+
+  // Update header
+  const ha = document.getElementById('room-header-avatar');
+  const hn = document.getElementById('room-header-name');
+  const hs = document.getElementById('room-header-sub');
+  if (ha) { ha.style.background = color; ha.textContent = type==='public'?'#':type==='dm'?'@':name.charAt(0).toUpperCase(); }
+  if (hn) hn.textContent = name;
+  if (hs) hs.textContent = type==='public'?'Room Publik':type==='dm'?'Pesan Pribadi':'Grup';
+
+  // Switch screen
+  document.getElementById('chat-rooms-screen').classList.remove('active');
+  document.getElementById('chat-room-screen').classList.add('active');
+
+  // Join room_members if not already
+  if (type !== 'public') {
+    await chatSB.from('room_members').upsert(
+      { room_id: roomId, user_code: chatState.myCode },
+      { onConflict: 'room_id,user_code' }
+    );
+  }
+
+  // Load messages
+  await loadMessages(roomId);
+
+  // Subscribe realtime
+  subscribeRoom(roomId);
+
+  // Focus input
+  setTimeout(() => document.getElementById('chat-input')?.focus(), 300);
+}
+
+// ── LOAD MESSAGES ──
+async function loadMessages(roomId) {
+  const area = document.getElementById('messages-area');
+  area.innerHTML = '<div class="msg-skeleton" style="width:60%;margin:.5rem 0"></div><div class="msg-skeleton" style="width:40%;margin:.5rem 0 .5rem auto"></div>';
+
+  const { data: msgs, error } = await chatSB
+    .from('messages')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('created_at', { ascending: true })
+    .limit(100);
+
+  if (error) { area.innerHTML = '<div class="chat-empty"><div class="chat-empty-text">Gagal memuat pesan</div></div>'; return; }
+
+  renderMessages(msgs || []);
+}
+
+function renderMessages(msgs) {
+  const area = document.getElementById('messages-area');
+  if (!msgs.length) {
+    area.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">Belum ada pesan.<br>Jadilah yang pertama!</div></div>';
+    return;
+  }
+
+  let html = '';
+  let lastDate = '';
+  msgs.forEach(msg => {
+    const d = new Date(msg.created_at);
+    const dateLabel = d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+    if (dateLabel !== lastDate) {
+      html += `<div class="msg-date-sep">${dateLabel}</div>`;
+      lastDate = dateLabel;
+    }
+    html += buildMsgBubble(msg);
+  });
+  area.innerHTML = html;
+  area.scrollTop = area.scrollHeight;
+
+  // Bind reply swipe
+  area.querySelectorAll('.msg-bubble').forEach(b => {
+    b.addEventListener('dblclick', () => {
+      const id = b.dataset.msgId;
+      const txt = b.dataset.msgText;
+      setReply(id, txt);
+    });
+  });
+}
+
+function buildMsgBubble(msg) {
+  const isMine = msg.sender_code === chatState.myCode;
+  const t = new Date(msg.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  const color = isMine ? chatState.myColor : stringToColor(msg.sender_code);
+  const initial = (msg.sender_code||'?').slice(5,7).toUpperCase();
+
+  return `
+    <div class="msg-row ${isMine?'mine':'theirs'}">
+      ${!isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
+      <div class="msg-bubble-wrap">
+        ${!isMine ? `<div class="msg-sender-name">${escHtml(msg.sender_code||'anon')}</div>` : ''}
+        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content)}">
+          ${msg.content ? escHtml(msg.content) : ''}
+        </div>
+        <div class="msg-time">${t}</div>
+      </div>
+      ${isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
+    </div>`;
+}
+
+// ── REALTIME SUBSCRIBE ──
+function subscribeRoom(roomId) {
+  // Unsubscribe previous
+  if (chatState.msgSubscription) {
+    chatSB.removeChannel(chatState.msgSubscription);
+  }
+  chatState.msgSubscription = chatSB
+    .channel('room-' + roomId)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `room_id=eq.${roomId}`
+    }, payload => {
+      appendMessage(payload.new);
+    })
+    .subscribe();
+}
+
+function appendMessage(msg) {
+  const area = document.getElementById('messages-area');
+  if (!area) return;
+  // Remove empty state
+  const empty = area.querySelector('.chat-empty');
+  if (empty) empty.remove();
+
+  const el = document.createElement('div');
+  el.innerHTML = buildMsgBubble(msg);
+  area.appendChild(el.firstElementChild);
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── SEND MESSAGE ──
+async function sendMessage() {
+  const inp = document.getElementById('chat-input');
+  const content = inp?.value?.trim();
+  if (!content || !chatState.currentRoomId || !chatSB) return;
+
+  inp.value = '';
+  inp.style.height = '';
+
+  const msg = {
+    room_id: chatState.currentRoomId,
+    sender_code: chatState.myCode,
+    content,
+    reply_to: chatState.replyTo || null,
+  };
+
+  cancelReply();
+  const { error } = await chatSB.from('messages').insert(msg);
+  if (error) toast('Gagal kirim pesan', 1);
+}
+
+function chatInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── REPLY ──
+function setReply(msgId, text) {
+  chatState.replyTo = msgId;
+  chatState.replyText = text;
+  const bar = document.getElementById('reply-preview');
+  if (bar) { bar.classList.add('show'); }
+  const pt = document.getElementById('reply-preview-text');
+  if (pt) pt.textContent = text;
+  document.getElementById('chat-input')?.focus();
+}
+
+function cancelReply() {
+  chatState.replyTo = null;
+  chatState.replyText = '';
+  const bar = document.getElementById('reply-preview');
+  if (bar) bar.classList.remove('show');
+}
+
+// ── NAVIGATION ──
+function chatGoBack() {
+  // Unsubscribe
+  if (chatState.msgSubscription) {
+    chatSB?.removeChannel(chatState.msgSubscription);
+    chatState.msgSubscription = null;
+  }
+  chatState.currentRoomId = null;
+  document.getElementById('chat-room-screen').classList.remove('active');
+  document.getElementById('chat-rooms-screen').classList.add('active');
+  // Refresh room list
+  loadRooms();
+}
+
+// ── NEW ROOM MODAL ──
+function openNewRoomModal() {
+  const modal = document.getElementById('chat-new-room-modal');
+  if (modal) { modal.classList.add('open'); }
+  // Show my code in DM section
+  const disp = document.getElementById('dm-my-code-display');
+  if (disp) disp.textContent = chatState.myCode || '—';
+  document.getElementById('dm-my-code-box')?.classList.add('show');
+}
+
+function closeNewRoomModal(e) {
+  if (e.target.id === 'chat-new-room-modal') {
+    document.getElementById('chat-new-room-modal').classList.remove('open');
+  }
+}
+
+function setRoomType(type, el) {
+  chatState.newRoomType = type;
+  document.querySelectorAll('.room-type-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('group-fields').style.display = type==='group'?'block':'none';
+  document.getElementById('dm-fields').style.display = type==='dm'?'block':'none';
+  document.getElementById('create-room-btn').textContent = type==='dm'?'Mulai DM':'Buat Grup';
+}
+
+function buildColorPicker() {
+  const el = document.getElementById('color-picker');
+  if (!el) return;
+  el.innerHTML = AVATAR_COLORS.map(c => `
+    <div class="color-dot ${c===chatState.newRoomColor?'selected':''}"
+      style="background:${c};box-shadow:0 2px 12px ${c}55"
+      onclick="selectColor('${c}',this)"></div>
+  `).join('');
+}
+
+function selectColor(c, el) {
+  chatState.newRoomColor = c;
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function createRoom() {
+  if (!chatSB) return;
+  const type = chatState.newRoomType;
+
+  if (type === 'dm') {
+    const target = document.getElementById('dm-target-code')?.value?.trim();
+    if (!target || !target.startsWith('anon-')) { toast('Kode anonim tidak valid', 1); return; }
+    if (target === chatState.myCode) { toast('Tidak bisa DM diri sendiri', 1); return; }
+
+    // Cek apakah target user ada
+    const { data: targetUser } = await chatSB.from('anon_users').select('code').eq('code', target).single();
+    if (!targetUser) { toast('Kode anonim tidak ditemukan', 1); return; }
+
+    // Cek apakah DM room sudah ada (cegah duplikat)
+    const { data: myRooms } = await chatSB
+      .from('room_members').select('room_id').eq('user_code', chatState.myCode);
+    if (myRooms?.length) {
+      const myRoomIds = myRooms.map(r => r.room_id);
+      const { data: targetRooms } = await chatSB
+        .from('room_members').select('room_id').eq('user_code', target).in('room_id', myRoomIds);
+      if (targetRooms?.length) {
+        const { data: existDM } = await chatSB
+          .from('chat_rooms').select('*').eq('type','dm').in('id', targetRooms.map(r=>r.room_id)).single();
+        if (existDM) {
+          document.getElementById('chat-new-room-modal').classList.remove('open');
+          openRoom(existDM.id, target, 'dm', '#7c3aed');
+          toast('Membuka DM yang sudah ada');
+          return;
+        }
+      }
+    }
+
+    const dmName = `${chatState.myCode} ↔ ${target}`;
+    const { data: room, error } = await chatSB.from('chat_rooms').insert({
+      type: 'dm', name: dmName, avatar_color: '#7c3aed', created_by: chatState.myCode
+    }).select().single();
+
+    if (error) { toast('Gagal buat DM', 1); return; }
+
+    // Add both members
+    await chatSB.from('room_members').insert([
+      { room_id: room.id, user_code: chatState.myCode },
+      { room_id: room.id, user_code: target },
+    ]);
+
+    document.getElementById('chat-new-room-modal').classList.remove('open');
+    openRoom(room.id, target, 'dm', '#7c3aed');
+
+  } else {
+    const name = document.getElementById('new-room-name')?.value?.trim();
+    const desc = document.getElementById('new-room-desc')?.value?.trim();
+    if (!name) { toast('Nama grup tidak boleh kosong', 1); return; }
+
+    const { data: room, error } = await chatSB.from('chat_rooms').insert({
+      type: 'group', name, description: desc||'',
+      avatar_color: chatState.newRoomColor,
+      created_by: chatState.myCode
+    }).select().single();
+
+    if (error) { toast('Gagal buat grup', 1); return; }
+
+    // Add creator as member
+    await chatSB.from('room_members').insert({ room_id: room.id, user_code: chatState.myCode });
+
+    document.getElementById('chat-new-room-modal').classList.remove('open');
+    openRoom(room.id, name, 'group', chatState.newRoomColor);
+  }
+}
+
+// ── UTILS ──
+function copyMyCode() {
+  if (!chatState.myCode) return;
+  navigator.clipboard?.writeText(chatState.myCode);
+  toast('Kode disalin: ' + chatState.myCode);
+}
+
+function stringToColor(str) {
+  if (!str) return '#64748b';
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash<<5)-hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── COMING SOON ──
 function showComingSoon(name) {
   const overlay = document.getElementById('coming-soon-overlay');
   const nameEl = document.getElementById('coming-soon-name');
@@ -4720,5 +5860,280 @@ function triggerPWAInstall() {
     <div style="text-align:center;margin-top:.75rem;font-size:.65rem;color:rgba(100,116,139,.45);letter-spacing:.05em;position:relative;z-index:1">1080 × 1350 px · JPEG · Siap diposting</div>
   </div>
 </div>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CHAT NOTIFICATION SYSTEM
+//  - In-app toast (slide-down glassmorphism)
+//  - Unread badge di navbar icon
+//  - Sound notifikasi (Web Audio API)
+//  - Browser Push Notification (jika diizinkan)
+// ══════════════════════════════════════════════════════════════
+
+const ChatNotif = (() => {
+  let _unreadCount = 0;
+  let _toastTimer = null;
+  let _progressTimer = null;
+  let _pendingRoom = null; // untuk navigasi saat toast diklik
+  let _audioCtx = null;
+
+  // ── Inisialisasi AudioContext (lazy) ──
+  function getAudioCtx() {
+    if (!_audioCtx) {
+      try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    }
+    return _audioCtx;
+  }
+
+  // ── Notif Sound — lembut dan futuristik ──
+  function playSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    try {
+      // Chord 2 nada: lembut ping
+      [[880, 0, 0.12],[1108, 0.08, 0.1]].forEach(([freq, delay, dur]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+        gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + dur + 0.05);
+      });
+    } catch(e) {}
+  }
+
+  // ── Browser Push Notification ──
+  function requestPushPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function sendPushNotif(title, body, roomId, roomData) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    // Jangan kirim jika tab aktif dan halaman chat terbuka
+    if (!document.hidden) {
+      const chatPage = document.getElementById('page-chat');
+      if (chatPage && chatPage.classList.contains('active')) return;
+    }
+    try {
+      const n = new Notification(title, {
+        body,
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
+        tag: 'chat-' + roomId,
+        renotify: true,
+        silent: false,
+      });
+      n.onclick = () => {
+        window.focus();
+        n.close();
+        if (roomData) {
+          showPage('chat');
+          setTimeout(() => {
+            openRoom(roomData.id, roomData.name, roomData.type, roomData.color);
+          }, 200);
+        }
+      };
+      setTimeout(() => n.close(), 6000);
+    } catch(e) {}
+  }
+
+  // ── Unread badge di feat-btn chat ──
+  function updateUnreadBadge(count) {
+    _unreadCount = count;
+
+    // Badge di feat-btn (dashboard shortcut)
+    document.querySelectorAll('.feat-btn').forEach(btn => {
+      if (btn.getAttribute('onclick')?.includes('chat')) {
+        let dot = btn.querySelector('.chat-unread-dot');
+        if (count > 0) {
+          if (!dot) {
+            dot = document.createElement('span');
+            dot.className = 'chat-unread-dot';
+            btn.appendChild(dot);
+          }
+        } else {
+          dot?.remove();
+        }
+      }
+    });
+
+    // Badge numerik di nav desktop (jika ada nav-tab chat)
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      if (tab.getAttribute('onclick')?.includes('chat')) {
+        let badge = tab.querySelector('.chat-notif-nav-badge');
+        if (count > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'chat-notif-nav-badge';
+            badge.style.cssText = 'margin-left:.4rem;background:#ef4444;color:#fff;border-radius:100px;font-size:.58rem;font-weight:800;padding:1px 5px;vertical-align:middle;';
+            tab.appendChild(badge);
+          }
+          badge.textContent = count > 99 ? '99+' : count;
+        } else {
+          badge?.remove();
+        }
+      }
+    });
+  }
+
+  // ── Show In-App Toast ──
+  function showToast(msg, roomData) {
+    const toast = document.getElementById('chat-notif-toast');
+    if (!toast) return;
+
+    // Simpan data room untuk navigasi saat klik
+    _pendingRoom = roomData;
+
+    // Isi konten
+    const avatarEl = document.getElementById('chat-notif-avatar');
+    const roomEl = document.getElementById('chat-notif-room');
+    const senderEl = document.getElementById('chat-notif-sender');
+    const textEl = document.getElementById('chat-notif-text');
+    const progressEl = document.getElementById('chat-notif-progress');
+
+    if (avatarEl) {
+      avatarEl.style.background = roomData?.color || 'linear-gradient(135deg,#00b4d8,#0096c7)';
+      avatarEl.textContent = roomData?.type === 'dm' ? '@' : roomData?.type === 'public' ? '#' : (roomData?.name?.charAt(0)?.toUpperCase() || '💬');
+    }
+    if (roomEl) roomEl.textContent = roomData?.name || 'Chat';
+    if (senderEl) senderEl.textContent = msg.sender_code || 'anon';
+    if (textEl) textEl.textContent = msg.content || '';
+
+    // Reset & animate
+    toast.classList.remove('show');
+    clearTimeout(_toastTimer);
+    clearInterval(_progressTimer);
+
+    // Reset progress bar
+    if (progressEl) {
+      progressEl.style.transition = 'none';
+      progressEl.style.transform = 'scaleX(1)';
+    }
+
+    // Trigger show
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+        // Progress bar countdown (4 detik)
+        if (progressEl) {
+          setTimeout(() => {
+            progressEl.style.transition = 'transform 4s linear';
+            progressEl.style.transform = 'scaleX(0)';
+          }, 50);
+        }
+      });
+    });
+
+    // Auto-dismiss setelah 4 detik
+    _toastTimer = setTimeout(() => hideToast(), 4200);
+  }
+
+  function hideToast() {
+    const toast = document.getElementById('chat-notif-toast');
+    if (!toast) return;
+    toast.classList.remove('show');
+    toast.style.transform = 'translateX(-50%) translateY(-120px)';
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      toast.style.transform = '';
+      toast.style.opacity = '';
+    }, 400);
+  }
+
+  // ── Handler saat toast diklik ──
+  window.chatNotifClick = function() {
+    clearTimeout(_toastTimer);
+    hideToast();
+    if (_pendingRoom) {
+      showPage('chat');
+      const rd = _pendingRoom;
+      setTimeout(() => {
+        openRoom(rd.id, rd.name, rd.type, rd.color || '#00b4d8');
+      }, 300);
+    }
+  };
+
+  // ── Main trigger — dipanggil saat ada pesan baru ──
+  function onNewMessage(msg, roomData) {
+    const isSelf = msg.sender_code === (window.chatState?.myCode);
+    if (isSelf) return; // Jangan notif pesan sendiri
+
+    const isInRoom = (
+      document.getElementById('page-chat')?.classList.contains('active') &&
+      document.getElementById('chat-room-screen')?.classList.contains('active') &&
+      window.chatState?.currentRoomId === msg.room_id
+    );
+
+    if (isInRoom) return; // Sudah di dalam room ini, tidak perlu notif
+
+    // Update unread count
+    updateUnreadBadge(_unreadCount + 1);
+
+    // Play sound
+    playSound();
+
+    // In-app toast
+    showToast(msg, roomData);
+
+    // Browser push notif (saat tab tidak aktif)
+    const pushTitle = `💬 ${roomData?.name || 'Chat'}`;
+    const pushBody = `${msg.sender_code}: ${msg.content?.slice(0, 60) || ''}`;
+    sendPushNotif(pushTitle, pushBody, msg.room_id, roomData);
+  }
+
+  // ── Reset unread saat user membuka halaman chat ──
+  function resetUnread() {
+    updateUnreadBadge(0);
+  }
+
+  // ── Request permission saat chatBoot ──
+  function init() {
+    requestPushPermission();
+  }
+
+  return { onNewMessage, resetUnread, init, playSound };
+})();
+
+// ── PATCH: subscribeRoom — patch ini TIDAK DIPAKAI (notif via global channel) ──
+// subscribeRoom tetap menggunakan definisi original di atas
+
+// ── Global channel untuk notif background ──
+let _globalMsgChannel = null;
+let _roomDataCache = {}; // cache room info
+
+function subscribeGlobalChatNotif() {
+  if (!chatSB || _globalMsgChannel) return;
+  _globalMsgChannel = chatSB
+    .channel('global-messages-notif')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+    }, async payload => {
+      const msg = payload.new;
+      // Ambil room data dari cache atau fetch
+      let roomData = _roomDataCache[msg.room_id];
+      if (!roomData) {
+        try {
+          const { data } = await chatSB.from('chat_rooms').select('id,name,type,avatar_color').eq('id', msg.room_id).single();
+          if (data) {
+            roomData = { id: data.id, name: data.name, type: data.type, color: data.avatar_color };
+            _roomDataCache[msg.room_id] = roomData;
+          }
+        } catch(e) {}
+      }
+      if (window.ChatNotif) ChatNotif.onNewMessage(msg, roomData);
+    })
+    .subscribe();
+}
+</script>
 </body>
 </html>
