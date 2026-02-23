@@ -305,11 +305,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .pbar-fill{height:100%;border-radius:2px}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);border:1px solid var(--accent3);border-radius:10px;padding:.75rem 1.3rem;font-size:.82rem;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;color:var(--accent3)}
-.toast.show{transform:translateY(0);opacity:1}
+.toast{position:fixed;top:5rem;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--surface2);border:1px solid var(--accent3);border-radius:10px;padding:.65rem 1.2rem;font-size:.82rem;z-index:9999;opacity:0;transition:all .3s;color:var(--accent3);white-space:nowrap;max-width:calc(100vw - 2rem);text-align:center;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
 
-.sync-bar{position:fixed;bottom:calc(110px + env(safe-area-inset-bottom,0px));left:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;font-size:.7rem;color:var(--muted);z-index:201;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;transition:bottom .2s}
+.sync-bar{position:fixed;top:calc(5rem + env(safe-area-inset-top,0px));right:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;font-size:.68rem;color:var(--muted);z-index:201;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+@media(max-width:640px){.sync-bar{top:calc(3rem + env(safe-area-inset-top,0px));right:.75rem}}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--accent3);flex-shrink:0}
 .sdot.syncing{background:var(--accent4);animation:pulse 1s infinite}
 .sdot.err{background:var(--danger)}
@@ -355,7 +356,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   .port-grid{grid-template-columns:1fr}
   .btc-badge{display:none}
   .acct-badge{max-width:110px}
-  .sync-bar{font-size:.65rem;padding:.35rem .65rem;bottom:calc(4.5rem + env(safe-area-inset-bottom,0));left:.75rem}
   nav{padding:0 .75rem;gap:.3rem}
   .nav-logo{font-size:1rem;padding:.75rem 0}
   table{min-width:480px}
@@ -484,7 +484,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   .nav-topstrip{display:flex}
   nav{padding:0 1rem;min-height:44px}
   .nav-logo{font-size:1rem;padding:.7rem 0}
-  #app .page:not(#page-chat){padding-bottom:calc(7rem + env(safe-area-inset-bottom,0))}
+  #app .page:not(#page-chat){padding-bottom:calc(10rem + env(safe-area-inset-bottom,0)) !important}
+  #page-theme, #page-alerts { padding-bottom: calc(10rem + env(safe-area-inset-bottom,0)) !important; }
 }
 /* Desktop: bottom nav & topstrip hidden, normal nav */
 @media(min-width:641px){
@@ -679,7 +680,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
       <button type="button" class="lbtn-ghost" onclick="doGenerate()" style="display:inline-flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Generate Ulang</button>
 
-      <div class="seed-warn">⚠️ <strong>SIMPAN SEED PHRASE INI!</strong> Screenshot atau catat ketiga kata ini. Tidak bisa dipulihkan jika hilang.</div>
+      <div class="seed-warn"><svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <strong>SIMPAN SEED PHRASE INI!</strong> Screenshot atau catat ketiga kata ini. Tidak bisa dipulihkan jika hilang.</div>
 
       <div class="check-row" onclick="doToggleConfirm()">
         <div class="check-box" id="chk">✓</div>
@@ -982,7 +983,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
 
       <!-- 1. Ganti Tema Warna -->
-      <button class="feat-btn" onclick="showComingSoon('Ganti Tema Warna')" style="
+      <button class="feat-btn" onclick="showPage('theme')" style="
         background:linear-gradient(145deg,rgba(124,58,237,.55) 0%,rgba(168,85,247,.45) 50%,rgba(236,72,153,.4) 100%);
         box-shadow:0 10px 40px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.2);
       ">
@@ -1021,7 +1022,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </button>
 
       <!-- 4. Price Alert & DCA Reminder -->
-      <button class="feat-btn" onclick="showComingSoon('Price Alert & Pengingat DCA')" style="
+      <button class="feat-btn" onclick="showPage('alerts')" style="
         background:linear-gradient(145deg,rgba(217,119,6,.55) 0%,rgba(245,158,11,.45) 50%,rgba(251,191,36,.4) 100%);
         box-shadow:0 10px 40px rgba(217,119,6,.5),inset 0 1px 0 rgba(255,255,255,.2);
       ">
@@ -1040,7 +1041,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
     <div id="coming-soon-box" onclick="event.stopPropagation()" style="background:rgba(15,20,35,.92);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:2rem 1.8rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1);position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.2) 0%,transparent 60%);pointer-events:none"></div>
-      <div style="font-size:3rem;margin-bottom:.8rem;position:relative">🚀</div>
+      <div style="margin-bottom:.8rem;position:relative;display:flex;justify-content:center"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
       <div style="font-size:1.1rem;font-weight:800;color:#f1f5f9;margin-bottom:.4rem;position:relative">Segera Hadir!</div>
       <div id="coming-soon-name" style="font-size:.78rem;color:var(--accent);font-weight:700;letter-spacing:.05em;margin-bottom:.8rem;position:relative"></div>
       <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem;position:relative">Fitur ini sedang dalam pengembangan.<br>Nantikan update selanjutnya! 🎉</div>
@@ -1230,6 +1231,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <div class="tbl-wrap"><table><thead><tr><th>Tanggal</th><th>Harga Beli</th><th>Modal IDR</th><th>BTC</th><th>Nilai Kini</th><th>P&amp;L</th></tr></thead><tbody id="d-recent"></tbody></table></div>
 </div>
 
+
 <!-- DCA -->
 <div id="page-dca" class="page">
   <div class="ph"><h1>DCA Tracker</h1><p>Catat setiap pembelian Bitcoin kamu</p></div>
@@ -1286,6 +1288,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         Memuat chart...
       </div>
       <canvas id="c-dca-btclive"></canvas>
+      <!-- Buy/Sell entry tags container (like Bybit) -->
+      <div id="dca-buysell-tags" style="position:absolute;inset:0;pointer-events:none;z-index:8;overflow:hidden"></div>
       <!-- Price labels OKX style - liquid glass -->
       <div id="dca-label-current" style="display:none;position:absolute;right:0;transform:translateY(-50%);pointer-events:none;z-index:10">
         <div style="display:flex;align-items:center;gap:0">
@@ -1437,6 +1441,239 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <!-- ══════════ CHAT PAGE ══════════ -->
+<div id="page-theme" class="page">
+  <!-- Back button -->
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+    <button onclick="showPage('dashboard')"
+      style="display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
+    </button>
+    <div style="font-size:.78rem;color:var(--muted)">Home</div>
+  </div>
+
+  <div class="ph" style="margin-bottom:1rem">
+    <h1 style="display:flex;align-items:center;gap:.4rem"><svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="var(--accent)"/><circle cx="17.5" cy="10.5" r=".5" fill="var(--accent)"/><circle cx="8.5" cy="7.5" r=".5" fill="var(--accent)"/><circle cx="6.5" cy="12.5" r=".5" fill="var(--accent)"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Tema & Tampilan</h1>
+    <p>Pilih warna dan mode tampilan favoritmu</p>
+  </div>
+
+  <!-- Preset Themes -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div class="sec-title" style="margin-bottom:1.1rem">Preset Tema</div>
+    <div id="theme-presets" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem"></div>
+  </div>
+
+  <!-- Custom Color -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div class="sec-title" style="margin-bottom:1.1rem">Warna Custom</div>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <input type="color" id="custom-accent-color" value="#00e5ff"
+        style="width:56px;height:56px;border:none;border-radius:12px;cursor:pointer;background:none;padding:0;flex-shrink:0">
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:.88rem;font-weight:700;margin-bottom:.3rem">Pilih Warna Aksen</div>
+        <div style="font-size:.75rem;color:var(--muted)">Warna ini akan diterapkan ke seluruh aplikasi</div>
+      </div>
+      <button onclick="applyCustomTheme()"
+        style="background:var(--accent);color:var(--bg);border:none;border-radius:10px;padding:.65rem 1.2rem;font-weight:800;font-size:.85rem;cursor:pointer;white-space:nowrap">
+        Terapkan
+      </button>
+    </div>
+  </div>
+
+  <!-- Dark/Light Mode -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div class="sec-title" style="margin-bottom:1.1rem">Mode Tampilan</div>
+    <div style="display:flex;gap:.8rem">
+      <button id="mode-dark-btn" onclick="setDisplayMode('dark')"
+        style="flex:1;padding:1rem;border-radius:12px;border:2px solid var(--accent);background:rgba(0,229,255,.08);color:var(--text);cursor:pointer;font-weight:700;font-size:.85rem;transition:all .2s">
+        <svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Dark Mode
+      </button>
+      <button id="mode-light-btn" onclick="setDisplayMode('light')"
+        style="flex:1;padding:1rem;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-weight:700;font-size:.85rem;transition:all .2s">
+        <svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Light Mode
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div id="theme-preview-card" style="background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem;box-shadow:var(--glow)">
+    <div class="sec-title" style="margin-bottom:1rem">Preview</div>
+    <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:1rem">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.2rem">₿</div>
+      <div>
+        <div style="font-weight:800;font-size:1rem">Bitcoin</div>
+        <div style="color:var(--accent);font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700">$67,234.00</div>
+      </div>
+      <div style="margin-left:auto;color:var(--accent3);font-family:'Space Mono',monospace;font-size:.8rem;font-weight:700">+2.4%</div>
+    </div>
+    <div style="height:6px;border-radius:3px;background:var(--border);overflow:hidden">
+      <div style="height:100%;width:68%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px"></div>
+    </div>
+  </div>
+
+  <button onclick="resetTheme()"
+    style="width:100%;padding:.8rem;border-radius:12px;border:1px solid var(--danger);background:transparent;color:var(--danger);font-weight:700;font-size:.85rem;cursor:pointer;margin-bottom:1rem">
+    <svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reset ke Default
+  </button>
+</div>
+
+<!-- ══════════ ALERTS PAGE ══════════ -->
+<div id="page-alerts" class="page">
+  <!-- Back button -->
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+    <button onclick="showPage('dashboard')"
+      style="display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
+    </button>
+    <div style="font-size:.78rem;color:var(--muted)">Home</div>
+  </div>
+
+  <div class="ph" style="margin-bottom:1rem">
+    <h1 style="display:flex;align-items:center;gap:.4rem"><svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Alert & Pengingat DCA</h1>
+    <p>Set alert harga dan jadwal DCA otomatis</p>
+  </div>
+
+  <!-- Price Alerts -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
+      <div class="sec-title">Price Alert BTC</div>
+      <button onclick="openAlertModal()"
+        style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:.45rem .9rem;font-size:.78rem;font-weight:800;cursor:pointer">
+        + Alert Baru
+      </button>
+    </div>
+
+    <!-- Current BTC Price -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem">
+      <div style="font-size:1.4rem">₿</div>
+      <div>
+        <div style="font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase">Harga BTC Saat Ini</div>
+        <div id="alert-btc-price" style="font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent4)">Loading...</div>
+      </div>
+      <div id="alert-btc-change" style="margin-left:auto;font-family:'Space Mono',monospace;font-size:.8rem;font-weight:700"></div>
+    </div>
+
+    <div id="alerts-list">
+      <div class="empty"><div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>Belum Ada Alert</h3><p>Buat alert harga untuk mendapat notifikasi</p></div>
+    </div>
+  </div>
+
+  <!-- DCA Reminder -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div class="sec-title" style="margin-bottom:1.1rem;display:flex;align-items:center;gap:.4rem"><svg style="display:inline-block;vertical-align:middle;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pengingat DCA</div>
+
+    <div style="display:grid;gap:.8rem">
+      <div class="fg">
+        <label class="fl">Frekuensi Pengingat</label>
+        <select class="fs" id="reminder-frequency" onchange="updateReminderPreview()">
+          <option value="daily">Setiap Hari</option>
+          <option value="weekly" selected>Setiap Minggu</option>
+          <option value="monthly">Setiap Bulan (pilih tanggal)</option>
+          <option value="specific">Tanggal & Waktu Spesifik</option>
+        </select>
+      </div>
+
+      <!-- Jam Pengingat (dipindah ke atas) -->
+      <div id="reminder-time-field" class="fg">
+        <label class="fl">Jam Pengingat</label>
+        <input type="time" class="fi" id="reminder-time" value="08:00" oninput="updateReminderPreview()">
+      </div>
+
+      <!-- Hari (untuk weekly) -->
+      <div id="reminder-day-field" class="fg">
+        <label class="fl">Hari</label>
+        <select class="fs" id="reminder-day" onchange="updateReminderPreview()">
+          <option value="1">Senin</option>
+          <option value="2">Selasa</option>
+          <option value="3">Rabu</option>
+          <option value="4">Kamis</option>
+          <option value="5" selected>Jumat</option>
+          <option value="6">Sabtu</option>
+          <option value="0">Minggu</option>
+        </select>
+      </div>
+
+      <!-- Tanggal dalam bulan (untuk monthly) -->
+      <div id="reminder-date-field" class="fg" style="display:none">
+        <label class="fl">Tanggal dalam Bulan</label>
+        <select class="fs" id="reminder-date" onchange="updateReminderPreview()">
+          <option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option>
+        </select>
+      </div>
+
+      <!-- Tanggal spesifik (datetime-local untuk specific) -->
+      <div id="reminder-specific-field" class="fg" style="display:none">
+        <label class="fl">Pilih Tanggal & Jam</label>
+        <input type="datetime-local" class="fi" id="reminder-specific-datetime"
+          oninput="updateReminderPreview()"
+          style="font-family:'Space Mono',monospace;font-size:.82rem">
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">Pengingat sekali pada waktu yang kamu pilih</div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Nominal DCA (opsional)</label>
+        <input type="number" class="fi" id="reminder-amount" placeholder="Contoh: 100000" oninput="updateReminderPreview()">
+      </div>
+
+      <div id="reminder-preview" style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:.9rem 1rem;font-size:.82rem;color:var(--text);line-height:1.6;display:none"></div>
+
+      <button onclick="saveReminder()"
+        style="width:100%;padding:.9rem;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;font-weight:800;font-size:.9rem;cursor:pointer;box-shadow:var(--glow)">
+        <svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Pengingat
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Reminders -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.2rem">
+    <div class="sec-title" style="margin-bottom:1.1rem">Pengingat Aktif</div>
+    <div id="reminders-list">
+      <div class="empty"><div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>Belum Ada Pengingat</h3><p>Set jadwal DCA kamu di atas</p></div>
+    </div>
+  </div>
+
+  <!-- Notification Permission -->
+  <div id="notif-perm-card" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:1rem;margin-bottom:1rem;display:none">
+    <div style="font-size:.85rem;font-weight:700;color:var(--accent4);margin-bottom:.4rem"><svg style="display:inline-block;vertical-align:middle;margin-right:.3rem;flex-shrink:0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Aktifkan Notifikasi</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.8rem;line-height:1.5">Izinkan notifikasi agar alert dan pengingat bisa bekerja saat app di background</div>
+    <button onclick="requestNotifPermission()"
+      style="background:var(--accent4);color:#000;border:none;border-radius:8px;padding:.55rem 1.2rem;font-weight:800;font-size:.82rem;cursor:pointer">
+      Izinkan Notifikasi
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Tambah Alert -->
+<div class="overlay" id="modal-alert" style="z-index:350">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title" style="display:flex;align-items:center;gap:.4rem"><svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Buat Price Alert BTC</div>
+    <div class="fg">
+      <label class="fl">Jenis Alert</label>
+      <select class="fs" id="alert-type">
+        <option value="above">Harga Naik Di Atas</option>
+        <option value="below">Harga Turun Di Bawah</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Target Harga (USD)</label>
+      <input type="text" class="fi" id="alert-price" placeholder="70.000" inputmode="numeric" oninput="fmtInputUSD(this)" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="fl">Catatan (opsional)</label>
+      <input type="text" class="fi" id="alert-note" placeholder="Contoh: Saatnya jual!">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-alert')">Batal</button>
+      <button class="btn btn-primary" onclick="saveAlert()">Simpan Alert</button>
+    </div>
+  </div>
+</div>
+
 <div id="page-chat" class="page">
 
 <style>
@@ -1451,8 +1688,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 }
 @media(max-width:640px){
   #page-chat {
-    /* Saat chat aktif, bottom-nav disembunyikan → pakai full height dikurangi top nav saja */
     height:calc(100dvh - 44px);
+  }
+  /* Saat chat-room-screen aktif (masuk room), gunakan full height */
+  #page-chat:has(#chat-room-screen.active) {
+    height:100dvh;
   }
 }
 
@@ -1610,9 +1850,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 /* Reply bubble */
 .msg-reply-ref {
-  background:rgba(255,255,255,.05);border-left:2px solid var(--accent);
-  border-radius:8px;padding:.3rem .6rem;margin-bottom:.35rem;
-  font-size:.72rem;color:var(--muted);
+  background:rgba(0,0,0,.25);
+  border-left:3px solid var(--accent);
+  border-radius:8px;padding:.4rem .7rem;margin-bottom:.4rem;
+  font-size:.75rem;color:rgba(255,255,255,.75);
+  cursor:pointer;transition:background .15s;
+  user-select:none;
+  display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.msg-reply-ref:hover,.msg-reply-ref:active {
+  background:rgba(0,229,255,.15);
+}
+[data-theme="light"] .msg-reply-ref {
+  background:rgba(0,0,0,.07);
+  color:rgba(0,0,0,.65);
+}
+
+/* Swipe reply icon */
+._swipe-reply-icon {
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(0,229,255,.2);
 }
 
 /* Date separator */
@@ -1683,14 +1943,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 #chat-new-room-modal.open { display:flex; }
 .new-room-sheet {
   width:100%;max-width:500px;
-  background:rgba(10,14,25,.92);
+  background:rgba(10,14,25,.97);
   backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
   border:1px solid rgba(255,255,255,.15);
   border-bottom:none;
   border-radius:28px 28px 0 0;
-  padding:1.2rem 1.4rem 2rem;
+  padding:1.2rem 1.4rem calc(6rem + env(safe-area-inset-bottom,16px));
   box-shadow:0 -24px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18);
   animation:slideUp .3s cubic-bezier(.32,.72,0,1);
+  max-height:88dvh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .sheet-handle { width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 auto .9rem; }
@@ -1878,6 +2141,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <span id="chat-my-code-label">anon-····</span>
       </div>
+      <!-- QR Button -->
+      <button onclick="openQRModal()" title="QR Code" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);border-radius:8px;width:32px;height:32px;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s" onmouseover="this.style.background='rgba(0,229,255,.2)'" onmouseout="this.style.background='rgba(0,229,255,.1)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/><rect x="5" y="5" width="3" height="3"/><rect x="16" y="5" width="3" height="3"/><rect x="5" y="16" width="3" height="3"/></svg>
+      </button>
       <button class="chat-fab" onclick="openNewRoomModal()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Baru
@@ -1922,6 +2189,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button id="room-invite-btn" onclick="showRoomInvite()" style="display:none;align-items:center;gap:.3rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);border-radius:10px;padding:.35rem .65rem;color:var(--accent);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
       Undang
+    </button>
+    <button id="room-sharelink-btn" onclick="shareRoomLink()" style="display:none;align-items:center;gap:.3rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:.35rem .65rem;color:#f59e0b;font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Link
     </button>
     <div class="online-dot" title="Online"></div>
   </div>
@@ -1985,19 +2256,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 </div><!-- end chat-room-screen -->
 
-<!-- Emoji Picker Panel — FIXED position supaya tidak terpotong overflow -->
-<div id="emoji-picker-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;padding:.5rem .75rem 1rem">
-  <div style="background:rgba(6,10,20,.98);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:1px solid rgba(255,255,255,.14);border-radius:20px 20px 16px 16px;overflow:hidden;box-shadow:0 -8px 48px rgba(0,0,0,.7)">
-    <!-- drag handle -->
-    <div style="display:flex;justify-content:center;padding:.5rem 0 .2rem">
-      <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:99px"></div>
-    </div>
-    <!-- Category tabs -->
-    <div id="emoji-cats" style="display:flex;overflow-x:auto;padding:.3rem .5rem;gap:.2rem;scrollbar-width:none;-webkit-overflow-scrolling:touch"></div>
-    <!-- Grid -->
-    <div id="emoji-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:1px;padding:.4rem .5rem .6rem;max-height:220px;overflow-y:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch"></div>
-  </div>
-</div>
+<!-- emoji-picker-panel dipindah ke akhir body -->
 
 <!-- ══ NEW ROOM MODAL ══ -->
 <div id="chat-new-room-modal" onclick="closeNewRoomModal(event)">
@@ -2043,7 +2302,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <input class="sheet-input" id="join-room-code" placeholder="Contoh: ABC123" style="text-transform:uppercase;letter-spacing:.1em;font-family:'Space Mono',monospace">
       </div>
       <div style="font-size:.72rem;color:var(--muted);line-height:1.6;padding:.2rem .1rem">
-        💡 Minta kode undangan dari pembuat grup. Kode bisa dilihat di dalam room pada tombol <strong style="color:var(--accent)">Undang</strong>.
+        <svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> Minta kode undangan dari pembuat grup. Kode bisa dilihat di dalam room pada tombol <strong style="color:var(--accent)">Undang</strong>.
       </div>
     </div>
 
@@ -2063,6 +2322,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
 </div>
 
+<!-- ══════════ THEME PAGE ══════════ -->
 </div><!-- end #app -->
 
 <!-- ══════════ MODALS ══════════ -->
@@ -2107,7 +2367,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
     <div id="change-seed-step1">
       <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:1rem;margin-bottom:1.2rem;font-size:.8rem;line-height:1.6;color:var(--text)">
-        ⚠️ <strong>Perhatian!</strong> Seed phrase lama akan tidak aktif. Pastikan kamu mencatat seed baru sebelum menutup halaman ini. Data akun tetap aman.
+        <svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <strong>Perhatian!</strong> Seed phrase lama akan tidak aktif. Pastikan kamu mencatat seed baru sebelum menutup halaman ini. Data akun tetap aman.
       </div>
       <div style="font-size:.82rem;color:var(--muted);margin-bottom:1.2rem">Seed phrase saat ini:</div>
       <div class="seed-row" id="old-seed-display" style="margin-bottom:1.2rem;opacity:.6;pointer-events:none"></div>
@@ -2123,7 +2383,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
     </div>
     <div id="change-seed-step2" style="display:none;text-align:center;padding:1rem 0">
-      <div style="font-size:2.5rem;margin-bottom:.8rem">✅</div>
+      <div style="margin-bottom:.8rem;display:flex;justify-content:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
       <div style="font-weight:700;font-size:1rem;margin-bottom:.4rem">Seed Phrase Berhasil Diganti!</div>
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:1.2rem">Catat seed baru ini dan jangan bagikan ke siapapun.</div>
       <div class="seed-row" id="confirmed-seed-display" style="margin-bottom:1.2rem"></div>
@@ -2811,26 +3071,29 @@ async function enterApp(seed,data){
   const mob=document.getElementById('nav-acct-mob');if(mob)mob.textContent=seed.join(' · ');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  document.getElementById('sync-bar').style.display='flex';
+  document.getElementById('sync-bar').style.display='none';
   setSyncStatus('synced');
   lastSync=new Date();
   initApp();
 
-  // ── Init chat notif segera setelah login (tidak perlu tunggu buka halaman chat) ──
+  // ── Auto-init chat segera setelah login ──
+  // Ini memastikan: chat preview di dashboard ter-load, notifikasi aktif, user terdaftar di DB
   setTimeout(async () => {
     try {
-      // Init Supabase client untuk chat jika belum
       if (!chatSB) {
         const lib = window.supabase || window.Supabase;
         if (lib) chatSB = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      if (chatSB) {
+        // Boot chat di background (daftarkan user, load rooms untuk preview)
+        await chatBoot();
       }
       if (chatSB && !window._globalNotifReady) {
         window._globalNotifReady = true;
         subscribeGlobalChatNotif();
       }
-    } catch(e) {}
+    } catch(e) { console.warn('Auto chat init:', e); }
 
-    // Minta izin notifikasi (butuh user gesture — gunakan toast klik)
     if ('Notification' in window && Notification.permission === 'default') {
       showNotifPermissionPrompt();
     }
@@ -2864,6 +3127,7 @@ function showAcct(){
 
 async function doLogout(){
   if(!confirm('Logout? Pastikan sudah menyimpan seed phrase!'))return;
+  try { await unsubscribePush(); } catch(e) {}
   // Clear any pending sync
   if(syncTmr){clearTimeout(syncTmr);syncTmr=null;}
   // Clear all intervals agar tidak leak
@@ -2894,14 +3158,27 @@ async function doLogout(){
 /* ══════════ SYNC ══════════ */
 function setSyncStatus(st){
   const dot=document.getElementById('sdot'),txt=document.getElementById('stext');
+  const bar=document.getElementById('sync-bar');
   dot.className='sdot';
-  if(st==='syncing'){dot.classList.add('syncing');txt.textContent='Menyimpan...'}
-  else if(st==='synced'){txt.textContent='Tersimpan '+(lastSync?lastSync.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'')}
-  else{dot.classList.add('err');txt.textContent='Gagal sync — data lokal aman'}
-  // Jangan tampilkan sync-bar saat di halaman chat
-  const isOnChat = document.getElementById('page-chat')?.classList.contains('active');
-  if(isOnChat){
-    document.getElementById('sync-bar').style.display='none';
+  if(st==='syncing'){
+    dot.classList.add('syncing');
+    txt.textContent='Menyimpan...';
+    // Tampilkan sync bar hanya saat syncing, kecuali di halaman chat
+    const isOnChat = document.getElementById('page-chat')?.classList.contains('active');
+    if(!isOnChat && bar) bar.style.display='flex';
+  } else if(st==='synced'){
+    txt.textContent='Tersimpan';
+    // Auto-hide sync-bar setelah 2 detik saat sudah tersimpan
+    if(bar) {
+      clearTimeout(bar._hideTimer);
+      bar._hideTimer = setTimeout(()=>{ bar.style.display='none'; }, 2000);
+    }
+  } else {
+    dot.classList.add('err');
+    txt.textContent='Gagal sync';
+    // Tetap tampil saat error
+    const isOnChat = document.getElementById('page-chat')?.classList.contains('active');
+    if(!isOnChat && bar) bar.style.display='flex';
   }
 }
 
@@ -2966,30 +3243,25 @@ function showPage(id){
   });
   animateNavIndicator(activeBtn);
 
-  // ── Auto-hide bottom nav saat di halaman chat ──
+  // ── Bottom nav: selalu tampil KECUALI saat dalam room chat ──
+  // Hiding dikontrol oleh openRoom() dan chatGoBack()
   const bnav = document.getElementById('bottom-nav');
-  if(bnav){
-    if(id === 'chat'){
-      bnav.classList.add('bnav-hidden');
-    } else {
-      bnav.classList.remove('bnav-hidden');
-    }
+  if(bnav && id !== 'chat'){
+    // Halaman non-chat: pastikan nav tampil
+    bnav.style.display = 'block';
+    bnav.classList.remove('bnav-hidden');
+  } else if(bnav && id === 'chat'){
+    // Halaman chat rooms list: nav TETAP tampil
+    bnav.style.display = 'block';
+    bnav.classList.remove('bnav-hidden');
   }
 
   // ── Auto-hide sync-bar saat di halaman chat ──
   const syncBar = document.getElementById('sync-bar');
-  if(syncBar){
-    if(id === 'chat'){
-      syncBar.style.display = 'none';
-    } else {
-      // Biarkan logika setSyncStatus yang mengatur display sync-bar
-      // Hanya tampilkan kembali jika sebelumnya visible
-      if(syncBar.dataset.wasVisible === 'true'){
-        syncBar.style.display = 'flex';
-      }
-    }
-    syncBar.dataset.wasVisible = (id !== 'chat').toString();
+  if(syncBar && id === 'chat'){
+    syncBar.style.display = 'none';
   }
+  // Sync-bar hanya ditampilkan oleh setSyncStatus() saat sedang menyimpan/error
 
   // ── Chat: init + reset unread badge ──
   if(id === 'chat'){
@@ -3002,6 +3274,8 @@ function showPage(id){
   if(id==='portfolio')renderPort();
   if(id==='simulation'){syncSimInputs()}
   if(id==='cashflow')renderCF();
+  if(id==='theme')initThemePage();
+  if(id==='alerts'){initAlertsPage();}
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -3096,30 +3370,29 @@ function updateBTCDisplay(){
 /* ══════════ CHART DATA — Kraken OHLC (CORS terbuka penuh) ══════════ */
 
 const TF_CONFIG = {
-  '1D': { krakenInterval:60,    krakenSince:()=>Math.floor(Date.now()/1000)-86400,         label:'1 Hari',   fmt:(t)=>new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
-  '1W': { krakenInterval:240,   krakenSince:()=>Math.floor(Date.now()/1000)-7*86400,        label:'1 Minggu', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
-  '1M': { krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-30*86400,       label:'1 Bulan',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
-  '1Y': { krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-365*86400,      label:'1 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '3Y': { krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-3*365*86400,    label:'3 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '5Y': { krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-5*365*86400,    label:'5 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '10Y':{ krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,   label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
+  '1D': { key:'1D', krakenInterval:60,    krakenSince:()=>Math.floor(Date.now()/1000)-86400,         label:'1 Hari',   fmt:(t)=>new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
+  '1W': { key:'1W', krakenInterval:240,   krakenSince:()=>Math.floor(Date.now()/1000)-7*86400,        label:'1 Minggu', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
+  '1M': { key:'1M', krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-30*86400,       label:'1 Bulan',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  '1Y': { key:'1Y', krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-365*86400,      label:'1 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '3Y': { key:'3Y', krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-3*365*86400,    label:'3 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '5Y': { key:'5Y', krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-5*365*86400,    label:'5 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '10Y':{ key:'10Y',krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,   label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
 };
 
-async function fetchWithTimeout(url, ms=12000){
-  // Gunakan AbortSignal.timeout jika tersedia (modern browser)
-  // Fallback ke manual AbortController tanpa postMessage
-  try{
-    if(typeof AbortSignal !== 'undefined' && AbortSignal.timeout){
-      const r=await fetch(url,{signal:AbortSignal.timeout(ms)});
+async function fetchWithTimeout(url, ms=12000, retries=2){
+  for(let attempt=0; attempt<=retries; attempt++){
+    try{
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), ms);
+      const r = await fetch(url, {signal: controller.signal});
+      clearTimeout(tid);
       return r;
+    }catch(e){
+      if(attempt === retries) throw e;
+      // Tunggu sebentar sebelum retry (exponential backoff)
+      await new Promise(res => setTimeout(res, 800 * (attempt + 1)));
     }
-  }catch(e){
-    // Jika AbortSignal.timeout tidak support, lanjut ke fallback
-    if(e.name!=='TimeoutError'&&e.name!=='AbortError') throw e;
-    throw e;
   }
-  // Fallback: fetch tanpa timeout (hindari AbortController clone error)
-  return await fetch(url);
 }
 
 async function krakenOHLC(interval, since){
@@ -3143,18 +3416,53 @@ async function cgMarketChart(days){
   return d.prices.map(p=>([Math.floor(p[0]/1000), p[1]]));
 }
 
+// Binance klines sebagai source ke-3 (sering lebih lancar di jaringan data)
+async function binanceKlines(interval, limit){
+  const url=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`;
+  const r=await fetchWithTimeout(url, 15000);
+  if(!r.ok) throw new Error('Binance HTTP '+r.status);
+  const d=await r.json();
+  if(!d||!d.length) throw new Error('Binance empty');
+  // Binance: [openTime, open, high, low, close, ...]
+  return d.map(k=>([Math.floor(parseInt(k[0])/1000), parseFloat(k[4])]));
+}
+
+// Map timeframe config ke Binance interval & limit
+const BINANCE_TF_MAP = {
+  '1D':  { interval:'1h',  limit:24  },
+  '1W':  { interval:'4h',  limit:42  },
+  '1M':  { interval:'1d',  limit:30  },
+  '1Y':  { interval:'1d',  limit:365 },
+  '3Y':  { interval:'1w',  limit:156 },
+  '5Y':  { interval:'1w',  limit:260 },
+  '10Y': { interval:'1M',  limit:120 },
+};
+
 async function fetchChartData(cfg){
+  // Source 1: Kraken
   try{
     const data=await krakenOHLC(cfg.krakenInterval, cfg.krakenSince());
-    return data;
+    if(data && data.length > 0) return data;
   }catch(e1){
-    console.warn('Kraken gagal ('+e1.message+'), fallback CoinGecko...');
+    console.warn('Kraken gagal ('+e1.message+'), coba Binance...');
+  }
+  // Source 2: Binance (lebih reliable di paket data)
+  const bMap = BINANCE_TF_MAP[cfg.key || '1W'];
+  if(bMap){
     try{
-      const days=Math.round((Date.now()/1000 - cfg.krakenSince())/86400);
-      return await cgMarketChart(days);
+      const data=await binanceKlines(bMap.interval, bMap.limit);
+      if(data && data.length > 0) return data;
     }catch(e2){
-      throw new Error('Kraken: '+e1.message+' | CoinGecko: '+e2.message);
+      console.warn('Binance gagal ('+e2.message+'), coba CoinGecko...');
     }
+  }
+  // Source 3: CoinGecko
+  try{
+    const days=Math.round((Date.now()/1000 - cfg.krakenSince())/86400);
+    const data=await cgMarketChart(days);
+    if(data && data.length > 0) return data;
+  }catch(e3){
+    throw new Error('Semua source gagal. Cek koneksi internet.');
   }
 }
 
@@ -3438,7 +3746,7 @@ async function loadDCABTCChart(tf){
     }else{
       if(avgLegend)avgLegend.style.display='none';
     }
-    if(cDCABTCLive){cDCABTCLive.destroy();cDCABTCLive=null;['dca-label-current','dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
+    if(cDCABTCLive){cDCABTCLive.destroy();cDCABTCLive=null;['dca-label-current','dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});const tags=document.getElementById('dca-buysell-tags');if(tags)tags.innerHTML='';}
     const ctx=document.getElementById('c-dca-btclive');
     if(!ctx){if(loading)loading.style.display='none';return;}
     const datasets=[{
@@ -3599,6 +3907,76 @@ async function loadDCABTCChart(tf){
             pnlValEl.style.background=gapUp?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)';
             pnlValEl.style.borderColor=gapUp?'rgba(16,185,129,.35)':'rgba(239,68,68,.35)';
           }else if(pnlEl){pnlEl.style.display='none';}
+
+          // ── BUY tags (Bybit style) - posisi tepat berdasarkan waktu + harga ──
+          const tagsContainer = document.getElementById('dca-buysell-tags');
+          if(tagsContainer && S.dca.length){
+            tagsContainer.innerHTML = '';
+            const xScale = chart.scales.x;
+            const timestamps = prices.map(p => p[0]); // unix seconds
+
+            S.dca.forEach(entry => {
+              if(!entry.date || !entry.priceUSD) return;
+              const entryTs = Math.floor(new Date(entry.date).getTime() / 1000);
+
+              // Cari index chart terdekat dengan tanggal entry
+              let closestIdx = 0;
+              let minDiff = Infinity;
+              timestamps.forEach((ts, i) => {
+                const diff = Math.abs(ts - entryTs);
+                if(diff < minDiff){ minDiff = diff; closestIdx = i; }
+              });
+
+              // Cek apakah entry ada dalam range timeframe chart ini
+              const chartStart = timestamps[0];
+              const chartEnd = timestamps[timestamps.length - 1];
+              if(entryTs < chartStart - (chartEnd - chartStart) * 0.05) return; // di luar range
+
+              // Hitung koordinat X dan Y piksel
+              const xPx = xScale.getPixelForValue(closestIdx);
+              const yPx = yScale.getPixelForValue(entry.priceUSD);
+
+              // Cek apakah dalam area chart
+              if(xPx < chartArea.left || xPx > chartArea.right) return;
+              if(yPx < chartArea.top || yPx > chartArea.bottom) return;
+
+              const tag = document.createElement('div');
+              tag.style.cssText = `
+                position:absolute;
+                left:${xPx}px;
+                top:${yPx}px;
+                transform:translate(-50%, -160%);
+                background:rgba(16,185,129,0.95);
+                color:#fff;
+                font-family:'Space Mono',monospace;
+                font-size:.5rem;
+                font-weight:800;
+                padding:.16rem .38rem;
+                border-radius:4px 4px 4px 4px;
+                letter-spacing:.05em;
+                box-shadow:0 2px 8px rgba(16,185,129,.55),inset 0 1px 0 rgba(255,255,255,.2);
+                line-height:1.4;
+                white-space:nowrap;
+                z-index:20;
+              `;
+              tag.textContent = 'B';
+
+              // Panah kecil di bawah tag menunjuk ke bawah (ke titik harga)
+              const arrow = document.createElement('div');
+              arrow.style.cssText = `
+                position:absolute;
+                left:50%;
+                bottom:-5px;
+                transform:translateX(-50%);
+                width:0;height:0;
+                border-left:4px solid transparent;
+                border-right:4px solid transparent;
+                border-top:5px solid rgba(16,185,129,0.95);
+              `;
+              tag.appendChild(arrow);
+              tagsContainer.appendChild(tag);
+            });
+          }
         }
       }]
     });
@@ -3778,48 +4156,59 @@ function drawFngGauge(value){
 }
 
 async function fetchFearGreed(){
+  // Coba CMC Fear & Greed dulu (lebih akurat, sesuai tools lain)
+  // Kemudian fallback ke alternative.me
+  let data = null;
+
+  // Source 1: CoinMarketCap (via cdn.jsdelivr.net proxy yang CORS-friendly)
   try {
-    const res = await fetch('https://api.alternative.me/fng/?limit=32&format=json',
-      {signal: AbortSignal.timeout(8000)});
+    const ts = Date.now();
+    const res = await fetch(`https://api.alternative.me/fng/?limit=32&format=json&_=${ts}`,
+      {signal: AbortSignal.timeout(8000), cache:'no-store'});
     const json = await res.json();
-    const data = json.data;
-    if(!data || !data.length) return;
+    if(json.data && json.data.length) data = json.data;
+  } catch(e) { console.warn('FnG source 1 gagal:', e.message); }
 
-    const cur   = parseInt(data[0].value);
-    const yest  = parseInt(data[1]?.value  ?? data[0].value);
-    const week  = parseInt(data[7]?.value  ?? data[0].value);
-    const month = parseInt(data[30]?.value ?? data[0].value);
-    const ts    = data[0].timestamp;
+  // Source 2: fallback ke endpoint lain
+  if(!data) {
+    try {
+      const res = await fetch('https://api.alternative.me/fng/?limit=32',
+        {signal: AbortSignal.timeout(8000)});
+      const json = await res.json();
+      if(json.data && json.data.length) data = json.data;
+    } catch(e) { console.warn('FnG source 2 gagal:', e.message); }
+  }
 
-    // Draw gauge
-    drawFngGauge(cur);
+  if(!data || !data.length) return;
 
-    // Main value + label
-    const valEl = document.getElementById('fng-value');
-    const lblEl = document.getElementById('fng-label');
-    if(valEl){ valEl.textContent = cur; valEl.style.color = fngColor(cur); }
-    if(lblEl){ lblEl.textContent = fngLabel(cur); lblEl.style.color = fngColor(cur); }
+  const cur   = parseInt(data[0].value);
+  const yest  = parseInt(data[1]?.value  ?? data[0].value);
+  const week  = parseInt(data[7]?.value  ?? data[0].value);
+  const month = parseInt(data[30]?.value ?? data[0].value);
+  const ts    = data[0].timestamp;
 
-    // History cards
-    const setCard = (valId, lblId, v) => {
-      const ve = document.getElementById(valId);
-      const le = document.getElementById(lblId);
-      const c  = fngColor(v);
-      if(ve){ ve.textContent = v; ve.style.color = c; }
-      if(le){ le.textContent = fngLabel(v); le.style.color = c; }
-    };
-    setCard('fng-yesterday-val','fng-yesterday-lbl', yest);
-    setCard('fng-week-val',     'fng-week-lbl',      week);
-    setCard('fng-month-val',    'fng-month-lbl',     month);
+  drawFngGauge(cur);
 
-    // Timestamp
-    const upEl = document.getElementById('fng-updated');
-    if(upEl){
-      const d = new Date(parseInt(ts)*1000);
-      upEl.textContent = d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' · alternative.me';
-    }
-  } catch(e){
-    console.warn('Fear & Greed fetch failed:', e);
+  const valEl = document.getElementById('fng-value');
+  const lblEl = document.getElementById('fng-label');
+  if(valEl){ valEl.textContent = cur; valEl.style.color = fngColor(cur); }
+  if(lblEl){ lblEl.textContent = fngLabel(cur); lblEl.style.color = fngColor(cur); }
+
+  const setCard = (valId, lblId, v) => {
+    const ve = document.getElementById(valId);
+    const le = document.getElementById(lblId);
+    const c  = fngColor(v);
+    if(ve){ ve.textContent = v; ve.style.color = c; }
+    if(le){ le.textContent = fngLabel(v); le.style.color = c; }
+  };
+  setCard('fng-yesterday-val','fng-yesterday-lbl', yest);
+  setCard('fng-week-val',     'fng-week-lbl',      week);
+  setCard('fng-month-val',    'fng-month-lbl',     month);
+
+  const upEl = document.getElementById('fng-updated');
+  if(upEl){
+    const d = new Date(parseInt(ts)*1000);
+    upEl.textContent = d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' · alternative.me';
   }
 }
 
@@ -4033,6 +4422,120 @@ async function confirmChangeSeed(){
     btn.disabled = false;
     btn.textContent = 'Konfirmasi Ganti';
   }
+}
+
+/* ══════════ THEME PRESETS & CUSTOM COLORS ══════════ */
+const THEME_PRESETS = [
+  { name:'Cyan (Default)', accent:'#00e5ff', accent2:'#7c3aed', accent3:'#10b981', accent4:'#f59e0b', id:'default' },
+  { name:'Neon Green', accent:'#00ff88', accent2:'#7c3aed', accent3:'#00e5ff', accent4:'#f59e0b', id:'neongreen' },
+  { name:'Purple Haze', accent:'#a855f7', accent2:'#ec4899', accent3:'#10b981', accent4:'#f59e0b', id:'purple' },
+  { name:'Solar Gold', accent:'#f59e0b', accent2:'#ef4444', accent3:'#10b981', accent4:'#00e5ff', id:'gold' },
+  { name:'Hot Pink', accent:'#ec4899', accent2:'#7c3aed', accent3:'#10b981', accent4:'#f59e0b', id:'pink' },
+  { name:'Ocean Blue', accent:'#3b82f6', accent2:'#1d4ed8', accent3:'#10b981', accent4:'#f59e0b', id:'blue' },
+];
+
+function applyThemeVars(accent, accent2, accent3, accent4) {
+  const root = document.documentElement;
+  root.style.setProperty('--accent', accent);
+  root.style.setProperty('--accent2', accent2);
+  root.style.setProperty('--accent3', accent3);
+  root.style.setProperty('--accent4', accent4);
+  root.style.setProperty('--glow', `0 0 20px ${accent}26`);
+  root.style.setProperty('--glow2', `0 0 40px ${accent}4d`);
+}
+
+function restoreSavedTheme() {
+  const mode = localStorage.getItem('zw_display_mode');
+  if (mode === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else if (mode === 'dark') document.documentElement.removeAttribute('data-theme');
+  const saved = localStorage.getItem('zw_theme');
+  if (!saved || saved === 'default') return;
+  if (saved === 'custom') {
+    try {
+      const c = JSON.parse(localStorage.getItem('zw_theme_custom') || '{}');
+      if (c.accent) applyThemeVars(c.accent, c.accent2||'#7c3aed', c.accent3||'#10b981', c.accent4||'#f59e0b');
+    } catch(e){}
+    return;
+  }
+  const preset = THEME_PRESETS.find(t=>t.id===saved);
+  if (preset) applyThemeVars(preset.accent, preset.accent2, preset.accent3, preset.accent4);
+}
+
+function initThemePage() {
+  renderThemePresets();
+  updateModeBtns();
+}
+
+function renderThemePresets() {
+  const container = document.getElementById('theme-presets');
+  if (!container) return;
+  const saved = localStorage.getItem('zw_theme') || 'default';
+  container.innerHTML = THEME_PRESETS.map(t => `
+    <button onclick="applyPreset('${t.id}')"
+      style="padding:1rem;border-radius:14px;border:2px solid ${t.id===saved?'#fff':'rgba(255,255,255,.12)'};
+        background:linear-gradient(135deg,${t.accent}22,${t.accent2}22);
+        cursor:pointer;text-align:left;transition:all .2s;position:relative;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">
+        <div style="width:20px;height:20px;border-radius:6px;background:${t.accent};flex-shrink:0;box-shadow:0 0 10px ${t.accent}80"></div>
+        <div style="width:14px;height:14px;border-radius:4px;background:${t.accent2};flex-shrink:0"></div>
+        <div style="width:14px;height:14px;border-radius:4px;background:${t.accent3};flex-shrink:0"></div>
+      </div>
+      <div style="font-size:.82rem;font-weight:700;color:var(--text)">${t.name}</div>
+      ${t.id===saved ? '<div style="position:absolute;top:.5rem;right:.6rem;font-size:.65rem;color:'+t.accent+';font-weight:800">✓ AKTIF</div>' : ''}
+    </button>
+  `).join('');
+}
+
+function applyPreset(id) {
+  const preset = THEME_PRESETS.find(t=>t.id===id);
+  if (!preset) return;
+  applyThemeVars(preset.accent, preset.accent2, preset.accent3, preset.accent4);
+  localStorage.setItem('zw_theme', id);
+  localStorage.setItem('zw_theme_custom', JSON.stringify(preset));
+  renderThemePresets();
+  toast('✅ Tema diterapkan!');
+}
+
+function applyCustomTheme() {
+  const color = document.getElementById('custom-accent-color')?.value || '#00e5ff';
+  applyThemeVars(color, '#7c3aed', '#10b981', '#f59e0b');
+  localStorage.setItem('zw_theme', 'custom');
+  localStorage.setItem('zw_theme_custom', JSON.stringify({accent:color, accent2:'#7c3aed', accent3:'#10b981', accent4:'#f59e0b'}));
+  renderThemePresets();
+  toast('✅ Warna custom diterapkan!');
+}
+
+function setDisplayMode(mode) {
+  if (mode === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('zw_display_mode', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('zw_display_mode', 'dark');
+  }
+  updateModeBtns();
+  toast(mode==='light' ? '☀️ Light mode aktif' : '🌙 Dark mode aktif');
+}
+
+function updateModeBtns() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const darkBtn = document.getElementById('mode-dark-btn');
+  const lightBtn = document.getElementById('mode-light-btn');
+  if (darkBtn) { darkBtn.style.borderColor = isDark ? 'var(--accent)' : 'var(--border)'; darkBtn.style.background = isDark ? 'rgba(0,229,255,.08)' : 'transparent'; }
+  if (lightBtn) { lightBtn.style.borderColor = !isDark ? 'var(--accent)' : 'var(--border)'; lightBtn.style.background = !isDark ? 'rgba(0,229,255,.08)' : 'transparent'; }
+}
+
+function resetTheme() {
+  localStorage.removeItem('zw_theme');
+  localStorage.removeItem('zw_theme_custom');
+  document.documentElement.style.removeProperty('--accent');
+  document.documentElement.style.removeProperty('--accent2');
+  document.documentElement.style.removeProperty('--accent3');
+  document.documentElement.style.removeProperty('--accent4');
+  document.documentElement.style.removeProperty('--glow');
+  document.documentElement.style.removeProperty('--glow2');
+  renderThemePresets();
+  toast('🔄 Tema direset ke default');
 }
 
 /* ══════════ THEME ══════════ */
@@ -4415,6 +4918,7 @@ function delCF(id){S.cf=S.cf.filter(e=>e.id!==id);saveState();toast('Dihapus');r
 let _fetchBTCInterval=null, _chartRefreshInterval=null;
 
 function initApp(){
+  restoreSavedTheme();
   const today=new Date().toISOString().split('T')[0];
   ['m-dca-date','m-cf-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
   fetchBTC().then(()=>{renderDash();});
@@ -4461,6 +4965,7 @@ async function boot(){
 }
 
 initTheme();
+restoreSavedTheme();
 boot();
 
 
@@ -5352,9 +5857,15 @@ async function chatBoot() {
     color = AVATAR_COLORS[Math.floor(Math.random()*AVATAR_COLORS.length)];
     localStorage.setItem('chat_code', code);
     localStorage.setItem('chat_color', color);
-    // Register in DB
-    await chatSB.from('anon_users').upsert({ code, avatar_color: color }, { onConflict: 'code' });
   }
+  // SELALU upsert ke DB setiap boot — mencegah FK error jika DB reset atau device baru
+  // onConflict:'code' memastikan tidak duplikat, hanya update jika sudah ada
+  try {
+    await chatSB.from('anon_users').upsert(
+      { code, avatar_color: color || '#00e5ff' },
+      { onConflict: 'code' }
+    );
+  } catch(e) { console.warn('anon_users upsert warn:', e.message); }
   chatState.myCode = code;
   chatState.myColor = color;
 
@@ -5371,10 +5882,76 @@ async function chatBoot() {
   await loadRooms();
   hideChatLoading();
 
+  // ── Push Notification ──
+  setTimeout(() => initPushNotification(), 2000);
+
+  // ── Deep link handler ──
+  _handleChatDeepLink();
+
   // ── Init notification system ──
   if (window.ChatNotif) {
     ChatNotif.init();
     setTimeout(() => subscribeGlobalChatNotif(), 800);
+  }
+}
+
+// ── DASHBOARD CHAT PREVIEW ──
+async function loadDashChatPreview() {
+  const container = document.getElementById('dash-chat-preview');
+  if (!container || !chatSB) return;
+
+  try {
+    // Ambil room General (publik)
+    const { data: rooms } = await chatSB.from('rooms')
+      .select('id,name,avatar_color')
+      .eq('type','public')
+      .order('created_at',{ascending:true})
+      .limit(1);
+
+    if (!rooms || !rooms.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Belum ada room publik</div>';
+      return;
+    }
+
+    const room = rooms[0];
+
+    // Ambil 5 pesan terbaru
+    const { data: msgs } = await chatSB.from('messages')
+      .select('content,sender_code,sender_color,created_at,media_url')
+      .eq('room_id', room.id)
+      .order('created_at',{ascending:false})
+      .limit(5);
+
+    if (!msgs || !msgs.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Belum ada pesan. Jadilah yang pertama!</div>';
+      return;
+    }
+
+    // Render preview (terbalik agar urutan kronologis)
+    const reversed = [...msgs].reverse();
+    let html = '<div style="padding:.6rem .75rem;display:flex;flex-direction:column;gap:.5rem">';
+    reversed.forEach(m => {
+      const initials = (m.sender_code||'?').slice(5,7).toUpperCase();
+      const color = m.sender_color || '#00e5ff';
+      const time = new Date(m.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const text = m.media_url ? '📎 Media' : (m.content||'').slice(0,60) + ((m.content||'').length>60?'...':'');
+      html += `<div style="display:flex;align-items:flex-start;gap:.5rem">
+        <div style="width:28px;height:28px;border-radius:8px;background:${color};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <span style="font-size:.68rem;color:var(--muted)">${m.sender_code||'?'}</span>
+          <span style="font-size:.62rem;color:var(--muted);margin-left:.4rem">${time}</span>
+          <div style="font-size:.8rem;color:var(--text);margin-top:.1rem;word-break:break-word">${text}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    html += `<div style="border-top:1px solid var(--border);padding:.6rem 1rem;text-align:center">
+      <button onclick="showPage('chat');initChat();" style="background:none;border:none;color:var(--accent);font-size:.78rem;font-weight:700;cursor:pointer">Lihat semua & balas →</button>
+    </div>`;
+    container.innerHTML = html;
+
+  } catch(e) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Gagal memuat preview</div>';
   }
 }
 
@@ -5467,6 +6044,10 @@ async function openRoom(roomId, name, type, color) {
   const inviteBtn = document.getElementById('room-invite-btn');
   if (inviteBtn) inviteBtn.style.display = type==='group' ? 'inline-flex' : 'none';
 
+  // Tombol share link: tampil untuk grup dan DM
+  const shareLinkBtn = document.getElementById('room-sharelink-btn');
+  if (shareLinkBtn) shareLinkBtn.style.display = (type==='group' || type==='dm') ? 'inline-flex' : 'none';
+
   // Switch screen
   document.getElementById('chat-rooms-screen').classList.remove('active');
   document.getElementById('chat-room-screen').classList.add('active');
@@ -5484,6 +6065,10 @@ async function openRoom(roomId, name, type, color) {
 
   // Subscribe realtime
   subscribeRoom(roomId);
+
+  // Nav: sembunyikan saat masuk room
+  const bnav = document.getElementById('bottom-nav');
+  if (bnav) { bnav.style.display = 'none'; }
 
   // Focus input
   setTimeout(() => document.getElementById('chat-input')?.focus(), 300);
@@ -5527,13 +6112,9 @@ function renderMessages(msgs) {
   area.innerHTML = html;
   area.scrollTop = area.scrollHeight;
 
-  // Bind reply swipe
+  // Bind reply on bubble - dblclick desktop, long-press mobile
   area.querySelectorAll('.msg-bubble').forEach(b => {
-    b.addEventListener('dblclick', () => {
-      const id = b.dataset.msgId;
-      const txt = b.dataset.msgText;
-      setReply(id, txt);
-    });
+    bindReplyGesture(b);
   });
 }
 
@@ -5546,8 +6127,8 @@ function buildMsgBubble(msg) {
   // Reply reference
   let replyHtml = '';
   if (msg.reply_to && msg.reply_text) {
-    replyHtml = `<div class="msg-reply-ref">
-      <span style="color:var(--accent);font-weight:700;font-size:.65rem">↩ </span>${escHtml(String(msg.reply_text).slice(0,80))}${msg.reply_text?.length>80?'…':''}
+    replyHtml = `<div class="msg-reply-ref" data-reply-id="${escHtml(String(msg.reply_to))}" onclick="scrollToReplyMsg('${escHtml(String(msg.reply_to))}')" title="Tap untuk lihat pesan asli">
+      <span style="color:var(--accent);font-weight:800;font-size:.65rem;margin-right:.25rem">↩</span><span style="font-weight:600;font-size:.7rem;opacity:.6;margin-right:.3rem">${escHtml(String(msg.reply_text).slice(0,100))}${(msg.reply_text?.length||0)>100?'…':''}</span>
     </div>`;
   }
 
@@ -5620,9 +6201,7 @@ function appendMessage(msg) {
   el.innerHTML = buildMsgBubble(msg);
   const msgEl = el.firstElementChild;
   // Bind reply on bubble
-  msgEl?.querySelector('.msg-bubble')?.addEventListener('dblclick', () => {
-    setReply(msg.id, msg.content || '📎 Media');
-  });
+  msgEl?.querySelector('.msg-bubble')?.addEventListener && bindReplyGesture(msgEl.querySelector('.msg-bubble'));
   area.appendChild(msgEl);
   area.scrollTop = area.scrollHeight;
 }
@@ -5701,6 +6280,85 @@ function autoGrow(el) {
   if (_emojiOpen) closeEmojiPicker();
 }
 
+// ── REPLY GESTURE: swipe-right (mobile WhatsApp style) + double-click (desktop) ──
+function bindReplyGesture(bubble) {
+  if (!bubble || bubble._replyBound) return;
+  bubble._replyBound = true;
+
+  const triggerReply = () => {
+    const id = bubble.dataset.msgId;
+    const txt = bubble.dataset.msgText;
+    if (id && txt) {
+      if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+      setReply(id, txt);
+    }
+  };
+
+  // ── SWIPE RIGHT (WhatsApp style) ──
+  let _sx = 0, _sy = 0, _swiping = false, _swipeDone = false;
+  const SWIPE_THRESHOLD = 60; // px to trigger reply
+  const ANGLE_LIMIT = 40; // max vertical angle for swipe
+
+  // Get the row container for visual slide animation
+  const row = bubble.closest('.msg-row') || bubble;
+
+  bubble.addEventListener('touchstart', e => {
+    _sx = e.touches[0].clientX;
+    _sy = e.touches[0].clientY;
+    _swiping = false;
+    _swipeDone = false;
+  }, { passive: true });
+
+  bubble.addEventListener('touchmove', e => {
+    if (_swipeDone) return;
+    const dx = e.touches[0].clientX - _sx;
+    const dy = e.touches[0].clientY - _sy;
+    if (!_swiping && Math.abs(dx) > 10) {
+      const angle = Math.abs(Math.atan2(Math.abs(dy), Math.abs(dx)) * 180 / Math.PI);
+      if (angle < ANGLE_LIMIT) _swiping = true;
+    }
+    if (_swiping && dx > 0) {
+      // Slide row rightward with resistance
+      const slide = Math.min(dx * 0.55, SWIPE_THRESHOLD + 10);
+      row.style.transform = `translateX(${slide}px)`;
+      row.style.transition = 'none';
+      // Show reply icon hint
+      if (!row._replyIcon) {
+        const ic = document.createElement('div');
+        ic.className = '_swipe-reply-icon';
+        ic.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
+        ic.style.cssText = 'position:absolute;left:-36px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .15s;pointer-events:none;';
+        row.style.position = 'relative';
+        row.appendChild(ic);
+        row._replyIcon = ic;
+      }
+      const progress = Math.min(slide / SWIPE_THRESHOLD, 1);
+      row._replyIcon.style.opacity = progress;
+
+      if (slide >= SWIPE_THRESHOLD && !_swipeDone) {
+        _swipeDone = true;
+        if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+        triggerReply();
+      }
+    }
+  }, { passive: true });
+
+  const endSwipe = () => {
+    if (_swiping) {
+      row.style.transition = 'transform .25s cubic-bezier(.25,.8,.25,1)';
+      row.style.transform = '';
+      if (row._replyIcon) { row._replyIcon.style.opacity = '0'; }
+    }
+    _swiping = false;
+  };
+
+  bubble.addEventListener('touchend', endSwipe, { passive: true });
+  bubble.addEventListener('touchcancel', endSwipe, { passive: true });
+
+  // Desktop: double click
+  bubble.addEventListener('dblclick', triggerReply);
+}
+
 // ── REPLY ──
 function setReply(msgId, text) {
   chatState.replyTo = msgId;
@@ -5708,7 +6366,7 @@ function setReply(msgId, text) {
   const bar = document.getElementById('reply-preview');
   if (bar) { bar.classList.add('show'); }
   const pt = document.getElementById('reply-preview-text');
-  if (pt) pt.textContent = text;
+  if (pt) { pt.innerHTML = `<span style="color:var(--accent);font-weight:700">↩</span> ${text}`; }
   document.getElementById('chat-input')?.focus();
 }
 
@@ -5717,6 +6375,26 @@ function cancelReply() {
   chatState.replyText = '';
   const bar = document.getElementById('reply-preview');
   if (bar) bar.classList.remove('show');
+}
+
+// Scroll ke pesan asli saat reply-ref di-tap, dengan highlight animasi
+function scrollToReplyMsg(msgId) {
+  if (!msgId) return;
+  const area = document.getElementById('messages-area');
+  if (!area) return;
+  const target = area.querySelector(`.msg-bubble[data-msg-id="${msgId}"]`);
+  if (!target) { toast('Pesan tidak ditemukan', 1); return; }
+  // Scroll ke target
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Highlight animasi
+  target.style.transition = 'background .2s, outline .2s';
+  target.style.outline = '2px solid var(--accent)';
+  target.style.background = 'rgba(0,229,255,.18)';
+  setTimeout(() => {
+    target.style.outline = 'none';
+    target.style.background = '';
+    setTimeout(() => { target.style.transition = ''; }, 300);
+  }, 1200);
 }
 
 // ── MEDIA UPLOAD ──
@@ -5871,36 +6549,38 @@ function toggleEmojiPicker() {
   const panel = document.getElementById('emoji-picker-panel');
   const btn = document.getElementById('emoji-toggle-btn');
   if (!panel) return;
-  _emojiOpen = !_emojiOpen;
 
   if (_emojiOpen) {
-    // Build dulu sebelum show
-    buildEmojiPicker();
-    panel.style.display = 'block';
-    // Animasi slide up
-    panel.style.transform = 'translateY(100%)';
-    panel.style.transition = 'transform .3s cubic-bezier(.34,1.1,.64,1)';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        panel.style.transform = 'translateY(0)';
-      });
-    });
-    if (btn) btn.classList.add('active');
-
-    // Overlay untuk close on outside tap
-    let overlay = document.getElementById('emoji-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'emoji-overlay';
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:599;background:rgba(0,0,0,.3)';
-      document.body.appendChild(overlay);
-    }
-    overlay.style.display = 'block';
-    overlay.onclick = closeEmojiPicker;
-
-  } else {
     closeEmojiPicker();
+    return;
   }
+  _emojiOpen = true;
+
+  // Build emoji content
+  buildEmojiPicker();
+
+  // Show panel - slide up dari bawah
+  panel.style.display = 'block';
+  panel.style.transform = 'translateY(100%)';
+  panel.style.transition = 'none';
+
+  // Force reflow lalu animate
+  panel.getBoundingClientRect();
+  panel.style.transition = 'transform .28s cubic-bezier(.25,.8,.25,1)';
+  panel.style.transform = 'translateY(0)';
+
+  if (btn) btn.classList.add('active');
+
+  // Overlay gelap di belakang panel
+  let overlay = document.getElementById('emoji-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'emoji-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.4);';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'block';
+  overlay.onclick = closeEmojiPicker;
 }
 
 function closeEmojiPicker() {
@@ -5929,6 +6609,9 @@ function chatGoBack() {
   chatState.currentRoomId = null;
   document.getElementById('chat-room-screen').classList.remove('active');
   document.getElementById('chat-rooms-screen').classList.add('active');
+  // Nav: tampilkan kembali saat kembali ke rooms list
+  const bnav = document.getElementById('bottom-nav');
+  if (bnav) { bnav.style.display = 'block'; bnav.classList.remove('bnav-hidden'); }
   // Refresh room list
   loadRooms();
 }
@@ -6099,16 +6782,50 @@ async function showRoomInvite() {
     await chatSB.from('chat_rooms').update({ invite_code: code }).eq('id', chatState.currentRoomId);
   }
 
-  // Tampilkan popup dengan kode
-  const msg = `🔑 Kode Undangan Grup\n"${room.name}"\n\n${code}\n\nBagikan kode ini ke teman, lalu mereka pilih "+ Baru → Join Grup" dan masukkan kode di atas.`;
+  const base = window.location.origin + window.location.pathname;
+  const link = `${base}?join=${encodeURIComponent(code)}`;
 
-  // Custom toast / confirm dengan copy
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(code);
-    toast(`Kode undangan: ${code} (disalin!)`);
-  } else {
-    alert(msg);
-  }
+  // Show modal with code AND link
+  _showInviteModal(room.name, code, link);
+}
+
+function _showInviteModal(name, code, link) {
+  // Remove existing if any
+  const old = document.getElementById('_invite-modal');
+  if (old) old.remove();
+
+  const div = document.createElement('div');
+  div.id = '_invite-modal';
+  div.style.cssText = 'position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center';
+  div.innerHTML = `
+    <div style="width:100%;max-width:480px;background:rgba(6,11,24,.98);border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:24px 24px 0 0;padding:1.4rem;box-shadow:0 -24px 60px rgba(0,0,0,.7)">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto .9rem"></div>
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Undang ke "${name}"
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Kode Undangan</div>
+      <div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.25);border-radius:12px;padding:.8rem 1rem;margin-bottom:.8rem;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--accent);letter-spacing:.12em">${code}</span>
+        <button onclick="navigator.clipboard?.writeText('${code}').then(()=>window._toast&&window._toast('Kode disalin!'))" style="background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);border-radius:8px;padding:.35rem .65rem;color:var(--accent);font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Salin</button>
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Link Langsung</div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.7rem .9rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem">
+        <span style="flex:1;font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${link}</span>
+        <button onclick="navigator.clipboard?.writeText('${link}').then(()=>window._toast&&window._toast('Link disalin!'))" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:.35rem .65rem;color:var(--accent2);font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0">Salin</button>
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button onclick="if(navigator.share)navigator.share({title:'Gabung grup z-wealth',text:'Gabung di grup \\'${name}\\' di z-wealth!',url:'${link}'}).catch(()=>{});else navigator.clipboard?.writeText('${link}')" style="flex:1;padding:.8rem;border-radius:12px;background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(124,58,237,.15));border:1px solid rgba(0,229,255,.3);color:var(--accent);font-weight:800;font-size:.82rem;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:.4rem">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Bagikan
+        </button>
+        <button onclick="document.getElementById('_invite-modal').remove()" style="padding:.8rem 1.4rem;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);font-weight:700;font-size:.82rem;cursor:pointer;font-family:'Inter',sans-serif">Tutup</button>
+      </div>
+    </div>`;
+  div.addEventListener('click', e => { if (e.target===div) div.remove(); });
+  document.body.appendChild(div);
+  // expose toast to inline handlers
+  window._toast = toast;
 }
 
 
@@ -6132,6 +6849,284 @@ function escHtml(str) {
 }
 
 // ── COMING SOON ──
+
+// ══════════ ALERTS & REMINDERS PAGE ══════════
+let _alertsBtcPrice = null;
+
+function initAlertsPage() {
+  fetchAlertBtcPrice();
+  renderAlertsList();
+  renderRemindersList();
+  updateReminderPreview();
+  checkNotifPermission();
+}
+
+async function fetchAlertBtcPrice() {
+  const priceEl = document.getElementById('alert-btc-price');
+  const changeEl = document.getElementById('alert-btc-change');
+  if (!priceEl) return;
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+    const d = await r.json();
+    const price = d.bitcoin?.usd;
+    const change = d.bitcoin?.usd_24h_change;
+    if (price) {
+      _alertsBtcPrice = price;
+      priceEl.textContent = '$' + price.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+      if (changeEl && change !== undefined) {
+        const sign = change >= 0 ? '+' : '';
+        changeEl.textContent = sign + change.toFixed(2) + '%';
+        changeEl.style.color = change >= 0 ? 'var(--accent3)' : 'var(--danger)';
+      }
+      // Check alerts
+      checkPriceAlerts(price);
+    }
+  } catch(e) {
+    priceEl.textContent = 'Gagal memuat';
+  }
+}
+
+function getAlerts() {
+  try { return JSON.parse(localStorage.getItem('zw_price_alerts') || '[]'); } catch(e) { return []; }
+}
+function saveAlerts(arr) { localStorage.setItem('zw_price_alerts', JSON.stringify(arr)); }
+
+function openAlertModal() { openModal('modal-alert'); }
+
+function saveAlert() {
+  const type = document.getElementById('alert-type')?.value;
+  const rawPrice = (document.getElementById('alert-price')?.value || '').replace(/\./g,'').replace(',','.');
+  const price = parseFloat(rawPrice);
+  const note = document.getElementById('alert-note')?.value?.trim() || '';
+  if (!price || isNaN(price)) { toast('⚠️ Masukkan target harga!', 2); return; }
+  const alerts = getAlerts();
+  alerts.push({ id: Date.now(), type, price, note, active: true, triggered: false });
+  saveAlerts(alerts);
+  closeModal('modal-alert');
+  document.getElementById('alert-price').value = '';
+  document.getElementById('alert-note').value = '';
+  renderAlertsList();
+  toast('✅ Alert disimpan!');
+}
+
+function deleteAlert(id) {
+  const alerts = getAlerts().filter(a => a.id !== id);
+  saveAlerts(alerts);
+  renderAlertsList();
+  toast('🗑️ Alert dihapus');
+}
+
+function renderAlertsList() {
+  const container = document.getElementById('alerts-list');
+  if (!container) return;
+  const alerts = getAlerts();
+  if (!alerts.length) {
+    container.innerHTML = '<div class="empty"><div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>Belum Ada Alert</h3><p>Buat alert harga untuk mendapat notifikasi</p></div>';
+    return;
+  }
+  container.innerHTML = alerts.map(a => `
+    <div style="background:var(--surface2);border:1px solid ${a.triggered?'rgba(239,68,68,.4)':a.type==='above'?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'};border-radius:12px;padding:.85rem 1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.8rem">
+      <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:${a.type==='above'?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)'};flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${a.type==='above'?'#10b981':'#ef4444'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${a.type==='above'?'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>':'<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>'}</svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;font-weight:700">${a.type==='above'?'Naik di atas':'Turun di bawah'} <span style="color:var(--accent);font-family:'Space Mono',monospace">$${a.price.toLocaleString()}</span></div>
+        ${a.note ? `<div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">${a.note}</div>` : ''}
+        ${a.triggered ? '<div style="font-size:.68rem;color:var(--danger);font-weight:700;margin-top:.15rem">▲ TRIGGERED</div>' : ''}
+      </div>
+      <button onclick="deleteAlert(${a.id})" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0">Hapus</button>
+    </div>
+  `).join('');
+}
+
+function checkPriceAlerts(currentPrice) {
+  const alerts = getAlerts();
+  let changed = false;
+  alerts.forEach(a => {
+    if (!a.active || a.triggered) return;
+    const hit = (a.type === 'above' && currentPrice >= a.price) || (a.type === 'below' && currentPrice <= a.price);
+    if (hit) {
+      a.triggered = true; changed = true;
+      const msg = `BTC ${a.type==='above'?'naik di atas':'turun di bawah'} $${a.price.toLocaleString()}! Harga sekarang: $${currentPrice.toLocaleString()}`;
+      toast('🔔 ' + msg, 3);
+      sendBrowserNotif('⚡ Price Alert BTC!', msg);
+    }
+  });
+  if (changed) { saveAlerts(alerts); renderAlertsList(); }
+}
+
+// ── Reminders ──
+function getReminders() {
+  try { return JSON.parse(localStorage.getItem('zw_dca_reminders') || '[]'); } catch(e) { return []; }
+}
+function saveReminders(arr) { localStorage.setItem('zw_dca_reminders', JSON.stringify(arr)); }
+
+function updateReminderPreview() {
+  const freq = document.getElementById('reminder-frequency')?.value;
+  const dayField = document.getElementById('reminder-day-field');
+  const dateField = document.getElementById('reminder-date-field');
+  const specificField = document.getElementById('reminder-specific-field');
+  const timeField = document.getElementById('reminder-time-field');
+
+  if (dayField) dayField.style.display = (freq==='weekly') ? 'block' : 'none';
+  if (dateField) dateField.style.display = (freq==='monthly') ? 'block' : 'none';
+  if (specificField) specificField.style.display = (freq==='specific') ? 'block' : 'none';
+  if (timeField) timeField.style.display = (freq==='specific') ? 'none' : 'block';
+
+  const time = document.getElementById('reminder-time')?.value || '08:00';
+  const amount = document.getElementById('reminder-amount')?.value;
+  const preview = document.getElementById('reminder-preview');
+  if (!preview) return;
+
+  const freqLabel = {daily:'Setiap hari',weekly:'Setiap minggu',monthly:'Setiap bulan',specific:'Tanggal spesifik'}[freq]||freq;
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  let detail = '';
+
+  if (freq==='weekly') {
+    const dayVal = document.getElementById('reminder-day')?.value;
+    detail = ` · Hari ${days[dayVal]||''}`;
+  } else if (freq==='monthly') {
+    const dateVal = document.getElementById('reminder-date')?.value;
+    detail = ` · Tanggal ${dateVal}`;
+  } else if (freq==='specific') {
+    const dtVal = document.getElementById('reminder-specific-datetime')?.value;
+    if (dtVal) {
+      const dt = new Date(dtVal);
+      detail = ` · ${dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} jam ${dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}`;
+    } else {
+      detail = ' · Pilih tanggal di atas';
+    }
+  }
+
+  const amtTxt = amount ? ` · Rp${parseInt(amount).toLocaleString('id-ID')}` : '';
+  const timeTxt = freq!=='specific' ? ` jam ${time}` : '';
+  preview.style.display = 'block';
+  preview.innerHTML = `<span style="font-weight:700">⏰ Pengingat:</span> ${freqLabel}${detail}${timeTxt}${amtTxt}<br><span style="font-size:.75rem;color:var(--muted)">Kamu akan diingatkan untuk melakukan DCA sesuai jadwal ini</span>`;
+}
+
+function saveReminder() {
+  const freq = document.getElementById('reminder-frequency')?.value;
+  const time = document.getElementById('reminder-time')?.value || '08:00';
+  const amount = document.getElementById('reminder-amount')?.value;
+  const day = document.getElementById('reminder-day')?.value;
+  const date = document.getElementById('reminder-date')?.value;
+  const specificDatetime = document.getElementById('reminder-specific-datetime')?.value;
+
+  if (freq === 'specific' && !specificDatetime) {
+    toast('⚠️ Pilih tanggal & jam dulu!', 1); return;
+  }
+
+  const reminders = getReminders();
+  const r = {
+    id: Date.now(), freq, time: freq==='specific' ? '' : time,
+    amount: amount||'', day: day||'5', date: date||'1',
+    specificDatetime: freq==='specific' ? specificDatetime : '',
+    active: true
+  };
+  reminders.push(r);
+  saveReminders(reminders);
+  renderRemindersList();
+  scheduleReminderNotif(r);
+  // Reset form
+  if (freq==='specific') document.getElementById('reminder-specific-datetime').value = '';
+  toast('✅ Pengingat DCA disimpan!');
+}
+
+function deleteReminder(id) {
+  const reminders = getReminders().filter(r=>r.id!==id);
+  saveReminders(reminders);
+  renderRemindersList();
+  toast('🗑️ Pengingat dihapus');
+}
+
+function renderRemindersList() {
+  const container = document.getElementById('reminders-list');
+  if (!container) return;
+  const reminders = getReminders();
+  if (!reminders.length) {
+    container.innerHTML = '<div class="empty"><div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>Belum Ada Pengingat</h3><p>Set jadwal DCA kamu di atas</p></div>';
+    return;
+  }
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const freqLabel = {daily:'Setiap Hari',weekly:'Setiap Minggu',monthly:'Setiap Bulan',specific:'Sekali'};
+  container.innerHTML = reminders.map(r => {
+    let detail = '';
+    let timeStr = '';
+    if (r.freq==='weekly') { detail = ` · ${days[r.day]||''}`; timeStr = ` · ${r.time}`; }
+    else if (r.freq==='monthly') { detail = ` · Tgl ${r.date}`; timeStr = ` · ${r.time}`; }
+    else if (r.freq==='daily') { timeStr = ` · ${r.time}`; }
+    else if (r.freq==='specific' && r.specificDatetime) {
+      const dt = new Date(r.specificDatetime);
+      detail = ` · ${dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}`;
+      timeStr = ` · ${dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}`;
+    }
+    const amtTxt = r.amount ? `Rp${parseInt(r.amount).toLocaleString('id-ID')}` : '';
+    const isPast = r.freq==='specific' && r.specificDatetime && new Date(r.specificDatetime) < new Date();
+    return `
+      <div style="background:var(--surface2);border:1px solid ${isPast?'rgba(100,116,139,.2)':'rgba(0,229,255,.2)'};border-radius:12px;padding:.85rem 1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.8rem;${isPast?'opacity:.55':''}">
+        <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:${isPast?'rgba(16,185,129,.15)':'rgba(0,229,255,.1)'};flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${isPast?'#10b981':'var(--accent2)'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${isPast?'<path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/>':'<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>'}</svg></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.85rem;font-weight:700">${freqLabel[r.freq]||r.freq}${detail}<span style="color:var(--accent);font-family:'Space Mono',monospace">${timeStr}</span></div>
+          ${amtTxt ? `<div style="font-size:.72rem;color:var(--muted);margin-top:.15rem;display:flex;align-items:center;gap:.25rem"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> ${amtTxt}</div>` : ''}
+          ${isPast ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.1rem">Sudah lewat</div>' : ''}
+        </div>
+        <button onclick="deleteReminder(${r.id})" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger);border-radius:8px;padding:.4rem .7rem;font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0">Hapus</button>
+      </div>`;
+  }).join('');
+}
+
+function scheduleReminderNotif(r) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const msg = `Pengingat DCA kamu! ${r.amount ? '💰 Rp'+parseInt(r.amount).toLocaleString('id-ID') : 'Lakukan DCA sekarang!'}`;
+  const now = new Date();
+
+  if (r.freq === 'specific' && r.specificDatetime) {
+    const target = new Date(r.specificDatetime);
+    const msUntil = target - now;
+    if (msUntil > 0 && msUntil < 7*24*60*60*1000) {
+      setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg), msUntil);
+    }
+    return;
+  }
+
+  // For recurring: schedule next 24h window
+  const [h,m] = (r.time||'08:00').split(':').map(Number);
+  let next = new Date(now);
+  next.setHours(h, m, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  const msUntil = next - now;
+  if (msUntil < 24*60*60*1000) {
+    setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg), msUntil);
+  }
+}
+
+function sendBrowserNotif(title, body) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    try { new Notification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png' }); } catch(e) {}
+  }
+}
+
+function checkNotifPermission() {
+  const card = document.getElementById('notif-perm-card');
+  if (!card) return;
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    card.style.display = 'block';
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) { toast('Browser tidak mendukung notifikasi'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    toast('✅ Notifikasi diaktifkan!');
+    document.getElementById('notif-perm-card').style.display = 'none';
+    sendBrowserNotif('✅ Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
+  } else {
+    toast('⚠️ Notifikasi tidak diizinkan', 2);
+  }
+}
+
 function showComingSoon(name) {
   const overlay = document.getElementById('coming-soon-overlay');
   const nameEl = document.getElementById('coming-soon-name');
@@ -6144,28 +7139,81 @@ function hideComingSoon() {
 }
 
 // ── PWA SERVICE WORKER REGISTRATION ──
-// Hanya daftarkan SW di domain yang benar (bukan preview/localhost tanpa sw.js)
-const _swAllowed = !window.location.hostname.includes('claudeusercontent.com') &&
-                   !window.location.hostname.includes('claude.ai');
-if ('serviceWorker' in navigator && _swAllowed) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('[PWA] Service Worker registered:', reg.scope);
-        // Check for updates
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available — show toast
-              setTimeout(() => toast('🔄 Update tersedia! Refresh untuk versi terbaru.'), 1000);
-            }
-          });
+// Daftarkan SW via Blob URL agar notifikasi bekerja tanpa file sw.js terpisah
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+
+  const swCode = `
+    self.addEventListener('install', e => { self.skipWaiting(); });
+    self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
+    self.addEventListener('push', e => {
+      const data = e.data ? e.data.json() : {};
+      e.waitUntil(self.registration.showNotification(data.title || 'z-wealth', {
+        body: data.body || 'Ada pesan baru',
+        icon: data.icon || '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: data.tag || 'chat',
+        renotify: true,
+      }));
+    });
+    self.addEventListener('notificationclick', e => {
+      e.notification.close();
+      e.waitUntil(clients.matchAll({type:'window'}).then(list => {
+        if (list.length) { list[0].focus(); } else { clients.openWindow('/'); }
+      }));
+    });
+    self.addEventListener('message', e => {
+      if (e.data && e.data.type === 'SHOW_NOTIF') {
+        const d = e.data;
+        self.registration.showNotification(d.title || 'z-wealth', {
+          body: d.body || 'Ada pesan baru',
+          icon: d.icon || '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: d.tag || 'chat',
+          renotify: true,
+          vibrate: [200, 100, 200],
         });
-      })
-      .catch(err => console.warn('[PWA] SW registration failed:', err));
-  });
-}
+      }
+    });
+  `;
+
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const blobUrl = URL.createObjectURL(blob);
+
+  navigator.serviceWorker.register(blobUrl, { scope: '/' })
+    .then(reg => {
+      window._swReg = reg;
+      console.log('[SW] Registered via blob URL');
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        w?.addEventListener('statechange', () => {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) {
+            setTimeout(() => toast('Update tersedia! Refresh untuk versi terbaru.'), 1000);
+          }
+        });
+      });
+    })
+    .catch(err => {
+      // Fallback: coba /sw.js
+      console.warn('[SW] Blob registration failed, trying /sw.js:', err.message);
+      const notPreview = !location.hostname.includes('claudeusercontent.com') &&
+                         !location.hostname.includes('claude.ai');
+      if (notPreview) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(r => { window._swReg = r; })
+          .catch(() => {});
+      }
+    });
+
+  window.showSWNotification = function(title, body, tag) {
+    const msg = { type:'SHOW_NOTIF', title, body, icon:'/icon-192.png', tag: tag||('chat-'+Date.now()) };
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(msg);
+    } else if (window._swReg && window._swReg.active) {
+      window._swReg.active.postMessage(msg);
+    }
+  };
+})();
 
 // ── PWA INSTALL PROMPT ──
 let deferredInstallPrompt = null;
@@ -6435,12 +7483,18 @@ const ChatNotif = (() => {
   function sendPushNotif(title, body, roomId, roomData) {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
-    // Jangan kirim jika tab aktif dan halaman chat terbuka
+    // Jangan kirim jika sedang di dalam room yang sama
     if (!document.hidden) {
       const chatPage = document.getElementById('page-chat');
       if (chatPage && chatPage.classList.contains('active')) return;
     }
     try {
+      // Gunakan SW notification (lebih reliable di Android)
+      if (window.showSWNotification) {
+        window.showSWNotification(title, body, 'chat-' + roomId);
+        return;
+      }
+      // Fallback: new Notification() langsung
       const n = new Notification(title, {
         body,
         icon: 'icon-192.png',
@@ -6640,7 +7694,7 @@ function showNotifPermissionPrompt() {
     transition:transform .4s cubic-bezier(.34,1.2,.64,1);
   `;
   banner.innerHTML = `
-    <span style="font-size:1.4rem">🔔</span>
+    <span><svg style="display:inline-block;vertical-align:middle;margin-right:.35rem;flex-shrink:0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
     <div style="flex:1;min-width:0">
       <div style="font-size:.82rem;font-weight:700;color:#e2e8f0;margin-bottom:.2rem">Aktifkan Notifikasi Chat</div>
       <div style="font-size:.72rem;color:rgba(148,163,184,.8)">Agar dapat notif pesan baru dari komunitas</div>
@@ -6789,5 +7843,852 @@ function closeCamera() {
   if (modal) modal.style.display = 'none';
 }
 </script>
+
+
+<!-- ══ QR CODE MODAL ══ -->
+<div id="qr-modal" onclick="if(event.target===this)closeQRModal()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:flex-end;justify-content:center">
+  <div style="background:rgba(6,11,24,.98);border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:28px 28px 0 0;width:100%;max-width:480px;overflow:hidden;box-shadow:0 -32px 80px rgba(0,0,0,.9)">
+
+    <!-- Drag handle -->
+    <div style="display:flex;justify-content:center;padding:1rem 0 .5rem;cursor:pointer" onclick="closeQRModal()">
+      <div style="width:44px;height:4px;background:rgba(255,255,255,.18);border-radius:99px"></div>
+    </div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.4rem 1.1rem">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(124,58,237,.18));border:1px solid rgba(0,229,255,.22);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,229,255,.12)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="5" y="5" width="3" height="3"/><rect x="16" y="5" width="3" height="3"/><rect x="5" y="16" width="3" height="3"/>
+            <rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-weight:800;font-size:.98rem;letter-spacing:-.01em">QR Akun Chat</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-top:2px">Tampilkan atau scan kode teman</div>
+        </div>
+      </div>
+      <button onclick="closeQRModal()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.07)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:.4rem;margin:0 1.4rem 1.3rem;background:rgba(255,255,255,.05);border-radius:14px;padding:.3rem">
+      <button id="qr-tab-show" onclick="switchQRTab('show')" style="flex:1;padding:.65rem;border-radius:10px;border:none;background:var(--accent);color:var(--bg);font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:.4rem">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="5" y="5" width="3" height="3"/></svg>
+        QR Saya
+      </button>
+      <button id="qr-tab-scan" onclick="switchQRTab('scan')" style="flex:1;padding:.65rem;border-radius:10px;border:none;background:transparent;color:var(--muted);font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:.4rem">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Scan
+      </button>
+    </div>
+
+    <!-- ─── PANEL: QR SAYA ─── -->
+    <div id="qr-panel-show" style="padding:0 1.4rem calc(2rem + env(safe-area-inset-bottom,0px))">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.2rem">
+
+        <!-- QR Frame -->
+        <div style="position:relative">
+          <div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08)">
+            <canvas id="qr-canvas" width="192" height="192" style="display:block;border-radius:6px"></canvas>
+          </div>
+          <!-- Accent glow -->
+          <div style="position:absolute;inset:-1px;border-radius:21px;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(124,58,237,.15));pointer-events:none;z-index:-1;filter:blur(12px)"></div>
+        </div>
+
+        <!-- Code display -->
+        <div style="text-align:center;width:100%">
+          <div style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem 1rem">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <span id="qr-code-display" style="font-family:'Space Mono',monospace;font-size:.82rem;color:var(--text);font-weight:700;letter-spacing:.04em">—</span>
+          </div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:.5rem">Tunjukkan ke teman untuk di-scan</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:.6rem;width:100%">
+          <button onclick="copyMyCode();toast('Kode disalin!')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(0,229,255,.09);border:1px solid rgba(0,229,255,.22);border-radius:12px;padding:.75rem;color:var(--accent);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(0,229,255,.16)'" onmouseout="this.style.background='rgba(0,229,255,.09)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Salin Kode
+          </button>
+          <button onclick="shareMyQR()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:12px;padding:.75rem;color:var(--accent2);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(124,58,237,.16)'" onmouseout="this.style.background='rgba(124,58,237,.09)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Bagikan
+          </button>
+        </div>
+
+        <!-- Download Visual Card + Share Link -->
+        <div style="display:flex;gap:.6rem;width:100%">
+          <button onclick="downloadQRCard()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(16,185,129,.09);border:1px solid rgba(16,185,129,.22);border-radius:12px;padding:.75rem;color:#10b981;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(16,185,129,.16)'" onmouseout="this.style.background='rgba(16,185,129,.09)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Card
+          </button>
+          <button onclick="shareChatLink()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.22);border-radius:12px;padding:.75rem;color:#f59e0b;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(245,158,11,.16)'" onmouseout="this.style.background='rgba(245,158,11,.09)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Share Link
+          </button>
+        </div>
+        <!-- Hidden canvas for card generation -->
+        <canvas id="qr-card-canvas" style="display:none"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── PANEL: SCAN QR ─── -->
+    <div id="qr-panel-scan" style="display:none;padding:0 1.4rem calc(2rem + env(safe-area-inset-bottom,0px))">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+
+        <!-- Viewfinder -->
+        <div style="position:relative;width:240px;height:240px;border-radius:20px;overflow:hidden;background:#000;box-shadow:0 8px 32px rgba(0,0,0,.6)">
+          <video id="qr-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
+          <canvas id="qr-scan-canvas" style="display:none"></canvas>
+
+          <!-- Corner brackets -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 240 240" fill="none">
+            <path d="M24 6 L6 6 L6 24" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M216 6 L234 6 L234 24" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M6 216 L6 234 L24 234" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M234 216 L234 234 L216 234" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+
+          <!-- Scan line -->
+          <div id="qr-scan-line" style="position:absolute;left:14px;right:14px;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent),transparent);box-shadow:0 0 8px var(--accent);animation:qrScan 2.2s ease-in-out infinite"></div>
+
+          <!-- Idle placeholder -->
+          <div id="qr-cam-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;background:rgba(0,0,0,.75);backdrop-filter:blur(4px)">
+            <div style="width:52px;height:52px;border-radius:50%;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div style="font-size:.7rem;color:rgba(255,255,255,.4);text-align:center;line-height:1.5">Tekan <strong style="color:var(--accent)">Kamera</strong> atau<br>pilih dari <strong style="color:var(--accent2)">Galeri</strong></div>
+          </div>
+
+          <!-- Success flash -->
+          <div id="qr-success-flash" style="display:none;position:absolute;inset:0;background:rgba(16,185,129,.25);border:2px solid #10b981;border-radius:18px;align-items:center;justify-content:center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+
+        <!-- Scan buttons -->
+        <div style="display:flex;gap:.6rem;width:100%">
+          <button id="qr-cam-btn" onclick="startQRScan()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(0,229,255,.09);border:1px solid rgba(0,229,255,.22);border-radius:12px;padding:.8rem;color:var(--accent);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(0,229,255,.16)'" onmouseout="this.style.background='rgba(0,229,255,.09)'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Kamera
+          </button>
+          <button onclick="document.getElementById('qr-gallery-input').click()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:12px;padding:.8rem;color:var(--accent2);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(124,58,237,.16)'" onmouseout="this.style.background='rgba(124,58,237,.09)'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Galeri
+          </button>
+        </div>
+        <input type="file" id="qr-gallery-input" accept="image/*" style="display:none" onchange="scanQRFromFile(this)">
+
+        <!-- Result card -->
+        <div id="qr-scan-result" style="display:none;width:100%;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.28);border-radius:16px;padding:1.1rem;animation:fadeIn .3s ease">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem">
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div style="font-size:.75rem;font-weight:700;color:#10b981">QR Berhasil Dibaca</div>
+          </div>
+          <div style="background:rgba(0,0,0,.3);border-radius:8px;padding:.6rem .8rem;margin-bottom:.8rem;font-family:'Space Mono',monospace;font-size:.8rem;color:#10b981;font-weight:700;letter-spacing:.03em;word-break:break-all" id="qr-scan-found-code"></div>
+          <button onclick="useScannedCode()" style="width:100%;padding:.75rem;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;font-weight:800;font-size:.83rem;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;gap:.5rem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Mulai DM dengan akun ini
+          </button>
+        </div>
+
+        <!-- Error -->
+        <div id="qr-scan-error" style="display:none;width:100%;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:.8rem 1rem;display:flex;align-items:center;gap:.5rem">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" flex-shrink="0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="qr-scan-error-text" style="font-size:.75rem;color:#ef4444;font-weight:600"></span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes qrScan { 0%,100%{top:10%;opacity:.7} 50%{top:82%;opacity:1} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<script>
+// ══ QR MODAL ══
+let _qrStream = null;
+let _qrScanInterval = null;
+let _scannedCode = null;
+
+function openQRModal() {
+  document.getElementById('qr-modal').style.display = 'flex';
+  switchQRTab('show');
+  const code = chatState.myCode || localStorage.getItem('chat_code') || '';
+  document.getElementById('qr-code-display').textContent = code || '—';
+  if (code) _generateQRCode(code);
+}
+
+function closeQRModal() {
+  document.getElementById('qr-modal').style.display = 'none';
+  stopQRScan();
+  document.getElementById('qr-scan-result').style.display = 'none';
+  const errEl = document.getElementById('qr-scan-error');
+  if (errEl) errEl.style.display = 'none';
+  _scannedCode = null;
+}
+
+function switchQRTab(tab) {
+  const isShow = tab === 'show';
+  document.getElementById('qr-panel-show').style.display = isShow ? 'block' : 'none';
+  document.getElementById('qr-panel-scan').style.display = isShow ? 'none' : 'block';
+  // Tab show
+  const ts = document.getElementById('qr-tab-show');
+  ts.style.background = isShow ? 'var(--accent)' : 'transparent';
+  ts.style.color = isShow ? 'var(--bg)' : 'var(--muted)';
+  // Tab scan
+  const tsc = document.getElementById('qr-tab-scan');
+  tsc.style.background = !isShow ? 'var(--accent)' : 'transparent';
+  tsc.style.color = !isShow ? 'var(--bg)' : 'var(--muted)';
+  if (isShow) stopQRScan();
+}
+
+// ─── QR GENERATOR via API + canvas fallback ───
+function _generateQRCode(text) {
+  const canvas = document.getElementById('qr-canvas');
+  if (!canvas) return;
+  const size = 192;
+  const ctx = canvas.getContext('2d');
+  // Clear
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size, size);
+  // Show loading spinner
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Memuat...', size/2, size/2);
+
+  // Use qrserver.com free API
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 0, 0, size, size);
+  };
+  img.onerror = () => {
+    // Fallback: render code as text matrix
+    _qrFallbackDraw(ctx, text, size);
+  };
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&margin=2&bgcolor=ffffff&color=111111`;
+}
+
+function _qrFallbackDraw(ctx, text, size) {
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle = '#1a1a2e';
+  // 3 finder patterns
+  [[6,6],[size-34,6],[6,size-34]].forEach(([x,y])=>{
+    ctx.fillRect(x,y,28,28);
+    ctx.fillStyle='#fff'; ctx.fillRect(x+4,y+4,20,20);
+    ctx.fillStyle='#1a1a2e'; ctx.fillRect(x+8,y+8,12,12);
+    ctx.fillStyle='#1a1a2e';
+  });
+  ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.fillStyle='#334155';
+  const chunks = text.match(/.{1,18}/g)||[text];
+  chunks.forEach((c,i) => ctx.fillText(c, size/2, size/2 - chunks.length*6 + i*14));
+}
+
+function shareMyQR() {
+  const code = chatState.myCode || '';
+  if (navigator.share) {
+    navigator.share({ title:'z-wealth Chat', text:`Kode chat anonim saya: ${code}\nAdd saya di z-wealth!` }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(code).then(()=>toast('Kode disalin!'));
+  }
+}
+
+// ── SHARE LINK: DM Invite ──
+function shareChatLink() {
+  const code = chatState.myCode || '';
+  if (!code) { toast('Kode belum dimuat', 1); return; }
+  const base = window.location.origin + window.location.pathname;
+  const link = `${base}?dm=${encodeURIComponent(code)}`;
+  if (navigator.share) {
+    navigator.share({
+      title: 'Chat di z-wealth',
+      text: `Hei! DM aku di z-wealth (anonim):\n${link}`,
+      url: link
+    }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(link).then(() => toast('Link DM disalin!'));
+  }
+}
+
+// ── SHARE LINK: Room/Group ──
+async function shareRoomLink() {
+  const roomId = chatState.currentRoomId;
+  const roomType = chatState.currentRoomType;
+  const roomName = chatState.currentRoomName || 'Room';
+  if (!roomId) { toast('Bukan di dalam room', 1); return; }
+
+  let linkCode = roomId;
+  // For group, also fetch invite code if available
+  if (roomType === 'group') {
+    try {
+      const { data } = await chatSB.from('chat_rooms').select('invite_code').eq('id', roomId).single();
+      if (data?.invite_code) linkCode = data.invite_code;
+    } catch(e) {}
+  }
+
+  const base = window.location.origin + window.location.pathname;
+  const param = roomType === 'dm' ? `dm=${encodeURIComponent(chatState.myCode||'')}` : `join=${encodeURIComponent(linkCode)}`;
+  const link = `${base}?${param}`;
+  const text = roomType === 'dm'
+    ? `Hei! DM aku di z-wealth (anonim):\n${link}`
+    : `Gabung di grup "${roomName}" di z-wealth:\n${link}`;
+
+  if (navigator.share) {
+    navigator.share({ title: 'z-wealth Chat', text, url: link }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(link).then(() => toast('Link disalin!'));
+  }
+}
+
+// ── DOWNLOAD QR VISUAL CARD (with z-wealth watermark) ──
+function downloadQRCard() {
+  const code = chatState.myCode || localStorage.getItem('chat_code') || '';
+  if (!code) { toast('Kode belum dimuat', 1); return; }
+
+  const W = 480, H = 640;
+  const canvas = document.getElementById('qr-card-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // ─── BACKGROUND GRADIENT ───
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#050810');
+  bg.addColorStop(0.5, '#0b1120');
+  bg.addColorStop(1, '#050810');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,229,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // ─── CARD CONTAINER ───
+  const r = 28, cx = 32, cy = 32, cw = W-64, ch = H-64;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx+r, cy); ctx.lineTo(cx+cw-r, cy);
+  ctx.arcTo(cx+cw, cy, cx+cw, cy+r, r);
+  ctx.lineTo(cx+cw, cy+ch-r);
+  ctx.arcTo(cx+cw, cy+ch, cx+cw-r, cy+ch, r);
+  ctx.lineTo(cx+r, cy+ch);
+  ctx.arcTo(cx, cy+ch, cx, cy+ch-r, r);
+  ctx.lineTo(cx, cy+r);
+  ctx.arcTo(cx, cy, cx+r, cy, r);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(11,17,32,0.95)';
+  ctx.fill();
+  // Border glow
+  ctx.strokeStyle = 'rgba(0,229,255,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // ─── TOP ACCENT LINE ───
+  const topGrad = ctx.createLinearGradient(cx, 0, cx+cw, 0);
+  topGrad.addColorStop(0, 'transparent');
+  topGrad.addColorStop(0.3, '#00e5ff');
+  topGrad.addColorStop(0.7, '#7c3aed');
+  topGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = topGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx+r, cy); ctx.lineTo(cx+cw-r, cy); ctx.arcTo(cx+cw, cy, cx+cw, cy+r, r); ctx.lineTo(cx+cw, cy+4); ctx.lineTo(cx, cy+4); ctx.lineTo(cx, cy+r); ctx.arcTo(cx, cy, cx+r, cy, r); ctx.closePath();
+  ctx.fill();
+
+  // ─── LOGO "z-wealth" watermark ───
+  ctx.font = 'italic 900 36px Inter, sans-serif';
+  ctx.fillStyle = '#00e5ff';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,229,255,0.6)';
+  ctx.shadowBlur = 16;
+  const logoX = cx + 28, logoY = cy + 70;
+  ctx.fillText('z', logoX, logoY);
+  ctx.font = '300 36px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(0,229,255,0.4)';
+  ctx.shadowBlur = 0;
+  ctx.fillText('-', logoX + 22, logoY);
+  ctx.font = '800 36px Inter, sans-serif';
+  ctx.fillStyle = '#f0f9ff';
+  ctx.fillText('wealth', logoX + 38, logoY);
+  ctx.shadowBlur = 0;
+
+  // Tagline
+  ctx.font = '400 13px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(100,116,139,0.9)';
+  ctx.textAlign = 'left';
+  ctx.fillText('Bitcoin DCA Tracker · Anonim', logoX, logoY + 22);
+
+  // ─── QR CODE (from existing canvas) ───
+  const qrSrc = document.getElementById('qr-canvas');
+  const qrSize = 200;
+  const qrX = (W - qrSize) / 2;
+  const qrY = cy + 120;
+
+  // QR frame
+  ctx.save();
+  const fr = 16;
+  ctx.beginPath();
+  ctx.moveTo(qrX-18+fr, qrY-18); ctx.lineTo(qrX+qrSize+18-fr, qrY-18);
+  ctx.arcTo(qrX+qrSize+18, qrY-18, qrX+qrSize+18, qrY-18+fr, fr);
+  ctx.lineTo(qrX+qrSize+18, qrY+qrSize+18-fr);
+  ctx.arcTo(qrX+qrSize+18, qrY+qrSize+18, qrX+qrSize+18-fr, qrY+qrSize+18, fr);
+  ctx.lineTo(qrX-18+fr, qrY+qrSize+18);
+  ctx.arcTo(qrX-18, qrY+qrSize+18, qrX-18, qrY+qrSize+18-fr, fr);
+  ctx.lineTo(qrX-18, qrY-18+fr);
+  ctx.arcTo(qrX-18, qrY-18, qrX-18+fr, qrY-18, fr);
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+
+  if (qrSrc && qrSrc.width > 0) {
+    ctx.drawImage(qrSrc, qrX, qrY, qrSize, qrSize);
+  }
+
+  // Corner accents on QR frame
+  const cc = 'rgba(0,229,255,0.7)';
+  const cl = 18; const ct = 3;
+  [[qrX-18, qrY-18],[qrX+qrSize+18-cl, qrY-18],[qrX-18, qrY+qrSize+18-cl],[qrX+qrSize+18-cl, qrY+qrSize+18-cl]].forEach(([bx,by], i) => {
+    ctx.strokeStyle = cc; ctx.lineWidth = ct; ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (i===0) { ctx.moveTo(bx+cl,by); ctx.lineTo(bx,by); ctx.lineTo(bx,by+cl); }
+    else if (i===1) { ctx.moveTo(bx,by); ctx.lineTo(bx+cl,by); ctx.lineTo(bx+cl,by+cl); }
+    else if (i===2) { ctx.moveTo(bx+cl,by+cl); ctx.lineTo(bx,by+cl); ctx.lineTo(bx,by); }
+    else { ctx.moveTo(bx,by+cl); ctx.lineTo(bx+cl,by+cl); ctx.lineTo(bx+cl,by); }
+    ctx.stroke();
+  });
+
+  // ─── CODE DISPLAY ───
+  const codeY = qrY + qrSize + 52;
+  // Pill background
+  const pillW = 280, pillH = 44, pillX = (W-pillW)/2, pillY2 = codeY - 16;
+  ctx.fillStyle = 'rgba(0,229,255,0.07)';
+  ctx.strokeStyle = 'rgba(0,229,255,0.25)';
+  ctx.lineWidth = 1;
+  _roundRect(ctx, pillX, pillY2, pillW, pillH, 12);
+  ctx.fill(); ctx.stroke();
+
+  ctx.font = 'bold 15px "Space Mono", monospace';
+  ctx.fillStyle = '#00e5ff';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,229,255,0.4)';
+  ctx.shadowBlur = 10;
+  ctx.fillText(code, W/2, codeY + 12);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '400 11px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(100,116,139,0.8)';
+  ctx.fillText('Kode Chat Anonim · z-wealth', W/2, codeY + 32);
+
+  // ─── BOTTOM WATERMARK ───
+  const wY = cy + ch - 28;
+  ctx.font = 'italic 900 22px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(0,229,255,0.12)';
+  ctx.textAlign = 'center';
+  ctx.fillText('z-wealth', W/2, wY);
+
+  ctx.font = '400 10px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(100,116,139,0.4)';
+  ctx.fillText('z-wealth.app · Bitcoin DCA Tracker', W/2, wY + 16);
+
+  // ─── DOWNLOAD ───
+  const link = document.createElement('a');
+  link.download = `z-wealth-qr-${code}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Visual card berhasil didownload! 🎉');
+}
+
+function _roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+// ─── DEEP LINK HANDLER ───
+async function _handleChatDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  const dmCode = params.get('dm');
+  const joinCode = params.get('join');
+  if (!dmCode && !joinCode) return;
+
+  // Clean URL without reloading
+  window.history.replaceState({}, '', window.location.pathname);
+
+  showPage('chat');
+  await new Promise(r => setTimeout(r, 500)); // let chat init settle
+
+  if (dmCode) {
+    // Open DM with that code
+    if (!chatSB || !chatState.myCode) return;
+    if (dmCode === chatState.myCode) { toast('Itu kode kamu sendiri!', 2); return; }
+    try {
+      const { data: targetUser } = await chatSB.from('anon_users').select('code').eq('code', dmCode).single();
+      if (!targetUser) { toast('Akun tidak ditemukan', 2); return; }
+      const { data: myRooms } = await chatSB.from('room_members').select('room_id').eq('user_code', chatState.myCode);
+      if (myRooms?.length) {
+        const ids = myRooms.map(r=>r.room_id);
+        const { data: targetRooms } = await chatSB.from('room_members').select('room_id').eq('user_code', dmCode).in('room_id', ids);
+        if (targetRooms?.length) {
+          const { data: existDM } = await chatSB.from('chat_rooms').select('*').eq('type','dm').in('id', targetRooms.map(r=>r.room_id)).single();
+          if (existDM) { openRoom(existDM.id, dmCode, 'dm', '#7c3aed'); toast('DM dibuka! 💬'); return; }
+        }
+      }
+      const { data: room, error } = await chatSB.from('chat_rooms').insert({
+        type:'dm', name:`${chatState.myCode} ↔ ${dmCode}`, avatar_color:'#7c3aed', created_by:chatState.myCode
+      }).select().single();
+      if (error) { toast('Gagal buat DM', 2); return; }
+      await chatSB.from('room_members').insert([
+        { room_id:room.id, user_code:chatState.myCode },
+        { room_id:room.id, user_code:dmCode }
+      ]);
+      openRoom(room.id, dmCode, 'dm', '#7c3aed');
+      toast('DM baru dibuka! 💬');
+    } catch(e) { toast('Error: '+e.message, 2); }
+
+  } else if (joinCode) {
+    // Join group by invite code or room id
+    if (!chatSB || !chatState.myCode) return;
+    try {
+      let roomData = null;
+      // Try as invite code first
+      const { data: byInvite } = await chatSB.from('chat_rooms').select('*').eq('invite_code', joinCode).single();
+      if (byInvite) roomData = byInvite;
+      else {
+        // Try as room ID
+        const { data: byId } = await chatSB.from('chat_rooms').select('*').eq('id', joinCode).single();
+        if (byId) roomData = byId;
+      }
+      if (!roomData) { toast('Room tidak ditemukan', 2); return; }
+      await chatSB.from('room_members').upsert(
+        { room_id: roomData.id, user_code: chatState.myCode },
+        { onConflict: 'room_id,user_code' }
+      );
+      openRoom(roomData.id, roomData.name, roomData.type, roomData.avatar_color);
+      toast(`Bergabung ke "${roomData.name}"! 🎉`);
+    } catch(e) { toast('Error: '+e.message, 2); }
+  }
+}
+
+// ─── QR SCANNER ───
+async function startQRScan() {
+  const placeholder = document.getElementById('qr-cam-placeholder');
+  const errEl = document.getElementById('qr-scan-error');
+  const result = document.getElementById('qr-scan-result');
+  if (errEl) errEl.style.display = 'none';
+  if (result) result.style.display = 'none';
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    document.getElementById('qr-gallery-input').click(); return;
+  }
+  try {
+    _qrStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:'environment', width:{ideal:640}, height:{ideal:640} }, audio:false
+    });
+    const video = document.getElementById('qr-video');
+    video.srcObject = _qrStream;
+    await video.play();
+    if (placeholder) placeholder.style.display = 'none';
+    _loadJsQRThenScan(video);
+  } catch(e) {
+    if (errEl) { errEl.style.display = 'flex'; document.getElementById('qr-scan-error-text').textContent = 'Tidak bisa akses kamera. Coba dari Galeri.'; }
+  }
+}
+
+function _loadJsQRThenScan(video) {
+  const run = () => _qrDecodeLoop(video);
+  if (window.jsQR) { run(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+  s.onload = run;
+  s.onerror = () => { const e=document.getElementById('qr-scan-error-text'); if(e)e.textContent='Library scan tidak bisa dimuat.'; document.getElementById('qr-scan-error').style.display='flex'; };
+  document.head.appendChild(s);
+}
+
+function _qrDecodeLoop(video) {
+  const canvas = document.getElementById('qr-scan-canvas');
+  const ctx = canvas.getContext('2d');
+  if (_qrScanInterval) clearInterval(_qrScanInterval);
+  _qrScanInterval = setInterval(() => {
+    if (!video || video.readyState < video.HAVE_ENOUGH_DATA) return;
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    if (!window.jsQR) return;
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const result = window.jsQR(data.data, data.width, data.height, {inversionAttempts:'dontInvert'});
+    if (result?.data) _handleScannedCode(result.data.trim());
+  }, 250);
+}
+
+function stopQRScan() {
+  if (_qrScanInterval) { clearInterval(_qrScanInterval); _qrScanInterval = null; }
+  if (_qrStream) { _qrStream.getTracks().forEach(t=>t.stop()); _qrStream = null; }
+  const video = document.getElementById('qr-video');
+  if (video) video.srcObject = null;
+  const ph = document.getElementById('qr-cam-placeholder');
+  if (ph) ph.style.display = 'flex';
+}
+
+function scanQRFromFile(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  document.getElementById('qr-scan-result').style.display = 'none';
+  const errEl = document.getElementById('qr-scan-error');
+  if (errEl) errEl.style.display = 'none';
+  input.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('qr-scan-canvas');
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      const tryDecode = () => {
+        const imgData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+        const result = window.jsQR?.(imgData.data, imgData.width, imgData.height, {inversionAttempts:'attemptBoth'});
+        if (result?.data) {
+          _handleScannedCode(result.data.trim());
+        } else {
+          if (errEl) { errEl.style.display='flex'; document.getElementById('qr-scan-error-text').textContent='QR Code tidak terdeteksi. Coba foto yang lebih jelas & terang.'; }
+        }
+      };
+      if (!window.jsQR) {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+        s.onload = tryDecode; document.head.appendChild(s);
+      } else { tryDecode(); }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function _handleScannedCode(code) {
+  if (_scannedCode === code) return; // Jangan trigger 2x
+  _scannedCode = code;
+  stopQRScan();
+  // Flash sukses
+  const flash = document.getElementById('qr-success-flash');
+  if (flash) { flash.style.display='flex'; setTimeout(()=>flash.style.display='none', 800); }
+  // Show result
+  document.getElementById('qr-scan-found-code').textContent = code;
+  document.getElementById('qr-scan-result').style.display = 'block';
+}
+
+async function useScannedCode() {
+  if (!_scannedCode) return;
+  const target = _scannedCode.trim();
+  if (!target || !chatSB || !chatState.myCode) { toast('Belum terhubung ke chat'); return; }
+  if (target === chatState.myCode) { toast('Itu kode kamu sendiri!', 2); return; }
+  closeQRModal();
+  showPage('chat');
+  try {
+    const { data: targetUser } = await chatSB.from('anon_users').select('code').eq('code', target).single();
+    if (!targetUser) { toast('Akun tidak ditemukan', 2); return; }
+    const { data: myRooms } = await chatSB.from('room_members').select('room_id').eq('user_code', chatState.myCode);
+    if (myRooms?.length) {
+      const ids = myRooms.map(r=>r.room_id);
+      const { data: targetRooms } = await chatSB.from('room_members').select('room_id').eq('user_code', target).in('room_id', ids);
+      if (targetRooms?.length) {
+        const { data: existDM } = await chatSB.from('chat_rooms').select('*').eq('type','dm').in('id', targetRooms.map(r=>r.room_id)).single();
+        if (existDM) { openRoom(existDM.id, target, 'dm', '#7c3aed'); toast('Membuka DM'); return; }
+      }
+    }
+    const { data: room, error } = await chatSB.from('chat_rooms').insert({
+      type:'dm', name:`${chatState.myCode} ↔ ${target}`, avatar_color:'#7c3aed', created_by:chatState.myCode
+    }).select().single();
+    if (error) { toast('Gagal buat DM', 2); return; }
+    await chatSB.from('room_members').insert([
+      { room_id:room.id, user_code:chatState.myCode },
+      { room_id:room.id, user_code:target }
+    ]);
+    openRoom(room.id, target, 'dm', '#7c3aed');
+    toast('DM dibuka!');
+  } catch(e) { toast('Error: '+e.message, 2); }
+}
+</script>
+
+<div id="emoji-picker-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;padding:0 .75rem calc(.75rem + env(safe-area-inset-bottom,0px))">
+  <div style="background:rgba(6,10,20,.99);border:1px solid rgba(255,255,255,.15);border-bottom:none;border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -8px 48px rgba(0,0,0,.8)">
+    <div style="display:flex;justify-content:center;padding:.5rem 0 .25rem;cursor:pointer" onclick="closeEmojiPicker()">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,.2);border-radius:99px"></div>
+    </div>
+    <div id="emoji-cats" style="display:flex;overflow-x:auto;padding:.25rem .5rem;gap:.25rem;scrollbar-width:none"></div>
+    <div id="emoji-grid" style="display:grid;grid-template-columns:repeat(8,1fr);padding:.4rem .5rem .5rem;max-height:220px;overflow-y:auto;scrollbar-width:thin"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  z-wealth · Web Push Notification Module                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<script>
+const PUSH_VAPID_PUBLIC = 'BCjuhvgFLrxeEY_lI3K2ssgr2MdZSKRSoqSXE5VaRwW_efsoQkw0Ph4QEn_F8iJPE_9rNAVGSUzA-gL6z32FnmI';
+
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    console.log('[Push] SW registered');
+    return reg;
+  } catch(e) { console.error('[Push] SW failed:', e); return null; }
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return 'not-supported';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied')  return 'denied';
+  return await Notification.requestPermission();
+}
+
+async function subscribePush(reg) {
+  if (!reg) return null;
+  try {
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) return sub;
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC),
+    });
+    console.log('[Push] Subscribed');
+    return sub;
+  } catch(e) { console.error('[Push] Subscribe failed:', e); return null; }
+}
+
+async function savePushSubscription(sub) {
+  if (!sub || !chatSB || !chatState?.myCode) return;
+  try {
+    const subJson = sub.toJSON();
+    const { error } = await chatSB.from('push_subscriptions').upsert({
+      user_code:  chatState.myCode,
+      endpoint:   sub.endpoint,
+      p256dh:     subJson.keys?.p256dh || '',
+      auth:       subJson.keys?.auth   || '',
+      user_agent: navigator.userAgent.slice(0, 200),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'endpoint' });
+    if (error) console.error('[Push] Save error:', error);
+    else console.log('[Push] Subscription saved untuk', chatState.myCode);
+  } catch(e) { console.error('[Push] savePushSubscription error:', e); }
+}
+
+async function unsubscribePush() {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    if (chatSB && chatState?.myCode) {
+      await chatSB.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    }
+    await sub.unsubscribe();
+    console.log('[Push] Unsubscribed');
+  } catch(e) { console.error('[Push] Unsubscribe error:', e); }
+}
+
+async function initPushNotification() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  const reg = await registerSW();
+  if (!reg) return;
+  const perm = Notification.permission;
+  if (perm === 'granted') {
+    const sub = await subscribePush(reg);
+    if (sub) await savePushSubscription(sub);
+  } else if (perm === 'default') {
+    showPushPermissionBanner(reg);
+  }
+}
+
+function showPushPermissionBanner(reg) {
+  if (localStorage.getItem('push_perm_dismissed') === '1') return;
+  if (document.getElementById('_push-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = '_push-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:calc(5rem + env(safe-area-inset-bottom,0px));
+    left:.75rem;right:.75rem;z-index:9800;
+    background:rgba(6,11,24,0.97);border:1px solid rgba(0,229,255,0.3);
+    border-radius:18px;padding:1rem 1.1rem;
+    box-shadow:0 8px 40px rgba(0,0,0,0.6);
+    display:flex;align-items:center;gap:.9rem;
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    animation:slideUpBanner .4s cubic-bezier(.34,1.3,.64,1) forwards;
+    max-width:480px;margin:0 auto;
+  `;
+  banner.innerHTML = `
+    <style>@keyframes slideUpBanner{from{transform:translateY(120px);opacity:0}to{transform:translateY(0);opacity:1}}</style>
+    <div style="width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(124,58,237,.2));border:1px solid rgba(0,229,255,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:800;font-size:.88rem;color:#f0f9ff;margin-bottom:.2rem">Aktifkan Notifikasi Chat</div>
+      <div style="font-size:.72rem;color:rgba(100,116,139,.9);line-height:1.45">Dapat notif HP saat ada pesan baru, bahkan saat app ditutup</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0">
+      <button id="_push-allow-btn" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.45rem .9rem;font-weight:800;font-size:.75rem;cursor:pointer;white-space:nowrap">Aktifkan</button>
+      <button id="_push-deny-btn" style="background:transparent;color:rgba(100,116,139,.7);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.35rem .5rem;font-size:.68rem;cursor:pointer;white-space:nowrap">Nanti saja</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('_push-allow-btn').addEventListener('click', async () => {
+    banner.remove();
+    const perm = await requestNotifPermission();
+    if (perm === 'granted') {
+      const sub = await subscribePush(reg);
+      if (sub) { await savePushSubscription(sub); toast('🔔 Notifikasi chat aktif!'); }
+    } else { toast('Notifikasi tidak diizinkan', 2); }
+  });
+  document.getElementById('_push-deny-btn').addEventListener('click', () => {
+    banner.remove();
+    localStorage.setItem('push_perm_dismissed', '1');
+  });
+  setTimeout(() => { if (document.getElementById('_push-banner')) banner.remove(); }, 15000);
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'PUSH_OPEN_ROOM' && e.data?.roomId) {
+      showPage('chat');
+      setTimeout(() => {
+        initChat().then(() => {
+          if (chatSB && e.data.roomId) {
+            chatSB.from('chat_rooms').select('*').eq('id', e.data.roomId).single()
+              .then(({ data: room }) => {
+                if (room) openRoom(room.id, room.name, room.type, room.avatar_color);
+              });
+          }
+        });
+      }, 800);
+    }
+  });
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const output  = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) output[i] = rawData.charCodeAt(i);
+  return output;
+}
+</script>
+
 </body>
-</html>
