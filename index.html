@@ -1085,8 +1085,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
           <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5Th</button>
           <button class="tf-btn" data-tf="10Y" onclick="loadBTCChart('10Y')">10Th</button>
         </div>
-        <div style="font-size:.65rem;color:var(--muted);text-align:right">via Kraken · auto refresh 60s</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:.35rem;flex-wrap:wrap">
+          <button id="m2-toggle-btn" onclick="toggleOverlay('m2')" style="
+            display:flex;align-items:center;gap:.25rem;
+            background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+            color:rgba(245,158,11,.6);border-radius:6px;padding:.22rem .5rem;
+            font-size:.6rem;font-weight:700;font-family:'Space Mono',monospace;
+            cursor:pointer;transition:all .2s;letter-spacing:.03em;white-space:nowrap;
+          ">
+            <span style="width:7px;height:7px;border-radius:50%;background:rgba(245,158,11,.5);display:inline-block;flex-shrink:0" id="m2-dot"></span>
+            Global M2
+          </button>
+          <button id="gold-toggle-btn" onclick="toggleOverlay('gold')" style="
+            display:flex;align-items:center;gap:.25rem;
+            background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);
+            color:rgba(251,191,36,.6);border-radius:6px;padding:.22rem .5rem;
+            font-size:.6rem;font-weight:700;font-family:'Space Mono',monospace;
+            cursor:pointer;transition:all .2s;letter-spacing:.03em;white-space:nowrap;
+          ">
+            <span style="width:7px;height:7px;border-radius:50%;background:rgba(251,191,36,.5);display:inline-block;flex-shrink:0" id="gold-dot"></span>
+            Emas
+          </button>
+          <button id="sp500-toggle-btn" onclick="toggleOverlay('sp500')" style="
+            display:flex;align-items:center;gap:.25rem;
+            background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
+            color:rgba(139,92,246,.6);border-radius:6px;padding:.22rem .5rem;
+            font-size:.6rem;font-weight:700;font-family:'Space Mono',monospace;
+            cursor:pointer;transition:all .2s;letter-spacing:.03em;white-space:nowrap;
+          ">
+            <span style="width:7px;height:7px;border-radius:50%;background:rgba(139,92,246,.5);display:inline-block;flex-shrink:0" id="sp500-dot"></span>
+            S&amp;P500
+          </button>
+          <div style="font-size:.65rem;color:var(--muted);text-align:right">via Kraken · auto refresh 60s</div>
+        </div>
       </div>
+    </div>
+    <div id="overlay-legend" style="display:none;align-items:center;gap:.8rem;margin-bottom:.4rem;padding:.3rem .5rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:.3rem"><span style="width:16px;height:2px;background:#10b981;display:inline-block;border-radius:2px"></span><span style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace">BTC</span></div>
+      <div id="leg-m2" style="display:none;align-items:center;gap:.3rem"><span style="width:16px;height:2px;background:#f59e0b;display:inline-block;border-radius:2px"></span><span style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace">Global M2</span></div>
+      <div id="leg-gold" style="display:none;align-items:center;gap:.3rem"><span style="width:16px;height:2px;background:#fbbf24;display:inline-block;border-radius:2px"></span><span style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace">Emas (XAU)</span></div>
+      <div id="leg-sp500" style="display:none;align-items:center;gap:.3rem"><span style="width:16px;height:2px;background:#8b5cf6;display:inline-block;border-radius:2px"></span><span style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace">S&P500</span></div>
     </div>
     <div class="btc-chart-container">
       <div class="btc-chart-loading" id="btcc-loading">
@@ -1103,12 +1141,79 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       <div class="btc-ohlc-item"><div class="btc-ohlc-label">Volume 24h</div><div class="btc-ohlc-val gld" id="btcc-vol">—</div></div>
     </div>
     <!-- RETURN ROW -->
-    <div id="btcc-return-row" style="margin-top:.7rem;padding:.65rem 1rem;border-radius:8px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
-      <span style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'Space Mono',monospace" id="btcc-return-label">Return periode</span>
-      <div style="display:flex;align-items:center;gap:.8rem">
-        <span style="font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700" id="btcc-return-usd">—</span>
-        <span style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;padding:.2rem .7rem;border-radius:6px" id="btcc-return-pct">—</span>
+    <div id="btcc-return-row" style="margin-top:.7rem;padding:.65rem 1rem;border-radius:8px;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+        <span style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'Space Mono',monospace" id="btcc-return-label">Return periode</span>
+        <div style="display:flex;align-items:center;gap:.8rem">
+          <span style="font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700" id="btcc-return-usd">—</span>
+          <span style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;padding:.2rem .7rem;border-radius:6px" id="btcc-return-pct">—</span>
+        </div>
       </div>
+      <div id="overlay-returns" style="display:none;flex-direction:column;gap:.3rem;border-top:1px solid rgba(255,255,255,.06);padding-top:.4rem">
+        <div id="ret-gold-row" style="display:none;align-items:center;justify-content:space-between">
+          <span style="font-size:.62rem;color:#fbbf24;font-family:'Space Mono',monospace">🥇 Emas</span>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#fbbf24" id="ret-gold-usd">—</span>
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-gold-pct">—</span>
+          </div>
+        </div>
+        <div id="ret-sp500-row" style="display:none;align-items:center;justify-content:space-between">
+          <span style="font-size:.62rem;color:#8b5cf6;font-family:'Space Mono',monospace">📈 S&amp;P500</span>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#8b5cf6" id="ret-sp500-usd">—</span>
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-sp500-pct">—</span>
+          </div>
+        </div>
+        <div id="ret-m2-row" style="display:none;align-items:center;justify-content:space-between">
+          <span style="font-size:.62rem;color:#f59e0b;font-family:'Space Mono',monospace">💧 Global M2</span>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#f59e0b" id="ret-m2-usd">—</span>
+            <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-m2-pct">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- SHARE CHART BUTTON -->
+    <button onclick="openChartShareModal()" style="
+      width:100%;margin-top:.8rem;padding:.55rem;border-radius:8px;
+      background:transparent;border:1px solid rgba(255,255,255,.1);
+      color:var(--muted);font-size:.72rem;font-weight:600;font-family:'Inter',sans-serif;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;
+      transition:all .2s;letter-spacing:.03em;
+    " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+       onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='var(--muted)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Bagikan Chart
+    </button>
+  </div>
+
+  <!-- CHART SHARE MODAL -->
+  <div id="chart-share-modal" style="
+    display:none;position:fixed;inset:0;z-index:9000;
+    background:rgba(0,0,0,.85);backdrop-filter:blur(12px);
+    align-items:center;justify-content:center;padding:1rem;
+  ">
+    <div style="
+      background:var(--surface);border:1px solid var(--border);border-radius:20px;
+      padding:1.2rem;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;
+      position:relative;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <span style="font-size:.88rem;font-weight:800;color:var(--text)">Bagikan Chart BTC</span>
+        <button onclick="closeChartShareModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <canvas id="chart-share-canvas" style="display:block;width:100%;height:auto;border-radius:12px;margin-bottom:1rem"></canvas>
+      <button onclick="downloadChartCard()" style="
+        width:100%;padding:.75rem;border-radius:10px;background:var(--accent);
+        color:var(--bg);border:none;font-family:'Inter',sans-serif;font-size:.88rem;
+        font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;
+      ">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        SIMPAN GAMBAR
+      </button>
+      <div style="text-align:center;margin-top:.5rem;font-size:.62rem;color:var(--muted)">1080 × 1440 px · PNG (3:4)</div>
     </div>
   </div>
 
@@ -2803,6 +2908,8 @@ body{transition:background .4s ease,color .3s ease}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
+// Promise.any polyfill for older Android WebView
+if(!Promise.any){Promise.any=function(ps){return new Promise((res,rej)=>{let n=ps.length,errs=[];if(!n)rej(new AggregateError([],'All promises rejected'));ps.forEach(p=>Promise.resolve(p).then(res).catch(e=>{errs.push(e);if(!--n)rej(new AggregateError(errs,'All promises rejected'))}))})}}
 /* ══════════ WORD LIST ══════════ */
 const W = [
 'abadi','abah','abang','abdi','abon','absah','adat','adik','adil','agak','agar','agung','ahli','ajak','ajal','ajar','akal','akar','akhir','aktif',
@@ -3338,16 +3445,36 @@ function getRawVal(id){
 
 /* ══════════ LIVE BTC ══════════ */
 async function fetchBTC(){
-  try{
-    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr&include_24hr_change=true');
-    const d=await r.json();
-    S.btcPrice=d.bitcoin.usd;S.btcPriceIDR=d.bitcoin.idr;
-    S.btcChange=d.bitcoin.usd_24h_change;
-    S.usdIdr=Math.round(d.bitcoin.idr/d.bitcoin.usd);
+  // Race CoinGecko vs Binance ticker — ambil yang paling cepat
+  const cgFetch = fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr&include_24hr_change=true', {signal:AbortSignal.timeout(5000)})
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => ({
+      usd: d.bitcoin.usd, idr: d.bitcoin.idr,
+      change: d.bitcoin.usd_24h_change,
+      usdIdr: Math.round(d.bitcoin.idr / d.bitcoin.usd),
+      src: 'cg'
+    }));
+
+  const bnFetch = fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {signal:AbortSignal.timeout(4000)})
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => {
+      const usd = parseFloat(d.lastPrice);
+      // IDR rate dari cache sebelumnya atau default
+      const idrRate = S.usdIdr || 16300;
+      return { usd, idr: usd * idrRate, change: parseFloat(d.priceChangePercent), usdIdr: idrRate, src: 'bn' };
+    });
+
+  try {
+    const result = await Promise.any([cgFetch, bnFetch]);
+    S.btcPrice = result.usd;
+    S.btcPriceIDR = result.idr;
+    S.btcChange = result.change;
+    // Hanya update usdIdr dari CoinGecko (lebih akurat)
+    if (result.src === 'cg') S.usdIdr = result.usdIdr;
     updateBTCDisplay();
     updateChartsInPlace();
-  }catch(e){
-    if(!S.btcPrice){S.btcPrice=95000;S.btcPriceIDR=95000*16000;S.btcChange=2.5;S.usdIdr=16000}
+  } catch(e) {
+    if(!S.btcPrice){ S.btcPrice=95000; S.btcPriceIDR=95000*16300; S.btcChange=0; S.usdIdr=16300; }
     updateBTCDisplay();
   }
   updateBTCLiveDisplay();
@@ -3379,7 +3506,7 @@ const TF_CONFIG = {
   '10Y':{ key:'10Y',krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,   label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
 };
 
-async function fetchWithTimeout(url, ms=12000, retries=2){
+async function fetchWithTimeout(url, ms=8000, retries=1){
   for(let attempt=0; attempt<=retries; attempt++){
     try{
       const controller = new AbortController();
@@ -3439,31 +3566,67 @@ const BINANCE_TF_MAP = {
 };
 
 async function fetchChartData(cfg){
-  // Source 1: Kraken
-  try{
-    const data=await krakenOHLC(cfg.krakenInterval, cfg.krakenSince());
-    if(data && data.length > 0) return data;
-  }catch(e1){
-    console.warn('Kraken gagal ('+e1.message+'), coba Binance...');
+  const tf = cfg.key;
+
+  // Return cache jika masih fresh (< 5 menit)
+  const cached = _btcChartCache[tf];
+  if(cached && (Date.now() - cached.ts) < _BTC_CACHE_TTL){
+    return cached.data;
   }
-  // Source 2: Binance (lebih reliable di paket data)
-  const bMap = BINANCE_TF_MAP[cfg.key || '1W'];
+
+  // 5Y & 10Y: hanya Kraken + CoinGecko (Binance limit 1000 candle, data terpotong)
+  // 1D/1W/1M/1Y/3Y: race Kraken + Binance (data cukup, Binance lebih cepat di Asia)
+  const longTF = tf === '5Y' || tf === '10Y';
+  const bMap = longTF ? null : BINANCE_TF_MAP[tf || '1W'];
+  const sources = [];
+
+  // Source 1: Kraken (prioritas untuk long TF karena data lengkap hingga 2011)
+  sources.push(
+    fetchWithTimeout(`https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=${cfg.krakenInterval}&since=${cfg.krakenSince()}`, longTF ? 8000 : 4000)
+      .then(r => r.ok ? r.json() : Promise.reject('Kraken '+r.status))
+      .then(d => {
+        if(d.error&&d.error.length) throw new Error(d.error[0]);
+        const pair = d.result&&(d.result['XXBTZUSD']||d.result['XBTUSD']);
+        if(!pair||!pair.length) throw new Error('empty');
+        const result = pair.map(k=>([parseInt(k[0]), parseFloat(k[4])]));
+        // Validasi: untuk 5Y/10Y harus ada data dari jauh
+        if(longTF && result.length < 100) throw new Error('Kraken data terlalu sedikit untuk '+tf);
+        return result;
+      })
+  );
+
+  // Source 2: Binance — hanya untuk TF pendek (≤3Y)
   if(bMap){
-    try{
-      const data=await binanceKlines(bMap.interval, bMap.limit);
-      if(data && data.length > 0) return data;
-    }catch(e2){
-      console.warn('Binance gagal ('+e2.message+'), coba CoinGecko...');
+    sources.push(
+      fetchWithTimeout(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${bMap.interval}&limit=${bMap.limit}`, 4000)
+        .then(r => r.ok ? r.json() : Promise.reject('Binance '+r.status))
+        .then(d => {
+          if(!d||!d.length) throw new Error('empty');
+          return d.map(k=>([Math.floor(parseInt(k[0])/1000), parseFloat(k[4])]));
+        })
+    );
+  }
+
+  // Race: ambil yang paling cepat berhasil
+  let data = null;
+  try {
+    data = await Promise.any(sources);
+  } catch(e) {
+    // Semua gagal → fallback CoinGecko (support data hingga 2013)
+    console.warn('Kraken'+(bMap?'+Binance':'')+' gagal, fallback CoinGecko');
+    try {
+      const days = Math.round((Date.now()/1000 - cfg.krakenSince())/86400);
+      data = await cgMarketChart(days);
+    } catch(e3) {
+      throw new Error('Semua sumber data gagal. Cek koneksi.');
     }
   }
-  // Source 3: CoinGecko
-  try{
-    const days=Math.round((Date.now()/1000 - cfg.krakenSince())/86400);
-    const data=await cgMarketChart(days);
-    if(data && data.length > 0) return data;
-  }catch(e3){
-    throw new Error('Semua source gagal. Cek koneksi internet.');
-  }
+
+  if(!data || data.length === 0) throw new Error('Data kosong dari semua sumber.');
+
+  // Simpan ke cache
+  _btcChartCache[tf] = { data, ts: Date.now() };
+  return data;
 }
 
 let _histCache=null; // [[timestamp_sec, price], ...]
@@ -3525,8 +3688,24 @@ async function cgPriceAt(dateStr){
 /* ══════════ BTC LIVE CHART ══════════ */
 let cBTCLive = null;
 let curTF = '1W';
+let overlayEnabled = {m2:false, gold:false, sp500:false};
+let overlayCache = {}; // cache {m2:{tf:data}, gold:{tf:data}, sp500:{tf:data}}
+// BTC chart data cache: {tf: {data, ts}} — TTL 5 menit
+const _btcChartCache = {};
+const _BTC_CACHE_TTL = 3 * 60 * 1000;  // 3 min - balance freshness vs speed
+let _loadingTF = null; // prevent concurrent loads of same TF
 
 async function loadBTCChart(tf){
+  // Jika TF sama dan sedang loading, jangan load ulang
+  if(_loadingTF === tf) return;
+  // Prefetch TF berikutnya di background (jika belum di-cache)
+  const prefetchTFs = ['1W','1M','1Y','10Y'];
+  const nextTF = prefetchTFs.find(t => t !== tf && !(_btcChartCache[t] && (Date.now()-_btcChartCache[t].ts < _BTC_CACHE_TTL)));
+  if (nextTF) setTimeout(() => {
+    const nc = TF_CONFIG[nextTF];
+    if (nc) fetchChartData(nc).catch(()=>{});
+  }, 3000);
+  _loadingTF = tf;
   curTF = tf;
   document.querySelectorAll('.tf-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.tf===tf);
@@ -3534,7 +3713,9 @@ async function loadBTCChart(tf){
   const cfg = TF_CONFIG[tf];
   const loading = document.getElementById('btcc-loading');
   const safe=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e)};
-  if(loading){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
+  // Hanya tampilkan loading jika tidak ada cache
+  const hasCached = _btcChartCache[tf] && (Date.now()-_btcChartCache[tf].ts < _BTC_CACHE_TTL);
+  if(loading && !hasCached){loading.style.display='flex';loading.innerHTML='<div style="width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><span>Memuat...</span>';}
   try{
     // Kraken OHLC (primary) → CoinGecko (fallback) — semua CORS terbuka
     const prices=await fetchChartData(cfg);
@@ -3561,28 +3742,117 @@ async function loadBTCChart(tf){
     safe('btcc-return-pct',e=>{e.textContent=retSign+retPct.toFixed(2)+'%';e.style.color=retColor;e.style.background=retBg;e.style.border=`1px solid ${retColor}`});
       if(cBTCLive){cBTCLive.destroy();cBTCLive=null;}
     const ctx = document.getElementById('c-btclive');
-    if(!ctx){if(loading)loading.style.display='none';return;}
+    if(!ctx){if(loading)loading.style.display='none';_loadingTF=null;return;}
+
+    // Build datasets
+    const datasets = [{
+      label:'BTC/USD',
+      data:vals,
+      borderColor:color,
+      borderWidth:2,
+      pointRadius:0,
+      pointHoverRadius:4,
+      pointHoverBackgroundColor:color,
+      fill:true,
+      backgroundColor:(ctx2)=>{
+        const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);
+        g.addColorStop(0,colorBg+'0.25)');
+        g.addColorStop(1,colorBg+'0.01)');
+        return g;
+      },
+      tension:.35,
+      yAxisID:'y',
+    }];
+
+    // Add overlays (M2, Gold, SP500)
+    const overlayConfigs = {
+      m2:    { fetchFn: fetchM2Data,    label:'Global M2', color:'rgba(245,158,11,0.8)',  hoverColor:'#f59e0b', yId:'yM2',    smooth:false, tickCb: v=>'$'+(v/1000).toFixed(0)+'T',  tooltipCb: v=>` M2: $${(v/1000).toFixed(1)}T` },
+      gold:  { fetchFn: fetchGoldData,  label:'Emas XAU',  color:'rgba(251,191,36,0.8)',  hoverColor:'#fbbf24', yId:'yGold',  smooth:true,  tickCb: v=>'$'+v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'}), tooltipCb: v=>` Emas: $${v.toLocaleString('en-US',{maximumFractionDigits:0})}` },
+      sp500: { fetchFn: fetchSP500Data, label:'S&P500',    color:'rgba(139,92,246,0.8)',  hoverColor:'#8b5cf6', yId:'ySP500', smooth:true,  tickCb: v=>v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'}), tooltipCb: v=>` S&P500: ${v.toLocaleString('en-US',{maximumFractionDigits:0})}` },
+    };
+    for (const [key, cfg] of Object.entries(overlayConfigs)) {
+      if (!overlayEnabled[key]) continue;
+      try {
+        const rawData = await cfg.fetchFn(tf);
+        if (rawData && rawData.length > 1) {
+          const n = labels.length;
+          const interp = [];
+          // Smooth interpolation: linear interpolate between data points
+          for (let i = 0; i < n; i++) {
+            const pos = i / (n - 1) * (rawData.length - 1);
+            const lo = Math.floor(pos);
+            const hi = Math.min(Math.ceil(pos), rawData.length - 1);
+            const t = pos - lo;
+            const valLo = rawData[lo].val;
+            const valHi = rawData[hi].val;
+            interp.push(valLo + (valHi - valLo) * t);
+          }
+          datasets.push({
+            label: cfg.label,
+            data: interp,
+            borderColor: cfg.color,
+            borderWidth: 1.5,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            pointHoverBackgroundColor: cfg.hoverColor,
+            fill: false,
+            tension: cfg.smooth ? .5 : .1,
+            cubicInterpolationMode: cfg.smooth ? 'monotone' : 'default',
+            spanGaps: true,
+            yAxisID: cfg.yId,
+          });
+        }
+      } catch(e) { console.warn(key + ' overlay error:', e); }
+    }
+
+    // Update overlay returns in return row
+    const overlayReturnsEl = document.getElementById('overlay-returns');
+    const anyOverlayOn = Object.values(overlayEnabled).some(Boolean);
+    if (overlayReturnsEl) overlayReturnsEl.style.display = anyOverlayOn ? 'flex' : 'none';
+
+    // Calculate and display return for each active overlay
+    const retDefs = {
+      gold:  { rowId:'ret-gold-row',  usdId:'ret-gold-usd',  pctId:'ret-gold-pct',  color:'#fbbf24', unit:'$',  isPrice:true },
+      sp500: { rowId:'ret-sp500-row', usdId:'ret-sp500-usd', pctId:'ret-sp500-pct', color:'#8b5cf6', unit:'',   isPrice:false },
+      m2:    { rowId:'ret-m2-row',    usdId:'ret-m2-usd',    pctId:'ret-m2-pct',    color:'#f59e0b', unit:'$',  isPrice:true },
+    };
+    for (const [key, rd] of Object.entries(retDefs)) {
+      const rowEl = document.getElementById(rd.rowId);
+      if (!rowEl) continue;
+      if (!overlayEnabled[key]) { rowEl.style.display = 'none'; continue; }
+      rowEl.style.display = 'flex';
+      try {
+        const cache = overlayCache[key] && overlayCache[key][tf];
+        if (cache && cache.length >= 2) {
+          const first = cache[0].val, last = cache[cache.length-1].val;
+          const pct = (last - first) / first * 100;
+          const sign = pct >= 0 ? '+' : '';
+          const col = pct >= 0 ? (key==='gold'?'#fbbf24':key==='sp500'?'#8b5cf6':'#f59e0b') : '#ef4444';
+          const usdEl = document.getElementById(rd.usdId);
+          const pctEl = document.getElementById(rd.pctId);
+          if (usdEl) {
+            if (key === 'm2') {
+              usdEl.textContent = sign + '$' + Math.abs((last-first)/1000).toFixed(1) + 'T';
+            } else {
+              usdEl.textContent = sign + '$' + Math.abs(last-first).toLocaleString('en-US',{maximumFractionDigits:0});
+            }
+            usdEl.style.color = col;
+          }
+          if (pctEl) {
+            pctEl.textContent = sign + pct.toFixed(2) + '%';
+            pctEl.style.color = col;
+            pctEl.style.background = pct>=0?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)';
+            pctEl.style.border = '1px solid ' + col;
+          }
+        }
+      } catch(e) {}
+    }
+
     cBTCLive = new Chart(ctx.getContext('2d'),{
       type:'line',
       data:{
         labels,
-        datasets:[{
-          label:'BTC/USD',
-          data:vals,
-          borderColor:color,
-          borderWidth:2,
-          pointRadius:0,
-          pointHoverRadius:4,
-          pointHoverBackgroundColor:color,
-          fill:true,
-          backgroundColor:(ctx2)=>{
-            const g=ctx2.chart.ctx.createLinearGradient(0,0,0,ctx2.chart.height);
-            g.addColorStop(0,colorBg+'0.25)');
-            g.addColorStop(1,colorBg+'0.01)');
-            return g;
-          },
-          tension:.35,
-        }]
+        datasets,
       },
       options:{
         animation:false,
@@ -3602,6 +3872,12 @@ async function loadBTCChart(tf){
             padding:10,
             callbacks:{
               label:ctx=>{
+                const oc = Object.values({
+                  m2:{label:'Global M2',cb:v=>` M2: $${(v/1000).toFixed(1)}T`},
+                  gold:{label:'Emas XAU',cb:v=>` Emas: $${v.toLocaleString('en-US',{maximumFractionDigits:0})}`},
+                  sp500:{label:'S&P500',cb:v=>` S&P500: ${v.toLocaleString('en-US',{maximumFractionDigits:0})}`},
+                }).find(o=>o.label===ctx.dataset.label);
+                if(oc) return oc.cb(ctx.parsed.y);
                 const price=ctx.parsed.y;
                 const firstPrice=vals[0];
                 const retPct=((price-firstPrice)/firstPrice*100);
@@ -3611,10 +3887,13 @@ async function loadBTCChart(tf){
                 return [priceStr, retStr];
               },
               labelColor:(ctx)=>{
+                const colorMap={'Global M2':'#f59e0b','Emas XAU':'#fbbf24','S&P500':'#8b5cf6'};
+                const c=colorMap[ctx.dataset.label];
+                if(c) return{borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:3};
                 const price=ctx.parsed.y;
                 const retPct=((price-vals[0])/vals[0]*100);
-                const c=retPct>=0?'#10b981':'#ef4444';
-                return{borderColor:c,backgroundColor:c,borderWidth:2,borderRadius:3};
+                const col=retPct>=0?'#10b981':'#ef4444';
+                return{borderColor:col,backgroundColor:col,borderWidth:2,borderRadius:3};
               }
             }
           }
@@ -3633,11 +3912,30 @@ async function loadBTCChart(tf){
             },
             grid:{color:'rgba(255,255,255,0.03)'},
             border:{display:false}
+          },
+          yM2:{
+            display: overlayEnabled.m2 && datasets.some(d=>d.yAxisID==='yM2'),
+            position:'left',
+            ticks:{color:'rgba(245,158,11,0.45)',font:{size:8},maxTicksLimit:5,callback:v=>'$'+(v/1000).toFixed(0)+'T'},
+            grid:{display:false},border:{display:false}
+          },
+          yGold:{
+            display: overlayEnabled.gold && datasets.some(d=>d.yAxisID==='yGold'),
+            position:'left',
+            ticks:{color:'rgba(251,191,36,0.45)',font:{size:8},maxTicksLimit:5,callback:v=>'$'+v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'})},
+            grid:{display:false},border:{display:false}
+          },
+          ySP500:{
+            display: overlayEnabled.sp500 && datasets.some(d=>d.yAxisID==='ySP500'),
+            position:'left',
+            ticks:{color:'rgba(139,92,246,0.45)',font:{size:8},maxTicksLimit:5,callback:v=>v.toLocaleString('en-US',{maximumFractionDigits:0,notation:'compact'})},
+            grid:{display:false},border:{display:false}
           }
         }
       }
     });
   }catch(e){
+    _loadingTF=null;
     console.warn('BTC chart error:',e);
     if(loading){
       loading.innerHTML=`<div style="text-align:center">
@@ -3649,6 +3947,1350 @@ async function loadBTCChart(tf){
     return;
   }
   if(loading) loading.style.display='none';
+  _loadingTF = null;  // ← CRITICAL: reset agar bisa reload chart setelah sukses
+}
+
+// ── GLOBAL M2 MONEY SUPPLY ──
+// Sumber: stlouisfed.org FRED API (CORS terbuka via proxy)
+async function fetchM2Data(tf) {
+  if (!overlayCache.m2) overlayCache.m2 = {};
+  if (overlayCache.m2[tf]) return overlayCache.m2[tf];
+  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = daysMap[tf] || 3660;
+  const now = new Date();
+  const startDate = new Date(now - days * 86400000);
+  const fmt = d => d.toISOString().split('T')[0];
+
+  // CORS proxy untuk FRED WM2NS (Global M2, miliar USD)
+  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=WM2NS&observation_start=${fmt(startDate)}`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+
+  try {
+    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
+    if (!r.ok) throw new Error('proxy error');
+    const text = await r.text();
+    const lines = text.trim().split('\n').slice(1);
+    const result = lines.map(l => {
+      const parts = l.split(',');
+      return { date: parts[0], val: parseFloat(parts[1]) };
+    }).filter(d => !isNaN(d.val) && d.val > 0);
+    if (result.length < 2) throw new Error('no data');
+    overlayCache.m2[tf] = result;
+    return result;
+  } catch(e) {
+    console.warn('M2 fetch failed, using static data:', e);
+    // Data statis approximate (miliar USD) sebagai fallback
+    const staticM2 = [
+      {date:'2015-01-01',val:65000},{date:'2015-07-01',val:66000},
+      {date:'2016-01-01',val:67500},{date:'2016-07-01',val:69000},
+      {date:'2017-01-01',val:71000},{date:'2017-07-01',val:73000},
+      {date:'2018-01-01',val:75000},{date:'2018-07-01',val:74000},
+      {date:'2019-01-01',val:73500},{date:'2019-07-01',val:75000},
+      {date:'2020-01-01',val:76000},{date:'2020-07-01',val:82000},
+      {date:'2021-01-01',val:87000},{date:'2021-07-01',val:89000},
+      {date:'2022-01-01',val:87000},{date:'2022-07-01',val:84000},
+      {date:'2023-01-01',val:82000},{date:'2023-07-01',val:83000},
+      {date:'2024-01-01',val:86000},{date:'2024-07-01',val:89000},
+      {date:'2025-01-01',val:94000},{date:'2025-02-01',val:95900},
+    ];
+    const cutoff = fmt(startDate);
+    const filtered = staticM2.filter(d => d.date >= cutoff);
+    const result2 = filtered.length >= 2 ? filtered : staticM2.slice(-6);
+    overlayCache.m2[tf] = result2;
+    return result2;
+  }
+}
+
+
+// ── GOLD (XAU/USD) DATA ──
+async function fetchGoldData(tf) {
+  if (!overlayCache.gold) overlayCache.gold = {};
+  // Return cache immediately if exists (preloaded)
+  if (overlayCache.gold[tf]) return overlayCache.gold[tf];
+  // Quick check: if static fallback already loaded before, return it
+  if (overlayCache._goldStatic && overlayCache._goldStatic[tf]) {
+    // Trigger background refresh of real data (don't await)
+    _bgFetchGold(tf);
+    return overlayCache._goldStatic[tf];
+  }
+  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = daysMap[tf] || 3660;
+  const now = new Date();
+  const startDate = new Date(now - days * 86400000);
+  const fmt = d => d.toISOString().split('T')[0];
+
+  // FRED: GOLDAMGBD228NLBM = Gold Fixing Price daily (USD per Troy Ounce)
+  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=GOLDAMGBD228NLBM&observation_start=${fmt(startDate)}`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  try {
+    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(10000)});
+    if (!r.ok) throw new Error('proxy error');
+    const text = await r.text();
+    const lines = text.trim().split('\n').slice(1);
+    const result = lines.map(l => {
+      const parts = l.split(',');
+      return { date: parts[0], val: parseFloat(parts[1]) };
+    }).filter(d => !isNaN(d.val) && d.val > 100)
+      .sort((a,b) => a.date.localeCompare(b.date));
+    if (result.length < 2) throw new Error('no data');
+    overlayCache.gold[tf] = result;
+    return result;
+  } catch(e) {
+    console.warn('Gold fetch failed, using static:', e);
+    // Data statis approximate harga emas (USD/oz)
+    const staticGold = [
+      {date:'2015-01-05',val:1183},
+      {date:'2015-01-12',val:1182},
+      {date:'2015-01-19',val:1183},
+      {date:'2015-01-26',val:1190},
+      {date:'2015-02-02',val:1182},
+      {date:'2015-02-09',val:1169},
+      {date:'2015-02-16',val:1185},
+      {date:'2015-02-23',val:1179},
+      {date:'2015-03-02',val:1179},
+      {date:'2015-03-09',val:1182},
+      {date:'2015-03-16',val:1182},
+      {date:'2015-03-23',val:1190},
+      {date:'2015-03-30',val:1185},
+      {date:'2015-04-06',val:1179},
+      {date:'2015-04-13',val:1170},
+      {date:'2015-04-20',val:1167},
+      {date:'2015-04-27',val:1178},
+      {date:'2015-05-04',val:1187},
+      {date:'2015-05-11',val:1175},
+      {date:'2015-05-18',val:1173},
+      {date:'2015-05-25',val:1178},
+      {date:'2015-06-01',val:1159},
+      {date:'2015-06-08',val:1170},
+      {date:'2015-06-15',val:1177},
+      {date:'2015-06-22',val:1180},
+      {date:'2015-07-01',val:1170},
+      {date:'2015-07-08',val:1175},
+      {date:'2015-07-15',val:1171},
+      {date:'2015-07-22',val:1173},
+      {date:'2015-07-29',val:1151},
+      {date:'2015-08-05',val:1161},
+      {date:'2015-08-12',val:1136},
+      {date:'2015-08-19',val:1119},
+      {date:'2015-08-26',val:1130},
+      {date:'2015-09-02',val:1120},
+      {date:'2015-09-09',val:1128},
+      {date:'2015-09-16',val:1118},
+      {date:'2015-09-23',val:1093},
+      {date:'2015-09-30',val:1104},
+      {date:'2015-10-07',val:1080},
+      {date:'2015-10-14',val:1081},
+      {date:'2015-10-21',val:1073},
+      {date:'2015-10-28',val:1072},
+      {date:'2015-11-04',val:1073},
+      {date:'2015-11-11',val:1068},
+      {date:'2015-11-18',val:1064},
+      {date:'2015-12-01',val:1066},
+      {date:'2015-12-08',val:1065},
+      {date:'2015-12-15',val:1059},
+      {date:'2015-12-22',val:1063},
+      {date:'2015-12-29',val:1071},
+      {date:'2016-01-05',val:1087},
+      {date:'2016-01-12',val:1090},
+      {date:'2016-01-19',val:1123},
+      {date:'2016-01-26',val:1107},
+      {date:'2016-02-02',val:1117},
+      {date:'2016-02-09',val:1147},
+      {date:'2016-02-16',val:1168},
+      {date:'2016-02-23',val:1174},
+      {date:'2016-03-01',val:1192},
+      {date:'2016-03-08',val:1213},
+      {date:'2016-03-15',val:1214},
+      {date:'2016-03-22',val:1216},
+      {date:'2016-03-29',val:1241},
+      {date:'2016-04-05',val:1270},
+      {date:'2016-04-12',val:1261},
+      {date:'2016-04-19',val:1290},
+      {date:'2016-04-26',val:1306},
+      {date:'2016-05-03',val:1312},
+      {date:'2016-05-10',val:1335},
+      {date:'2016-05-17',val:1344},
+      {date:'2016-05-24',val:1372},
+      {date:'2016-05-31',val:1362},
+      {date:'2016-06-07',val:1355},
+      {date:'2016-06-14',val:1360},
+      {date:'2016-06-21',val:1360},
+      {date:'2016-07-01',val:1380},
+      {date:'2016-07-08',val:1362},
+      {date:'2016-07-15',val:1363},
+      {date:'2016-07-22',val:1365},
+      {date:'2016-07-29',val:1340},
+      {date:'2016-08-05',val:1334},
+      {date:'2016-08-12',val:1304},
+      {date:'2016-08-19',val:1298},
+      {date:'2016-08-26',val:1288},
+      {date:'2016-09-02',val:1283},
+      {date:'2016-09-09',val:1274},
+      {date:'2016-09-16',val:1245},
+      {date:'2016-09-23',val:1231},
+      {date:'2016-09-30',val:1214},
+      {date:'2016-10-07',val:1208},
+      {date:'2016-10-14',val:1192},
+      {date:'2016-10-21',val:1173},
+      {date:'2016-10-28',val:1150},
+      {date:'2016-11-04',val:1158},
+      {date:'2016-11-11',val:1146},
+      {date:'2016-11-18',val:1150},
+      {date:'2016-12-01',val:1137},
+      {date:'2016-12-08',val:1155},
+      {date:'2016-12-15',val:1135},
+      {date:'2016-12-22',val:1155},
+      {date:'2016-12-29',val:1144},
+      {date:'2017-01-05',val:1142},
+      {date:'2017-01-12',val:1140},
+      {date:'2017-01-19',val:1153},
+      {date:'2017-01-26',val:1173},
+      {date:'2017-02-02',val:1173},
+      {date:'2017-02-09',val:1177},
+      {date:'2017-02-16',val:1155},
+      {date:'2017-02-23',val:1191},
+      {date:'2017-03-02',val:1196},
+      {date:'2017-03-09',val:1193},
+      {date:'2017-03-16',val:1200},
+      {date:'2017-03-23',val:1213},
+      {date:'2017-03-30',val:1238},
+      {date:'2017-04-06',val:1219},
+      {date:'2017-04-13',val:1233},
+      {date:'2017-04-20',val:1259},
+      {date:'2017-04-27',val:1249},
+      {date:'2017-05-04',val:1257},
+      {date:'2017-05-11',val:1270},
+      {date:'2017-05-18',val:1264},
+      {date:'2017-05-25',val:1286},
+      {date:'2017-06-01',val:1279},
+      {date:'2017-06-08',val:1307},
+      {date:'2017-06-15',val:1305},
+      {date:'2017-06-22',val:1335},
+      {date:'2017-06-29',val:1320},
+      {date:'2017-07-06',val:1337},
+      {date:'2017-07-13',val:1313},
+      {date:'2017-07-20',val:1330},
+      {date:'2017-07-27',val:1339},
+      {date:'2017-08-03',val:1358},
+      {date:'2017-08-10',val:1323},
+      {date:'2017-08-17',val:1354},
+      {date:'2017-08-24',val:1351},
+      {date:'2017-09-01',val:1362},
+      {date:'2017-09-08',val:1352},
+      {date:'2017-09-15',val:1345},
+      {date:'2017-09-22',val:1337},
+      {date:'2017-09-29',val:1328},
+      {date:'2017-10-06',val:1342},
+      {date:'2017-10-13',val:1336},
+      {date:'2017-10-20',val:1357},
+      {date:'2017-10-27',val:1327},
+      {date:'2017-11-03',val:1335},
+      {date:'2017-11-10',val:1313},
+      {date:'2017-11-17',val:1323},
+      {date:'2017-11-24',val:1328},
+      {date:'2017-12-01',val:1332},
+      {date:'2017-12-08',val:1337},
+      {date:'2017-12-15',val:1320},
+      {date:'2017-12-22',val:1308},
+      {date:'2018-01-01',val:1325},
+      {date:'2018-01-08',val:1325},
+      {date:'2018-01-15',val:1324},
+      {date:'2018-01-22',val:1310},
+      {date:'2018-01-29',val:1327},
+      {date:'2018-02-05',val:1313},
+      {date:'2018-02-12',val:1316},
+      {date:'2018-02-19',val:1318},
+      {date:'2018-02-26',val:1307},
+      {date:'2018-03-05',val:1299},
+      {date:'2018-03-12',val:1313},
+      {date:'2018-03-19',val:1288},
+      {date:'2018-03-26',val:1277},
+      {date:'2018-04-02',val:1275},
+      {date:'2018-04-09',val:1283},
+      {date:'2018-04-16',val:1263},
+      {date:'2018-04-23',val:1261},
+      {date:'2018-04-30',val:1262},
+      {date:'2018-05-07',val:1239},
+      {date:'2018-05-14',val:1221},
+      {date:'2018-05-21',val:1235},
+      {date:'2018-05-28',val:1228},
+      {date:'2018-06-04',val:1214},
+      {date:'2018-06-11',val:1223},
+      {date:'2018-06-18',val:1215},
+      {date:'2018-06-25',val:1195},
+      {date:'2018-07-02',val:1205},
+      {date:'2018-07-09',val:1193},
+      {date:'2018-07-16',val:1177},
+      {date:'2018-07-23',val:1192},
+      {date:'2018-07-30',val:1185},
+      {date:'2018-08-06',val:1176},
+      {date:'2018-08-13',val:1186},
+      {date:'2018-08-20',val:1185},
+      {date:'2018-09-01',val:1175},
+      {date:'2018-09-08',val:1184},
+      {date:'2018-09-15',val:1191},
+      {date:'2018-09-22',val:1177},
+      {date:'2018-09-29',val:1191},
+      {date:'2018-10-06',val:1191},
+      {date:'2018-10-13',val:1217},
+      {date:'2018-10-20',val:1183},
+      {date:'2018-10-27',val:1213},
+      {date:'2018-11-03',val:1209},
+      {date:'2018-11-10',val:1218},
+      {date:'2018-11-17',val:1245},
+      {date:'2018-11-24',val:1234},
+      {date:'2018-12-01',val:1264},
+      {date:'2018-12-08',val:1246},
+      {date:'2018-12-15',val:1263},
+      {date:'2018-12-22',val:1263},
+      {date:'2018-12-29',val:1270},
+      {date:'2019-01-05',val:1287},
+      {date:'2019-01-12',val:1292},
+      {date:'2019-01-19',val:1307},
+      {date:'2019-01-26',val:1292},
+      {date:'2019-02-02',val:1344},
+      {date:'2019-02-09',val:1330},
+      {date:'2019-02-16',val:1359},
+      {date:'2019-02-23',val:1339},
+      {date:'2019-03-02',val:1361},
+      {date:'2019-03-09',val:1400},
+      {date:'2019-03-16',val:1364},
+      {date:'2019-03-23',val:1364},
+      {date:'2019-03-30',val:1381},
+      {date:'2019-04-06',val:1399},
+      {date:'2019-04-13',val:1407},
+      {date:'2019-04-20',val:1419},
+      {date:'2019-04-27',val:1406},
+      {date:'2019-05-04',val:1395},
+      {date:'2019-05-11',val:1411},
+      {date:'2019-05-18',val:1432},
+      {date:'2019-05-25',val:1425},
+      {date:'2019-06-01',val:1398},
+      {date:'2019-06-08',val:1422},
+      {date:'2019-06-15',val:1444},
+      {date:'2019-06-22',val:1461},
+      {date:'2019-06-29',val:1455},
+      {date:'2019-07-06',val:1465},
+      {date:'2019-07-13',val:1461},
+      {date:'2019-07-20',val:1480},
+      {date:'2019-07-27',val:1504},
+      {date:'2019-08-03',val:1523},
+      {date:'2019-08-10',val:1535},
+      {date:'2019-08-17',val:1531},
+      {date:'2019-08-24',val:1529},
+      {date:'2019-09-01',val:1535},
+      {date:'2019-09-08',val:1531},
+      {date:'2019-09-15',val:1555},
+      {date:'2019-09-22',val:1521},
+      {date:'2019-09-29',val:1549},
+      {date:'2019-10-06',val:1564},
+      {date:'2019-10-13',val:1582},
+      {date:'2019-10-20',val:1570},
+      {date:'2019-10-27',val:1588},
+      {date:'2019-11-03',val:1577},
+      {date:'2019-11-10',val:1580},
+      {date:'2019-11-17',val:1588},
+      {date:'2019-11-24',val:1624},
+      {date:'2019-12-01',val:1625},
+      {date:'2019-12-08',val:1627},
+      {date:'2019-12-15',val:1671},
+      {date:'2019-12-22',val:1635},
+      {date:'2019-12-29',val:1651},
+      {date:'2020-01-05',val:1654},
+      {date:'2020-01-12',val:1653},
+      {date:'2020-01-19',val:1693},
+      {date:'2020-01-26',val:1687},
+      {date:'2020-02-02',val:1653},
+      {date:'2020-02-09',val:1670},
+      {date:'2020-02-16',val:1683},
+      {date:'2020-02-23',val:1690},
+      {date:'2020-03-01',val:1662},
+      {date:'2020-03-08',val:1652},
+      {date:'2020-03-15',val:1664},
+      {date:'2020-03-22',val:1700},
+      {date:'2020-03-29',val:1715},
+      {date:'2020-04-05',val:1740},
+      {date:'2020-04-12',val:1746},
+      {date:'2020-04-19',val:1763},
+      {date:'2020-04-26',val:1776},
+      {date:'2020-05-03',val:1837},
+      {date:'2020-05-10',val:1865},
+      {date:'2020-05-17',val:1902},
+      {date:'2020-05-24',val:1927},
+      {date:'2020-05-31',val:1938},
+      {date:'2020-06-07',val:1988},
+      {date:'2020-06-14',val:1988},
+      {date:'2020-06-21',val:2001},
+      {date:'2020-06-28',val:2022},
+      {date:'2020-07-05',val:2036},
+      {date:'2020-07-12',val:2021},
+      {date:'2020-07-19',val:2067},
+      {date:'2020-08-01',val:2071},
+      {date:'2020-08-08',val:2060},
+      {date:'2020-08-15',val:2050},
+      {date:'2020-08-22',val:2062},
+      {date:'2020-08-29',val:2076},
+      {date:'2020-09-05',val:2039},
+      {date:'2020-09-12',val:2019},
+      {date:'2020-09-19',val:2004},
+      {date:'2020-09-26',val:1998},
+      {date:'2020-10-03',val:1963},
+      {date:'2020-10-10',val:1965},
+      {date:'2020-10-17',val:1950},
+      {date:'2020-10-24',val:1959},
+      {date:'2020-10-31',val:1926},
+      {date:'2020-11-07',val:1908},
+      {date:'2020-11-14',val:1863},
+      {date:'2020-11-21',val:1864},
+      {date:'2020-11-28',val:1818},
+      {date:'2020-12-05',val:1821},
+      {date:'2020-12-12',val:1804},
+      {date:'2020-12-19',val:1769},
+      {date:'2020-12-26',val:1792},
+      {date:'2021-01-02',val:1756},
+      {date:'2021-01-09',val:1707},
+      {date:'2021-01-16',val:1728},
+      {date:'2021-01-23',val:1703},
+      {date:'2021-01-30',val:1699},
+      {date:'2021-02-06',val:1697},
+      {date:'2021-02-13',val:1690},
+      {date:'2021-02-20',val:1654},
+      {date:'2021-03-01',val:1664},
+      {date:'2021-03-08',val:1694},
+      {date:'2021-03-15',val:1712},
+      {date:'2021-03-22',val:1736},
+      {date:'2021-03-29',val:1755},
+      {date:'2021-04-05',val:1724},
+      {date:'2021-04-12',val:1788},
+      {date:'2021-04-19',val:1775},
+      {date:'2021-04-26',val:1851},
+      {date:'2021-05-03',val:1854},
+      {date:'2021-05-10',val:1853},
+      {date:'2021-05-17',val:1916},
+      {date:'2021-05-24',val:1906},
+      {date:'2021-06-01',val:1871},
+      {date:'2021-06-08',val:1905},
+      {date:'2021-06-15',val:1890},
+      {date:'2021-06-22',val:1904},
+      {date:'2021-06-29',val:1897},
+      {date:'2021-07-06',val:1928},
+      {date:'2021-07-13',val:1888},
+      {date:'2021-07-20',val:1918},
+      {date:'2021-07-27',val:1944},
+      {date:'2021-08-03',val:1908},
+      {date:'2021-08-10',val:1928},
+      {date:'2021-08-17',val:1932},
+      {date:'2021-08-24',val:1923},
+      {date:'2021-08-31',val:1949},
+      {date:'2021-09-07',val:1946},
+      {date:'2021-09-14',val:1935},
+      {date:'2021-09-21',val:1983},
+      {date:'2021-09-28',val:1973},
+      {date:'2021-10-05',val:1964},
+      {date:'2021-10-12',val:1962},
+      {date:'2021-10-19',val:1965},
+      {date:'2021-10-26',val:2003},
+      {date:'2021-11-02',val:1987},
+      {date:'2021-11-09',val:2002},
+      {date:'2021-11-16',val:1998},
+      {date:'2021-11-23',val:2016},
+      {date:'2021-11-30',val:2009},
+      {date:'2021-12-07',val:2028},
+      {date:'2021-12-14',val:2018},
+      {date:'2021-12-21',val:2039},
+      {date:'2021-12-28',val:2041},
+      {date:'2022-01-04',val:2032},
+      {date:'2022-01-11',val:2023},
+      {date:'2022-01-18',val:2025},
+      {date:'2022-01-25',val:2031},
+      {date:'2022-02-01',val:2029},
+      {date:'2022-02-08',val:2062},
+      {date:'2022-02-15',val:2048},
+      {date:'2022-02-22',val:2075},
+      {date:'2022-03-01',val:2087},
+      {date:'2022-03-08',val:2049},
+      {date:'2022-03-15',val:2017},
+      {date:'2022-03-22',val:2028},
+      {date:'2022-03-29',val:2021},
+      {date:'2022-04-05',val:1984},
+      {date:'2022-04-12',val:1988},
+      {date:'2022-04-19',val:1978},
+      {date:'2022-04-26',val:1946},
+      {date:'2022-05-03',val:1919},
+      {date:'2022-05-10',val:1897},
+      {date:'2022-05-17',val:1911},
+      {date:'2022-05-24',val:1857},
+      {date:'2022-05-31',val:1823},
+      {date:'2022-06-07',val:1805},
+      {date:'2022-06-14',val:1799},
+      {date:'2022-06-21',val:1752},
+      {date:'2022-06-28',val:1746},
+      {date:'2022-07-05',val:1727},
+      {date:'2022-07-12',val:1707},
+      {date:'2022-07-19',val:1697},
+      {date:'2022-07-26',val:1654},
+      {date:'2022-08-02',val:1662},
+      {date:'2022-08-09',val:1625},
+      {date:'2022-08-16',val:1622},
+      {date:'2022-08-23',val:1637},
+      {date:'2022-09-01',val:1631},
+      {date:'2022-09-08',val:1621},
+      {date:'2022-09-15',val:1609},
+      {date:'2022-09-22',val:1637},
+      {date:'2022-09-29',val:1628},
+      {date:'2022-10-06',val:1633},
+      {date:'2022-10-13',val:1647},
+      {date:'2022-10-20',val:1670},
+      {date:'2022-10-27',val:1652},
+      {date:'2022-11-03',val:1699},
+      {date:'2022-11-10',val:1712},
+      {date:'2022-11-17',val:1718},
+      {date:'2022-11-24',val:1757},
+      {date:'2022-12-01',val:1769},
+      {date:'2022-12-08',val:1770},
+      {date:'2022-12-15',val:1788},
+      {date:'2022-12-22',val:1826},
+      {date:'2022-12-29',val:1813},
+      {date:'2023-01-05',val:1849},
+      {date:'2023-01-12',val:1863},
+      {date:'2023-01-19',val:1892},
+      {date:'2023-01-26',val:1913},
+      {date:'2023-02-02',val:1928},
+      {date:'2023-02-09',val:1962},
+      {date:'2023-02-16',val:1964},
+      {date:'2023-02-23',val:1971},
+      {date:'2023-03-02',val:1971},
+      {date:'2023-03-09',val:2014},
+      {date:'2023-03-16',val:2023},
+      {date:'2023-03-23',val:2048},
+      {date:'2023-03-30',val:2021},
+      {date:'2023-04-06',val:2041},
+      {date:'2023-04-13',val:2045},
+      {date:'2023-04-20',val:2047},
+      {date:'2023-05-01',val:2050},
+      {date:'2023-05-08',val:2020},
+      {date:'2023-05-15',val:2058},
+      {date:'2023-05-22',val:2048},
+      {date:'2023-05-29',val:2046},
+      {date:'2023-06-05',val:2053},
+      {date:'2023-06-12',val:1999},
+      {date:'2023-06-19',val:1990},
+      {date:'2023-06-26',val:1975},
+      {date:'2023-07-03',val:1990},
+      {date:'2023-07-10',val:1916},
+      {date:'2023-07-17',val:1934},
+      {date:'2023-07-24',val:1888},
+      {date:'2023-07-31',val:1856},
+      {date:'2023-08-07',val:1849},
+      {date:'2023-08-14',val:1845},
+      {date:'2023-08-21',val:1869},
+      {date:'2023-08-28',val:1829},
+      {date:'2023-09-04',val:1829},
+      {date:'2023-09-11',val:1809},
+      {date:'2023-09-18',val:1830},
+      {date:'2023-10-01',val:1804},
+      {date:'2023-10-08',val:1842},
+      {date:'2023-10-15',val:1814},
+      {date:'2023-10-22',val:1828},
+      {date:'2023-10-29',val:1856},
+      {date:'2023-11-05',val:1872},
+      {date:'2023-11-12',val:1913},
+      {date:'2023-11-19',val:1916},
+      {date:'2023-11-26',val:1921},
+      {date:'2023-12-03',val:1958},
+      {date:'2023-12-10',val:1986},
+      {date:'2023-12-17',val:2036},
+      {date:'2023-12-24',val:2061},
+      {date:'2023-12-31',val:2083},
+      {date:'2024-01-07',val:2130},
+      {date:'2024-01-14',val:2137},
+      {date:'2024-01-21',val:2173},
+      {date:'2024-01-28',val:2207},
+      {date:'2024-02-04',val:2258},
+      {date:'2024-02-11',val:2254},
+      {date:'2024-02-18',val:2272},
+      {date:'2024-02-25',val:2280},
+      {date:'2024-03-03',val:2329},
+      {date:'2024-03-10',val:2320},
+      {date:'2024-03-17',val:2348},
+      {date:'2024-03-24',val:2312},
+      {date:'2024-04-01',val:2370},
+      {date:'2024-04-08',val:2327},
+      {date:'2024-04-15',val:2342},
+      {date:'2024-04-22',val:2385},
+      {date:'2024-04-29',val:2350},
+      {date:'2024-05-06',val:2387},
+      {date:'2024-05-13',val:2406},
+      {date:'2024-05-20',val:2402},
+      {date:'2024-05-27',val:2467},
+      {date:'2024-06-03',val:2490},
+      {date:'2024-06-10',val:2443},
+      {date:'2024-06-17',val:2475},
+      {date:'2024-06-24',val:2543},
+      {date:'2024-07-01',val:2523},
+      {date:'2024-07-08',val:2565},
+      {date:'2024-07-15',val:2598},
+      {date:'2024-07-22',val:2632},
+      {date:'2024-07-29',val:2635},
+      {date:'2024-08-05',val:2662},
+      {date:'2024-08-12',val:2662},
+      {date:'2024-08-19',val:2724},
+      {date:'2024-08-26',val:2701},
+      {date:'2024-09-02',val:2732},
+      {date:'2024-09-09',val:2724},
+      {date:'2024-09-16',val:2746},
+      {date:'2024-09-23',val:2745},
+      {date:'2024-10-01',val:2746},
+      {date:'2024-10-08',val:2729},
+      {date:'2024-10-15',val:2773},
+      {date:'2024-10-22',val:2794},
+      {date:'2024-10-29',val:2776},
+      {date:'2024-11-05',val:2798},
+      {date:'2024-11-12',val:2812},
+      {date:'2024-11-19',val:2826},
+      {date:'2024-11-26',val:2825},
+      {date:'2024-12-03',val:2836},
+      {date:'2024-12-10',val:2864},
+      {date:'2024-12-17',val:2859},
+      {date:'2024-12-24',val:2846},
+      {date:'2024-12-31',val:2880},
+      {date:'2025-01-07',val:2844},
+      {date:'2025-01-14',val:2894},
+      {date:'2025-01-21',val:2908},
+      {date:'2025-02-01',val:2929},
+      {date:'2025-02-08',val:2921},
+      {date:'2025-02-15',val:2984},
+      {date:'2025-02-22',val:3027},
+      {date:'2025-03-01',val:3075},
+      {date:'2025-03-08',val:3138},
+      {date:'2025-03-15',val:3212},
+      {date:'2025-03-22',val:3247},
+      {date:'2025-04-01',val:3317},
+      {date:'2025-04-08',val:3294},
+      {date:'2025-04-15',val:3315},
+      {date:'2025-04-22',val:3302},
+      {date:'2025-04-29',val:3327},
+      {date:'2025-05-06',val:3327},
+      {date:'2025-05-13',val:3282},
+      {date:'2025-05-20',val:3292},
+      {date:'2025-05-27',val:3284},
+      {date:'2025-06-03',val:3255},
+      {date:'2025-06-10',val:3315},
+      {date:'2025-06-17',val:3328},
+      {date:'2025-06-24',val:3296},
+      {date:'2025-07-01',val:3283},
+      {date:'2025-07-08',val:3324},
+      {date:'2025-07-15',val:3233},
+      {date:'2025-07-22',val:3299},
+      {date:'2025-07-29',val:3298},
+      {date:'2025-08-05',val:3278},
+      {date:'2025-08-12',val:3329},
+      {date:'2025-08-19',val:3318},
+      {date:'2025-08-26',val:3284},
+      {date:'2025-09-02',val:3288},
+      {date:'2025-09-09',val:3280},
+      {date:'2025-09-16',val:3276},
+      {date:'2025-09-23',val:3254},
+      {date:'2025-09-30',val:3324},
+      {date:'2025-10-07',val:3314},
+      {date:'2025-10-14',val:3308},
+      {date:'2025-10-21',val:3257},
+      {date:'2025-10-28',val:3340},
+      {date:'2025-11-04',val:3337},
+      {date:'2025-11-11',val:3289},
+      {date:'2025-11-18',val:3260},
+      {date:'2025-11-25',val:3261},
+      {date:'2025-12-02',val:3294},
+      {date:'2025-12-09',val:3258},
+      {date:'2025-12-16',val:3281},
+      {date:'2025-12-23',val:3310},
+      {date:'2025-12-30',val:3242},
+      {date:'2026-01-06',val:3334},
+      {date:'2026-01-13',val:3322},
+      {date:'2026-01-20',val:3248},
+      {date:'2026-01-27',val:3243},
+      {date:'2026-02-03',val:3273},
+      {date:'2026-02-10',val:3253}
+    ];
+    const cutoff = fmt(startDate);
+    const filtered = staticGold.filter(d => d.date >= cutoff);
+    const result2 = filtered.length >= 2 ? filtered : staticGold.slice(-6);
+    overlayCache.gold[tf] = result2;
+    return result2;
+  }
+}
+
+// ── S&P 500 DATA ──
+async function fetchSP500Data(tf) {
+  if (!overlayCache.sp500) overlayCache.sp500 = {};
+  if (overlayCache.sp500[tf]) return overlayCache.sp500[tf];
+  if (overlayCache._sp500Static && overlayCache._sp500Static[tf]) {
+    _bgFetchSP500(tf);
+    return overlayCache._sp500Static[tf];
+  }
+  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = daysMap[tf] || 3660;
+  const now = new Date();
+  const startDate = new Date(now - days * 86400000);
+  const fmt = d => d.toISOString().split('T')[0];
+
+  // FRED: SP500 = S&P 500 Index
+  const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&observation_start=${fmt(startDate)}`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  try {
+    const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
+    if (!r.ok) throw new Error('proxy error');
+    const text = await r.text();
+    const lines = text.trim().split('\n').slice(1);
+    const result = lines.map(l => {
+      const parts = l.split(',');
+      return { date: parts[0], val: parseFloat(parts[1]) };
+    }).filter(d => !isNaN(d.val) && d.val > 0)
+      .sort((a,b) => a.date.localeCompare(b.date)); // pastikan ascending
+    if (result.length < 2) throw new Error('no data');
+    overlayCache.sp500[tf] = result;
+    return result;
+  } catch(e) {
+    console.warn('SP500 fetch failed, using static:', e);
+    // Data statis approximate S&P500
+    const staticSP500 = [
+      {date:'2015-01-05',val:2036},
+      {date:'2015-01-12',val:2050},
+      {date:'2015-01-19',val:2051},
+      {date:'2015-01-26',val:2060},
+      {date:'2015-02-02',val:2055},
+      {date:'2015-02-09',val:2048},
+      {date:'2015-02-16',val:2048},
+      {date:'2015-02-23',val:2085},
+      {date:'2015-03-02',val:2044},
+      {date:'2015-03-09',val:2075},
+      {date:'2015-03-16',val:2075},
+      {date:'2015-03-23',val:2098},
+      {date:'2015-03-30',val:2096},
+      {date:'2015-04-06',val:2103},
+      {date:'2015-04-13',val:2127},
+      {date:'2015-04-20',val:2112},
+      {date:'2015-04-27',val:2107},
+      {date:'2015-05-04',val:2142},
+      {date:'2015-05-11',val:2142},
+      {date:'2015-05-21',val:2148},
+      {date:'2015-05-28',val:2134},
+      {date:'2015-06-04',val:2102},
+      {date:'2015-06-11',val:2111},
+      {date:'2015-06-18',val:2065},
+      {date:'2015-06-25',val:2046},
+      {date:'2015-07-02',val:1998},
+      {date:'2015-07-09',val:1974},
+      {date:'2015-07-16',val:1960},
+      {date:'2015-07-23',val:1935},
+      {date:'2015-07-30',val:1903},
+      {date:'2015-08-06',val:1900},
+      {date:'2015-08-13',val:1870},
+      {date:'2015-08-25',val:1840},
+      {date:'2015-09-01',val:1882},
+      {date:'2015-09-08',val:1868},
+      {date:'2015-09-15',val:1904},
+      {date:'2015-09-22',val:1958},
+      {date:'2015-09-29',val:2010},
+      {date:'2015-10-06',val:2046},
+      {date:'2015-10-13',val:2066},
+      {date:'2015-10-20',val:2096},
+      {date:'2015-11-01',val:2080},
+      {date:'2015-11-08',val:2130},
+      {date:'2015-11-15',val:2080},
+      {date:'2015-11-22',val:2065},
+      {date:'2015-11-29',val:2042},
+      {date:'2015-12-06',val:2036},
+      {date:'2015-12-13',val:1995},
+      {date:'2015-12-20',val:1966},
+      {date:'2015-12-27',val:1930},
+      {date:'2016-01-03',val:1903},
+      {date:'2016-01-10',val:1885},
+      {date:'2016-01-17',val:1860},
+      {date:'2016-01-24',val:1845},
+      {date:'2016-01-31',val:1825},
+      {date:'2016-02-11',val:1843},
+      {date:'2016-02-18',val:1838},
+      {date:'2016-02-25',val:1858},
+      {date:'2016-03-03',val:1854},
+      {date:'2016-03-10',val:1861},
+      {date:'2016-03-17',val:1872},
+      {date:'2016-03-24',val:1904},
+      {date:'2016-03-31',val:1910},
+      {date:'2016-04-07',val:1916},
+      {date:'2016-04-14',val:1940},
+      {date:'2016-04-21',val:1943},
+      {date:'2016-04-28',val:2013},
+      {date:'2016-05-05',val:2036},
+      {date:'2016-05-12',val:2018},
+      {date:'2016-05-19',val:2043},
+      {date:'2016-05-26',val:2064},
+      {date:'2016-06-02',val:2084},
+      {date:'2016-06-09',val:2114},
+      {date:'2016-06-16',val:2125},
+      {date:'2016-06-23',val:2133},
+      {date:'2016-06-30',val:2143},
+      {date:'2016-07-11',val:2143},
+      {date:'2016-07-18',val:2146},
+      {date:'2016-07-25',val:2116},
+      {date:'2016-08-01',val:2134},
+      {date:'2016-08-08',val:2157},
+      {date:'2016-08-15',val:2127},
+      {date:'2016-08-22',val:2182},
+      {date:'2016-08-29',val:2188},
+      {date:'2016-09-05',val:2180},
+      {date:'2016-09-12',val:2191},
+      {date:'2016-09-19',val:2190},
+      {date:'2016-09-26',val:2224},
+      {date:'2016-10-03',val:2223},
+      {date:'2016-10-10',val:2225},
+      {date:'2016-10-17',val:2207},
+      {date:'2016-10-24',val:2256},
+      {date:'2016-10-31',val:2233},
+      {date:'2016-11-07',val:2263},
+      {date:'2016-11-14',val:2255},
+      {date:'2016-11-21',val:2269},
+      {date:'2016-11-28',val:2294},
+      {date:'2016-12-05',val:2245},
+      {date:'2016-12-13',val:2268},
+      {date:'2016-12-20',val:2258},
+      {date:'2016-12-27',val:2269},
+      {date:'2017-01-03',val:2299},
+      {date:'2017-01-10',val:2296},
+      {date:'2017-01-17',val:2307},
+      {date:'2017-01-24',val:2332},
+      {date:'2017-01-31',val:2392},
+      {date:'2017-02-07',val:2374},
+      {date:'2017-02-14',val:2377},
+      {date:'2017-02-21',val:2406},
+      {date:'2017-03-01',val:2377},
+      {date:'2017-03-08',val:2401},
+      {date:'2017-03-15',val:2416},
+      {date:'2017-03-22',val:2404},
+      {date:'2017-03-29',val:2400},
+      {date:'2017-04-05',val:2370},
+      {date:'2017-04-12',val:2431},
+      {date:'2017-04-19',val:2418},
+      {date:'2017-04-26',val:2444},
+      {date:'2017-05-03',val:2458},
+      {date:'2017-05-10',val:2415},
+      {date:'2017-05-17',val:2445},
+      {date:'2017-05-24',val:2425},
+      {date:'2017-05-31',val:2463},
+      {date:'2017-06-07',val:2450},
+      {date:'2017-06-14',val:2474},
+      {date:'2017-06-21',val:2453},
+      {date:'2017-06-28',val:2457},
+      {date:'2017-07-05',val:2453},
+      {date:'2017-07-12',val:2471},
+      {date:'2017-07-19',val:2504},
+      {date:'2017-07-26',val:2439},
+      {date:'2017-08-08',val:2449},
+      {date:'2017-08-15',val:2473},
+      {date:'2017-08-22',val:2471},
+      {date:'2017-08-29',val:2469},
+      {date:'2017-09-05',val:2532},
+      {date:'2017-09-12',val:2506},
+      {date:'2017-09-19',val:2557},
+      {date:'2017-09-26',val:2536},
+      {date:'2017-10-03',val:2526},
+      {date:'2017-10-10',val:2596},
+      {date:'2017-10-17',val:2630},
+      {date:'2017-10-24',val:2634},
+      {date:'2017-10-31',val:2662},
+      {date:'2017-11-07',val:2637},
+      {date:'2017-11-14',val:2641},
+      {date:'2017-11-21',val:2687},
+      {date:'2017-11-28',val:2677},
+      {date:'2017-12-05',val:2703},
+      {date:'2017-12-18',val:2681},
+      {date:'2017-12-25',val:2705},
+      {date:'2018-01-01',val:2763},
+      {date:'2018-01-08',val:2809},
+      {date:'2018-01-15',val:2854},
+      {date:'2018-01-26',val:2862},
+      {date:'2018-02-02',val:2890},
+      {date:'2018-02-09',val:2832},
+      {date:'2018-02-16',val:2778},
+      {date:'2018-02-23',val:2744},
+      {date:'2018-03-02',val:2667},
+      {date:'2018-03-09',val:2644},
+      {date:'2018-03-16',val:2622},
+      {date:'2018-03-23',val:2563},
+      {date:'2018-04-02',val:2533},
+      {date:'2018-04-09',val:2531},
+      {date:'2018-04-16',val:2556},
+      {date:'2018-04-23',val:2548},
+      {date:'2018-04-30',val:2558},
+      {date:'2018-05-07',val:2597},
+      {date:'2018-05-14',val:2600},
+      {date:'2018-05-21',val:2639},
+      {date:'2018-05-28',val:2652},
+      {date:'2018-06-04',val:2664},
+      {date:'2018-06-11',val:2718},
+      {date:'2018-06-18',val:2737},
+      {date:'2018-06-25',val:2737},
+      {date:'2018-07-02',val:2748},
+      {date:'2018-07-09',val:2806},
+      {date:'2018-07-16',val:2836},
+      {date:'2018-07-23',val:2824},
+      {date:'2018-07-30',val:2843},
+      {date:'2018-08-06',val:2904},
+      {date:'2018-08-13',val:2924},
+      {date:'2018-08-20',val:2900},
+      {date:'2018-08-27',val:2904},
+      {date:'2018-09-03',val:2930},
+      {date:'2018-09-10',val:2918},
+      {date:'2018-09-20',val:2933},
+      {date:'2018-09-27',val:2935},
+      {date:'2018-10-04',val:2909},
+      {date:'2018-10-11',val:2870},
+      {date:'2018-10-18',val:2775},
+      {date:'2018-10-25',val:2697},
+      {date:'2018-11-01',val:2697},
+      {date:'2018-11-08',val:2613},
+      {date:'2018-11-15',val:2554},
+      {date:'2018-11-22',val:2478},
+      {date:'2018-11-29',val:2451},
+      {date:'2018-12-06',val:2401},
+      {date:'2018-12-13',val:2350},
+      {date:'2018-12-24',val:2369},
+      {date:'2018-12-31',val:2322},
+      {date:'2019-01-07',val:2338},
+      {date:'2019-01-14',val:2404},
+      {date:'2019-01-21',val:2447},
+      {date:'2019-01-28',val:2460},
+      {date:'2019-02-04',val:2521},
+      {date:'2019-02-11',val:2572},
+      {date:'2019-02-18',val:2618},
+      {date:'2019-02-25',val:2688},
+      {date:'2019-03-04',val:2735},
+      {date:'2019-03-11',val:2768},
+      {date:'2019-03-18',val:2794},
+      {date:'2019-03-25',val:2852},
+      {date:'2019-04-01',val:2882},
+      {date:'2019-04-08',val:2884},
+      {date:'2019-04-15',val:2899},
+      {date:'2019-04-23',val:2927},
+      {date:'2019-04-30',val:2916},
+      {date:'2019-05-07',val:2928},
+      {date:'2019-05-14',val:2959},
+      {date:'2019-05-21',val:2978},
+      {date:'2019-05-28',val:2969},
+      {date:'2019-06-04',val:2975},
+      {date:'2019-06-11',val:2976},
+      {date:'2019-06-18',val:3007},
+      {date:'2019-06-25',val:3005},
+      {date:'2019-07-02',val:3000},
+      {date:'2019-07-09',val:2989},
+      {date:'2019-07-16',val:3036},
+      {date:'2019-07-26',val:2992},
+      {date:'2019-08-02',val:3041},
+      {date:'2019-08-09',val:3024},
+      {date:'2019-08-16',val:3012},
+      {date:'2019-08-23',val:2986},
+      {date:'2019-08-30',val:2995},
+      {date:'2019-09-06',val:2949},
+      {date:'2019-09-13',val:2946},
+      {date:'2019-09-20',val:2913},
+      {date:'2019-10-01',val:2928},
+      {date:'2019-10-08',val:2921},
+      {date:'2019-10-15',val:2921},
+      {date:'2019-10-22',val:2994},
+      {date:'2019-10-29',val:3002},
+      {date:'2019-11-05',val:3003},
+      {date:'2019-11-12',val:2997},
+      {date:'2019-11-19',val:3071},
+      {date:'2019-11-26',val:3104},
+      {date:'2019-12-03',val:3131},
+      {date:'2019-12-10',val:3131},
+      {date:'2019-12-17',val:3219},
+      {date:'2019-12-24',val:3269},
+      {date:'2019-12-31',val:3254},
+      {date:'2020-01-07',val:3259},
+      {date:'2020-01-14',val:3318},
+      {date:'2020-01-21',val:3308},
+      {date:'2020-01-28',val:3355},
+      {date:'2020-02-04',val:3380},
+      {date:'2020-02-11',val:3365},
+      {date:'2020-02-19',val:3414},
+      {date:'2020-02-26',val:3205},
+      {date:'2020-03-04',val:2800},
+      {date:'2020-03-11',val:2393},
+      {date:'2020-03-23',val:2203},
+      {date:'2020-03-30',val:2240},
+      {date:'2020-04-06',val:2276},
+      {date:'2020-04-13',val:2397},
+      {date:'2020-04-20',val:2505},
+      {date:'2020-04-27',val:2637},
+      {date:'2020-05-04',val:2774},
+      {date:'2020-05-11',val:2923},
+      {date:'2020-05-18',val:3027},
+      {date:'2020-05-25',val:3105},
+      {date:'2020-06-01',val:3222},
+      {date:'2020-06-08',val:3239},
+      {date:'2020-06-15',val:3230},
+      {date:'2020-06-22',val:3267},
+      {date:'2020-06-29',val:3223},
+      {date:'2020-07-06',val:3308},
+      {date:'2020-07-13',val:3277},
+      {date:'2020-07-20',val:3320},
+      {date:'2020-07-27',val:3370},
+      {date:'2020-08-03',val:3395},
+      {date:'2020-08-10',val:3391},
+      {date:'2020-08-18',val:3385},
+      {date:'2020-08-25',val:3387},
+      {date:'2020-09-01',val:3384},
+      {date:'2020-09-08',val:3280},
+      {date:'2020-09-15',val:3268},
+      {date:'2020-09-24',val:3228},
+      {date:'2020-10-01',val:3271},
+      {date:'2020-10-08',val:3291},
+      {date:'2020-10-15',val:3326},
+      {date:'2020-10-22',val:3357},
+      {date:'2020-10-29',val:3378},
+      {date:'2020-11-05',val:3434},
+      {date:'2020-11-12',val:3490},
+      {date:'2020-11-19',val:3574},
+      {date:'2020-11-26',val:3611},
+      {date:'2020-12-03',val:3649},
+      {date:'2020-12-10',val:3710},
+      {date:'2020-12-17',val:3695},
+      {date:'2020-12-24',val:3710},
+      {date:'2020-12-31',val:3744},
+      {date:'2021-01-07',val:3812},
+      {date:'2021-01-14',val:3778},
+      {date:'2021-01-21',val:3785},
+      {date:'2021-01-28',val:3842},
+      {date:'2021-02-04',val:3787},
+      {date:'2021-02-11',val:3873},
+      {date:'2021-02-18',val:3917},
+      {date:'2021-02-25',val:3983},
+      {date:'2021-03-04',val:4006},
+      {date:'2021-03-11',val:4023},
+      {date:'2021-03-18',val:4049},
+      {date:'2021-03-25',val:4079},
+      {date:'2021-04-01',val:4093},
+      {date:'2021-04-08',val:4133},
+      {date:'2021-04-15',val:4158},
+      {date:'2021-04-22',val:4174},
+      {date:'2021-04-29',val:4200},
+      {date:'2021-05-06',val:4244},
+      {date:'2021-05-13',val:4203},
+      {date:'2021-05-20',val:4229},
+      {date:'2021-05-27',val:4246},
+      {date:'2021-06-03',val:4243},
+      {date:'2021-06-10',val:4241},
+      {date:'2021-06-17',val:4280},
+      {date:'2021-06-24',val:4366},
+      {date:'2021-07-01',val:4351},
+      {date:'2021-07-08',val:4307},
+      {date:'2021-07-15',val:4405},
+      {date:'2021-07-22',val:4444},
+      {date:'2021-07-29',val:4454},
+      {date:'2021-08-05',val:4453},
+      {date:'2021-08-12',val:4480},
+      {date:'2021-08-19',val:4556},
+      {date:'2021-08-26',val:4569},
+      {date:'2021-09-02',val:4551},
+      {date:'2021-09-09',val:4538},
+      {date:'2021-09-16',val:4516},
+      {date:'2021-09-23',val:4544},
+      {date:'2021-09-30',val:4511},
+      {date:'2021-10-07',val:4548},
+      {date:'2021-10-18',val:4467},
+      {date:'2021-10-25',val:4501},
+      {date:'2021-11-01',val:4518},
+      {date:'2021-11-08',val:4527},
+      {date:'2021-11-15',val:4578},
+      {date:'2021-11-22',val:4596},
+      {date:'2021-11-29',val:4676},
+      {date:'2021-12-06',val:4682},
+      {date:'2021-12-13',val:4711},
+      {date:'2021-12-20',val:4729},
+      {date:'2021-12-27',val:4722},
+      {date:'2022-01-03',val:4795},
+      {date:'2022-01-10',val:4752},
+      {date:'2022-01-17',val:4711},
+      {date:'2022-01-24',val:4586},
+      {date:'2022-01-31',val:4528},
+      {date:'2022-02-07',val:4398},
+      {date:'2022-02-14',val:4350},
+      {date:'2022-02-21',val:4269},
+      {date:'2022-02-28',val:4201},
+      {date:'2022-03-08',val:4173},
+      {date:'2022-03-15',val:4137},
+      {date:'2022-03-22',val:4161},
+      {date:'2022-03-29',val:4158},
+      {date:'2022-04-05',val:4078},
+      {date:'2022-04-12',val:4025},
+      {date:'2022-04-19',val:3989},
+      {date:'2022-04-26',val:3925},
+      {date:'2022-05-03',val:3886},
+      {date:'2022-05-10',val:3821},
+      {date:'2022-05-17',val:3760},
+      {date:'2022-05-24',val:3785},
+      {date:'2022-05-31',val:3694},
+      {date:'2022-06-07',val:3708},
+      {date:'2022-06-16',val:3655},
+      {date:'2022-06-23',val:3734},
+      {date:'2022-06-30',val:3785},
+      {date:'2022-07-07',val:3885},
+      {date:'2022-07-14',val:4001},
+      {date:'2022-07-21',val:4122},
+      {date:'2022-07-28',val:4203},
+      {date:'2022-08-04',val:4310},
+      {date:'2022-08-16',val:4312},
+      {date:'2022-08-23',val:4271},
+      {date:'2022-08-30',val:4196},
+      {date:'2022-09-06',val:4113},
+      {date:'2022-09-13',val:3955},
+      {date:'2022-09-20',val:3785},
+      {date:'2022-09-27',val:3676},
+      {date:'2022-10-04',val:3625},
+      {date:'2022-10-12',val:3555},
+      {date:'2022-10-19',val:3605},
+      {date:'2022-10-26',val:3602},
+      {date:'2022-11-02',val:3623},
+      {date:'2022-11-09',val:3673},
+      {date:'2022-11-16',val:3723},
+      {date:'2022-11-23',val:3722},
+      {date:'2022-11-30',val:3773},
+      {date:'2022-12-07',val:3857},
+      {date:'2022-12-14',val:3909},
+      {date:'2022-12-21',val:3981},
+      {date:'2022-12-28',val:4026},
+      {date:'2023-01-04',val:4021},
+      {date:'2023-01-11',val:4013},
+      {date:'2023-01-18',val:4091},
+      {date:'2023-01-25',val:4152},
+      {date:'2023-02-02',val:4171},
+      {date:'2023-02-09',val:4102},
+      {date:'2023-02-16',val:4157},
+      {date:'2023-02-23',val:4128},
+      {date:'2023-03-02',val:4132},
+      {date:'2023-03-09',val:4097},
+      {date:'2023-03-16',val:4149},
+      {date:'2023-03-23',val:4178},
+      {date:'2023-03-30',val:4179},
+      {date:'2023-04-06',val:4155},
+      {date:'2023-04-13',val:4160},
+      {date:'2023-04-20',val:4180},
+      {date:'2023-05-01',val:4198},
+      {date:'2023-05-08',val:4149},
+      {date:'2023-05-15',val:4201},
+      {date:'2023-05-22',val:4266},
+      {date:'2023-05-29',val:4271},
+      {date:'2023-06-05',val:4326},
+      {date:'2023-06-12',val:4375},
+      {date:'2023-06-19',val:4414},
+      {date:'2023-06-26',val:4437},
+      {date:'2023-07-03',val:4552},
+      {date:'2023-07-10',val:4540},
+      {date:'2023-07-17',val:4627},
+      {date:'2023-07-27',val:4623},
+      {date:'2023-08-03',val:4545},
+      {date:'2023-08-10',val:4487},
+      {date:'2023-08-17',val:4552},
+      {date:'2023-08-24',val:4432},
+      {date:'2023-08-31',val:4522},
+      {date:'2023-09-07',val:4346},
+      {date:'2023-09-14',val:4300},
+      {date:'2023-09-21',val:4280},
+      {date:'2023-09-28',val:4212},
+      {date:'2023-10-05',val:4168},
+      {date:'2023-10-12',val:4195},
+      {date:'2023-10-19',val:4185},
+      {date:'2023-10-27',val:4144},
+      {date:'2023-11-03',val:4099},
+      {date:'2023-11-10',val:4180},
+      {date:'2023-11-17',val:4242},
+      {date:'2023-11-24',val:4304},
+      {date:'2023-12-01',val:4428},
+      {date:'2023-12-08',val:4483},
+      {date:'2023-12-15',val:4525},
+      {date:'2023-12-22',val:4603},
+      {date:'2023-12-29',val:4750},
+      {date:'2024-01-05',val:4850},
+      {date:'2024-01-12',val:4800},
+      {date:'2024-01-19',val:4802},
+      {date:'2024-01-26',val:4913},
+      {date:'2024-02-02',val:4898},
+      {date:'2024-02-09',val:4955},
+      {date:'2024-02-16',val:5061},
+      {date:'2024-02-23',val:5083},
+      {date:'2024-03-01',val:5142},
+      {date:'2024-03-08',val:5119},
+      {date:'2024-03-15',val:5271},
+      {date:'2024-03-28',val:5232},
+      {date:'2024-04-04',val:5322},
+      {date:'2024-04-11',val:5292},
+      {date:'2024-04-18',val:5240},
+      {date:'2024-04-25',val:5380},
+      {date:'2024-05-02',val:5356},
+      {date:'2024-05-09',val:5453},
+      {date:'2024-05-16',val:5481},
+      {date:'2024-05-23',val:5479},
+      {date:'2024-05-30',val:5481},
+      {date:'2024-06-06',val:5584},
+      {date:'2024-06-13',val:5611},
+      {date:'2024-06-20',val:5594},
+      {date:'2024-06-27',val:5642},
+      {date:'2024-07-04',val:5685},
+      {date:'2024-07-16',val:5665},
+      {date:'2024-07-23',val:5424},
+      {date:'2024-08-05',val:5204},
+      {date:'2024-08-12',val:5195},
+      {date:'2024-08-19',val:5154},
+      {date:'2024-08-26',val:5264},
+      {date:'2024-09-02',val:5355},
+      {date:'2024-09-09',val:5421},
+      {date:'2024-09-16',val:5420},
+      {date:'2024-09-23',val:5557},
+      {date:'2024-09-30',val:5739},
+      {date:'2024-10-07',val:5692},
+      {date:'2024-10-14',val:5730},
+      {date:'2024-10-21',val:5790},
+      {date:'2024-10-28',val:5915},
+      {date:'2024-11-04',val:5923},
+      {date:'2024-11-11',val:5961},
+      {date:'2024-11-18',val:6045},
+      {date:'2024-11-29',val:6062},
+      {date:'2024-12-06',val:6069},
+      {date:'2024-12-13',val:6077},
+      {date:'2024-12-20',val:6006},
+      {date:'2024-12-27',val:6024},
+      {date:'2025-01-03',val:6123},
+      {date:'2025-01-10',val:6111},
+      {date:'2025-01-17',val:6111},
+      {date:'2025-01-24',val:6057},
+      {date:'2025-01-31',val:6082},
+      {date:'2025-02-07',val:6192},
+      {date:'2025-02-19',val:6068},
+      {date:'2025-02-26',val:6089},
+      {date:'2025-03-05',val:5850},
+      {date:'2025-03-12',val:5558},
+      {date:'2025-03-19',val:5265},
+      {date:'2025-03-26',val:5072},
+      {date:'2025-04-07',val:5010},
+      {date:'2025-04-14',val:5111},
+      {date:'2025-04-21',val:5170},
+      {date:'2025-04-28',val:5313},
+      {date:'2025-05-05',val:5586},
+      {date:'2025-05-12',val:5761},
+      {date:'2025-05-19',val:5843},
+      {date:'2025-06-01',val:5875},
+      {date:'2025-06-08',val:5844},
+      {date:'2025-06-15',val:5879},
+      {date:'2025-06-22',val:5915},
+      {date:'2025-06-29',val:5908},
+      {date:'2025-07-06',val:5973},
+      {date:'2025-07-13',val:5906},
+      {date:'2025-07-20',val:5880},
+      {date:'2025-07-27',val:5924},
+      {date:'2025-08-03',val:5943},
+      {date:'2025-08-10',val:5899},
+      {date:'2025-08-17',val:5880},
+      {date:'2025-08-24',val:5928},
+      {date:'2025-08-31',val:5851},
+      {date:'2025-09-07',val:5900},
+      {date:'2025-09-14',val:5901},
+      {date:'2025-09-21',val:5871},
+      {date:'2025-09-28',val:5942},
+      {date:'2025-10-05',val:5803},
+      {date:'2025-10-12',val:5918},
+      {date:'2025-10-19',val:5805},
+      {date:'2025-10-26',val:5864},
+      {date:'2025-11-02',val:5785},
+      {date:'2025-11-09',val:5783},
+      {date:'2025-11-16',val:5791},
+      {date:'2025-11-23',val:5881},
+      {date:'2025-11-30',val:5810},
+      {date:'2025-12-07',val:5759},
+      {date:'2025-12-14',val:5794},
+      {date:'2025-12-21',val:5842},
+      {date:'2025-12-28',val:5770},
+      {date:'2026-01-04',val:5864},
+      {date:'2026-01-11',val:5814},
+      {date:'2026-01-18',val:5793},
+      {date:'2026-01-25',val:5821},
+      {date:'2026-02-01',val:5850},
+      {date:'2026-02-08',val:5815},
+      {date:'2026-02-15',val:5850}
+    ];
+    const cutoff = fmt(startDate);
+    const filtered = staticSP500.filter(d => d.date >= cutoff);
+    const result2 = filtered.length >= 2 ? filtered : staticSP500.slice(-6);
+    overlayCache.sp500[tf] = result2;
+    return result2;
+  }
+}
+
+// ── PRELOAD: fetch overlay data di background saat app start ──
+async function _preloadOverlayData() {
+  // Urutan TF yang paling sering dipakai (preload 1W dan curTF dulu)
+  const tfsToPreload = ['1W', '10Y', '5Y', '1Y', '3Y', '1M'];
+
+  // Preload semua overlay secara paralel, dengan delay kecil agar tidak blokir
+  // fetch BTC utama
+  await new Promise(r => setTimeout(r, 1500)); // tunggu BTC chart selesai dulu
+
+  const fetchFns = {
+    gold:  fetchGoldData,
+    sp500: fetchSP500Data,
+    m2:    fetchM2Data,
+  };
+
+  // Preload TF saat ini dulu (paling relevan)
+  const curTFs = [curTF, ...tfsToPreload.filter(t => t !== curTF)];
+
+  for (const tf of curTFs) {
+    // Fetch semua 3 overlay untuk TF ini secara paralel
+    await Promise.allSettled([
+      fetchFns.gold(tf).catch(()=>{}),
+      fetchFns.sp500(tf).catch(()=>{}),
+      fetchFns.m2(tf).catch(()=>{}),
+    ]);
+    // Jeda singkat antar TF agar tidak flood network
+    await new Promise(r => setTimeout(r, 300));
+  }
+  console.log('[z-wealth] Overlay preload selesai untuk semua TF');
+}
+
+// Background fetch helpers — update cache without blocking UI
+async function _bgFetchGold(tf) {
+  try { const d = await fetchGoldData(tf); overlayCache.gold[tf] = d; } catch(e) {}
+}
+async function _bgFetchSP500(tf) {
+  try { const d = await fetchSP500Data(tf); overlayCache.sp500[tf] = d; } catch(e) {}
+}
+
+function toggleOverlay(key) {
+  overlayEnabled[key] = !overlayEnabled[key];
+  const on = overlayEnabled[key];
+  const colors = {
+    m2:    {on:'rgba(245,158,11,.2)',  onBorder:'rgba(245,158,11,.6)',  onColor:'#f59e0b',  off:'rgba(245,158,11,.08)',  offBorder:'rgba(245,158,11,.25)',  offColor:'rgba(245,158,11,.6)',  dotOn:'#f59e0b',  dotOff:'rgba(245,158,11,.5)'},
+    gold:  {on:'rgba(251,191,36,.2)',  onBorder:'rgba(251,191,36,.6)',  onColor:'#fbbf24',  off:'rgba(251,191,36,.08)',  offBorder:'rgba(251,191,36,.25)',  offColor:'rgba(251,191,36,.6)',  dotOn:'#fbbf24',  dotOff:'rgba(251,191,36,.5)'},
+    sp500: {on:'rgba(139,92,246,.2)',  onBorder:'rgba(139,92,246,.6)',  onColor:'#8b5cf6',  off:'rgba(139,92,246,.08)',  offBorder:'rgba(139,92,246,.25)',  offColor:'rgba(139,92,246,.6)',  dotOn:'#8b5cf6',  dotOff:'rgba(139,92,246,.5)'},
+  };
+  const c = colors[key];
+  const btn = document.getElementById(key+'-toggle-btn');
+  const dot = document.getElementById(key+'-dot');
+  if (btn) {
+    btn.style.background = on ? c.on : c.off;
+    btn.style.borderColor = on ? c.onBorder : c.offBorder;
+    btn.style.color = on ? c.onColor : c.offColor;
+  }
+  if (dot) dot.style.background = on ? c.dotOn : c.dotOff;
+  // Update legend
+  const anyOn = Object.values(overlayEnabled).some(Boolean);
+  const legend = document.getElementById('overlay-legend');
+  if (legend) legend.style.display = anyOn ? 'flex' : 'none';
+  const legEl = document.getElementById('leg-'+key);
+  if (legEl) legEl.style.display = on ? 'flex' : 'none';
+  // Jika overlay di-enable dan data sudah di-cache → render langsung (instant)
+  // Jika belum di-cache → loadBTCChart akan fetch sambil showing loading
+  loadBTCChart(curTF);
 }
 
 function updateBTCLiveDisplay(){
@@ -4928,7 +6570,13 @@ function initApp(){
   if(_fetchBTCInterval) clearInterval(_fetchBTCInterval);
   if(_chartRefreshInterval) clearInterval(_chartRefreshInterval);
   _fetchBTCInterval=setInterval(fetchBTC,60000);
-  _chartRefreshInterval=setInterval(()=>loadBTCChart(curTF),300000);
+  _chartRefreshInterval=setInterval(()=>{
+    // Invalidate cache before auto-refresh so kita dapat data fresh
+    delete _btcChartCache[curTF];
+    loadBTCChart(curTF);
+  },300000);
+  // ── PRELOAD overlay data di background agar toggle instan ──
+  _preloadOverlayData();
   syncSimInputs();
   requestAnimationFrame(()=>{
     const firstActive=document.querySelector('.bnav-item.active');
@@ -5184,7 +6832,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   const PH=(pg,tot)=>`<div class="ph">
     <div>
       <div class="ph-logo-main"><span class="ph-logo-z">z</span><span class="ph-logo-hyphen">-</span><span class="ph-logo-wealth">wealth</span></div>
-      <div class="ph-logo-sub">z-wealth.netlify.app</div>
+      <div class="ph-logo-sub">z-wealth.vercel.app</div>
     </div>
     <div class="ph-right">
       <div class="ph-title">LAPORAN KEUANGAN</div>
@@ -5194,7 +6842,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   </div>`;
 
   const PF=(pg,tot)=>`<div class="pf">
-    <span>z-wealth.netlify.app · Laporan Konfidensial</span>
+    <span>z-wealth.vercel.app · Laporan Konfidensial</span>
     <span>Generate: ${dateStr} ${timeStr} WIB &nbsp;·&nbsp; BTC $${p.toLocaleString('en-US')}</span>
     <span>Halaman ${pg} dari ${tot}</span>
   </div>`;
@@ -5451,6 +7099,210 @@ function showShareCard(){
   setTimeout(drawShareCard,80);
 }
 
+
+// ── CHART SHARE CARD ──
+function openChartShareModal() {
+  const modal = document.getElementById('chart-share-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(() => generateChartShareCard(), 100);
+}
+
+function closeChartShareModal() {
+  const modal = document.getElementById('chart-share-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function generateChartShareCard() {
+  const canvas = document.getElementById('chart-share-canvas');
+  if (!canvas) return;
+  if (!cBTCLive) {
+    // Show error message on canvas
+    const W2=1080,H2=1440; canvas.width=W2; canvas.height=H2;
+    const ctx2=canvas.getContext('2d');
+    ctx2.fillStyle='#04060f'; ctx2.fillRect(0,0,W2,H2);
+    ctx2.font='bold 36px Inter,sans-serif'; ctx2.fillStyle='rgba(148,163,184,0.5)';
+    ctx2.textAlign='center'; ctx2.fillText('Memuat chart...', W2/2, H2/2);
+    ctx2.textAlign='left'; return;
+  }
+  try {
+
+  const W = 1080, H = 1440;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // ── BACKGROUND ──
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#04060f'); bg.addColorStop(1, '#080e1c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,229,255,0.02)';
+  for (let x=40;x<W;x+=55) for (let y=40;y<H;y+=55){ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();}
+  const gTop=ctx.createRadialGradient(W/2,0,0,W/2,0,500);
+  gTop.addColorStop(0,'rgba(0,229,255,0.06)');gTop.addColorStop(1,'transparent');
+  ctx.fillStyle=gTop;ctx.fillRect(0,0,W,500);
+
+  const PAD = 64;
+
+  // Count active overlays for dynamic sizing
+  const activeOverlays = ['gold','sp500','m2'].filter(k => overlayEnabled[k]);
+  const nOverlay = activeOverlays.length;
+
+  // ── FIXED HEIGHTS ──
+  const HEADER_H  = 160;  // logo + domain + breathing room
+  const PRICE_H   = 190;  // price + badge + gap
+  const DIV_H     = 48;   // divider
+  const OV_ROW_H  = 68;   // each overlay row (MUST be before BTC_RET_H)
+  const BTC_RET_H = OV_ROW_H;  // bitcoin row same height
+  const FOOTER_H  = 50;   // date footer
+  const FOOTER_PAD = 16;
+
+  const totalFixed = PAD + HEADER_H + PRICE_H + DIV_H + BTC_RET_H + (nOverlay * OV_ROW_H) + DIV_H + FOOTER_H + FOOTER_PAD + PAD;
+  const chartH = Math.max(360, H - totalFixed);
+
+  // ── LAYOUT Y POSITIONS ──
+  let y = PAD;
+
+  // LOGO + DOMAIN
+  const logoBaseline = y + 36;
+  ctx.shadowBlur = 0;
+  drawZWealthLogo(ctx, PAD, logoBaseline, 30, '#00e5ff');
+  ctx.font = '400 22px Inter,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.4)';
+  ctx.fillText('z-wealth.vercel.app', PAD, logoBaseline + 32);
+
+  // TIMEFRAME top-right
+  const tfLabelRaw = (TF_CONFIG[curTF]?.label) || curTF;
+  const tfLabel = 'Return ' + tfLabelRaw;
+  ctx.font = '600 26px Inter,sans-serif';
+  const tfW = ctx.measureText(tfLabel).width + 36;
+  ctx.fillStyle = 'rgba(0,229,255,0.08)';
+  ctx.beginPath(); ctx.roundRect(W-PAD-tfW, y+8, tfW, 42, 10); ctx.fill();
+  ctx.strokeStyle='rgba(0,229,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='rgba(0,229,255,0.8)';
+  ctx.textAlign='center';
+  ctx.fillText(tfLabel, W-PAD-tfW/2, y+36);
+  ctx.textAlign='left';
+
+  y += HEADER_H;
+
+  // BTC PRICE
+  const price = S.btcPrice || 0;
+  const ch = S.btcChange || 0;
+  const isUp = ch >= 0;
+  const badgeColor = isUp ? '#10b981' : '#ef4444';
+  const badgeBg = isUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+
+  ctx.font = '700 92px Space Mono,monospace';
+  ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 0;
+  ctx.fillText('$'+price.toLocaleString('en-US',{maximumFractionDigits:0}), PAD, y+78);
+
+  // Badge
+  const chText = (isUp?'▲ +':'▼ ')+ch.toFixed(2)+'%';
+  ctx.font = 'bold 30px Inter,sans-serif';
+  const pillW = ctx.measureText(chText).width + 44;
+  ctx.fillStyle = badgeBg;
+  ctx.beginPath();ctx.roundRect(PAD, y+90, pillW, 48, 12);ctx.fill();
+  ctx.strokeStyle=badgeColor+'50';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=badgeColor;
+  ctx.fillText(chText, PAD+22, y+120);
+
+  y += PRICE_H;
+
+  // CHART
+  const srcCanvas = document.getElementById('c-btclive');
+  if (srcCanvas) ctx.drawImage(srcCanvas, PAD, y, W-PAD*2, chartH);
+  y += chartH;
+
+  // DIVIDER
+  y += 20;
+  const dg=ctx.createLinearGradient(PAD,0,W-PAD,0);
+  dg.addColorStop(0,'transparent');dg.addColorStop(0.5,'rgba(0,229,255,0.2)');dg.addColorStop(1,'transparent');
+  ctx.strokeStyle=dg;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,y);ctx.lineTo(W-PAD,y);ctx.stroke();
+  y += 24;
+
+  // BTC RETURN
+  const retPct = document.getElementById('btcc-return-pct')?.textContent || '';
+  const retLabel = document.getElementById('btcc-return-label')?.textContent || '';
+  const retUp = !retPct.startsWith('-');
+  const retColor = retUp ? '#10b981' : '#ef4444';
+
+  const btcRowH = OV_ROW_H - 4;  // match overlay row height
+  ctx.fillStyle = retUp ? 'rgba(16,185,129,0.07)' : 'rgba(239,68,68,0.07)';
+  ctx.beginPath();ctx.roundRect(PAD, y, W-PAD*2, btcRowH, 12);ctx.fill();
+  ctx.strokeStyle=retColor+'25';ctx.lineWidth=1;ctx.stroke();
+  // Dot (hijau/merah seperti overlay)
+  ctx.fillStyle=retColor;
+  ctx.beginPath();ctx.arc(PAD+24, y+btcRowH/2, 6, 0, Math.PI*2);ctx.fill();
+  // Label Bitcoin
+  ctx.font='600 26px Inter,sans-serif';ctx.fillStyle='rgba(226,232,240,0.65)';
+  ctx.fillText('Bitcoin', PAD+46, y+btcRowH/2+9);
+  // % kanan - font sama dengan overlay
+  ctx.font='bold 32px Space Mono,monospace';ctx.fillStyle=retColor;
+  ctx.textAlign='right';
+  ctx.fillText(retPct, W-PAD-22, y+btcRowH/2+11);
+  ctx.textAlign='left';
+  y += OV_ROW_H;  // same step as overlay rows
+
+  // OVERLAY ROWS
+  const overlayDefs = [
+    {key:'gold',  label:'Emas (XAU)', pctId:'ret-gold-pct',  color:'#fbbf24'},
+    {key:'sp500', label:'S&P 500',    pctId:'ret-sp500-pct', color:'#8b5cf6'},
+    {key:'m2',    label:'Global M2',  pctId:'ret-m2-pct',    color:'#f59e0b'},
+  ];
+  for (const row of overlayDefs) {
+    if (!overlayEnabled[row.key]) continue;
+    const pStr = document.getElementById(row.pctId)?.textContent || '';
+    const col = !pStr.startsWith('-') ? row.color : '#ef4444';
+    const rowH = OV_ROW_H - 4;
+
+    ctx.fillStyle='rgba(255,255,255,0.03)';
+    ctx.beginPath();ctx.roundRect(PAD,y,W-PAD*2,rowH,10);ctx.fill();
+    ctx.strokeStyle=row.color+'18';ctx.lineWidth=1;ctx.stroke();
+
+    ctx.fillStyle=row.color;
+    ctx.beginPath();ctx.arc(PAD+24,y+rowH/2,6,0,Math.PI*2);ctx.fill();
+
+    ctx.font='600 26px Inter,sans-serif';ctx.fillStyle='rgba(226,232,240,0.65)';
+    ctx.fillText(row.label, PAD+46, y+rowH/2+9);
+
+    ctx.font='bold 32px Space Mono,monospace';ctx.fillStyle=col;
+    ctx.textAlign='right';
+    ctx.fillText(pStr, W-PAD-22, y+rowH/2+11);
+    ctx.textAlign='left';
+    y += OV_ROW_H;
+  }
+
+  // FOOTER — always at bottom, dark strip
+  const footY = H - FOOTER_H - FOOTER_PAD;
+  ctx.fillStyle='rgba(4,6,15,0.85)';
+  ctx.fillRect(0, footY-10, W, FOOTER_H+FOOTER_PAD+10);
+  ctx.font='400 22px Inter,sans-serif';ctx.fillStyle='rgba(100,116,139,0.5)';
+  const dateStr=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  ctx.fillText(dateStr, PAD, footY+28);
+  } catch(err) {
+    console.error('generateChartShareCard error:', err);
+    // Show error on canvas
+    const W2=canvas.width||1080, H2=canvas.height||1440;
+    const ctx2=canvas.getContext('2d');
+    ctx2.fillStyle='#04060f'; ctx2.fillRect(0,0,W2,H2);
+    ctx2.font='bold 32px Inter,sans-serif'; ctx2.fillStyle='#ef4444';
+    ctx2.textAlign='center';
+    ctx2.fillText('Error: '+err.message, W2/2, H2/2);
+    ctx2.textAlign='left';
+  }
+}
+
+
+function downloadChartCard() {
+  const canvas = document.getElementById('chart-share-canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = 'z-wealth-chart-' + curTF + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 function closeShareModal(){
   document.getElementById('modal-share').style.display='none';
 }
@@ -5564,7 +7416,7 @@ function drawShareCard(){
   /* Domain — mepet ke logo, hanya 6px gap di bawah baseline logo */
   ctx.font='400 24px "Segoe UI",Arial,sans-serif';
   ctx.fillStyle='rgba(148,163,184,0.55)';
-  ctx.fillText('z-wealth.netlify.app',PAD,138);
+  ctx.fillText('z-wealth.vercel.app',PAD,138);
 
   /* Date right — sejajar dengan logo */
   ctx.textAlign='right';
@@ -7183,7 +9035,6 @@ function hideComingSoon() {
   navigator.serviceWorker.register(blobUrl, { scope: '/' })
     .then(reg => {
       window._swReg = reg;
-      console.log('[SW] Registered via blob URL');
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
         w?.addEventListener('statechange', () => {
@@ -7395,7 +9246,7 @@ function triggerPWAInstall() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;position:relative;z-index:1">
       <div>
         <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI DCA</div>
-        <div style="font-size:.68rem;color:rgba(148,163,184,.55);margin-top:3px;letter-spacing:.05em">z-wealth.netlify.app</div>
+        <div style="font-size:.68rem;color:rgba(148,163,184,.55);margin-top:3px;letter-spacing:.05em">z-wealth.vercel.app</div>
       </div>
       <button id="share-close-btn" onclick="closeShareModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -8413,13 +10264,53 @@ async function startQRScan() {
 }
 
 function _loadJsQRThenScan(video) {
+  const errEl = document.getElementById('qr-scan-error');
+  if (errEl) errEl.style.display = 'none';
+
+  // Try native BarcodeDetector first (Chrome/Android)
+  if ('BarcodeDetector' in window) {
+    _qrDecodeLoopNative(video);
+    return;
+  }
+
+  // Fallback: try multiple CDNs for jsQR
   const run = () => _qrDecodeLoop(video);
   if (window.jsQR) { run(); return; }
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
-  s.onload = run;
-  s.onerror = () => { const e=document.getElementById('qr-scan-error-text'); if(e)e.textContent='Library scan tidak bisa dimuat.'; document.getElementById('qr-scan-error').style.display='flex'; };
-  document.head.appendChild(s);
+
+  const cdns = [
+    'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+    'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js',
+  ];
+
+  function tryLoad(i) {
+    if (i >= cdns.length) {
+      const e = document.getElementById('qr-scan-error-text');
+      if (e) e.textContent = 'Kamera scan tidak tersedia. Gunakan tombol Galeri untuk upload foto QR.';
+      if (errEl) errEl.style.display = 'flex';
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = cdns[i];
+    s.onload = run;
+    s.onerror = () => tryLoad(i + 1);
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+}
+
+function _qrDecodeLoopNative(video) {
+  const detector = new BarcodeDetector({formats: ['qr_code']});
+  if (_qrScanInterval) clearInterval(_qrScanInterval);
+  _qrScanInterval = setInterval(async () => {
+    if (!video || video.readyState < video.HAVE_ENOUGH_DATA) return;
+    try {
+      const barcodes = await detector.detect(video);
+      if (barcodes.length > 0 && barcodes[0].rawValue) {
+        _handleScannedCode(barcodes[0].rawValue.trim());
+      }
+    } catch(e) {}
+  }, 300);
 }
 
 function _qrDecodeLoop(video) {
@@ -8457,24 +10348,57 @@ function scanQRFromFile(input) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const canvas = document.getElementById('qr-scan-canvas');
       canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
       canvas.getContext('2d').drawImage(img, 0, 0);
-      const tryDecode = () => {
+
+      const showErr = (msg) => {
+        if (errEl) { errEl.style.display='flex'; document.getElementById('qr-scan-error-text').textContent = msg || 'QR Code tidak terdeteksi. Coba foto lebih jelas.'; }
+      };
+
+      const tryJsQR = () => {
         const imgData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
         const result = window.jsQR?.(imgData.data, imgData.width, imgData.height, {inversionAttempts:'attemptBoth'});
-        if (result?.data) {
-          _handleScannedCode(result.data.trim());
-        } else {
-          if (errEl) { errEl.style.display='flex'; document.getElementById('qr-scan-error-text').textContent='QR Code tidak terdeteksi. Coba foto yang lebih jelas & terang.'; }
-        }
+        if (result?.data) { _handleScannedCode(result.data.trim()); }
+        else { showErr('QR Code tidak terdeteksi. Coba foto yang lebih jelas & terang.'); }
       };
-      if (!window.jsQR) {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
-        s.onload = tryDecode; document.head.appendChild(s);
-      } else { tryDecode(); }
+
+      const loadJsQRAndDecode = () => {
+        if (window.jsQR) { tryJsQR(); return; }
+        const cdns = [
+          'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+          'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js',
+        ];
+        const tryNext = (i) => {
+          if (i >= cdns.length) { tryJsQR(); return; }
+          const s = document.createElement('script');
+          s.src = cdns[i];
+          s.onload = tryJsQR;
+          s.onerror = () => tryNext(i+1);
+          document.head.appendChild(s);
+        };
+        tryNext(0);
+      };
+
+      // Try native BarcodeDetector first (async-safe here)
+      if ('BarcodeDetector' in window) {
+        try {
+          const detector = new BarcodeDetector({formats:['qr_code']});
+          const bitmap = await createImageBitmap(img);
+          const barcodes = await detector.detect(bitmap);
+          if (barcodes.length > 0 && barcodes[0].rawValue) {
+            _handleScannedCode(barcodes[0].rawValue.trim());
+          } else {
+            // BarcodeDetector found nothing — try jsQR as backup
+            loadJsQRAndDecode();
+          }
+        } catch(e) {
+          loadJsQRAndDecode();
+        }
+      } else {
+        loadJsQRAndDecode();
+      }
     };
     img.src = ev.target.result;
   };
@@ -8546,7 +10470,6 @@ async function registerSW() {
   if (!('serviceWorker' in navigator)) return null;
   try {
     const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    console.log('[Push] SW registered');
     return reg;
   } catch(e) { console.error('[Push] SW failed:', e); return null; }
 }
@@ -8567,7 +10490,6 @@ async function subscribePush(reg) {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC),
     });
-    console.log('[Push] Subscribed');
     return sub;
   } catch(e) { console.error('[Push] Subscribe failed:', e); return null; }
 }
@@ -8600,7 +10522,6 @@ async function unsubscribePush() {
       await chatSB.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
     }
     await sub.unsubscribe();
-    console.log('[Push] Unsubscribed');
   } catch(e) { console.error('[Push] Unsubscribe error:', e); }
 }
 
