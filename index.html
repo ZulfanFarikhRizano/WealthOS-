@@ -11919,16 +11919,33 @@ function showPushPermissionBanner(reg) {
 function detectProviders() {
   const providers = [];
 
-  // ── OKX: cek window.okxwallet (extension desktop)
+  // ── OKX Desktop Extension: window.okxwallet
   if (window.okxwallet) {
     providers.push({ name:'OKX', evm: window.okxwallet, btc: window.okxwallet.bitcoin || null });
   }
 
-  // ── OKX In-App Browser: inject ke window.ethereum dengan flag isOKExWallet / isOKX
+  // ── OKX In-App Browser (Mobile Web3 Browser):
+  // OKX bisa inject provider di beberapa lokasi berbeda tergantung versi app:
+  // 1. window.okxwallet (sama seperti extension)
+  // 2. window.ethereum dengan flag isOKExWallet/isOKX/isOkxWallet
+  // 3. window.okexchain (versi lama OKX)
+  // 4. window.ethereum tanpa flag khusus tapi di UA ada "OKX"
   if (
     window.ethereum &&
     (window.ethereum.isOKExWallet || window.ethereum.isOKX || window.ethereum.isOkxWallet) &&
     !window.okxwallet
+  ) {
+    providers.push({ name:'OKX', evm: window.ethereum, btc: null });
+  }
+  // OKX lama / versi tertentu: window.okexchain
+  if (window.okexchain && !providers.find(p => p.name === 'OKX')) {
+    providers.push({ name:'OKX', evm: window.okexchain, btc: null });
+  }
+  // Fallback OKX via UserAgent — OKX browser biasanya ada "OKX" di UA
+  if (
+    window.ethereum &&
+    /OKX|OKEx|OkxWallet/i.test(navigator.userAgent) &&
+    !providers.find(p => p.name === 'OKX')
   ) {
     providers.push({ name:'OKX', evm: window.ethereum, btc: null });
   }
@@ -12407,20 +12424,50 @@ async function tryFetchPhantomBTC(provider) {
 //  WALLET CONNECT MODAL — openWalletModal
 // ══════════════════════════════════════════
 
+// ── Debug helper: log semua provider info ke toast (aktif sementara) ──
+function debugWalletEnv() {
+  const info = {
+    hasEthereum: !!window.ethereum,
+    hasOkxwallet: !!window.okxwallet,
+    hasPhantom: !!window.phantom,
+    eth_isMetaMask: window.ethereum?.isMetaMask,
+    eth_isOKExWallet: window.ethereum?.isOKExWallet,
+    eth_isOKX: window.ethereum?.isOKX,
+    eth_isOkxWallet: window.ethereum?.isOkxWallet,
+    eth_isTrust: window.ethereum?.isTrust,
+    eth_isTrustWallet: window.ethereum?.isTrustWallet,
+    eth_isCoinbaseWallet: window.ethereum?.isCoinbaseWallet,
+    okx_keys: window.okxwallet ? Object.keys(window.okxwallet).slice(0,8).join(',') : 'N/A',
+    eth_keys: window.ethereum ? Object.keys(window.ethereum).filter(k => k.startsWith('is')).join(',') : 'N/A',
+    ua_short: navigator.userAgent.slice(0,60),
+  };
+  console.log('[z-wealth wallet debug]', JSON.stringify(info, null, 2));
+  // Tampilkan ringkasan ke toast
+  const flags = info.eth_keys || 'tidak ada flag';
+  const provider = info.hasOkxwallet ? 'window.okxwallet ✅' : (info.hasEthereum ? 'window.ethereum' : '❌ tidak ada provider');
+  toast(`🔍 Provider: ${provider}<br>Flags: ${flags}`, 3);
+}
+
 function openWalletModal() {
   // ── Jika sudah di dalam mobile wallet browser, langsung connect — tidak perlu buka modal
   // Popup konfirmasi "Terima / Tolak" akan muncul otomatis dari wallet app
-  const isMobileWalletBrowser = !!(
-    window.ethereum && (
-      window.ethereum.isOKExWallet || window.ethereum.isOKX || window.ethereum.isOkxWallet ||
-      window.ethereum.isTrust || window.ethereum.isTrustWallet ||
-      window.ethereum.isCoinbaseWallet || window.ethereum.isCoinbaseBrowser ||
-      window.ethereum.isMetaMask
-    ) && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  // Deteksi apakah sedang di dalam mobile wallet in-app browser
+  // Cek berbagai flag + UserAgent
+  const ua = navigator.userAgent || '';
+  const isMobileOS = /Android|iPhone|iPad|iPod/i.test(ua);
+  const hasEthProvider = !!window.ethereum || !!window.okxwallet || !!window.okexchain;
+  const isWalletUA = /OKX|OKEx|OkxWallet|MetaMask|TrustWallet|Trust\s?Wallet|CoinbaseBrowser/i.test(ua);
+  const hasWalletFlag = !!(
+    window.ethereum?.isOKExWallet || window.ethereum?.isOKX || window.ethereum?.isOkxWallet ||
+    window.ethereum?.isTrust || window.ethereum?.isTrustWallet ||
+    window.ethereum?.isCoinbaseWallet || window.ethereum?.isCoinbaseBrowser ||
+    window.ethereum?.isMetaMask || window.okxwallet || window.okexchain
   );
+  const isMobileWalletBrowser = isMobileOS && hasEthProvider && (isWalletUA || hasWalletFlag);
 
   if (isMobileWalletBrowser) {
-    // Langsung trigger connect — popup approve/reject dari wallet akan muncul sendiri
+    // Sudah di dalam wallet browser — langsung trigger eth_requestAccounts
+    // Popup "Terima / Tolak" akan muncul otomatis dari wallet app
     connectWalletExtension(null);
     return;
   }
@@ -12551,37 +12598,46 @@ async function connectWalletExtension(preferredName) {
 
 // ── Opsi 2: Deep Link ke Wallet App di HP ──
 function openWalletApp(walletName) {
-  // Dapatkan URL halaman z-Wealth saat ini
-  const currentUrl = encodeURIComponent(window.location.href);
-  const currentHost = encodeURIComponent(window.location.hostname + window.location.pathname + window.location.search);
+  const rawUrl   = window.location.href;
+  const encUrl   = encodeURIComponent(rawUrl);
+  const host     = window.location.hostname;
+  const pathname = window.location.pathname;
 
+  // ── Deep link per wallet — langsung buka dApp browser dengan URL z-Wealth ──
   const deepLinks = {
+
     metamask: {
-      // MetaMask deep link: membuka browser MetaMask langsung ke URL ini
-      url: `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`,
-      fallback: 'https://metamask.io/download/',
-      name: 'MetaMask'
+      name: 'MetaMask',
+      // Universal link resmi MetaMask — langsung buka dApp browser
+      primary:  `https://metamask.app.link/dapp/${host}${pathname}`,
+      fallback: 'https://metamask.io/download/'
     },
+
     okx: {
-      // OKX Wallet deep link
-      url: `okex://wallet/dapp/url?dappUrl=${currentUrl}`,
-      httpFallback: `https://www.okx.com/download`,
-      webFallback: `https://www.okx.com/web3`,
-      name: 'OKX Wallet'
+      name: 'OKX Wallet',
+      // Format resmi OKX Web3 browser deep link
+      // okx://wallet/dapp/url?dappUrl=<encoded> → buka dApp browser OKX langsung ke URL
+      primary:  `okx://wallet/dapp/url?dappUrl=${encUrl}`,
+      // HTTP universal link sebagai fallback (lebih reliable di beberapa Android)
+      secondary: `https://www.okx.com/ul/szKO5i?dappUrl=${encUrl}`,
+      fallback: 'https://www.okx.com/web3'
     },
+
     trust: {
-      // Trust Wallet deep link
-      url: `trust://open_url?coin_id=60&url=${currentUrl}`,
-      httpFallback: `https://link.trustwallet.com/open_url?coin_id=60&url=${currentUrl}`,
-      fallback: 'https://trustwallet.com/download',
-      name: 'Trust Wallet'
+      name: 'Trust Wallet',
+      // Universal link Trust Wallet — buka dApp browser langsung ke URL
+      primary:  `https://link.trustwallet.com/open_url?coin_id=60&url=${encUrl}`,
+      // Custom scheme sebagai alternatif
+      secondary: `trust://browser?url=${encUrl}`,
+      fallback: 'https://trustwallet.com/download'
     },
+
     coinbase: {
-      // Coinbase Wallet deep link
-      url: `cbwallet://dapp?url=${currentUrl}`,
-      httpFallback: `https://go.cb-w.com/dapp?cb_url=${currentUrl}`,
-      fallback: 'https://www.coinbase.com/wallet/downloads',
-      name: 'Coinbase Wallet'
+      name: 'Coinbase Wallet',
+      // Universal link Coinbase Wallet
+      primary:  `https://go.cb-w.com/dapp?cb_url=${encUrl}`,
+      secondary: `cbwallet://dapp?url=${encUrl}`,
+      fallback: 'https://www.coinbase.com/wallet/downloads'
     }
   };
 
@@ -12590,34 +12646,31 @@ function openWalletApp(walletName) {
 
   // Cek apakah mobile
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
   if (!isMobile) {
-    toast(`📱 Deep link ke ${config.name} hanya bekerja di HP. Di desktop, gunakan Opsi 1 (Extension).`, 2);
+    toast(`📱 Fitur ini untuk HP. Di desktop pakai Opsi 1 (Extension).`, 2);
     return;
   }
 
-  // Tutup modal
   closeWalletModal(null, true);
+  toast(`🚀 Membuka ${config.name}...`, 1);
 
-  toast(`🚀 Membuka ${config.name}... Jika tidak terbuka, pastikan app sudah terinstall.`, 1);
-
-  // Coba deep link dulu, fallback ke HTTP universal link
-  const httpLink = config.httpFallback || config.fallback;
-
-  if (config.httpFallback) {
-    // Gunakan HTTP universal link yang lebih reliable
-    window.location.href = config.httpFallback;
-  } else {
-    // Coba custom scheme, fallback ke store jika gagal
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    iframe.src = config.url;
-
+  // Strategi: coba primary link dulu
+  // Untuk OKX: custom scheme (okx://) paling reliable untuk buka dApp browser langsung
+  // Untuk yang lain: HTTP universal link lebih reliable
+  if (walletName === 'okx') {
+    // Coba custom scheme okx:// dulu — ini yang buka dApp browser OKX
+    // Jika gagal (app tidak ada), fallback ke secondary HTTP link
+    const start = Date.now();
+    window.location.href = config.primary;
     setTimeout(() => {
-      document.body.removeChild(iframe);
-      window.location.href = config.fallback;
+      // Jika masih di halaman ini setelah 1.5s, berarti custom scheme gagal
+      if (Date.now() - start < 2000) {
+        window.location.href = config.secondary;
+      }
     }, 1500);
+  } else {
+    // Untuk MetaMask, Trust, Coinbase: HTTP universal link langsung (lebih reliable)
+    window.location.href = config.primary;
   }
 }
 
@@ -14303,6 +14356,12 @@ function searchNewsOnline() {
       <div style="margin-top:.65rem;font-size:.63rem;color:var(--muted);line-height:1.55;text-align:center">
         Klik tombol di atas → wallet app terbuka → connect otomatis di browser wallet-nya
       </div>
+    </div>
+
+    <!-- Debug strip — untuk diagnosa provider (bisa dihapus nanti) -->
+    <div style="border-top:1px solid var(--border);padding:.6rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+      <span style="font-size:.6rem;color:var(--muted)">Sudah di dalam wallet browser tapi tidak connect?</span>
+      <button onclick="debugWalletEnv()" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);border-radius:7px;padding:.3rem .7rem;font-size:.62rem;font-weight:700;color:var(--accent);cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap">🔍 Diagnosa</button>
     </div>
 
   </div>
