@@ -12730,7 +12730,7 @@ const _OR_URL   = 'https://openrouter.ai/api/v1/chat/completions';
 const _OR_MODEL = 'mistralai/mistral-7b-instruct:free';
 // OpenRouter membutuhkan API key bahkan untuk free tier
 // Dapatkan key gratis di https://openrouter.ai - masukkan di bawah atau via env
-const _OR_KEY = localStorage.getItem('zw_or_key') || '';
+const _OR_KEY = localStorage.getItem('zw_or_key') || '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';
 
 async function _callOpenRouter(systemPrompt, messages, maxTokens) {
   if (!_aiProviderReady('openrouter')) throw new Error('OpenRouter sedang cooldown');
