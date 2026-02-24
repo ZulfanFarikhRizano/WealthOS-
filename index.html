@@ -41,11 +41,11 @@
   --nav-bg:rgba(11,17,32,.97); --card-shadow:0 4px 24px rgba(0,0,0,.4);
 }
 [data-theme="light"] {
-  --bg:#f0f4f8; --surface:#ffffff; --surface2:#e8edf5; --border:#d0dae8;
-  --accent:#0088cc; --accent2:#7c3aed; --accent3:#059669; --accent4:#d97706;
-  --danger:#dc2626; --text:#0f172a; --muted:#64748b;
-  --glow:0 0 20px rgba(0,136,204,.1); --glow2:0 0 40px rgba(0,136,204,.2);
-  --nav-bg:rgba(255,255,255,.97); --card-shadow:0 4px 24px rgba(0,0,0,.08);
+  --bg:#f0f6ff; --surface:#ffffff; --surface2:#e8f0fb; --border:#c8d8f0;
+  --accent:#0070c0; --accent2:#6d28d9; --accent3:#047857; --accent4:#b45309;
+  --danger:#c0392b; --text:#0f1e2e; --muted:#5a6a80;
+  --glow:0 0 20px rgba(0,112,192,.08); --glow2:0 0 40px rgba(0,112,192,.18);
+  --nav-bg:rgba(255,255,255,.97); --card-shadow:0 4px 24px rgba(0,0,0,.07);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden;max-width:100vw}
@@ -1645,7 +1645,7 @@ span svg, div svg.inline {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Aset
       </button>
-      <button id="btn-connect-wallet" class="btn btn-sm" onclick="connectWallet()" style="display:inline-flex;align-items:center;gap:.35rem;background:transparent;border:1px solid rgba(124,58,237,.6);color:#a78bfa;transition:all .2s">
+      <button id="btn-connect-wallet" class="btn btn-sm" onclick="openWalletModal()" style="display:inline-flex;align-items:center;gap:.35rem;background:transparent;border:1px solid rgba(124,58,237,.6);color:#a78bfa;transition:all .2s">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><path d="M1 10h22"/></svg>
         <span id="wallet-btn-label">Connect Wallet</span>
       </button>
@@ -1711,17 +1711,19 @@ span svg, div svg.inline {
   <div id="wallet-chart-section" style="display:none;margin-bottom:1.2rem">
     <!-- Summary bar -->
     <div id="wallet-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin-bottom:.9rem"></div>
-    <!-- Charts row -->
-    <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:.8rem;align-items:start">
+    <!-- Charts: stack vertical di mobile -->
+    <div style="display:flex;flex-direction:column;gap:.8rem">
       <!-- Donut: alokasi -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem">
         <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.7rem">Alokasi Wallet</div>
-        <div style="position:relative;height:170px"><canvas id="c-wallet-alloc"></canvas></div>
-        <div id="wallet-alloc-legend" style="margin-top:.7rem;display:flex;flex-direction:column;gap:.3rem"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.8rem">
+          <div style="position:relative;width:100%;max-width:220px;height:200px;margin:0 auto"><canvas id="c-wallet-alloc"></canvas></div>
+          <div id="wallet-alloc-legend" style="width:100%;display:flex;flex-direction:column;gap:.3rem"></div>
+        </div>
       </div>
       <!-- Line: histori nilai total -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.4rem">
           <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Histori Nilai Total</div>
           <div style="display:flex;gap:.3rem">
             <button onclick="setWalletHistRange(24)" id="whr-24" class="tf-btn active" style="font-size:.6rem;padding:.18rem .45rem">24J</button>
@@ -1729,7 +1731,7 @@ span svg, div svg.inline {
             <button onclick="setWalletHistRange(720)" id="whr-720" class="tf-btn" style="font-size:.6rem;padding:.18rem .45rem">30H</button>
           </div>
         </div>
-        <div style="position:relative;height:170px"><canvas id="c-wallet-hist"></canvas></div>
+        <div style="position:relative;height:200px;width:100%"><canvas id="c-wallet-hist"></canvas></div>
         <div style="font-size:.63rem;color:var(--muted);margin-top:.5rem;text-align:right">Snapshot otomatis tiap 30 menit · disimpan lokal</div>
       </div>
     </div>
@@ -2192,6 +2194,11 @@ span svg, div svg.inline {
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   flex-shrink:0;
 }
+[data-theme="light"] .room-header {
+  background:var(--surface) !important;
+  border-bottom:1px solid var(--border) !important;
+  backdrop-filter:none !important;
+}
 .room-header-back {
   width:36px;height:36px;border-radius:12px;border:none;cursor:pointer;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
@@ -2199,6 +2206,12 @@ span svg, div svg.inline {
   transition:all .18s;flex-shrink:0;
 }
 .room-header-back:hover { background:rgba(255,255,255,.15); }
+[data-theme="light"] .room-header-back {
+  background:var(--surface2) !important;
+  border-color:var(--border) !important;
+  color:var(--text) !important;
+}
+[data-theme="light"] .room-header-back:hover { background:var(--border) !important; }
 .room-header-avatar {
   width:40px;height:40px;border-radius:13px;display:flex;align-items:center;
   justify-content:center;font-weight:800;font-size:1rem;color:#fff;flex-shrink:0;
@@ -2207,6 +2220,8 @@ span svg, div svg.inline {
 .room-header-info { flex:1;min-width:0; }
 .room-header-name { font-size:.95rem;font-weight:800; }
 .room-header-sub { font-size:.68rem;color:var(--muted); }
+[data-theme="light"] .room-header-name { color:var(--text) !important; }
+[data-theme="light"] .room-header-sub { color:var(--muted) !important; }
 
 /* Messages area */
 .messages-area {
@@ -2305,6 +2320,11 @@ span svg, div svg.inline {
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   flex-shrink:0;
 }
+[data-theme="light"] .chat-input-area {
+  background:var(--surface) !important;
+  border-top:1px solid var(--border) !important;
+  backdrop-filter:none !important;
+}
 .reply-preview {
   display:none;align-items:center;gap:.5rem;
   background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);
@@ -2326,6 +2346,16 @@ span svg, div svg.inline {
   line-height:1.45;transition:border-color .2s;
   backdrop-filter:blur(8px);
 }
+[data-theme="light"] .chat-input {
+  background:var(--surface2) !important;
+  border-color:var(--border) !important;
+  color:var(--text) !important;
+  backdrop-filter:none !important;
+}
+[data-theme="light"] .chat-input:focus {
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 3px rgba(0,112,192,.1) !important;
+}
 /* AI input — fixed single line, no scroll */
 .ai-input-single {
   flex:1;background:rgba(255,255,255,.07);
@@ -2335,6 +2365,16 @@ span svg, div svg.inline {
   outline:none;height:44px;line-height:1;
   transition:border-color .2s;backdrop-filter:blur(8px);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+[data-theme="light"] .ai-input-single {
+  background:var(--surface2) !important;
+  border-color:var(--border) !important;
+  color:var(--text) !important;
+  backdrop-filter:none !important;
+}
+[data-theme="light"] .ai-input-single:focus {
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 3px rgba(0,112,192,.1) !important;
 }
 .ai-input-single:focus {
   border-color:rgba(0,229,255,.4);
@@ -2471,6 +2511,21 @@ span svg, div svg.inline {
 }
 .chat-tool-btn:hover { background:rgba(255,255,255,.13);color:var(--accent);border-color:rgba(0,229,255,.3); }
 .chat-tool-btn.active { background:rgba(0,229,255,.12);color:var(--accent);border-color:rgba(0,229,255,.4); }
+[data-theme="light"] .chat-tool-btn {
+  background:var(--surface2) !important;
+  border-color:var(--border) !important;
+  color:var(--muted) !important;
+}
+[data-theme="light"] .chat-tool-btn:hover {
+  background:var(--border) !important;
+  color:var(--accent) !important;
+  border-color:var(--accent) !important;
+}
+[data-theme="light"] .chat-tool-btn.active {
+  background:rgba(0,112,192,.1) !important;
+  color:var(--accent) !important;
+  border-color:var(--accent) !important;
+}
 
 /* ── EMOJI PICKER TABS ── */
 .emoji-cat-btn {
@@ -2799,7 +2854,7 @@ span svg, div svg.inline {
 </style>
 
 <!-- Header -->
-<div class="room-header" style="background:linear-gradient(135deg,rgba(0,50,80,.7),rgba(0,30,60,.8));">
+<div class="room-header" style="background:linear-gradient(135deg,rgba(0,50,80,.7),rgba(0,30,60,.8));" id="ai-room-header">
   <button class="room-header-back" onclick="showPage('dashboard')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
   </button>
@@ -2837,10 +2892,20 @@ span svg, div svg.inline {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
     Bear Market
   </button>
-  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Target harga Bitcoin 2025">
+  <button class="ai-chip" id="ai-chip-target" onclick="aiChipSend(this)" data-prompt="">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-    Target 2025
+    <span id="ai-chip-target-label">Target</span>
   </button>
+  <script>
+    (function() {
+      const yr = new Date().getFullYear();
+      const chip = document.getElementById('ai-chip-target');
+      if (chip) {
+        chip.dataset.prompt = 'Target harga Bitcoin ' + yr;
+        document.getElementById('ai-chip-target-label').textContent = 'Target ' + yr;
+      }
+    })();
+  </script>
   <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Cara membaca Fear & Greed Index untuk investasi">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
     Fear & Greed
@@ -3710,6 +3775,322 @@ span svg, div svg.inline {
 [data-theme="light"] tr:last-child td{border-bottom:none}
 [data-theme="light"] .fi{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.12);color:var(--text)}
 [data-theme="light"] select.fi option{background:#fff;color:#000}
+
+/* ══════════════════════════════════════════
+   LIGHT MODE — COMPREHENSIVE AESTHETIC FIX
+   Semua elemen dengan warna hardcode dark
+══════════════════════════════════════════ */
+
+/* Background halaman utama */
+[data-theme="light"] body { background: var(--bg); }
+[data-theme="light"] #app { background: var(--bg); }
+
+/* Page headers */
+[data-theme="light"] .ph p { color: var(--muted); }
+[data-theme="light"] .ph h1 { color: var(--accent); }
+[data-theme="light"] .sec-title { color: var(--text); }
+
+/* Stat cards teks */
+[data-theme="light"] .slabel { color: var(--muted) !important; }
+[data-theme="light"] .sval { color: var(--text) !important; }
+[data-theme="light"] .ssub { color: var(--muted) !important; }
+[data-theme="light"] .sval.acc { color: var(--accent) !important; }
+[data-theme="light"] .sval.pos { color: var(--accent3) !important; }
+[data-theme="light"] .sval.gld { color: var(--accent4) !important; }
+
+/* Cards & surfaces */
+[data-theme="light"] .card { background: var(--surface); border-color: var(--border); }
+[data-theme="light"] .tbl-wrap table { color: var(--text); }
+[data-theme="light"] th { color: var(--muted) !important; }
+[data-theme="light"] td { color: var(--text) !important; }
+[data-theme="light"] td.pos, [data-theme="light"] .pos { color: var(--accent3) !important; }
+[data-theme="light"] td.neg, [data-theme="light"] .neg { color: var(--danger) !important; }
+[data-theme="light"] td.acc { color: var(--accent) !important; }
+
+/* Form inputs */
+[data-theme="light"] .fi { color: var(--text) !important; background: #fff !important; border-color: var(--border) !important; }
+[data-theme="light"] .fl { color: var(--muted) !important; }
+[data-theme="light"] select.fi { color: var(--text) !important; }
+[data-theme="light"] input::placeholder { color: var(--muted) !important; opacity:.7; }
+
+/* Buttons */
+[data-theme="light"] .btn { color: var(--text); border-color: var(--border); background: var(--surface); }
+[data-theme="light"] .btn-primary { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+[data-theme="light"] .btn-ghost { border-color: var(--border) !important; color: var(--text) !important; background: transparent; }
+[data-theme="light"] .btn-del { color: var(--danger) !important; border-color: rgba(192,57,43,.25) !important; background: rgba(192,57,43,.05) !important; }
+[data-theme="light"] .lbtn { background: var(--accent) !important; color: #fff !important; }
+[data-theme="light"] .lbtn-ghost { border-color: var(--border); color: var(--text); }
+
+/* Chart section & badges */
+[data-theme="light"] .btc-chart-wrap { background: var(--surface); border-color: var(--border); }
+[data-theme="light"] .btc-chart-header { border-bottom-color: var(--border); }
+[data-theme="light"] .btc-price-big { color: var(--text) !important; }
+[data-theme="light"] .btc-price-idr { color: var(--muted) !important; }
+[data-theme="light"] .tf-btn { background: var(--surface2) !important; color: var(--muted) !important; border-color: var(--border) !important; }
+[data-theme="light"] .tf-btn.active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+/* DCA page */
+[data-theme="light"] .dca-sum-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .dca-sum-val { color: var(--text) !important; }
+[data-theme="light"] .dca-sum-label { color: var(--muted) !important; }
+[data-theme="light"] .empty h3 { color: var(--muted) !important; }
+[data-theme="light"] .empty p { color: var(--muted) !important; opacity: .7; }
+
+/* Seed words */
+[data-theme="light"] .sw { background: #eef5ff !important; border-color: rgba(0,112,192,.3) !important; color: var(--accent) !important; }
+[data-theme="light"] .sw-num { color: var(--muted) !important; }
+[data-theme="light"] .sinput { background: var(--surface2) !important; border-color: var(--border) !important; color: var(--text) !important; }
+
+/* Modal internals */
+[data-theme="light"] .modal { color: var(--text); }
+[data-theme="light"] .modal h2, [data-theme="light"] .modal h3 { color: var(--text); }
+[data-theme="light"] .modal label { color: var(--muted); }
+[data-theme="light"] .modal .sec-hdr { border-color: var(--border); }
+[data-theme="light"] .overlay { background: rgba(15,30,46,.35) !important; }
+
+/* AI Chat page */
+[data-theme="light"] .ai-chat-header { background: var(--surface) !important; border-bottom-color: var(--border) !important; }
+[data-theme="light"] .ai-chat-title { color: var(--text) !important; }
+[data-theme="light"] .ai-chat-sub { color: var(--muted) !important; }
+[data-theme="light"] .msg-bubble { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="light"] .msg-row.mine .msg-bubble { background: var(--accent) !important; color: #fff !important; }
+[data-theme="light"] .msg-sender-name { color: var(--muted) !important; }
+[data-theme="light"] .msg-time { color: var(--muted) !important; }
+[data-theme="light"] .ai-chip { background: var(--surface) !important; border-color: var(--border) !important; color: var(--accent) !important; }
+[data-theme="light"] .ai-chip:hover { background: var(--surface2) !important; border-color: var(--accent) !important; }
+[data-theme="light"] .chat-input-area { background: var(--surface) !important; border-top-color: var(--border) !important; }
+[data-theme="light"] .chat-input { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+[data-theme="light"] .ai-bubble-content { color: var(--text) !important; }
+[data-theme="light"] .ai-bubble-content strong { color: var(--accent) !important; }
+[data-theme="light"] .ai-bubble-content code { background: rgba(0,112,192,.08) !important; border-color: rgba(0,112,192,.18) !important; color: var(--accent) !important; }
+[data-theme="light"] #ai-typing-provider-status span { color: #047857 !important; }
+
+/* Community Chat */
+[data-theme="light"] .chat-rooms-list { background: var(--bg) !important; }
+[data-theme="light"] .room-item { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .room-name { color: var(--text) !important; }
+[data-theme="light"] .room-preview { color: var(--muted) !important; }
+[data-theme="light"] .chat-room-header { background: var(--surface) !important; border-bottom-color: var(--border) !important; }
+[data-theme="light"] .chat-room-name { color: var(--text) !important; }
+[data-theme="light"] .messages-area { background: var(--bg) !important; }
+[data-theme="light"] .chat-empty-text { color: var(--muted) !important; }
+
+/* News page */
+[data-theme="light"] .news-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .news-title { color: var(--text) !important; }
+[data-theme="light"] .news-snippet { color: var(--muted) !important; }
+[data-theme="light"] .news-meta { color: var(--muted) !important; border-top-color: var(--border) !important; }
+[data-theme="light"] .nf-btn { background: var(--surface2) !important; color: var(--muted) !important; border-color: var(--border) !important; }
+[data-theme="light"] .nf-btn.active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+/* Portfolio page */
+[data-theme="light"] .port-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .port-name { color: var(--text) !important; }
+[data-theme="light"] .port-val { color: var(--text) !important; }
+
+/* Simulation page */
+[data-theme="light"] .sim-param-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .sim-param-toggle { color: var(--text) !important; background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .sim-sum-card { background: var(--surface2) !important; border-color: var(--border) !important; }
+[data-theme="light"] .sim-sum-label { color: var(--muted) !important; }
+[data-theme="light"] .sim-sum-val { color: var(--text) !important; }
+
+/* Cashflow page */
+[data-theme="light"] .cf-sum-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .badge { color: var(--text) !important; }
+
+/* Alerts & Reminders */
+[data-theme="light"] .alert-card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] .alert-label { color: var(--text) !important; }
+[data-theme="light"] .alert-sub { color: var(--muted) !important; }
+
+/* Theme page */
+[data-theme="light"] .theme-preset-card { background: var(--surface) !important; border-color: var(--border) !important; }
+
+/* AI Predict page */
+[data-theme="light"] #pred-verdict { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="light"] #pred-ai-narrative { color: var(--text) !important; }
+
+/* Section headers */
+[data-theme="light"] .sec-hdr { border-bottom-color: var(--border) !important; }
+
+/* Scrollbar light mode */
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--surface2); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--border); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Toast */
+[data-theme="light"] .toast-msg { background: #1e2d3d !important; color: #f0f6ff !important; }
+
+/* Fear & Greed widget */
+[data-theme="light"] #fear-greed-widget { background: var(--surface) !important; border-color: var(--border) !important; }
+
+/* Inline hardcoded dark rgba overrides — semua elemen pakai background rgba gelap */
+[data-theme="light"] [style*="background:rgba(0,229,255,.08)"],
+[data-theme="light"] [style*="background:rgba(0,229,255, .08)"] { background: rgba(0,112,192,.07) !important; }
+[data-theme="light"] [style*="background:rgba(0,229,255,.1)"] { background: rgba(0,112,192,.08) !important; }
+[data-theme="light"] [style*="background:rgba(0,229,255,.15)"] { background: rgba(0,112,192,.1) !important; }
+[data-theme="light"] [style*="background:rgba(124,58,237,.08)"] { background: rgba(109,40,217,.07) !important; }
+[data-theme="light"] [style*="background:rgba(16,185,129,.08)"],
+[data-theme="light"] [style*="background:rgba(16,185,129,.07)"] { background: rgba(4,120,87,.07) !important; }
+[data-theme="light"] [style*="background:rgba(245,158,11,.08)"],
+[data-theme="light"] [style*="background:rgba(245,158,11,.06)"] { background: rgba(180,83,9,.06) !important; }
+[data-theme="light"] [style*="background:rgba(239,68,68,.08)"] { background: rgba(192,57,43,.06) !important; }
+[data-theme="light"] [style*="background:#050810"],
+[data-theme="light"] [style*="background:#0b1120"],
+[data-theme="light"] [style*="background:#111827"] { background: var(--surface2) !important; }
+[data-theme="light"] [style*="background:var(--bg)"] { background: var(--bg) !important; }
+[data-theme="light"] [style*="background:var(--surface)"] { background: var(--surface) !important; }
+[data-theme="light"] [style*="color:var(--text)"] { color: var(--text) !important; }
+[data-theme="light"] [style*="color:var(--muted)"] { color: var(--muted) !important; }
+[data-theme="light"] [style*="color:var(--accent)"] { color: var(--accent) !important; }
+[data-theme="light"] [style*="border.*var(--border)"] { border-color: var(--border) !important; }
+
+/* Inline text warna putih yang tidak sesuai di light */
+[data-theme="light"] [style*="color:#e2e8f0"],
+[data-theme="light"] [style*="color:#f0f9ff"],
+[data-theme="light"] [style*="color:#bae6fd"],
+[data-theme="light"] [style*="color:rgba(255,255,255"] { color: var(--text) !important; }
+[data-theme="light"] [style*="color:rgba(226,232,240"] { color: var(--muted) !important; }
+
+/* Divider dan border */
+[data-theme="light"] [style*="border-color:#1e2d45"],
+[data-theme="light"] [style*="border:#1e2d45"] { border-color: var(--border) !important; }
+
+/* Inline dark surface backgrounds jadi terang */
+[data-theme="light"] [style*="background:linear-gradient(135deg,#0a1628"],
+[data-theme="light"] [style*="background:linear-gradient(135deg,rgba(5,8,16"],
+[data-theme="light"] [style*="background:linear-gradient(135deg,rgba(11,17,32"] { background: linear-gradient(135deg, #e8f0fb, #f0f6ff) !important; }
+
+/* Feat buttons di dashboard — tetap colorful tapi lebih cerah */
+[data-theme="light"] .feat-btn { box-shadow: 0 6px 24px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.4) !important; }
+[data-theme="light"] .feat-btn .fb-label { text-shadow: 0 1px 4px rgba(0,0,0,.15) !important; }
+
+/* Sync bar */
+[data-theme="light"] .sync-bar { color: var(--muted) !important; }
+[data-theme="light"] #acct-sync { color: var(--muted) !important; }
+
+/* Bottom nav labels */
+[data-theme="light"] .bnav-label { color: var(--muted) !important; }
+[data-theme="light"] .bnav-item.active .bnav-label { color: var(--accent) !important; }
+
+/* PWA install banner light */
+[data-theme="light"] #pwa-install-banner {
+  background: linear-gradient(135deg, #e8f4ff, #f0f6ff, #ede9fe) !important;
+  border-color: rgba(0,112,192,.2) !important;
+}
+[data-theme="light"] #pwa-install-banner * { color: var(--text) !important; }
+[data-theme="light"] #pwa-banner-btn { color: var(--accent) !important; border-color: rgba(0,112,192,.4) !important; background: rgba(0,112,192,.08) !important; }
+
+/* Chart canvas area containers */
+[data-theme="light"] .btc-chart-wrap,
+[data-theme="light"] [id^="page-"] .card,
+[data-theme="light"] .chart-section { background: var(--surface) !important; border-color: var(--border) !important; }
+
+/* DCA chart area */
+[data-theme="light"] #dca-btc-chart-wrap { background: var(--surface) !important; border-color: var(--border) !important; }
+
+/* Dash chat preview */
+[data-theme="light"] #dash-chat-preview { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
+
+/* Notif cards */
+[data-theme="light"] #notif-perm-card { background: rgba(180,83,9,.06) !important; border-color: rgba(180,83,9,.2) !important; }
+
+/* Coming soon overlay */
+[data-theme="light"] #coming-soon-overlay { background: rgba(15,30,46,.5) !important; }
+
+/* QR Modal */
+[data-theme="light"] #qr-modal-box { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
+
+/* News modal */
+[data-theme="light"] #news-modal-box { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
+[data-theme="light"] .nm-title { color: var(--text) !important; }
+[data-theme="light"] .nm-body { color: var(--text) !important; }
+[data-theme="light"] .nm-meta { color: var(--muted) !important; border-bottom-color: var(--border) !important; }
+
+/* ── CHAT: z-AI header inline override ── */
+[data-theme="light"] #ai-room-header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* ── CHAT: messages area ── */
+[data-theme="light"] .messages-area {
+  background: var(--bg) !important;
+}
+
+/* ── CHAT: bubbles theirs (orang lain) ── */
+[data-theme="light"] .msg-row.theirs .msg-bubble {
+  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+  backdrop-filter: none !important;
+}
+
+/* ── CHAT: bubbles mine (sendiri) ── */
+[data-theme="light"] .msg-row.mine .msg-bubble {
+  background: linear-gradient(135deg, #0070c0, #0099e6) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 2px 12px rgba(0,112,192,.3) !important;
+  backdrop-filter: none !important;
+}
+
+/* ── CHAT: sender name & time ── */
+[data-theme="light"] .msg-sender-name { color: var(--muted) !important; }
+[data-theme="light"] .msg-row.mine .msg-sender-name { color: rgba(0,112,192,.7) !important; }
+[data-theme="light"] .msg-time { color: var(--muted) !important; }
+[data-theme="light"] .msg-row.mine .msg-time { color: rgba(255,255,255,.7) !important; }
+
+/* ── CHAT: date separator ── */
+[data-theme="light"] .msg-date-sep {
+  background: rgba(0,0,0,.05) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+}
+
+/* ── CHAT: reply ref ── */
+[data-theme="light"] .reply-preview {
+  background: rgba(0,112,192,.06) !important;
+  border-color: rgba(0,112,192,.2) !important;
+}
+
+/* ── CHAT: emoji panel ── */
+[data-theme="light"] #emoji-picker-panel {
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border) !important;
+}
+[data-theme="light"] .emoji-cat-btn { color: var(--text) !important; }
+[data-theme="light"] .emoji-cat-btn:hover { background: var(--surface2) !important; }
+[data-theme="light"] .emoji-cat-btn.active { background: rgba(0,112,192,.1) !important; outline-color: rgba(0,112,192,.3) !important; }
+[data-theme="light"] .emoji-btn:hover { background: var(--surface2) !important; }
+
+/* ── CHAT: room list ── */
+[data-theme="light"] .rooms-page { background: var(--bg) !important; }
+[data-theme="light"] .room-item {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .room-item:hover { background: var(--surface2) !important; }
+[data-theme="light"] .room-name { color: var(--text) !important; }
+[data-theme="light"] .room-preview { color: var(--muted) !important; }
+[data-theme="light"] .room-meta { color: var(--muted) !important; }
+[data-theme="light"] .room-unread {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* ── CHAT: delete button in header ── */
+[data-theme="light"] .room-header .btn-del,
+[data-theme="light"] .room-header button {
+  background: var(--surface2) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+}
+
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -11978,16 +12359,61 @@ async function tryFetchPhantomBTC(provider) {
   } catch(e) { console.warn('[Phantom BTC]', e); }
 }
 
-async function connectWallet() {
+// ══════════════════════════════════════════
+//  WALLET CONNECT MODAL — openWalletModal
+// ══════════════════════════════════════════
+
+function openWalletModal() {
+  const overlay = document.getElementById('wc-modal-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.classList.add('open');
+  }
+  // Reset status msg
+  const st = document.getElementById('wc-ext-status');
+  if (st) { st.style.display='none'; st.textContent=''; }
+}
+
+function closeWalletModal(event, force) {
+  if (!force && event && event.target !== document.getElementById('wc-modal-overlay')) return;
+  const overlay = document.getElementById('wc-modal-overlay');
+  if (overlay) { overlay.style.display='none'; overlay.classList.remove('open'); }
+}
+
+// ── Opsi 1: Connect via Browser Extension ──
+async function connectWalletExtension(preferredName) {
+  const overlay = document.getElementById('wc-modal-overlay');
+  const statusEl = document.getElementById('wc-ext-status');
+
   const providers = detectProviders();
-  if (!providers.length) {
-    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tidak ada wallet browser terdeteksi. Install MetaMask, OKX, atau Phantom!', 2);
+
+  // Cari provider yang dipilih, atau fallback ke yang tersedia
+  let chosen = null;
+  if (preferredName) {
+    chosen = providers.find(p => p.name === preferredName) || null;
+  }
+  if (!chosen) {
+    // Coba urutan prioritas
+    const order = ['OKX','Phantom','MetaMask','Browser Wallet'];
+    for (const name of order) { const p = providers.find(x=>x.name===name); if(p){chosen=p;break;} }
+  }
+
+  if (!chosen) {
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      const installLinks = {
+        MetaMask: 'https://metamask.io/download/',
+        OKX: 'https://www.okx.com/id/web3',
+        Phantom: 'https://phantom.app/'
+      };
+      const link = installLinks[preferredName] || '#';
+      statusEl.innerHTML = `Extension <b>${preferredName||'wallet'}</b> tidak terdeteksi. <a href="${link}" target="_blank" style="color:var(--accent);font-weight:700">Install dulu →</a>`;
+    }
     return;
   }
-  // If multiple providers, pick best one (OKX > Phantom > MetaMask)
-  const order = ['OKX','Phantom','MetaMask','Browser Wallet'];
-  let chosen = providers[0];
-  for (const name of order) { const p = providers.find(x=>x.name===name); if(p){chosen=p;break;} }
+
+  // Tutup modal, lanjut proses connect
+  if (overlay) { overlay.style.display='none'; overlay.classList.remove('open'); }
 
   const btn = document.getElementById('btn-connect-wallet');
   const lbl = document.getElementById('wallet-btn-label');
@@ -12012,14 +12438,11 @@ async function connectWallet() {
     updateWalletUI();
     toast(`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${chosen.name} terhubung! Memuat semua token...`);
 
-    // EVM tokens
     await fetchWalletTokens(address, chainId);
 
-    // Try auto-fetch BTC for OKX & Phantom
     if (chosen.name === 'OKX') tryFetchOKXBTC(chosen);
     if (chosen.name === 'Phantom') tryFetchPhantomBTC(chosen);
 
-    // Auto-refresh EVM every 60s, BTC every 120s
     if (walletState.refreshInterval) clearInterval(walletState.refreshInterval);
     walletState.refreshInterval = setInterval(() => {
       if (walletState.connected) fetchWalletTokens(walletState.address, walletState.chainId);
@@ -12029,7 +12452,6 @@ async function connectWallet() {
       if (walletState.btcAddresses.length) refreshAllBTC();
     }, 120000);
 
-    // Listen events
     evmProvider.on?.('accountsChanged', accs => {
       if (!accs||!accs.length) { disconnectWallet(); return; }
       walletState.address = accs[0]; updateWalletUI();
@@ -12047,6 +12469,83 @@ async function connectWallet() {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+// ── Opsi 2: Deep Link ke Wallet App di HP ──
+function openWalletApp(walletName) {
+  // Dapatkan URL halaman z-Wealth saat ini
+  const currentUrl = encodeURIComponent(window.location.href);
+  const currentHost = encodeURIComponent(window.location.hostname + window.location.pathname + window.location.search);
+
+  const deepLinks = {
+    metamask: {
+      // MetaMask deep link: membuka browser MetaMask langsung ke URL ini
+      url: `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`,
+      fallback: 'https://metamask.io/download/',
+      name: 'MetaMask'
+    },
+    okx: {
+      // OKX Wallet deep link
+      url: `okex://wallet/dapp/url?dappUrl=${currentUrl}`,
+      httpFallback: `https://www.okx.com/download`,
+      webFallback: `https://www.okx.com/web3`,
+      name: 'OKX Wallet'
+    },
+    trust: {
+      // Trust Wallet deep link
+      url: `trust://open_url?coin_id=60&url=${currentUrl}`,
+      httpFallback: `https://link.trustwallet.com/open_url?coin_id=60&url=${currentUrl}`,
+      fallback: 'https://trustwallet.com/download',
+      name: 'Trust Wallet'
+    },
+    coinbase: {
+      // Coinbase Wallet deep link
+      url: `cbwallet://dapp?url=${currentUrl}`,
+      httpFallback: `https://go.cb-w.com/dapp?cb_url=${currentUrl}`,
+      fallback: 'https://www.coinbase.com/wallet/downloads',
+      name: 'Coinbase Wallet'
+    }
+  };
+
+  const config = deepLinks[walletName];
+  if (!config) return;
+
+  // Cek apakah mobile
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (!isMobile) {
+    toast(`📱 Deep link ke ${config.name} hanya bekerja di HP. Di desktop, gunakan Opsi 1 (Extension).`, 2);
+    return;
+  }
+
+  // Tutup modal
+  closeWalletModal(null, true);
+
+  toast(`🚀 Membuka ${config.name}... Jika tidak terbuka, pastikan app sudah terinstall.`, 1);
+
+  // Coba deep link dulu, fallback ke HTTP universal link
+  const httpLink = config.httpFallback || config.fallback;
+
+  if (config.httpFallback) {
+    // Gunakan HTTP universal link yang lebih reliable
+    window.location.href = config.httpFallback;
+  } else {
+    // Coba custom scheme, fallback ke store jika gagal
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.src = config.url;
+
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      window.location.href = config.fallback;
+    }, 1500);
+  }
+}
+
+// ── connectWallet() tetap ada sebagai alias untuk backward compat ──
+async function connectWallet() {
+  openWalletModal();
 }
 
 function disconnectWallet() {
@@ -12807,18 +13306,22 @@ async function _callPollinations(systemPrompt, messages, maxTokens) {
 
   const rawText = await res.text();
 
-  // Jika response mengandung deprecation notice (bukan JSON valid), coba parse sebagai JSON dulu
+  // Cek deprecation notice sebelum parse JSON
+  if (rawText.includes('IMPORTANT NOTICE') || rawText.includes('legacy text API') || rawText.includes('being deprecated')) {
+    _aiProviderFail('pollinations');
+    throw new Error('Pollinations: deprecation notice received');
+  }
+
   let text = '';
   try {
     const data = JSON.parse(rawText);
-    // Cek apakah isi pesan adalah deprecation notice dari Pollinations
     const content = data.choices?.[0]?.message?.content?.trim() || '';
     if (content.includes('IMPORTANT NOTICE') || content.includes('legacy text API') || content.includes('being deprecated')) {
+      _aiProviderFail('pollinations');
       throw new Error('Pollinations: deprecation notice received');
     }
     text = content;
   } catch(parseErr) {
-    // Jika parse gagal atau dapat deprecation notice, throw error agar fallback ke provider lain
     _aiProviderFail('pollinations');
     throw new Error('Pollinations: ' + (parseErr.message || 'response tidak valid'));
   }
@@ -13618,6 +14121,174 @@ function searchNewsOnline() {
 }
 </script>
 
+
+<!-- ══════════════════════════════════════════
+     WALLET CONNECT MODAL — 2 Opsi
+══════════════════════════════════════════ -->
+<div id="wc-modal-overlay" onclick="closeWalletModal(event)" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem">
+  <div id="wc-modal-box" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 0 80px rgba(0,0,0,.6),0 0 40px rgba(124,58,237,.1)">
+
+    <!-- Header -->
+    <div style="padding:1.25rem 1.25rem .8rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:var(--text);letter-spacing:-.02em">Connect Wallet</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Pilih cara menghubungkan wallet kamu</div>
+      </div>
+      <button onclick="closeWalletModal(null,true)" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-family:'Inter',sans-serif">✕</button>
+    </div>
+
+    <!-- READ-ONLY NOTICE -->
+    <div style="margin:1rem 1.25rem .2rem;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:.85rem 1rem;display:flex;gap:.75rem;align-items:flex-start">
+      <div style="flex-shrink:0;margin-top:1px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div style="font-size:.72rem;font-weight:800;color:#10b981;letter-spacing:.03em;margin-bottom:.25rem">🔒 100% AMAN · READ-ONLY</div>
+        <div style="font-size:.68rem;color:rgba(16,185,129,.85);line-height:1.6">
+          Fitur ini <strong>hanya membaca</strong> saldo & token wallet kamu secara publik.
+          <strong>Tidak ada akses ke private key</strong>, tidak bisa kirim atau terima transaksi, tidak bisa approve apapun. Data diambil langsung dari blockchain via Moralis & Mempool.space.
+        </div>
+      </div>
+    </div>
+
+    <!-- Opsi 1: Browser Extension -->
+    <div style="padding:1rem 1.25rem .6rem">
+      <div style="font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Opsi 1 — Browser Extension (Desktop)
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+        <!-- MetaMask -->
+        <button class="wc-ext-btn" onclick="connectWalletExtension('MetaMask')">
+          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(246,133,27,.15),rgba(246,133,27,.05));border-color:rgba(246,133,27,.3)">
+            <svg width="22" height="22" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726" stroke="#E17726" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625" stroke="#E27625" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.2292 23.5334L24.7436 28.872L32.2414 30.8953L34.3391 23.6501L28.2292 23.5334Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M0.67688 23.6501L2.76226 30.8953L10.2477 28.872L6.77435 23.5334L0.67688 23.6501Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M9.85444 14.7927L7.83447 17.8573L15.2536 18.1966L14.9956 10.1776L9.85444 14.7927Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M25.1455 14.7927L19.9157 10.0864L19.7464 18.1966L27.1655 17.8573L25.1455 14.7927Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M20.2005 26.7345L24.7436 28.872L24.1107 23.7018L20.2005 26.7345Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/></svg>
+          </div>
+          <span>MetaMask</span>
+        </button>
+        <!-- OKX -->
+        <button class="wc-ext-btn" onclick="connectWalletExtension('OKX')">
+          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(0,209,178,.15),rgba(0,209,178,.05));border-color:rgba(0,209,178,.3)">
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#000"/><rect x="4" y="4" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="17" y="4" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="4" y="17" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="17" y="17" width="11" height="11" rx="1.5" fill="#00d1b2"/></svg>
+          </div>
+          <span>OKX</span>
+        </button>
+        <!-- Phantom -->
+        <button class="wc-ext-btn" onclick="connectWalletExtension('Phantom')">
+          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(171,159,242,.2),rgba(171,159,242,.05));border-color:rgba(171,159,242,.35)">
+            <svg width="22" height="22" viewBox="0 0 128 128" fill="none"><rect width="128" height="128" rx="26" fill="#ab9ff2"/><path d="M110.584 64.5c0 25.405-20.65 46-46.084 46-23.19 0-42.4-16.3-45.7-37.7h31.6c2.5 6.3 8.6 10.7 15.6 10.7 9.4 0 17-7.6 17-17s-7.6-17-17-17c-6.9 0-12.9 4.2-15.6 10.4H18.4C22.1 38 41.1 22 64.5 22c25.4 0 46.084 18.9 46.084 42.5z" fill="white"/></svg>
+          </div>
+          <span>Phantom</span>
+        </button>
+      </div>
+      <div id="wc-ext-status" style="display:none;font-size:.7rem;color:var(--danger);text-align:center;margin-top:.5rem;padding:.4rem;background:rgba(239,68,68,.08);border-radius:7px;border:1px solid rgba(239,68,68,.2)"></div>
+    </div>
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.2rem 1.25rem">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:.65rem;color:var(--muted);font-weight:700;white-space:nowrap">ATAU</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- Opsi 2: Mobile App Deep Link -->
+    <div style="padding:.6rem 1.25rem 1.25rem">
+      <div style="font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        Opsi 2 — Buka Langsung di Wallet App (Mobile)
+      </div>
+
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:12px;padding:.75rem;margin-bottom:.65rem">
+        <div style="font-size:.68rem;color:rgba(0,229,255,.75);line-height:1.6">
+          💡 Jika kamu buka z-Wealth dari browser di HP, klik salah satu tombol di bawah untuk langsung membuka wallet app kamu dan melakukan koneksi otomatis.
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <!-- MetaMask Mobile -->
+        <button class="wc-app-btn" onclick="openWalletApp('metamask')">
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(246,133,27,.2),rgba(246,133,27,.08));border:1px solid rgba(246,133,27,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625"/></svg>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:.82rem;font-weight:700;color:var(--text)">MetaMask Mobile</div>
+              <div style="font-size:.65rem;color:var(--muted)">Buka di app MetaMask</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:#F6851B;font-weight:700;background:rgba(246,133,27,.1);border:1px solid rgba(246,133,27,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+        </button>
+
+        <!-- OKX Mobile -->
+        <button class="wc-app-btn" onclick="openWalletApp('okx')">
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,209,178,.2),rgba(0,209,178,.08));border:1px solid rgba(0,209,178,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#000"/><rect x="3" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="3" y="18" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="18" width="11" height="11" rx="1" fill="#00d1b2"/></svg>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:.82rem;font-weight:700;color:var(--text)">OKX Wallet</div>
+              <div style="font-size:.65rem;color:var(--muted)">Buka di app OKX Wallet</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:#00d1b2;font-weight:700;background:rgba(0,209,178,.1);border:1px solid rgba(0,209,178,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+        </button>
+
+        <!-- Trust Wallet -->
+        <button class="wc-app-btn" onclick="openWalletApp('trust')">
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(51,117,187,.2),rgba(51,117,187,.08));border:1px solid rgba(51,117,187,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16 3L5 8v8c0 6.075 4.69 11.738 11 13 6.31-1.262 11-6.925 11-13V8L16 3z" fill="#3375BB"/><path d="M13 15.5l2.5 2.5L20 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:.82rem;font-weight:700;color:var(--text)">Trust Wallet</div>
+              <div style="font-size:.65rem;color:var(--muted)">Buka di app Trust Wallet</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:#3375BB;font-weight:700;background:rgba(51,117,187,.1);border:1px solid rgba(51,117,187,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+        </button>
+
+        <!-- Coinbase Wallet -->
+        <button class="wc-app-btn" onclick="openWalletApp('coinbase')">
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,82,255,.2),rgba(0,82,255,.08));border:1px solid rgba(0,82,255,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#0052FF"/><circle cx="16" cy="16" r="8" fill="white"/><rect x="12" y="14" width="8" height="4" rx="2" fill="#0052FF"/></svg>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:.82rem;font-weight:700;color:var(--text)">Coinbase Wallet</div>
+              <div style="font-size:.65rem;color:var(--muted)">Buka di app Coinbase Wallet</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:#0052FF;font-weight:700;background:rgba(0,82,255,.1);border:1px solid rgba(0,82,255,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+        </button>
+      </div>
+
+      <!-- Info note -->
+      <div style="margin-top:.75rem;padding:.65rem .8rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:9px;font-size:.65rem;color:rgba(245,158,11,.85);line-height:1.6">
+        ⚠️ <strong>Cara kerja deep link:</strong> Tombol ini akan membuka app wallet kamu, lalu arahkan browser wallet-nya ke URL z-Wealth ini. Dari sana, tombol Connect Wallet akan otomatis terdeteksi oleh extension wallet tersebut.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSS for wallet modal -->
+<style>
+#wc-modal-overlay.open { display:flex !important; }
+.wc-ext-btn {
+  display:flex;flex-direction:column;align-items:center;gap:.45rem;
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:.75rem .5rem;cursor:pointer;transition:all .2s;color:var(--muted);font-size:.7rem;font-weight:700;font-family:'Inter',sans-serif;
+}
+.wc-ext-btn:hover { border-color:rgba(167,139,250,.5);background:rgba(124,58,237,.08);color:var(--text);transform:translateY(-2px);box-shadow:0 4px 16px rgba(124,58,237,.15); }
+.wc-ext-icon {
+  width:48px;height:48px;border-radius:12px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.wc-app-btn {
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:.65rem .85rem;cursor:pointer;transition:all .2s;width:100%;font-family:'Inter',sans-serif;
+}
+.wc-app-btn:hover { border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04);transform:translateX(2px); }
+</style>
 
 <!-- News Detail Modal -->
 <div id="news-modal-overlay" onclick="closeNewsModal(event)">
