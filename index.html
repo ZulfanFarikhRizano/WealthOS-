@@ -32,6 +32,9 @@
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- WalletConnect Universal Provider + Modal (UMD, no bundler needed) -->
+<script src="https://unpkg.com/@walletconnect/modal@2.7.0/dist/index.umd.js"></script>
+<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.17.0/dist/index.umd.js"></script>
 <style>
 :root {
   --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
@@ -12702,22 +12705,103 @@ function copyZWealthURL() {
   }
 }
 
-// ── WalletConnect: buka modal QR scan via Reown AppKit ──
-function openWalletConnect() {
+// ── WalletConnect: inisialisasi & buka QR modal ──
+let _wcProvider = null;
+let _wcInitializing = false;
+
+async function openWalletConnect() {
   closeWalletModal(null, true);
-  if (window._wcModal) {
-    window._wcModal.open();
-  } else {
-    // AppKit belum siap (mungkin CDN lambat load) — tampilkan pesan
-    toast('⏳ WalletConnect sedang dimuat, coba lagi sebentar...', 1);
-    // Retry setelah 2 detik
-    setTimeout(() => {
-      if (window._wcModal) {
-        window._wcModal.open();
-      } else {
-        toast('❌ WalletConnect gagal dimuat. Coba refresh halaman.', 2);
-      }
-    }, 2000);
+
+  // Cek apakah library sudah load
+  const EthereumProvider = window.WalletConnectEthereumProvider?.EthereumProvider
+    || window.EthereumProvider
+    || window['@walletconnect/ethereum-provider']?.EthereumProvider;
+
+  const WalletConnectModal = window.WalletConnectModal?.WalletConnectModal
+    || window.WalletConnectModal;
+
+  if (!EthereumProvider || !WalletConnectModal) {
+    toast('⏳ WalletConnect sedang dimuat... coba lagi dalam 2 detik', 1);
+    setTimeout(() => openWalletConnect(), 2500);
+    return;
+  }
+
+  if (_wcInitializing) { toast('⏳ Sedang menghubungkan...', 1); return; }
+  _wcInitializing = true;
+
+  try {
+    // Buat provider baru setiap kali (agar QR fresh)
+    _wcProvider = await EthereumProvider.init({
+      projectId: 'dec35dd23f44d3a833556dd8ff806420',
+      chains: [1],
+      optionalChains: [56, 137, 42161, 10, 43114, 8453],
+      showQrModal: true,
+      qrModalOptions: {
+        themeMode: 'dark',
+        themeVariables: {
+          '--wcm-accent-color': '#00e5ff',
+          '--wcm-background-color': '#0b1120',
+          '--wcm-z-index': '700',
+        },
+        explorerRecommendedWalletIds: [
+          // OKX Wallet
+          '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709',
+          // MetaMask
+          'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
+          // Trust Wallet
+          '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
+        ],
+      },
+      metadata: {
+        name: 'z-Wealth',
+        description: 'Bitcoin DCA Tracker',
+        url: window.location.origin,
+        icons: [window.location.origin + '/icon-192.png'],
+      },
+    });
+
+    // Event: user approve di wallet
+    _wcProvider.on('connect', async () => {
+      try {
+        const accounts = _wcProvider.accounts;
+        const chainId  = _wcProvider.chainId;
+        if (!accounts?.[0]) return;
+
+        walletState.connected    = true;
+        walletState.providerName = 'WalletConnect';
+        walletState.address      = accounts[0];
+        walletState.chainId      = chainId || 1;
+        walletState.tokens       = [];
+        walletState.loading      = true;
+
+        updateWalletUI();
+        toast('✅ Wallet terhubung via WalletConnect! Memuat token...');
+        await fetchWalletTokens(accounts[0], chainId || 1);
+
+        if (walletState.refreshInterval) clearInterval(walletState.refreshInterval);
+        walletState.refreshInterval = setInterval(() => {
+          if (walletState.connected) fetchWalletTokens(walletState.address, walletState.chainId);
+        }, 60000);
+      } catch(e) { console.error('[WC connect]', e); }
+    });
+
+    // Event: user disconnect
+    _wcProvider.on('disconnect', () => {
+      if (walletState.providerName === 'WalletConnect') disconnectWallet();
+    });
+
+    // Buka QR modal
+    await _wcProvider.connect();
+
+  } catch(e) {
+    if (e?.message?.includes('User rejected') || e?.code === 4001) {
+      toast('Koneksi WalletConnect dibatalkan.', 1);
+    } else {
+      console.error('[WC]', e);
+      toast('❌ Gagal connect WalletConnect: ' + (e?.message || e), 2);
+    }
+  } finally {
+    _wcInitializing = false;
   }
 }
 
@@ -14426,71 +14510,5 @@ function searchNewsOnline() {
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     WALLETCONNECT / REOWN APPKIT INTEGRATION
-     Project ID: dec35dd23f44d3a833556dd8ff806420
-══════════════════════════════════════════ -->
-<script type="module">
-// ── Reown AppKit (WalletConnect v3) — vanilla JS via ESM CDN ──
-import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit@1.7.3/dist/esm/index.js';
-import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@1.7.3/dist/esm/index.js';
-import { mainnet, polygon, bsc, arbitrum, base } from 'https://cdn.jsdelivr.net/npm/@reown/appkit/networks';
 
-const WC_PROJECT_ID = 'dec35dd23f44d3a833556dd8ff806420';
-
-const ethersAdapter = new EthersAdapter();
-
-const modal = createAppKit({
-  adapters: [ethersAdapter],
-  projectId: WC_PROJECT_ID,
-  networks: [mainnet, polygon, bsc, arbitrum, base],
-  defaultNetwork: mainnet,
-  metadata: {
-    name: 'z-Wealth',
-    description: 'Bitcoin DCA Tracker',
-    url: window.location.origin,
-    icons: [window.location.origin + '/icon-192.png']
-  },
-  features: {
-    analytics: false,
-    email: false,
-    socials: false,
-    onramp: false,
-  },
-  themeMode: 'dark',
-  themeVariables: {
-    '--w3m-accent': '#00e5ff',
-    '--w3m-border-radius-master': '12px',
-  }
-});
-
-// Expose globally so vanilla JS can call it
-window._wcModal = modal;
-
-// Listen to connection events
-modal.subscribeAccount(({ address, isConnected, chainId }) => {
-  if (isConnected && address) {
-    // Map to existing walletState system
-    walletState.connected = true;
-    walletState.providerName = 'WalletConnect';
-    walletState.address = address;
-    walletState.chainId = chainId || 1;
-    walletState.tokens = [];
-    walletState.loading = true;
-    updateWalletUI();
-    closeWalletModal(null, true);
-    toast('✅ Wallet terhubung via WalletConnect! Memuat token...');
-    fetchWalletTokens(address, walletState.chainId).then(() => {
-      if (walletState.refreshInterval) clearInterval(walletState.refreshInterval);
-      walletState.refreshInterval = setInterval(() => {
-        if (walletState.connected) fetchWalletTokens(walletState.address, walletState.chainId);
-      }, 60000);
-    });
-  } else if (!isConnected && walletState.providerName === 'WalletConnect') {
-    disconnectWallet();
-  }
-});
-
-console.log('[z-wealth] WalletConnect AppKit initialized');
-</script>
 </body>
