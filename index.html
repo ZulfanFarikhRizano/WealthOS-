@@ -11918,16 +11918,60 @@ function showPushPermissionBanner(reg) {
 // ── Detect available wallet providers ──
 function detectProviders() {
   const providers = [];
-  // OKX
-  if (window.okxwallet) providers.push({ name:'OKX', evm: window.okxwallet, btc: window.okxwallet.bitcoin || null });
-  // Phantom
-  if (window.phantom?.ethereum) providers.push({ name:'Phantom', evm: window.phantom.ethereum, btc: window.phantom.bitcoin || null });
-  // MetaMask (detect last so OKX/Phantom don't masquerade)
-  if (window.ethereum && !window.okxwallet && !window.phantom?.ethereum) providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
-  // MetaMask alongside others (window.ethereum.isMetaMask)
-  if (window.ethereum?.isMetaMask && (window.okxwallet || window.phantom)) providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
-  // Fallback: any EIP-1193 provider
-  if (!providers.length && window.ethereum) providers.push({ name:'Browser Wallet', evm: window.ethereum, btc: null });
+
+  // ── OKX: cek window.okxwallet (extension desktop)
+  if (window.okxwallet) {
+    providers.push({ name:'OKX', evm: window.okxwallet, btc: window.okxwallet.bitcoin || null });
+  }
+
+  // ── OKX In-App Browser: inject ke window.ethereum dengan flag isOKExWallet / isOKX
+  if (
+    window.ethereum &&
+    (window.ethereum.isOKExWallet || window.ethereum.isOKX || window.ethereum.isOkxWallet) &&
+    !window.okxwallet
+  ) {
+    providers.push({ name:'OKX', evm: window.ethereum, btc: null });
+  }
+
+  // ── Phantom
+  if (window.phantom?.ethereum) {
+    providers.push({ name:'Phantom', evm: window.phantom.ethereum, btc: window.phantom.bitcoin || null });
+  }
+
+  // ── MetaMask (extension desktop, atau MetaMask Mobile browser)
+  if (window.ethereum?.isMetaMask && !window.ethereum.isOKExWallet && !window.ethereum.isOKX && !window.okxwallet && !window.phantom?.ethereum) {
+    providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
+  }
+  // MetaMask alongside OKX/Phantom
+  if (window.ethereum?.isMetaMask && (window.okxwallet || window.phantom)) {
+    providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
+  }
+
+  // ── Trust Wallet in-app browser
+  if (window.ethereum?.isTrust || window.ethereum?.isTrustWallet) {
+    if (!providers.find(p => p.evm === window.ethereum)) {
+      providers.push({ name:'Trust Wallet', evm: window.ethereum, btc: null });
+    }
+  }
+
+  // ── Coinbase Wallet in-app browser
+  if (window.ethereum?.isCoinbaseWallet || window.ethereum?.isCoinbaseBrowser) {
+    if (!providers.find(p => p.evm === window.ethereum)) {
+      providers.push({ name:'Coinbase Wallet', evm: window.ethereum, btc: null });
+    }
+  }
+
+  // ── Fallback: window.ethereum apapun yang belum terdaftar (mobile wallet browser lain)
+  if (!providers.length && window.ethereum) {
+    // Coba deteksi nama dari userAgent
+    const ua = navigator.userAgent || '';
+    let name = 'Browser Wallet';
+    if (/OKX/i.test(ua)) name = 'OKX';
+    else if (/MetaMask/i.test(ua)) name = 'MetaMask';
+    else if (/Trust/i.test(ua)) name = 'Trust Wallet';
+    providers.push({ name, evm: window.ethereum, btc: null });
+  }
+
   return providers;
 }
 
@@ -11941,7 +11985,7 @@ const NATIVE_SYMBOL = { 1:'ETH',56:'BNB',137:'MATIC',42161:'ETH',10:'ETH',43114:
 const NATIVE_CG_ID  = { ETH:'ethereum',BNB:'binancecoin',MATIC:'matic-network',AVAX:'avalanche-2',FTM:'fantom',CRO:'crypto-com-chain' };
 const NATIVE_ICON   = { 1:'Ξ',56:'⬡',137:'⬡',42161:'Ξ',10:'Ξ',43114:'▲',8453:'Ξ',250:'F',25:'◈' };
 const NATIVE_GRAD   = { 1:'#627EEA,#8FA8F5',56:'#F3BA2F,#F5CC5E',137:'#8247E5,#A66FEF',42161:'#2D374B,#96BEDC',10:'#FF0420,#FF6B80',43114:'#E84142,#F08080',8453:'#0052FF,#4D8EFF',250:'#1969FF,#5FA4FF',25:'#002D74,#1565C0' };
-const PROVIDER_COLOR = { MetaMask:'#F6851B',OKX:'#00d1b2',Phantom:'#ab9ff2','Browser Wallet':'#64748b' };
+const PROVIDER_COLOR = { MetaMask:'#F6851B',OKX:'#00d1b2',Phantom:'#ab9ff2','Trust Wallet':'#3375BB','Coinbase Wallet':'#0052FF','Browser Wallet':'#64748b' };
 
 function truncateAddr(addr) { if(!addr)return'—'; return addr.slice(0,6)+'…'+addr.slice(-4); }
 function fmtQty(n) { if(n===null||n===undefined||isNaN(n))return'—'; if(n>=1e9)return(n/1e9).toFixed(3)+'B'; if(n>=1e6)return(n/1e6).toFixed(3)+'M'; if(n>=1e3)return(n/1e3).toFixed(3)+'K'; if(n>=1)return n.toFixed(4); return n.toFixed(8); }
@@ -12364,6 +12408,23 @@ async function tryFetchPhantomBTC(provider) {
 // ══════════════════════════════════════════
 
 function openWalletModal() {
+  // ── Jika sudah di dalam mobile wallet browser, langsung connect — tidak perlu buka modal
+  // Popup konfirmasi "Terima / Tolak" akan muncul otomatis dari wallet app
+  const isMobileWalletBrowser = !!(
+    window.ethereum && (
+      window.ethereum.isOKExWallet || window.ethereum.isOKX || window.ethereum.isOkxWallet ||
+      window.ethereum.isTrust || window.ethereum.isTrustWallet ||
+      window.ethereum.isCoinbaseWallet || window.ethereum.isCoinbaseBrowser ||
+      window.ethereum.isMetaMask
+    ) && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+
+  if (isMobileWalletBrowser) {
+    // Langsung trigger connect — popup approve/reject dari wallet akan muncul sendiri
+    connectWalletExtension(null);
+    return;
+  }
+
   const overlay = document.getElementById('wc-modal-overlay');
   if (overlay) {
     overlay.style.display = 'flex';
@@ -12387,14 +12448,29 @@ async function connectWalletExtension(preferredName) {
 
   const providers = detectProviders();
 
+  // ── Deteksi apakah sedang di dalam mobile in-app browser wallet
+  const isMobileWalletBrowser = !!(
+    window.ethereum && (
+      window.ethereum.isOKExWallet || window.ethereum.isOKX || window.ethereum.isOkxWallet ||
+      window.ethereum.isTrust || window.ethereum.isTrustWallet ||
+      window.ethereum.isCoinbaseWallet || window.ethereum.isCoinbaseBrowser ||
+      window.ethereum.isMetaMask
+    ) && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+
   // Cari provider yang dipilih, atau fallback ke yang tersedia
   let chosen = null;
   if (preferredName) {
     chosen = providers.find(p => p.name === preferredName) || null;
   }
+  // Jika di mobile in-app browser dan provider tidak ketemu by name,
+  // langsung pakai provider pertama yang ada (popup konfirmasi wallet akan muncul otomatis)
+  if (!chosen && isMobileWalletBrowser) {
+    chosen = providers[0] || { name: preferredName || 'Wallet', evm: window.ethereum, btc: null };
+  }
   if (!chosen) {
-    // Coba urutan prioritas
-    const order = ['OKX','Phantom','MetaMask','Browser Wallet'];
+    // Desktop: coba urutan prioritas
+    const order = ['OKX','Phantom','MetaMask','Trust Wallet','Coinbase Wallet','Browser Wallet'];
     for (const name of order) { const p = providers.find(x=>x.name===name); if(p){chosen=p;break;} }
   }
 
@@ -12404,10 +12480,12 @@ async function connectWalletExtension(preferredName) {
       const installLinks = {
         MetaMask: 'https://metamask.io/download/',
         OKX: 'https://www.okx.com/id/web3',
-        Phantom: 'https://phantom.app/'
+        Phantom: 'https://phantom.app/',
+        'Trust Wallet': 'https://trustwallet.com/download',
+        'Coinbase Wallet': 'https://www.coinbase.com/wallet/downloads'
       };
       const link = installLinks[preferredName] || '#';
-      statusEl.innerHTML = `Extension <b>${preferredName||'wallet'}</b> tidak terdeteksi. <a href="${link}" target="_blank" style="color:var(--accent);font-weight:700">Install dulu →</a>`;
+      statusEl.innerHTML = `Extension <b>${preferredName||'wallet'}</b> tidak terdeteksi di browser ini.<br><small style="opacity:.8">Jika pakai HP, gunakan Opsi 2 (Wallet App).</small><br><a href="${link}" target="_blank" style="color:var(--accent);font-weight:700">Install extension →</a>`;
     }
     return;
   }
@@ -14125,169 +14203,135 @@ function searchNewsOnline() {
 <!-- ══════════════════════════════════════════
      WALLET CONNECT MODAL — 2 Opsi
 ══════════════════════════════════════════ -->
-<div id="wc-modal-overlay" onclick="closeWalletModal(event)" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem">
-  <div id="wc-modal-box" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 0 80px rgba(0,0,0,.6),0 0 40px rgba(124,58,237,.1)">
+<div id="wc-modal-overlay" onclick="closeWalletModal(event)" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:0">
+  <div id="wc-modal-box" style="background:var(--surface);border:1px solid var(--border);border-top-left-radius:22px;border-top-right-radius:22px;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,.5)">
 
-    <!-- Header -->
-    <div style="padding:1.25rem 1.25rem .8rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:1rem;font-weight:800;color:var(--text);letter-spacing:-.02em">Connect Wallet</div>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Pilih cara menghubungkan wallet kamu</div>
-      </div>
-      <button onclick="closeWalletModal(null,true)" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-family:'Inter',sans-serif">✕</button>
+    <!-- Drag handle -->
+    <div style="display:flex;justify-content:center;padding:.7rem 0 .3rem">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--border)"></div>
     </div>
 
-    <!-- READ-ONLY NOTICE -->
-    <div style="margin:1rem 1.25rem .2rem;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:.85rem 1rem;display:flex;gap:.75rem;align-items:flex-start">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.3rem 1.2rem .8rem">
+      <div style="font-size:.95rem;font-weight:800;color:var(--text)">Connect Wallet</div>
+      <button onclick="closeWalletModal(null,true)" style="background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--muted);cursor:pointer;font-size:.75rem;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- READ-ONLY NOTICE — sama persis seperti di BTC section -->
+    <div style="margin:0 1.2rem .9rem;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:.85rem 1rem;display:flex;gap:.75rem;align-items:flex-start">
       <div style="flex-shrink:0;margin-top:1px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
       <div>
         <div style="font-size:.72rem;font-weight:800;color:#10b981;letter-spacing:.03em;margin-bottom:.25rem">🔒 100% AMAN · READ-ONLY</div>
         <div style="font-size:.68rem;color:rgba(16,185,129,.85);line-height:1.6">
-          Fitur ini <strong>hanya membaca</strong> saldo & token wallet kamu secara publik.
-          <strong>Tidak ada akses ke private key</strong>, tidak bisa kirim atau terima transaksi, tidak bisa approve apapun. Data diambil langsung dari blockchain via Moralis & Mempool.space.
+          Fitur ini <strong>hanya membaca</strong> saldo wallet kamu secara publik — seperti melihat data di blockchain explorer.
+          <strong>Tidak ada akses ke private key</strong>, tidak bisa kirim atau terima transaksi, tidak bisa approve apapun.
+          Data diambil langsung dari blockchain via Moralis &amp; Mempool.space.
         </div>
       </div>
     </div>
 
-    <!-- Opsi 1: Browser Extension -->
-    <div style="padding:1rem 1.25rem .6rem">
-      <div style="font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        Opsi 1 — Browser Extension (Desktop)
+    <!-- OPSI 1: Desktop Browser Extension -->
+    <div style="padding:0 1.2rem .6rem">
+      <div style="font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.55rem;display:flex;align-items:center;gap:.35rem">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Desktop — Browser Extension
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
-        <!-- MetaMask -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">
         <button class="wc-ext-btn" onclick="connectWalletExtension('MetaMask')">
-          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(246,133,27,.15),rgba(246,133,27,.05));border-color:rgba(246,133,27,.3)">
-            <svg width="22" height="22" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726" stroke="#E17726" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625" stroke="#E27625" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/><path d="M28.2292 23.5334L24.7436 28.872L32.2414 30.8953L34.3391 23.6501L28.2292 23.5334Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M0.67688 23.6501L2.76226 30.8953L10.2477 28.872L6.77435 23.5334L0.67688 23.6501Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M9.85444 14.7927L7.83447 17.8573L15.2536 18.1966L14.9956 10.1776L9.85444 14.7927Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M25.1455 14.7927L19.9157 10.0864L19.7464 18.1966L27.1655 17.8573L25.1455 14.7927Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/><path d="M20.2005 26.7345L24.7436 28.872L24.1107 23.7018L20.2005 26.7345Z" fill="#E27625" stroke="#E27625" stroke-width=".25"/></svg>
+          <div class="wc-ext-icon" style="border-color:rgba(246,133,27,.35);background:rgba(246,133,27,.08)">
+            <svg width="22" height="20" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625"/><path d="M28.2292 23.5334L24.7436 28.872L32.2414 30.8953L34.3391 23.6501L28.2292 23.5334Z" fill="#E27625"/><path d="M0.67688 23.6501L2.76226 30.8953L10.2477 28.872L6.77435 23.5334L0.67688 23.6501Z" fill="#E27625"/><path d="M9.85444 14.7927L7.83447 17.8573L15.2536 18.1966L14.9956 10.1776L9.85444 14.7927Z" fill="#E27625"/><path d="M25.1455 14.7927L19.9157 10.0864L19.7464 18.1966L27.1655 17.8573L25.1455 14.7927Z" fill="#E27625"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625"/><path d="M20.2005 26.7345L24.7436 28.872L24.1107 23.7018L20.2005 26.7345Z" fill="#E27625"/></svg>
           </div>
           <span>MetaMask</span>
         </button>
-        <!-- OKX -->
         <button class="wc-ext-btn" onclick="connectWalletExtension('OKX')">
-          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(0,209,178,.15),rgba(0,209,178,.05));border-color:rgba(0,209,178,.3)">
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#000"/><rect x="4" y="4" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="17" y="4" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="4" y="17" width="11" height="11" rx="1.5" fill="#00d1b2"/><rect x="17" y="17" width="11" height="11" rx="1.5" fill="#00d1b2"/></svg>
+          <div class="wc-ext-icon" style="border-color:rgba(0,209,178,.35);background:rgba(0,209,178,.08)">
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#000"/><rect x="4" y="4" width="10" height="10" rx="1.5" fill="#00d1b2"/><rect x="18" y="4" width="10" height="10" rx="1.5" fill="#00d1b2"/><rect x="4" y="18" width="10" height="10" rx="1.5" fill="#00d1b2"/><rect x="18" y="18" width="10" height="10" rx="1.5" fill="#00d1b2"/></svg>
           </div>
           <span>OKX</span>
         </button>
-        <!-- Phantom -->
         <button class="wc-ext-btn" onclick="connectWalletExtension('Phantom')">
-          <div class="wc-ext-icon" style="background:linear-gradient(135deg,rgba(171,159,242,.2),rgba(171,159,242,.05));border-color:rgba(171,159,242,.35)">
+          <div class="wc-ext-icon" style="border-color:rgba(171,159,242,.35);background:rgba(171,159,242,.1)">
             <svg width="22" height="22" viewBox="0 0 128 128" fill="none"><rect width="128" height="128" rx="26" fill="#ab9ff2"/><path d="M110.584 64.5c0 25.405-20.65 46-46.084 46-23.19 0-42.4-16.3-45.7-37.7h31.6c2.5 6.3 8.6 10.7 15.6 10.7 9.4 0 17-7.6 17-17s-7.6-17-17-17c-6.9 0-12.9 4.2-15.6 10.4H18.4C22.1 38 41.1 22 64.5 22c25.4 0 46.084 18.9 46.084 42.5z" fill="white"/></svg>
           </div>
           <span>Phantom</span>
         </button>
       </div>
-      <div id="wc-ext-status" style="display:none;font-size:.7rem;color:var(--danger);text-align:center;margin-top:.5rem;padding:.4rem;background:rgba(239,68,68,.08);border-radius:7px;border:1px solid rgba(239,68,68,.2)"></div>
+      <div id="wc-ext-status" style="display:none;font-size:.7rem;color:var(--danger);text-align:center;margin-top:.5rem;padding:.45rem .7rem;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.2)"></div>
     </div>
 
     <!-- Divider -->
-    <div style="display:flex;align-items:center;gap:.75rem;padding:.2rem 1.25rem">
+    <div style="display:flex;align-items:center;gap:.6rem;padding:.3rem 1.2rem .5rem">
       <div style="flex:1;height:1px;background:var(--border)"></div>
-      <span style="font-size:.65rem;color:var(--muted);font-weight:700;white-space:nowrap">ATAU</span>
+      <span style="font-size:.6rem;color:var(--muted);font-weight:700;letter-spacing:.08em">ATAU</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
 
-    <!-- Opsi 2: Mobile App Deep Link -->
-    <div style="padding:.6rem 1.25rem 1.25rem">
-      <div style="font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
-        Opsi 2 — Buka Langsung di Wallet App (Mobile)
+    <!-- OPSI 2: Mobile Wallet App -->
+    <div style="padding:0 1.2rem 1.4rem">
+      <div style="font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.55rem;display:flex;align-items:center;gap:.35rem">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        Mobile — Buka di Wallet App
       </div>
-
-      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:12px;padding:.75rem;margin-bottom:.65rem">
-        <div style="font-size:.68rem;color:rgba(0,229,255,.75);line-height:1.6">
-          💡 Jika kamu buka z-Wealth dari browser di HP, klik salah satu tombol di bawah untuk langsung membuka wallet app kamu dan melakukan koneksi otomatis.
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        <!-- MetaMask Mobile -->
-        <button class="wc-app-btn" onclick="openWalletApp('metamask')">
-          <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(246,133,27,.2),rgba(246,133,27,.08));border:1px solid rgba(246,133,27,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625"/></svg>
-            </div>
-            <div style="text-align:left">
-              <div style="font-size:.82rem;font-weight:700;color:var(--text)">MetaMask Mobile</div>
-              <div style="font-size:.65rem;color:var(--muted)">Buka di app MetaMask</div>
-            </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem">
+        <button class="wc-app-btn2" onclick="openWalletApp('metamask')">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(246,133,27,.12);border:1px solid rgba(246,133,27,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="15" viewBox="0 0 35 33" fill="none"><path d="M32.9582 1L19.8241 10.7183L22.2665 4.99099L32.9582 1Z" fill="#E17726"/><path d="M2.04858 1L15.0707 10.809L12.7413 4.99099L2.04858 1Z" fill="#E27625"/><path d="M10.2477 28.872L14.7995 26.7345L10.8893 23.7018L10.2477 28.872Z" fill="#E27625"/></svg>
           </div>
-          <div style="font-size:.65rem;color:#F6851B;font-weight:700;background:rgba(246,133,27,.1);border:1px solid rgba(246,133,27,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+          <span class="wc-app-name">MetaMask</span>
         </button>
-
-        <!-- OKX Mobile -->
-        <button class="wc-app-btn" onclick="openWalletApp('okx')">
-          <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,209,178,.2),rgba(0,209,178,.08));border:1px solid rgba(0,209,178,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#000"/><rect x="3" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="3" y="18" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="18" width="11" height="11" rx="1" fill="#00d1b2"/></svg>
-            </div>
-            <div style="text-align:left">
-              <div style="font-size:.82rem;font-weight:700;color:var(--text)">OKX Wallet</div>
-              <div style="font-size:.65rem;color:var(--muted)">Buka di app OKX Wallet</div>
-            </div>
+        <button class="wc-app-btn2" onclick="openWalletApp('okx')">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(0,209,178,.12);border:1px solid rgba(0,209,178,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#000"/><rect x="3" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="3" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="3" y="18" width="11" height="11" rx="1" fill="#00d1b2"/><rect x="18" y="18" width="11" height="11" rx="1" fill="#00d1b2"/></svg>
           </div>
-          <div style="font-size:.65rem;color:#00d1b2;font-weight:700;background:rgba(0,209,178,.1);border:1px solid rgba(0,209,178,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+          <span class="wc-app-name">OKX Wallet</span>
         </button>
-
-        <!-- Trust Wallet -->
-        <button class="wc-app-btn" onclick="openWalletApp('trust')">
-          <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(51,117,187,.2),rgba(51,117,187,.08));border:1px solid rgba(51,117,187,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16 3L5 8v8c0 6.075 4.69 11.738 11 13 6.31-1.262 11-6.925 11-13V8L16 3z" fill="#3375BB"/><path d="M13 15.5l2.5 2.5L20 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div style="text-align:left">
-              <div style="font-size:.82rem;font-weight:700;color:var(--text)">Trust Wallet</div>
-              <div style="font-size:.65rem;color:var(--muted)">Buka di app Trust Wallet</div>
-            </div>
+        <button class="wc-app-btn2" onclick="openWalletApp('trust')">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(51,117,187,.12);border:1px solid rgba(51,117,187,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M16 3L5 8v8c0 6.075 4.69 11.738 11 13 6.31-1.262 11-6.925 11-13V8L16 3z" fill="#3375BB"/><path d="M13 15.5l2.5 2.5L20 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <div style="font-size:.65rem;color:#3375BB;font-weight:700;background:rgba(51,117,187,.1);border:1px solid rgba(51,117,187,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+          <span class="wc-app-name">Trust Wallet</span>
         </button>
-
-        <!-- Coinbase Wallet -->
-        <button class="wc-app-btn" onclick="openWalletApp('coinbase')">
-          <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,82,255,.2),rgba(0,82,255,.08));border:1px solid rgba(0,82,255,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#0052FF"/><circle cx="16" cy="16" r="8" fill="white"/><rect x="12" y="14" width="8" height="4" rx="2" fill="#0052FF"/></svg>
-            </div>
-            <div style="text-align:left">
-              <div style="font-size:.82rem;font-weight:700;color:var(--text)">Coinbase Wallet</div>
-              <div style="font-size:.65rem;color:var(--muted)">Buka di app Coinbase Wallet</div>
-            </div>
+        <button class="wc-app-btn2" onclick="openWalletApp('coinbase')">
+          <div style="width:32px;height:32px;border-radius:9px;background:rgba(0,82,255,.12);border:1px solid rgba(0,82,255,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#0052FF"/><circle cx="16" cy="16" r="8" fill="white"/><rect x="12" y="14" width="8" height="4" rx="2" fill="#0052FF"/></svg>
           </div>
-          <div style="font-size:.65rem;color:#0052FF;font-weight:700;background:rgba(0,82,255,.1);border:1px solid rgba(0,82,255,.25);border-radius:5px;padding:.15rem .45rem;white-space:nowrap">Buka App →</div>
+          <span class="wc-app-name">Coinbase</span>
         </button>
       </div>
-
-      <!-- Info note -->
-      <div style="margin-top:.75rem;padding:.65rem .8rem;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:9px;font-size:.65rem;color:rgba(245,158,11,.85);line-height:1.6">
-        ⚠️ <strong>Cara kerja deep link:</strong> Tombol ini akan membuka app wallet kamu, lalu arahkan browser wallet-nya ke URL z-Wealth ini. Dari sana, tombol Connect Wallet akan otomatis terdeteksi oleh extension wallet tersebut.
+      <div style="margin-top:.65rem;font-size:.63rem;color:var(--muted);line-height:1.55;text-align:center">
+        Klik tombol di atas → wallet app terbuka → connect otomatis di browser wallet-nya
       </div>
     </div>
+
   </div>
 </div>
 
 <!-- CSS for wallet modal -->
 <style>
+@keyframes wc-slide-up { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+#wc-modal-overlay { align-items:flex-end !important; }
 #wc-modal-overlay.open { display:flex !important; }
+#wc-modal-box { animation:wc-slide-up .22s cubic-bezier(.32,1.01,.46,1); }
 .wc-ext-btn {
-  display:flex;flex-direction:column;align-items:center;gap:.45rem;
+  display:flex;flex-direction:column;align-items:center;gap:.4rem;
   background:var(--surface2);border:1px solid var(--border);border-radius:12px;
-  padding:.75rem .5rem;cursor:pointer;transition:all .2s;color:var(--muted);font-size:.7rem;font-weight:700;font-family:'Inter',sans-serif;
+  padding:.7rem .4rem;cursor:pointer;transition:all .18s;
+  color:var(--muted);font-size:.68rem;font-weight:700;font-family:'Inter',sans-serif;
 }
-.wc-ext-btn:hover { border-color:rgba(167,139,250,.5);background:rgba(124,58,237,.08);color:var(--text);transform:translateY(-2px);box-shadow:0 4px 16px rgba(124,58,237,.15); }
+.wc-ext-btn:hover,.wc-ext-btn:active { border-color:rgba(167,139,250,.5);background:rgba(124,58,237,.1);color:var(--text);transform:translateY(-1px); }
 .wc-ext-icon {
-  width:48px;height:48px;border-radius:12px;border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;transition:all .2s;
+  width:46px;height:46px;border-radius:12px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
 }
-.wc-app-btn {
-  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+.wc-app-btn2 {
+  display:flex;align-items:center;gap:.6rem;
   background:var(--surface2);border:1px solid var(--border);border-radius:12px;
-  padding:.65rem .85rem;cursor:pointer;transition:all .2s;width:100%;font-family:'Inter',sans-serif;
+  padding:.6rem .8rem;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;
 }
-.wc-app-btn:hover { border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04);transform:translateX(2px); }
+.wc-app-btn2:hover,.wc-app-btn2:active { border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.05); }
+.wc-app-name { font-size:.75rem;font-weight:700;color:var(--text); }
 </style>
 
 <!-- News Detail Modal -->
