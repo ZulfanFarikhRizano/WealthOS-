@@ -2784,7 +2784,7 @@ span svg, div svg.inline {
     <div class="room-header-name">z-AI Assistant</div>
     <div class="room-header-sub" id="ai-chat-status">
       <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:.3rem;box-shadow:0 0 6px #10b981"></span>
-      Powered by Gemini · Siap membantu
+      Powered by Groq AI · Siap membantu
     </div>
   </div>
   <button onclick="clearAIChat()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.35rem .6rem;color:var(--muted);font-size:.65rem;font-weight:700;cursor:pointer;transition:all .2s" title="Hapus riwayat chat">
@@ -12470,57 +12470,41 @@ function removeAITyping() {
 }
 
 async function callAI(systemPrompt, messages, maxTokens = 1500) {
-  // Try Groq first via proxy /api/groq
+  // Gunakan Groq via proxy /api/groq (key aman di server Vercel)
   try {
-    if (true) {
-      const body = {
-        model: _GROQ_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content || m.parts?.[0]?.text || '' }))
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.7
-      };
-      const res = await fetch(_GROQ_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, // Authorization ditangani proxy /api/groq
-        body: JSON.stringify(body)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content;
-        if (text) return { text, provider: 'Groq (Llama 3.3)' };
-      }
-      const errData = await res.clone().json().catch(() => ({}));
-      console.warn('[AI] Groq error:', errData.error?.message);
-      // Fall through to Gemini
-    } catch(e) {
-      console.warn('[AI] Groq failed, trying Gemini...', e.message);
-    }
-  }
-
-  // Fallback: Gemini
-  const geminiKey = getGeminiKey();
-  if (geminiKey) {
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
-    const geminiMessages = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : m.role, parts: [{ text: m.content || m.parts?.[0]?.text || '' }] }));
     const body = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: geminiMessages,
-      generationConfig: { temperature: 0.7, maxOutputTokens: maxTokens }
+      model: _GROQ_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({
+          role: m.role === 'model' ? 'assistant' : m.role,
+          content: m.content || m.parts?.[0]?.text || ''
+        }))
+      ],
+      max_tokens: maxTokens,
+      temperature: 0.7
     };
-    const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+    const res = await fetch(_GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
     if (res.ok) {
       const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return { text, provider: 'Gemini' };
+      const text = data.choices?.[0]?.message?.content;
+      if (text) return { text, provider: 'Groq (Llama 3.3)' };
+      throw new Error('Respons AI kosong');
     }
-    const errData = await res.clone().json().catch(() => ({}));
-    throw new Error(errData.error?.message || 'Semua AI tidak tersedia saat ini.');
-  }
 
-  throw new Error('Tidak ada API key tersedia.');
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error?.message || 'Groq error: ' + res.status);
+
+  } catch(e) {
+    console.error('[callAI] Error:', e.message);
+    throw new Error('AI tidak tersedia: ' + e.message);
+  }
 }
 
 async function sendAIMessage(overrideText) {
@@ -12597,14 +12581,8 @@ let cPredPrice = null;
 let predData = null;
 
 async function runBTCPrediction() {
-  const key = getGeminiKey();
   const warningEl = document.getElementById('pred-apikey-warning');
-
-  if (!key && warningEl) {
-    warningEl.style.display = 'block';
-  } else if (warningEl) {
-    warningEl.style.display = 'none';
-  }
+  if (warningEl) warningEl.style.display = 'none'; // Key ditangani server Groq
 
   const btn = document.getElementById('pred-refresh-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Memuat...'; }
@@ -12722,8 +12700,8 @@ async function runBTCPrediction() {
     predData = { price, priceIDR, change24h, change7d, high24, low24, vol24, mcap, fngVal, fngCat, ath, athPct };
     document.getElementById('pred-last-updated').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
 
-    // AI Analysis with Gemini
-    await runGeminiPrediction(predData, key);
+    // AI Analysis with Groq
+    await runGroqPrediction(predData);
 
   } catch(e) {
     console.error('[Prediksi]', e);
@@ -12734,7 +12712,7 @@ async function runBTCPrediction() {
   }
 }
 
-async function runGeminiPrediction(data, key) {
+async function runGroqPrediction(data) {
   const verdictEl = document.getElementById('pred-verdict');
   const verdictIcon = document.getElementById('pred-verdict-icon');
   const verdictText = document.getElementById('pred-verdict-text');
