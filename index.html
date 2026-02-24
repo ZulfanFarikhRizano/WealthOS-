@@ -12895,7 +12895,7 @@ Balas HANYA JSON array ini tanpa teks lain:
       source: a.source || 'Kripto News',
       url: null,
       published: new Date().toISOString()
-    })).filter(a => a.judulID.length > 5);
+    })).filter(a => a.judulID.length > 5).map((a, i) => ({...a, id: i}));
 
     _newsCache = articles;
     renderNewsList(articles);
@@ -12987,7 +12987,7 @@ function renderNewsList(articles) {
       ? `<div style="font-size:.76rem;color:var(--muted);line-height:1.45;margin-bottom:.4rem">${a.ringkasan}</div>`
       : '';
 
-    return `<div class="news-card ${sClass}" onclick="openNewsModal(${a.id})" style="cursor:pointer;">
+    return `<div class="news-card ${sClass}" onclick="openNewsModal('${a.id}')" style="cursor:pointer;">
       <span class="news-sentiment-badge badge-${sClass}">${badgeIcon} ${badgeTxt}</span>
       <div class="news-title">${a.judulID}</div>
       ${ringkasanHTML}
@@ -13058,7 +13058,7 @@ function urlBase64ToUint8Array(base64String) {
 let _currentNewsArticle = null;
 
 function openNewsModal(id) {
-  const article = (_newsCache || []).find(a => a.id === id);
+  const article = (_newsCache || []).find(a => String(a.id) === String(id));
   if (!article) return;
   _currentNewsArticle = article;
 
