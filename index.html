@@ -781,6 +781,39 @@ span svg, div svg.inline {
   #page-news { padding:.9rem .9rem 5rem; }
   .news-card { padding:.85rem .95rem; }
 }
+
+/* ── News Detail Modal ── */
+#news-modal-overlay {
+  position:fixed;inset:0;z-index:450;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;justify-content:center;
+}
+#news-modal-overlay.open { display:flex; }
+#news-modal-box {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:22px 22px 0 0;width:100%;max-width:620px;
+  max-height:90vh;overflow-y:auto;padding:1.5rem 1.3rem 2.8rem;
+  position:relative;animation:nmSlideUp .26s ease;
+}
+@keyframes nmSlideUp { from{transform:translateY(50px);opacity:0} to{transform:translateY(0);opacity:1} }
+#news-modal-close {
+  position:absolute;top:1rem;right:1rem;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:50%;width:34px;height:34px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:var(--muted);
+}
+#news-modal-close:hover{color:var(--text);border-color:var(--accent);}
+.nm-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .7rem;border-radius:100px;font-size:.62rem;font-weight:800;letter-spacing:.04em;margin-bottom:.8rem;}
+.nm-title{font-size:1.05rem;font-weight:800;color:var(--text);line-height:1.55;margin-bottom:.65rem;}
+.nm-meta{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;font-size:.66rem;color:var(--muted);margin-bottom:.9rem;}
+.nm-body{font-size:.85rem;color:var(--muted);line-height:1.75;white-space:pre-line;margin-bottom:1.2rem;}
+.nm-loading{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.84rem;}
+.nm-actions{display:flex;gap:.6rem;margin-top:.5rem;}
+.nm-btn-search{flex:1;padding:.78rem;border-radius:12px;background:var(--accent);color:var(--bg);border:none;font-weight:700;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;}
+.nm-btn-search:hover{background:#33eaff;}
+.nm-btn-close{padding:.78rem 1.2rem;border-radius:12px;background:transparent;border:1.5px solid var(--border);color:var(--text);font-weight:600;font-size:.85rem;cursor:pointer;}
+.nm-btn-close:hover{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -7917,6 +7950,24 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   </button>
 </div>
 <div class="wrap">${P1}${P2}${P3}${P4}${P5}${P6}</div>
+
+<!-- News Detail Modal -->
+<div id="news-modal-overlay" onclick="closeNewsModal(event)">
+  <div id="news-modal-box">
+    <div id="news-modal-close" onclick="closeNewsModal(null,true)">✕</div>
+    <div id="nm-badge" class="nm-badge"></div>
+    <div id="nm-title" class="nm-title"></div>
+    <div id="nm-meta" class="nm-meta"></div>
+    <div id="nm-body" class="nm-body"></div>
+    <div class="nm-actions">
+      <button class="nm-btn-search" onclick="searchNewsOnline()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Cari Berita Asli
+      </button>
+      <button class="nm-btn-close" onclick="closeNewsModal(null,true)">Tutup</button>
+    </div>
+  </div>
+</div>
 </body></html>`;
 
   /* DELIVER */
@@ -12776,8 +12827,7 @@ async function loadCryptoNews(forceRefresh = false) {
     </div>`).join('');
 
   try {
-    const groqKey = getGroqKey();
-    if (!groqKey) throw new Error('API key Groq tidak tersedia');
+    // Key ditangani proxy /api/groq
 
     const today = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     const todayEn = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
@@ -12937,7 +12987,7 @@ function renderNewsList(articles) {
       ? `<div style="font-size:.76rem;color:var(--muted);line-height:1.45;margin-bottom:.4rem">${a.ringkasan}</div>`
       : '';
 
-    return `<div class="news-card ${sClass}">
+    return `<div class="news-card ${sClass}" onclick="openNewsModal(${a.id})" style="cursor:pointer;">
       <span class="news-sentiment-badge badge-${sClass}">${badgeIcon} ${badgeTxt}</span>
       <div class="news-title">${a.judulID}</div>
       ${ringkasanHTML}
@@ -12945,6 +12995,7 @@ function renderNewsList(articles) {
       <div class="news-meta">
         <span class="news-source-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2 2 2 0 0 0 2 2z"/><rect x="10" y="4" width="8" height="5"/><path d="M10 13h8M10 16h8"/></svg> ${a.source}</span>
         <span style="color:var(--muted);font-size:.6rem;font-style:italic">· via Groq AI</span>
+        <span style="margin-left:auto;color:var(--accent);font-size:.65rem;font-weight:600">Baca →</span>
       </div>
     </div>`;
   }).join('');
@@ -12999,6 +13050,115 @@ function urlBase64ToUint8Array(base64String) {
   for (let i = 0; i < rawData.length; ++i) output[i] = rawData.charCodeAt(i);
   return output;
 }
+
+
+// ══════════════════════════════════════════
+//  NEWS MODAL
+// ══════════════════════════════════════════
+let _currentNewsArticle = null;
+
+function openNewsModal(id) {
+  const article = (_newsCache || []).find(a => a.id === id);
+  if (!article) return;
+  _currentNewsArticle = article;
+
+  const sentimen = article.sentimen || 'NETRAL';
+  const badgeColor  = sentimen==='POSITIF' ? '#10b981' : sentimen==='NEGATIF' ? '#ef4444' : '#64748b';
+  const badgeBg     = sentimen==='POSITIF' ? 'rgba(16,185,129,.13)' : sentimen==='NEGATIF' ? 'rgba(239,68,68,.13)' : 'rgba(100,116,139,.1)';
+  const badgeBorder = sentimen==='POSITIF' ? 'rgba(16,185,129,.28)' : sentimen==='NEGATIF' ? 'rgba(239,68,68,.28)' : 'rgba(100,116,139,.2)';
+  const badgeTxt    = sentimen==='POSITIF' ? '● Positif' : sentimen==='NEGATIF' ? '● Negatif' : '○ Netral';
+
+  const badge = document.getElementById('nm-badge');
+  badge.textContent = badgeTxt;
+  badge.style.cssText = `background:${badgeBg};color:${badgeColor};border:1px solid ${badgeBorder};display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .7rem;border-radius:100px;font-size:.62rem;font-weight:800;letter-spacing:.04em;margin-bottom:.8rem;`;
+
+  document.getElementById('nm-title').textContent = article.judulID;
+
+  const coinsHtml = (article.coins||[]).map(c =>
+    `<span style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.18);border-radius:6px;padding:.1rem .4rem;font-size:.6rem;font-weight:800;color:var(--accent);font-family:'Space Mono',monospace;">${c}</span>`
+  ).join(' ');
+  document.getElementById('nm-meta').innerHTML =
+    `<span style="color:var(--accent3);font-weight:700">${article.source}</span>
+     <span>·</span><span style="font-style:italic;opacity:.7">via Groq AI</span>
+     ${coinsHtml}`;
+
+  document.getElementById('nm-body').innerHTML =
+    `<div class="nm-loading">
+       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;display:block;margin:0 auto .6rem"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+       Memuat isi berita...
+     </div>`;
+
+  document.getElementById('news-modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  _generateNewsBody(article);
+}
+
+async function _generateNewsBody(article) {
+  try {
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 700,
+        temperature: 0.65,
+        messages: [{
+          role: 'user',
+          content: `Tulis isi berita kripto dalam Bahasa Indonesia yang informatif dan natural berdasarkan judul ini:
+
+"${article.judulID}"
+
+Sumber: ${article.source}
+Sentimen: ${article.sentimen}
+${article.ringkasan ? 'Ringkasan: ' + article.ringkasan : ''}
+
+Tulis 3-4 paragraf isi berita dengan gaya jurnalistik. Jangan tulis ulang judulnya. Langsung isi beritanya saja.`
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error('Gagal memuat');
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content || '').trim();
+    if (!text) throw new Error('Respons kosong');
+    document.getElementById('nm-body').textContent = text;
+  } catch(e) {
+    document.getElementById('nm-body').innerHTML =
+      `<span style="font-size:.82rem;line-height:1.65;">${article.ringkasan || 'Tidak dapat memuat isi berita.'}</span>
+       <br><br><span style="font-size:.75rem;opacity:.6">Gunakan tombol "Cari Berita Asli" untuk membaca di sumber aslinya.</span>`;
+  }
+}
+
+function closeNewsModal(event, force) {
+  if (!force && event && event.target !== document.getElementById('news-modal-overlay')) return;
+  document.getElementById('news-modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function searchNewsOnline() {
+  if (!_currentNewsArticle) return;
+  const q = encodeURIComponent(_currentNewsArticle.judulID + ' ' + _currentNewsArticle.source + ' kripto');
+  window.open('https://www.google.com/search?q=' + q, '_blank');
+}
 </script>
 
+
+<!-- News Detail Modal -->
+<div id="news-modal-overlay" onclick="closeNewsModal(event)">
+  <div id="news-modal-box">
+    <div id="news-modal-close" onclick="closeNewsModal(null,true)">✕</div>
+    <div id="nm-badge" class="nm-badge"></div>
+    <div id="nm-title" class="nm-title"></div>
+    <div id="nm-meta" class="nm-meta"></div>
+    <div id="nm-body" class="nm-body"></div>
+    <div class="nm-actions">
+      <button class="nm-btn-search" onclick="searchNewsOnline()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Cari Berita Asli
+      </button>
+      <button class="nm-btn-close" onclick="closeNewsModal(null,true)">Tutup</button>
+    </div>
+  </div>
+</div>
 </body>
