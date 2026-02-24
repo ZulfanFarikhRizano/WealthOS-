@@ -7962,7 +7962,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
     <div class="nm-actions">
       <button class="nm-btn-search" onclick="searchNewsOnline()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Cari Berita Asli
+        Lihat Berita Asli
       </button>
       <button class="nm-btn-close" onclick="closeNewsModal(null,true)">Tutup</button>
     </div>
@@ -13126,7 +13126,7 @@ Tulis 3-4 paragraf isi berita dengan gaya jurnalistik. Jangan tulis ulang juduln
   } catch(e) {
     document.getElementById('nm-body').innerHTML =
       `<span style="font-size:.82rem;line-height:1.65;">${article.ringkasan || 'Tidak dapat memuat isi berita.'}</span>
-       <br><br><span style="font-size:.75rem;opacity:.6">Gunakan tombol "Cari Berita Asli" untuk membaca di sumber aslinya.</span>`;
+       <br><br><span style="font-size:.75rem;opacity:.6">Gunakan tombol "Lihat Berita Asli" untuk membaca di sumber aslinya.</span>`;
   }
 }
 
@@ -13138,8 +13138,53 @@ function closeNewsModal(event, force) {
 
 function searchNewsOnline() {
   if (!_currentNewsArticle) return;
-  const q = encodeURIComponent(_currentNewsArticle.judulID + ' ' + _currentNewsArticle.source + ' kripto');
-  window.open('https://www.google.com/search?q=' + q, '_blank');
+  const source = (_currentNewsArticle.source || '').toLowerCase();
+  const q = encodeURIComponent(_currentNewsArticle.judulID);
+
+  const sourceMap = {
+    'coindesk':      `https://www.coindesk.com/search?s=${q}`,
+    'cointelegraph': `https://cointelegraph.com/search?query=${q}`,
+    'bloomberg':     `https://www.bloomberg.com/search?query=${q}`,
+    'reuters':       `https://www.reuters.com/search/news?blob=${q}`,
+    'cnbc':          `https://www.cnbc.com/search/?query=${q}`,
+    'forbes':        `https://www.forbes.com/search/?q=${q}`,
+    'decrypt':       `https://decrypt.co/?s=${q}`,
+    'the block':     `https://www.theblock.co/search#q=${q}`,
+    'blockworks':    `https://blockworks.co/?s=${q}`,
+    'coinmarketcap': `https://coinmarketcap.com/headlines/news/`,
+    'coingecko':     `https://www.coingecko.com/en/news`,
+    'bisnis':        `https://bisnis.com/search?q=${q}`,
+    'detik':         `https://www.detik.com/search/searchall?query=${q}`,
+    'kompas':        `https://search.kompas.com/search/?q=${q}`,
+  };
+
+  let url = null;
+  for (const [key, val] of Object.entries(sourceMap)) {
+    if (source.includes(key)) { url = val; break; }
+  }
+
+  // Fallback: buka homepage sumber
+  if (!url) {
+    const homepageMap = {
+      'coindesk': 'https://www.coindesk.com',
+      'cointelegraph': 'https://cointelegraph.com',
+      'bloomberg': 'https://www.bloomberg.com',
+      'reuters': 'https://www.reuters.com',
+      'cnbc': 'https://www.cnbc.com/cryptoworld/',
+      'forbes': 'https://www.forbes.com/crypto-blockchain/',
+      'decrypt': 'https://decrypt.co',
+    };
+    for (const [key, val] of Object.entries(homepageMap)) {
+      if (source.includes(key)) { url = val; break; }
+    }
+  }
+
+  // Last fallback: Google tapi di tab news
+  if (!url) {
+    url = `https://news.google.com/search?q=${q}+kripto&hl=id`;
+  }
+
+  window.open(url, '_blank');
 }
 </script>
 
@@ -13155,7 +13200,7 @@ function searchNewsOnline() {
     <div class="nm-actions">
       <button class="nm-btn-search" onclick="searchNewsOnline()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Cari Berita Asli
+        Lihat Berita Asli
       </button>
       <button class="nm-btn-close" onclick="closeNewsModal(null,true)">Tutup</button>
     </div>
