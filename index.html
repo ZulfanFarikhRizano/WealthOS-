@@ -1243,6 +1243,11 @@ span svg, div svg.inline {
       <button onclick="hideComingSoon()" style="background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:12px;padding:.75rem 2rem;color:#fff;font-weight:800;font-size:.88rem;cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 20px rgba(124,58,237,.4)">Oke, Ditunggu!</button>
     </div>
   </div>
+  <!-- CHAT COMMUNITY PREVIEW -->
+  <div id="dash-chat-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:1.2rem;overflow:hidden;min-height:60px;display:flex;align-items:center;justify-content:center">
+    <div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Memuat preview chat...</div>
+  </div>
+
   <!-- PWA INSTALL BANNER -->
   <div id="pwa-install-banner" style="display:block;margin-bottom:1.2rem;border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#091428 100%);border:1px solid rgba(0,229,255,.2);box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(0,229,255,.08)">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(0,229,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(124,58,237,.06) 0%,transparent 60%);pointer-events:none"></div>
@@ -1275,6 +1280,7 @@ span svg, div svg.inline {
           <button class="tf-btn" data-tf="1D" onclick="loadBTCChart('1D')">1Hr</button>
           <button class="tf-btn active" data-tf="1W" onclick="loadBTCChart('1W')">1Mg</button>
           <button class="tf-btn" data-tf="1M" onclick="loadBTCChart('1M')">1Bl</button>
+          <button class="tf-btn" data-tf="YTD" onclick="loadBTCChart('YTD')">YTD</button>
           <button class="tf-btn" data-tf="1Y" onclick="loadBTCChart('1Y')">1Th</button>
           <button class="tf-btn" data-tf="3Y" onclick="loadBTCChart('3Y')">3Th</button>
           <button class="tf-btn" data-tf="5Y" onclick="loadBTCChart('5Y')">5Th</button>
@@ -1567,6 +1573,7 @@ span svg, div svg.inline {
           <button class="tf-btn" data-tf="1D" onclick="loadDCABTCChart('1D')">1Hr</button>
           <button class="tf-btn active" data-tf="1W" onclick="loadDCABTCChart('1W')">1Mg</button>
           <button class="tf-btn" data-tf="1M" onclick="loadDCABTCChart('1M')">1Bl</button>
+          <button class="tf-btn" data-tf="YTD" onclick="loadDCABTCChart('YTD')">YTD</button>
           <button class="tf-btn" data-tf="1Y" onclick="loadDCABTCChart('1Y')">1Th</button>
           <button class="tf-btn" data-tf="3Y" onclick="loadDCABTCChart('3Y')">3Th</button>
         </div>
@@ -1650,18 +1657,37 @@ span svg, div svg.inline {
   </div>
 
   <!-- BTC Address Input Panel -->
-  <div id="btc-input-panel" style="display:none;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:.9rem 1rem;margin-bottom:.8rem">
-    <div style="font-size:.72rem;color:var(--accent4);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.55rem;display:flex;align-items:center;gap:.4rem">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
-      Bitcoin Address (Read-Only)
+  <div id="btc-input-panel" style="display:none;margin-bottom:.8rem">
+
+    <!-- 🔒 SECURITY NOTICE -->
+    <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:.85rem 1rem;margin-bottom:.65rem;display:flex;gap:.75rem;align-items:flex-start">
+      <div style="flex-shrink:0;margin-top:1px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div style="font-size:.72rem;font-weight:800;color:#10b981;letter-spacing:.03em;margin-bottom:.25rem">🔒 100% AMAN · READ-ONLY</div>
+        <div style="font-size:.68rem;color:rgba(16,185,129,.85);line-height:1.6">
+          Fitur ini <strong>hanya membaca</strong> saldo wallet Bitcoin kamu secara publik — seperti melihat data di blockchain explorer. 
+          <strong>Tidak ada akses ke private key</strong>, tidak bisa kirim atau terima transaksi, tidak bisa approve apapun. 
+          Address Bitcoin bersifat publik dan aman untuk dibagikan. Data diambil langsung dari blockchain via Mempool.space.
+        </div>
+      </div>
     </div>
-    <div style="display:flex;gap:.5rem;align-items:center">
-      <input id="btc-addr-input" type="text" placeholder="bc1q... atau 1... atau 3..." style="flex:1;background:var(--bg);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.55rem .8rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.78rem;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='rgba(245,158,11,.7)'" onblur="this.style.borderColor='rgba(245,158,11,.3)'" onkeydown="if(event.key==='Enter')addBTCAddress()">
-      <button onclick="addBTCAddress()" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:.5rem .9rem;color:var(--accent4);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">Tambah</button>
-    </div>
-    <div id="btc-addr-list" style="margin-top:.6rem;display:flex;flex-direction:column;gap:.35rem"></div>
-    <div style="font-size:.65rem;color:var(--muted);margin-top:.5rem;line-height:1.5">
-      Data dari <strong style="color:rgba(245,158,11,.7)">Mempool.space</strong> · Tanpa API key · Saldo realtime · Hanya baca
+
+    <!-- Input Box -->
+    <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:.9rem 1rem">
+      <div style="font-size:.72rem;color:var(--accent4);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.55rem;display:flex;align-items:center;gap:.4rem">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+        Bitcoin Address (Read-Only)
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input id="btc-addr-input" type="text" placeholder="bc1q... atau 1... atau 3..." style="flex:1;background:var(--bg);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.55rem .8rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.78rem;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='rgba(245,158,11,.7)'" onblur="this.style.borderColor='rgba(245,158,11,.3)'" onkeydown="if(event.key==='Enter')addBTCAddress()">
+        <button onclick="addBTCAddress()" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:.5rem .9rem;color:var(--accent4);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">Tambah</button>
+      </div>
+      <div id="btc-addr-list" style="margin-top:.6rem;display:flex;flex-direction:column;gap:.5rem"></div>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:.5rem;line-height:1.5">
+        Data dari <strong style="color:rgba(245,158,11,.7)">Mempool.space</strong> · Tanpa API key · Saldo realtime · Hanya baca
+      </div>
     </div>
   </div>
 
@@ -2784,7 +2810,7 @@ span svg, div svg.inline {
     <div class="room-header-name">z-AI Assistant</div>
     <div class="room-header-sub" id="ai-chat-status">
       <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:.3rem;box-shadow:0 0 6px #10b981"></span>
-      Powered by Groq AI · Siap membantu
+      Groq · OpenRouter · Pollinations — Siap membantu
     </div>
   </div>
   <button onclick="clearAIChat()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.35rem .6rem;color:var(--muted);font-size:.65rem;font-weight:700;cursor:pointer;transition:all .2s" title="Hapus riwayat chat">
@@ -4011,7 +4037,7 @@ function showLL(m){
 }
 function hideLL(){document.getElementById('lloading').style.display='none'}
 function showLerr(m){
-  document.getElementById('lerr').textContent='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> '+m;
+  document.getElementById('lerr').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.3rem"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'+m;
   document.getElementById('lerr').style.display='block';
   document.getElementById('tab-existing').style.display='block';
 }
@@ -4303,13 +4329,14 @@ function updateBTCDisplay(){
 /* ══════════ CHART DATA — Kraken OHLC (CORS terbuka penuh) ══════════ */
 
 const TF_CONFIG = {
-  '1D': { key:'1D', krakenInterval:60,    krakenSince:()=>Math.floor(Date.now()/1000)-86400,         label:'1 Hari',   fmt:(t)=>new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
-  '1W': { key:'1W', krakenInterval:240,   krakenSince:()=>Math.floor(Date.now()/1000)-7*86400,        label:'1 Minggu', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
-  '1M': { key:'1M', krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-30*86400,       label:'1 Bulan',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
-  '1Y': { key:'1Y', krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-365*86400,      label:'1 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '3Y': { key:'3Y', krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-3*365*86400,    label:'3 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '5Y': { key:'5Y', krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-5*365*86400,    label:'5 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
-  '10Y':{ key:'10Y',krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,   label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
+  '1D': { key:'1D',  krakenInterval:60,    krakenSince:()=>Math.floor(Date.now()/1000)-86400,                                                                                                                   label:'1 Hari',   fmt:(t)=>new Date(t*1000).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) },
+  '1W': { key:'1W',  krakenInterval:240,   krakenSince:()=>Math.floor(Date.now()/1000)-7*86400,                                                                                                                  label:'1 Minggu', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}) },
+  '1M': { key:'1M',  krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-30*86400,                                                                                                                 label:'1 Bulan',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  'YTD':{ key:'YTD', krakenInterval:1440,  krakenSince:()=>{ const s=new Date(new Date().getFullYear(),0,1); return Math.floor(s.getTime()/1000); },                                                            label:'YTD',      fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) },
+  '1Y': { key:'1Y',  krakenInterval:1440,  krakenSince:()=>Math.floor(Date.now()/1000)-365*86400,                                                                                                                label:'1 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '3Y': { key:'3Y',  krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-3*365*86400,                                                                                                              label:'3 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '5Y': { key:'5Y',  krakenInterval:10080, krakenSince:()=>Math.floor(Date.now()/1000)-5*365*86400,                                                                                                              label:'5 Tahun',  fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{month:'short',year:'2-digit'}) },
+  '10Y':{ key:'10Y', krakenInterval:21600, krakenSince:()=>Math.floor(Date.now()/1000)-10*365*86400,                                                                                                             label:'10 Tahun', fmt:(t)=>new Date(t*1000).toLocaleDateString('id-ID',{year:'numeric',month:'short'}) },
 };
 
 async function fetchWithTimeout(url, ms=8000, retries=1){
@@ -4365,6 +4392,7 @@ const BINANCE_TF_MAP = {
   '1D':  { interval:'1h',  limit:24  },
   '1W':  { interval:'4h',  limit:42  },
   '1M':  { interval:'1d',  limit:30  },
+  'YTD': { interval:'1d',  limit:366 },
   '1Y':  { interval:'1d',  limit:365 },
   '3Y':  { interval:'1w',  limit:156 },
   '5Y':  { interval:'1w',  limit:260 },
@@ -4401,10 +4429,14 @@ async function fetchChartData(cfg){
       })
   );
 
-  // Source 2: Binance — hanya untuk TF pendek (≤3Y)
+  // Source 2: Binance — hanya untuk TF pendek (≤3Y) + YTD
   if(bMap){
+    // Untuk YTD: gunakan startTime = 1 Jan tahun ini (lebih akurat dari limit)
+    const binanceUrl = tf === 'YTD'
+      ? `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${bMap.interval}&startTime=${new Date(new Date().getFullYear(),0,1).getTime()}&limit=1000`
+      : `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${bMap.interval}&limit=${bMap.limit}`;
     sources.push(
-      fetchWithTimeout(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${bMap.interval}&limit=${bMap.limit}`, 4000)
+      fetchWithTimeout(binanceUrl, 4000)
         .then(r => r.ok ? r.json() : Promise.reject('Binance '+r.status))
         .then(d => {
           if(!d||!d.length) throw new Error('empty');
@@ -4761,10 +4793,12 @@ async function loadBTCChart(tf){
 async function fetchM2Data(tf) {
   if (!overlayCache.m2) overlayCache.m2 = {};
   if (overlayCache.m2[tf]) return overlayCache.m2[tf];
-  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
-  const days = daysMap[tf] || 3660;
+  const daysMap = {'1D':2,'1W':8,'1M':35,'YTD':366,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = tf === 'YTD'
+    ? Math.ceil((Date.now() - new Date(new Date().getFullYear(),0,1).getTime()) / 86400000) + 1
+    : (daysMap[tf] || 3660);
   const now = new Date();
-  const startDate = new Date(now - days * 86400000);
+  const startDate = tf === 'YTD' ? new Date(new Date().getFullYear(),0,1) : new Date(now - days * 86400000);
   const fmt = d => d.toISOString().split('T')[0];
 
   // CORS proxy untuk FRED WM2NS (Global M2, miliar USD)
@@ -4819,10 +4853,12 @@ async function fetchGoldData(tf) {
     _bgFetchGold(tf);
     return overlayCache._goldStatic[tf];
   }
-  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
-  const days = daysMap[tf] || 3660;
+  const daysMap = {'1D':2,'1W':8,'1M':35,'YTD':366,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = tf === 'YTD'
+    ? Math.ceil((Date.now() - new Date(new Date().getFullYear(),0,1).getTime()) / 86400000) + 1
+    : (daysMap[tf] || 3660);
   const now = new Date();
-  const startDate = new Date(now - days * 86400000);
+  const startDate = tf === 'YTD' ? new Date(new Date().getFullYear(),0,1) : new Date(now - days * 86400000);
   const fmt = d => d.toISOString().split('T')[0];
 
   // FRED: GOLDAMGBD228NLBM = Gold Fixing Price daily (USD per Troy Ounce)
@@ -5434,10 +5470,12 @@ async function fetchSP500Data(tf) {
     _bgFetchSP500(tf);
     return overlayCache._sp500Static[tf];
   }
-  const daysMap = {'1D':2,'1W':8,'1M':35,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
-  const days = daysMap[tf] || 3660;
+  const daysMap = {'1D':2,'1W':8,'1M':35,'YTD':366,'1Y':370,'3Y':1100,'5Y':1830,'10Y':3660};
+  const days = tf === 'YTD'
+    ? Math.ceil((Date.now() - new Date(new Date().getFullYear(),0,1).getTime()) / 86400000) + 1
+    : (daysMap[tf] || 3660);
   const now = new Date();
-  const startDate = new Date(now - days * 86400000);
+  const startDate = tf === 'YTD' ? new Date(new Date().getFullYear(),0,1) : new Date(now - days * 86400000);
   const fmt = d => d.toISOString().split('T')[0];
 
   // FRED: SP500 = S&P 500 Index
@@ -6060,7 +6098,7 @@ async function _preloadOverlayData() {
     // Jeda singkat antar TF agar tidak flood network
     await new Promise(r => setTimeout(r, 300));
   }
-  console.log('[z-wealth] Overlay preload selesai untuk semua TF');
+  // Preload complete
 }
 
 // Background fetch helpers — update cache without blocking UI
@@ -7105,7 +7143,7 @@ function renderPort(){
           : 'linear-gradient(135deg,rgba(124,58,237,.7),rgba(167,139,250,.8))';
         const icon = t.isNative ? (NATIVE_ICON[t.chainId]||'Ξ') : t.symbol.slice(0,2);
         const logoEl = t.logo
-          ? `<img src="${t.logo}" style="width:22px;height:22px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none';this.nextSibling.style.display='inline-flex'"><span style="display:none;width:22px;height:22px;border-radius:6px;background:${gradCss};align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;flex-shrink:0">${icon}</span>`
+          ? `<img src="${t.logo}" alt="${icon}" style="width:22px;height:22px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none';this.nextSibling.style.display='inline-flex'"><span style="display:none;width:22px;height:22px;border-radius:6px;background:${gradCss};align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;flex-shrink:0">${icon}</span>`
           : `<span style="display:inline-flex;width:22px;height:22px;border-radius:6px;background:${gradCss};align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;flex-shrink:0">${icon}</span>`;
         const badge = idx===0 ? `<span style="font-size:.58rem;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa;border-radius:4px;padding:.08rem .32rem;font-weight:700;font-family:'Inter',sans-serif;margin-left:.3rem">(Wallet)</span>` : '';
         const priceCell = t.priceIDR ? `<span>${fmtIDR(t.priceIDR)}</span>` : `<span style="color:var(--muted)">—</span>`;
@@ -7338,7 +7376,7 @@ async function runSimDynamic(){
     const validPrices=prices.filter(p=>p&&p>100);
 
     if(validDates.length===0){
-      if(status){status.style.color='var(--danger)';status.textContent='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal mendapatkan data harga historis. Cek koneksi internet.';}
+      if(status){status.style.color='var(--danger)';status.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.3rem"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal mendapatkan data harga historis. Cek koneksi internet.';}
       toast('Gagal ambil data harga historis',1);
       resetBtn();return;
     }
@@ -7386,12 +7424,12 @@ async function runSimDynamic(){
       {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
     ]);
 
-    if(status){status.style.color='var(--accent3)';status.textContent=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${validPeriods.length} periode · ${validDates[0]} → ${validDates[validDates.length-1]} · harga Kraken/CoinGecko`;}
+    if(status){status.style.color='var(--accent3)';status.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.3rem"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${validPeriods.length} periode · ${validDates[0]} → ${validDates[validDates.length-1]} · harga Kraken/CoinGecko`;}
     toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Simulasi selesai!');
 
   }catch(err){
     console.error('runSimDynamic error:',err);
-    if(status){status.style.color='var(--danger)';status.textContent='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal — cek koneksi dan coba lagi';}
+    if(status){status.style.color='var(--danger)';status.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.3rem"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal — cek koneksi dan coba lagi';}
     toast('Gagal ambil data historis',1);
   }finally{
       resetBtn();
@@ -7878,7 +7916,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
       <td>${e.date}</td>
       <td><span style="padding:2px 6px;border-radius:3px;font-size:8.5px;font-weight:700;background:${TB[e.type]||'#f3f4f6'};color:${TC[e.type]||'#374151'}">${TL[e.type]||e.type}</span></td>
       <td>${e.category}</td>
-      <td style="color:#6b7280">${e.desc||'—'}</td>
+      <td style="color:#6b7280">${e.desc ? e.desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—'}</td>
       <td style="text-align:right" class="${e.type==='income'?'g':e.type==='expense'?'r':'c'}">${e.type==='income'?'+ ':'- '}${idr(e.amount)}</td>
     </tr>`;
   }).join('');
@@ -7950,24 +7988,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   </button>
 </div>
 <div class="wrap">${P1}${P2}${P3}${P4}${P5}${P6}</div>
-
-<!-- News Detail Modal -->
-<div id="news-modal-overlay" onclick="closeNewsModal(event)">
-  <div id="news-modal-box">
-    <div id="news-modal-close" onclick="closeNewsModal(null,true)">✕</div>
-    <div id="nm-badge" class="nm-badge"></div>
-    <div id="nm-title" class="nm-title"></div>
-    <div id="nm-meta" class="nm-meta"></div>
-    <div id="nm-body" class="nm-body"></div>
-    <div class="nm-actions">
-      <button class="nm-btn-search" onclick="searchNewsOnline()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Lihat Berita Asli
-      </button>
-      <button class="nm-btn-close" onclick="closeNewsModal(null,true)">Tutup</button>
-    </div>
-  </div>
-</div>
 </body></html>`;
 
   /* DELIVER */
@@ -8648,9 +8668,14 @@ async function chatBoot() {
     ChatNotif.init();
     setTimeout(() => subscribeGlobalChatNotif(), 800);
   }
+
+  // ── Dashboard Chat Preview ──
+  setTimeout(() => loadDashChatPreview(), 500);
 }
 
 // ── DASHBOARD CHAT PREVIEW ──
+// loadDashChatPreview dipanggil dari chatBoot setelah sukses connect
+// Pastikan element #dash-chat-preview ada di dashboard HTML
 async function loadDashChatPreview() {
   const container = document.getElementById('dash-chat-preview');
   if (!container || !chatSB) return;
@@ -8689,11 +8714,11 @@ async function loadDashChatPreview() {
       const initials = (m.sender_code||'?').slice(5,7).toUpperCase();
       const color = m.sender_color || '#00e5ff';
       const time = new Date(m.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-      const text = m.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : (m.content||'').slice(0,60) + ((m.content||'').length>60?'...':'');
+      const text = m.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : escHtml((m.content||'').slice(0,60)) + ((m.content||'').length>60?'...':'');
       html += `<div style="display:flex;align-items:flex-start;gap:.5rem">
-        <div style="width:28px;height:28px;border-radius:8px;background:${color};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${initials}</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:${escHtml(m.sender_color||'#00e5ff')};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${escHtml(initials)}</div>
         <div style="flex:1;min-width:0">
-          <span style="font-size:.68rem;color:var(--muted)">${m.sender_code||'?'}</span>
+          <span style="font-size:.68rem;color:var(--muted)">${escHtml(m.sender_code||'?')}</span>
           <span style="font-size:.62rem;color:var(--muted);margin-left:.4rem">${time}</span>
           <div style="font-size:.8rem;color:var(--text);margin-top:.1rem;word-break:break-word">${text}</div>
         </div>
@@ -8917,7 +8942,7 @@ function buildMsgBubble(msg) {
       ${!isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
       <div class="msg-bubble-wrap">
         ${!isMine ? `<div class="msg-sender-name">${escHtml(msg.sender_code||'anon')}</div>` : ''}
-        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media')}">
+        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'📎 Media')}">
           ${replyHtml}${contentHtml}
         </div>
         <div class="msg-time">${t}</div>
@@ -9175,7 +9200,7 @@ function onMediaSelected(input) {
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = e => {
-        thumb.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+        thumb.innerHTML = `<img src="${e.target.result}" alt="preview" style="width:100%;height:100%;object-fit:cover">`;
       };
       reader.readAsDataURL(file);
     } else {
@@ -9201,7 +9226,7 @@ function openLightbox(type, url) {
   if (!lb || !content) return;
   content.innerHTML = type === 'video'
     ? `<video src="${url}" controls autoplay style="max-width:100%;max-height:88vh;border-radius:14px"></video>`
-    : `<img src="${url}" style="max-width:100%;max-height:90vh;border-radius:14px">`;
+    : `<img src="${url}" alt="media" style="max-width:100%;max-height:90vh;border-radius:14px">`;
   lb.classList.add('open');
 }
 function closeLightbox() {
@@ -9871,15 +9896,28 @@ function checkNotifPermission() {
 }
 
 async function requestNotifPermission() {
-  if (!('Notification' in window)) { toast('Browser tidak mendukung notifikasi'); return; }
+  if (!('Notification' in window)) {
+    toast('Browser tidak mendukung notifikasi');
+    return 'not-supported';
+  }
+  if (Notification.permission === 'denied') {
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Notifikasi sudah diblokir di browser', 2);
+    return 'denied';
+  }
+  if (Notification.permission === 'granted') {
+    toast('\u2705 Notifikasi sudah aktif!');
+    document.getElementById('notif-perm-card').style.display = 'none';
+    return 'granted';
+  }
   const perm = await Notification.requestPermission();
   if (perm === 'granted') {
     toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi diaktifkan!');
     document.getElementById('notif-perm-card').style.display = 'none';
-    sendBrowserNotif('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
+    sendBrowserNotif('\u2705 Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
   } else {
     toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Notifikasi tidak diizinkan', 2);
   }
+  return perm;
 }
 
 function showComingSoon(name) {
@@ -10327,11 +10365,19 @@ const ChatNotif = (() => {
 
     if (avatarEl) {
       avatarEl.style.background = roomData?.color || 'linear-gradient(135deg,#00b4d8,#0096c7)';
-      avatarEl.textContent = roomData?.type === 'dm' ? '@' : roomData?.type === 'public' ? '#' : (roomData?.name?.charAt(0)?.toUpperCase() || '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg>');
+      avatarEl.textContent = roomData?.type === 'dm' ? '@' : roomData?.type === 'public' ? '#' : (roomData?.name?.charAt(0)?.toUpperCase() || '?');
     }
     if (roomEl) roomEl.textContent = roomData?.name || 'Chat';
     if (senderEl) senderEl.textContent = msg.sender_code || 'anon';
-    if (textEl) textEl.textContent = msg.content || (msg.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Mengirim media' : '...');
+    if (textEl) {
+      if (msg.content) {
+        textEl.textContent = msg.content;
+      } else if (msg.media_url) {
+        textEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.25rem"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Mengirim media';
+      } else {
+        textEl.textContent = '...';
+      }
+    }
 
     // Reset & animate
     toast.classList.remove('show');
@@ -10410,8 +10456,8 @@ const ChatNotif = (() => {
     showToast(msg, roomData);
 
     // Browser push notif (saat tab tidak aktif)
-    const pushTitle = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg> ${roomData?.name || 'Chat'}`;
-    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : '...');
+    const pushTitle = roomData?.name || 'Chat';
+    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '📎 Media' : '...');
     const pushBody = `${msg.sender_code}: ${msgPreview}`;
     sendPushNotif(pushTitle, pushBody, msg.room_id, roomData);
   }
@@ -11377,12 +11423,7 @@ async function registerSW() {
   } catch(e) { console.error('[Push] SW failed:', e); return null; }
 }
 
-async function requestNotifPermission() {
-  if (!('Notification' in window)) return 'not-supported';
-  if (Notification.permission === 'granted') return 'granted';
-  if (Notification.permission === 'denied')  return 'denied';
-  return await Notification.requestPermission();
-}
+// requestNotifPermission sudah didefinisikan di atas (merged - UI + return value)
 
 async function subscribePush(reg) {
   if (!reg) return null;
@@ -11410,7 +11451,7 @@ async function savePushSubscription(sub) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'endpoint' });
     if (error) console.error('[Push] Save error:', error);
-    else console.log('[Push] Subscription saved untuk', chatState.myCode);
+    else { /* Push subscription saved */ }
   } catch(e) { console.error('[Push] savePushSubscription error:', e); }
 }
 
@@ -11595,59 +11636,105 @@ function loadBTCAddresses() {
   } catch(e) {}
 }
 
+async function fetchBTCData(address) {
+  // Try multiple APIs in order
+  const apis = [
+    async () => {
+      const r = await fetch(`https://mempool.space/api/address/${address}`, {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) throw new Error('mempool '+r.status);
+      const d = await r.json();
+      const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+      const txCount = (d.chain_stats?.tx_count || 0);
+      const unconfirmedTx = (d.mempool_stats?.tx_count || 0);
+      return { satoshi, txCount, unconfirmedTx, source: 'mempool.space' };
+    },
+    async () => {
+      const r = await fetch(`https://blockstream.info/api/address/${address}`, {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) throw new Error('blockstream '+r.status);
+      const d = await r.json();
+      const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+      const txCount = (d.chain_stats?.tx_count || 0);
+      return { satoshi, txCount, unconfirmedTx: 0, source: 'blockstream.info' };
+    },
+    async () => {
+      const r = await fetch(`https://blockchain.info/rawaddr/${address}?limit=0`, {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) throw new Error('blockchain.info '+r.status);
+      const d = await r.json();
+      return { satoshi: d.final_balance || 0, txCount: d.n_tx || 0, unconfirmedTx: 0, source: 'blockchain.info' };
+    }
+  ];
+  for (const api of apis) {
+    try { return await api(); } catch(e) { console.warn('[BTC]', e.message); }
+  }
+  throw new Error('All BTC APIs failed');
+}
+
 async function fetchBTCSingle(entry) {
   entry.loading = true;
   try {
-    // Mempool.space public API — no key needed
-    const r = await fetch(`https://mempool.space/api/address/${entry.address}`);
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+    const { satoshi, txCount, unconfirmedTx, source } = await fetchBTCData(entry.address);
     entry.btc = satoshi / 1e8;
+    entry.txCount = txCount;
+    entry.unconfirmedTx = unconfirmedTx;
+    entry.dataSource = source;
 
-    // BTC price in IDR from CoinGecko
+    // BTC price — try multiple sources
     try {
-      const pr = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr');
-      if (pr.ok) {
-        const pd = await pr.json();
-        const priceIDR = pd?.bitcoin?.idr;
-        const priceUSD = pd?.bitcoin?.usd;
-        entry.valueIDR = priceIDR ? entry.btc * priceIDR : null;
-        entry.valueUSD = priceUSD ? entry.btc * priceUSD : null;
-        entry._btcPriceIDR = priceIDR;
-        entry._btcPriceUSD = priceUSD;
-      }
+      const [priceIDR, priceUSD] = await fetchBTCPrice();
+      entry.valueIDR = priceIDR ? entry.btc * priceIDR : null;
+      entry.valueUSD = priceUSD ? entry.btc * priceUSD : null;
+      entry._btcPriceIDR = priceIDR;
+      entry._btcPriceUSD = priceUSD;
     } catch(e) {}
   } catch(e) {
     console.warn('[BTC] fetch error for', entry.address, e);
     entry.btc = null;
+    entry.error = e.message;
   } finally {
     entry.loading = false;
   }
+}
+
+async function fetchBTCPrice() {
+  // Try CoinGecko first, then fallback
+  try {
+    const pr = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr', {signal: AbortSignal.timeout(6000)});
+    if (pr.ok) {
+      const pd = await pr.json();
+      if (pd?.bitcoin?.usd) return [pd.bitcoin.idr, pd.bitcoin.usd];
+    }
+  } catch(e) {}
+  try {
+    const pr = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', {signal: AbortSignal.timeout(6000)});
+    if (pr.ok) {
+      const pd = await pr.json();
+      const usd = parseFloat(pd?.data?.amount);
+      if (usd) return [null, usd]; // no IDR from coinbase
+    }
+  } catch(e) {}
+  return [null, null];
 }
 
 async function refreshAllBTC() {
   if (!walletState.btcAddresses.length) return;
   // Fetch BTC price once, reuse for all
   let priceIDR = null, priceUSD = null;
-  try {
-    const pr = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr');
-    if (pr.ok) { const pd = await pr.json(); priceIDR = pd?.bitcoin?.idr; priceUSD = pd?.bitcoin?.usd; }
-  } catch(e) {}
+  try { [priceIDR, priceUSD] = await fetchBTCPrice(); } catch(e) {}
 
   await Promise.all(walletState.btcAddresses.map(async entry => {
     try {
-      const r = await fetch(`https://mempool.space/api/address/${entry.address}`);
-      if (!r.ok) return;
-      const d = await r.json();
-      const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+      const { satoshi, txCount, unconfirmedTx, source } = await fetchBTCData(entry.address);
       entry.btc = satoshi / 1e8;
+      entry.txCount = txCount;
+      entry.unconfirmedTx = unconfirmedTx;
+      entry.dataSource = source;
       entry.valueIDR = priceIDR ? entry.btc * priceIDR : null;
       entry.valueUSD = priceUSD ? entry.btc * priceUSD : null;
       entry._btcPriceIDR = priceIDR;
       entry._btcPriceUSD = priceUSD;
       entry.loading = false;
-    } catch(e) { entry.loading = false; }
+      entry.error = null;
+    } catch(e) { entry.loading = false; entry.error = e.message; }
   }));
   renderBTCAddrList();
   renderPort();
@@ -11657,19 +11744,100 @@ function renderBTCAddrList() {
   const el = document.getElementById('btc-addr-list');
   if (!el) return;
   if (!walletState.btcAddresses.length) { el.innerHTML = ''; return; }
-  el.innerHTML = walletState.btcAddresses.map(entry => {
-    const btcStr  = entry.loading ? '…' : (entry.btc !== null ? entry.btc.toFixed(8) + ' BTC' : 'Error');
-    const idrStr  = entry.valueIDR ? ' ≈ ' + fmtIDR(entry.valueIDR) : '';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:.45rem .7rem;gap:.5rem;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:.5rem;min-width:0">
-        <span style="font-size:.75rem;font-weight:900;color:#f59e0b;flex-shrink:0">₿</span>
-        <span style="font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(245,158,11,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${truncateAddr(entry.address)}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
-        <span style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent4);font-weight:700">${btcStr}${idrStr}</span>
-        <button onclick="removeBTCAddress('${entry.address}')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:5px;padding:.15rem .4rem;font-size:.62rem;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">✕</button>
-      </div>
-    </div>`;
+  el.innerHTML = walletState.btcAddresses.map((entry, idx) => {
+    const isLoading = entry.loading;
+    const hasError  = !isLoading && entry.btc === null;
+    const btcAmt    = !isLoading && entry.btc !== null ? entry.btc.toFixed(8) : null;
+    const usdVal    = entry.valueUSD != null ? '$' + entry.valueUSD.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : null;
+    const idrVal    = entry.valueIDR != null ? fmtIDR(entry.valueIDR) : null;
+    const txCount   = entry.txCount != null ? entry.txCount.toLocaleString() : null;
+    const priceUSD  = entry._btcPriceUSD ? '$' + entry._btcPriceUSD.toLocaleString('en-US',{maximumFractionDigits:0}) : null;
+    const label     = walletState.btcAddresses.length > 1 ? `BTC Wallet #${idx+1}` : 'BTC Wallet';
+
+    if (isLoading) return `
+      <div style="background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:1rem 1.1rem;display:flex;align-items:center;gap:.8rem">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;animation:pulse 1.5s infinite">₿</div>
+        <div style="flex:1">
+          <div style="font-size:.75rem;font-weight:700;color:var(--accent4);margin-bottom:.2rem">${label}</div>
+          <div style="font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace">${truncateAddr(entry.address)}</div>
+          <div style="margin-top:.5rem;display:flex;gap:.4rem;align-items:center">
+            <div style="width:60px;height:8px;border-radius:4px;background:rgba(245,158,11,.15);animation:pulse 1.5s infinite"></div>
+            <div style="font-size:.62rem;color:var(--muted)">Memuat saldo...</div>
+          </div>
+        </div>
+      </div>`;
+
+    if (hasError) return `
+      <div style="background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.04));border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:1rem 1.1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+          <div style="display:flex;align-items:center;gap:.7rem">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;color:#f87171">₿</div>
+            <div>
+              <div style="font-size:.75rem;font-weight:700;color:#f87171;margin-bottom:.15rem">${label}</div>
+              <div style="font-size:.63rem;color:var(--muted);font-family:'Space Mono',monospace">${truncateAddr(entry.address)}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <span style="font-size:.65rem;color:#f87171;font-weight:700;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:.15rem .5rem">Gagal Fetch</span>
+            <button onclick="fetchBTCSingle(walletState.btcAddresses[${idx}]).then(()=>{renderBTCAddrList();renderPort();})" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:.2rem .5rem;font-size:.62rem;color:var(--accent4);cursor:pointer;font-weight:700">↺ Retry</button>
+            <button onclick="removeBTCAddress('${entry.address}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:.2rem .45rem;font-size:.65rem;color:#f87171;cursor:pointer;font-weight:700">✕</button>
+          </div>
+        </div>
+        <div style="margin-top:.6rem;font-size:.62rem;color:rgba(239,68,68,.7);background:rgba(239,68,68,.05);border-radius:6px;padding:.3rem .6rem">
+          ⚠ Tidak dapat terhubung ke API. Coba lagi atau periksa koneksi internet.
+        </div>
+      </div>`;
+
+    return `
+      <div style="background:linear-gradient(135deg,rgba(245,158,11,.09) 0%,rgba(250,120,0,.05) 50%,rgba(11,17,32,1) 100%);border:1px solid rgba(245,158,11,.35);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(245,158,11,.08)">
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem .5rem">
+          <div style="display:flex;align-items:center;gap:.65rem">
+            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:#000;box-shadow:0 2px 10px rgba(245,158,11,.4)">₿</div>
+            <div>
+              <div style="font-size:.78rem;font-weight:800;color:var(--accent4);letter-spacing:.01em">${label}</div>
+              <div style="display:flex;align-items:center;gap:.35rem;margin-top:.1rem">
+                <span style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace">${truncateAddr(entry.address)}</span>
+                <span style="font-size:.52rem;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:4px;padding:.05rem .35rem;color:#10b981;font-weight:700">READ-ONLY</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <button onclick="(async()=>{walletState.btcAddresses[${idx}].loading=true;renderBTCAddrList();await fetchBTCSingle(walletState.btcAddresses[${idx}]);renderBTCAddrList();renderPort();})()" title="Refresh" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:7px;padding:.25rem .5rem;font-size:.65rem;color:var(--accent4);cursor:pointer;font-weight:700;transition:all .2s">↺</button>
+            <button onclick="removeBTCAddress('${entry.address}')" title="Hapus" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:7px;padding:.25rem .45rem;font-size:.65rem;color:#f87171;cursor:pointer;font-weight:700">✕</button>
+          </div>
+        </div>
+        <!-- Balance section -->
+        <div style="padding:.3rem 1rem .7rem;border-bottom:1px solid rgba(245,158,11,.1)">
+          <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.2rem">Total Saldo</div>
+          <div style="display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap">
+            <span style="font-family:'Space Mono',monospace;font-size:1.35rem;font-weight:700;color:var(--accent4)">${btcAmt} BTC</span>
+            ${usdVal ? `<span style="font-size:.8rem;color:var(--muted);font-weight:500">${usdVal}</span>` : ''}
+          </div>
+          ${idrVal ? `<div style="font-family:'Space Mono',monospace;font-size:.75rem;color:rgba(245,158,11,.7);margin-top:.15rem">≈ ${idrVal}</div>` : ''}
+        </div>
+        <!-- Stats row -->
+        <div style="display:flex;gap:0;padding:.55rem 1rem">
+          ${priceUSD ? `
+          <div style="flex:1;display:flex;flex-direction:column;gap:.1rem">
+            <div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Harga BTC</div>
+            <div style="font-family:'Space Mono',monospace;font-size:.75rem;font-weight:700;color:var(--text)">${priceUSD}</div>
+          </div>` : ''}
+          ${txCount != null ? `
+          <div style="flex:1;display:flex;flex-direction:column;gap:.1rem">
+            <div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Total TX</div>
+            <div style="font-family:'Space Mono',monospace;font-size:.75rem;font-weight:700;color:var(--text)">${txCount}</div>
+          </div>` : ''}
+          <div style="flex:1;display:flex;flex-direction:column;gap:.1rem">
+            <div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Network</div>
+            <div style="font-size:.72rem;font-weight:700;color:#10b981">● Mainnet</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:.1rem;align-items:flex-end">
+            <div style="font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Explorer</div>
+            <a href="https://mempool.space/address/${entry.address}" target="_blank" style="font-size:.65rem;color:var(--accent4);text-decoration:none;font-weight:700;display:flex;align-items:center;gap:.2rem">View <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          </div>
+        </div>
+      </div>`;
   }).join('');
 }
 
@@ -12315,13 +12483,20 @@ const AI_CHAT_SYSTEM = `Kamu adalah z-AI, asisten investasi cerdas yang terinteg
 - Manajemen risiko investasi
 - Pasar keuangan Indonesia
 
+Informasi tentang aplikasi ini:
+- Nama aplikasi: z-wealth (Bitcoin DCA Tracker)
+- Developer / pembuat z-wealth dan z-AI: Zulfan
+- Jika ada yang bertanya tentang siapa yang membuat z-AI, z-wealth, developer-nya, pembuatnya, atau pertanyaan serupa — jawab bahwa developernya bernama Zulfan.
+
 Gunakan bahasa Indonesia yang natural dan mudah dipahami. Jawaban terstruktur, padat, dan actionable. Gunakan emoji secukupnya. Selalu ingatkan bahwa analisis ini bukan saran investasi finansial jika relevan.`;
 
 let aiChatHistory = [];    // [{role:'user'|'model', parts:[{text}]}]
 let aiIsStreaming = false;
 let aiInitialized = false;
 
-const _BUILT_IN_GEMINI_KEY = 'AIzaSyAjRkczUz9MDytofC5IsPSI8cux_N6gKpU';
+// Gemini key telah dipindahkan ke backend (tidak boleh ada di client-side)
+// Fitur prediksi sekarang menggunakan callAI (Groq → OpenRouter → Pollinations)
+const _BUILT_IN_GEMINI_KEY = ''; // DEPRECATED - key tidak disimpan di client
 // Groq API - gratis & cepat (Llama 3.3 70B)
 const _GROQ_KEY = ''; // Key disimpan aman di server Vercel, tidak di sini
 const _GROQ_URL = '/api/groq'; // Proxy aman via Vercel serverless function
@@ -12358,7 +12533,7 @@ function initAIChat() {
 
   if (aiChatHistory.length === 0 && area.children.length === 0) {
     // Welcome message
-    appendAIMessage('model', `Halo! Saya **z-AI**, asisten investasi kamu yang didukung oleh Gemini AI <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V3"/><circle cx="12" cy="3" r="1"/><line x1="8" y1="15" x2="8.01" y2="15" stroke-width="3"/><line x1="16" y1="15" x2="16.01" y2="15" stroke-width="3"/><path d="M9 19h6"/></svg>\n\nSaya bisa membantu kamu dengan:\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Analisis & prediksi Bitcoin\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> Strategi DCA terbaik\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg> Membaca indikator pasar\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Rencana investasi jangka panjang\n\nApa yang ingin kamu tanyakan hari ini?`, Date.now(), true);
+    appendAIMessage('model', `Halo! Saya **z-AI**, asisten investasi Bitcoin kamu 🤖\n\nSaya bisa membantu kamu dengan:\n- 📈 Analisis & prediksi Bitcoin\n- 💡 Strategi DCA terbaik\n- 📊 Membaca indikator pasar\n- 🎯 Rencana investasi jangka panjang\n\nApa yang ingin kamu tanyakan hari ini?`, Date.now(), true);
   } else if (aiChatHistory.length > 0 && area.children.length === 0) {
     // Re-render history if area is empty
     aiChatHistory.forEach(msg => {
@@ -12389,7 +12564,13 @@ function saveAIChatHistory() {
 
 // ── Simple markdown → HTML converter ──
 function aiMarkdown(text) {
-  return text
+  // Sanitize raw text first to prevent XSS, then apply markdown
+  const safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return safe
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
@@ -12399,7 +12580,7 @@ function aiMarkdown(text) {
     .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hul])/gm, '')
     .replace(/\n/g, '<br>')
-    || text;
+    || safe;
 }
 
 function appendAIMessage(role, text, ts, skipHistory) {
@@ -12444,6 +12625,20 @@ function appendAIMessage(role, text, ts, skipHistory) {
 function showAITyping() {
   const area = document.getElementById('ai-messages-area');
   if (!area) return;
+
+  // Build provider status pills
+  function _providerPill(name, label, icon) {
+    const s = _aiProviderStatus[name];
+    const ready = !s || s.ok || (Date.now() - s.failedAt > _AI_COOLDOWN_MS);
+    const color = ready ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.1)';
+    const border = ready ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.25)';
+    const textColor = ready ? '#10b981' : '#f87171';
+    const dot = ready ? '#10b981' : '#ef4444';
+    return `<span style="display:inline-flex;align-items:center;gap:.25rem;background:${color};border:1px solid ${border};border-radius:99px;padding:.12rem .45rem;font-size:.55rem;font-weight:700;color:${textColor};">
+      <span style="width:5px;height:5px;border-radius:50%;background:${dot};flex-shrink:0"></span>${icon} ${label}
+    </span>`;
+  }
+
   const el = document.createElement('div');
   el.className = 'msg-row theirs';
   el.id = 'ai-typing-indicator';
@@ -12459,6 +12654,11 @@ function showAITyping() {
           <div class="ai-typing-dot"></div>
           <div class="ai-typing-dot"></div>
         </div>
+        <div id="ai-typing-provider-status" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem;opacity:.8">
+          ${_providerPill('groq','Groq','⚡')}
+          ${_providerPill('openrouter','OpenRouter','🔀')}
+          ${_providerPill('pollinations','Pollinations','🌐')}
+        </div>
       </div>
     </div>`;
   area.appendChild(el);
@@ -12469,42 +12669,321 @@ function removeAITyping() {
   document.getElementById('ai-typing-indicator')?.remove();
 }
 
-async function callAI(systemPrompt, messages, maxTokens = 1500) {
-  // Gunakan Groq via proxy /api/groq (key aman di server Vercel)
-  try {
-    const body = {
+/* ══════════════════════════════════════════════════════════════
+   AI PROVIDER CHAIN — Auto-fallback: Groq → OpenRouter → Pollinations
+   Semua provider bebas CORS. Sistem retry otomatis jika limit.
+══════════════════════════════════════════════════════════════ */
+
+// Status tracker per provider — reset setiap 5 menit
+const _aiProviderStatus = {
+  groq:         { ok: true, failedAt: 0 },
+  openrouter:   { ok: true, failedAt: 0 },
+  pollinations: { ok: true, failedAt: 0 },
+};
+const _AI_COOLDOWN_MS = 5 * 60 * 1000; // 5 menit cooldown jika limit
+
+function _aiProviderReady(name) {
+  const s = _aiProviderStatus[name];
+  if (s.ok) return true;
+  if (Date.now() - s.failedAt > _AI_COOLDOWN_MS) { s.ok = true; return true; }
+  return false;
+}
+function _aiProviderFail(name) {
+  _aiProviderStatus[name] = { ok: false, failedAt: Date.now() };
+}
+
+// ── Provider 1: Groq via Vercel proxy (no CORS issue) ──
+async function _callGroq(systemPrompt, messages, maxTokens) {
+  if (!_aiProviderReady('groq')) throw new Error('Groq sedang cooldown');
+  const res = await fetch(_GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(20000),
+    body: JSON.stringify({
       model: _GROQ_MODEL,
+      max_tokens: maxTokens,
+      temperature: 0.7,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages.map(m => ({
-          role: m.role === 'model' ? 'assistant' : m.role,
-          content: m.content || m.parts?.[0]?.text || ''
-        }))
-      ],
+        ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content || m.parts?.[0]?.text || '' }))
+      ]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || ('HTTP ' + res.status);
+    // Rate limit / quota
+    if (res.status === 429 || res.status === 503 || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('limit')) {
+      _aiProviderFail('groq');
+    }
+    throw new Error('Groq: ' + msg);
+  }
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error('Groq: respons kosong');
+  return { text, provider: 'Groq · Llama 3.3' };
+}
+
+// ── Provider 2: OpenRouter (free tier, CORS enabled, 100+ models) ──
+// Model: mistralai/mistral-7b-instruct (gratis, kuat, cepat)
+const _OR_URL   = 'https://openrouter.ai/api/v1/chat/completions';
+const _OR_MODEL = 'mistralai/mistral-7b-instruct:free';
+// OpenRouter membutuhkan API key bahkan untuk free tier
+// Dapatkan key gratis di https://openrouter.ai - masukkan di bawah atau via env
+const _OR_KEY = localStorage.getItem('zw_or_key') || '';
+
+async function _callOpenRouter(systemPrompt, messages, maxTokens) {
+  if (!_aiProviderReady('openrouter')) throw new Error('OpenRouter sedang cooldown');
+  const headers = {
+    'Content-Type': 'application/json',
+    'HTTP-Referer': window.location.origin,
+    'X-Title': 'z-wealth',
+  };
+  if (_OR_KEY) headers['Authorization'] = 'Bearer ' + _OR_KEY;
+
+  const res = await fetch(_OR_URL, {
+    method: 'POST',
+    headers,
+    signal: AbortSignal.timeout(25000),
+    body: JSON.stringify({
+      model: _OR_MODEL,
       max_tokens: maxTokens,
-      temperature: 0.7
-    };
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content || m.parts?.[0]?.text || '' }))
+      ]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || ('HTTP ' + res.status);
+    if (res.status === 401 || res.status === 403) {
+      _aiProviderFail('openrouter');
+      throw new Error('OpenRouter: API key diperlukan - daftar gratis di openrouter.ai');
+    }
+    if (res.status === 429 || res.status === 503 || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('limit') || msg.toLowerCase().includes('quota')) {
+      _aiProviderFail('openrouter');
+    }
+    throw new Error('OpenRouter: ' + msg);
+  }
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error('OpenRouter: respons kosong');
+  return { text, provider: 'OpenRouter · Mistral 7B' };
+}
 
-    const res = await fetch(_GROQ_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+// ── Provider 3: Pollinations AI (100% gratis, no key, no CORS, no signup) ──
+// Menggunakan GET endpoint text.pollinations.ai (anonymous, tidak deprecated)
+const _POLL_BASE = 'https://text.pollinations.ai';
 
-    if (res.ok) {
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content;
-      if (text) return { text, provider: 'Groq (Llama 3.3)' };
-      throw new Error('Respons AI kosong');
+async function _callPollinations(systemPrompt, messages, maxTokens) {
+  if (!_aiProviderReady('pollinations')) throw new Error('Pollinations sedang cooldown');
+
+  // Susun prompt: gabungkan system + history + user terakhir sebagai plain text
+  const allMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content || m.parts?.[0]?.text || '' }))
+  ];
+
+  // Gunakan POST ke endpoint /openai yang tetap support anonymous request
+  // Catatan: Hanya deprecated untuk authenticated users — anonymous tetap berjalan
+  const res = await fetch(_POLL_BASE + '/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(30000),
+    body: JSON.stringify({
+      model: 'openai-large',
+      max_tokens: Math.min(maxTokens, 2000),
+      temperature: 0.7,
+      messages: allMessages
+    })
+  });
+
+  if (!res.ok) {
+    const msg = 'HTTP ' + res.status;
+    if (res.status === 429 || res.status === 503) _aiProviderFail('pollinations');
+    throw new Error('Pollinations: ' + msg);
+  }
+
+  const rawText = await res.text();
+
+  // Jika response mengandung deprecation notice (bukan JSON valid), coba parse sebagai JSON dulu
+  let text = '';
+  try {
+    const data = JSON.parse(rawText);
+    // Cek apakah isi pesan adalah deprecation notice dari Pollinations
+    const content = data.choices?.[0]?.message?.content?.trim() || '';
+    if (content.includes('IMPORTANT NOTICE') || content.includes('legacy text API') || content.includes('being deprecated')) {
+      throw new Error('Pollinations: deprecation notice received');
+    }
+    text = content;
+  } catch(parseErr) {
+    // Jika parse gagal atau dapat deprecation notice, throw error agar fallback ke provider lain
+    _aiProviderFail('pollinations');
+    throw new Error('Pollinations: ' + (parseErr.message || 'response tidak valid'));
+  }
+
+  if (!text) {
+    _aiProviderFail('pollinations');
+    throw new Error('Pollinations: respons kosong');
+  }
+  return { text, provider: 'Pollinations · GPT-4o' };
+}
+
+// ── MAIN callAI — otomatis chain semua provider + notifikasi user ──
+async function callAI(systemPrompt, messages, maxTokens = 1500) {
+  const providers = [
+    { name: 'groq',         label: 'Groq · Llama 3.3',       fn: () => _callGroq(systemPrompt, messages, maxTokens) },
+    { name: 'openrouter',   label: 'OpenRouter · Mistral 7B', fn: () => _callOpenRouter(systemPrompt, messages, maxTokens) },
+    { name: 'pollinations', label: 'Pollinations · GPT-4o',   fn: () => _callPollinations(systemPrompt, messages, maxTokens) },
+  ];
+
+  const errors = [];
+  let attemptCount = 0;
+
+  for (const p of providers) {
+    if (!_aiProviderReady(p.name)) {
+      errors.push(`${p.name}: cooldown`);
+      continue;
     }
 
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error?.message || 'Groq error: ' + res.status);
+    // Tampilkan status switching (jika bukan provider pertama)
+    if (attemptCount > 0) {
+      _showAIProviderSwitch(p.label, attemptCount);
+    }
+    attemptCount++;
 
-  } catch(e) {
-    console.error('[callAI] Error:', e.message);
-    throw new Error('AI tidak tersedia: ' + e.message);
+    try {
+      const result = await p.fn();
+      _aiProviderStatus[p.name].ok = true;
+
+      // Jika berhasil lewat fallback, tampilkan notif sukses
+      if (attemptCount > 1) {
+        _showAIFallbackSuccess(result.provider);
+      }
+
+      return result;
+    } catch(e) {
+      console.warn(`[AI] ${p.name} gagal:`, e.message);
+      errors.push(`${p.name}: ${e.message}`);
+
+      // Notifikasi provider gagal (limit/error)
+      const isLimit = /rate|limit|429|quota|overload|capacity/i.test(e.message);
+      _showAIProviderFailed(p.label, isLimit);
+    }
   }
+
+  // Semua gagal
+  _showAIAllFailed();
+  throw new Error('Semua AI provider tidak tersedia. ' + errors.join(' | '));
+}
+
+// ── Notifikasi: provider aktif sedang switching ──
+function _showAIProviderSwitch(newProviderLabel, attempt) {
+  const icons = ['🔄','⚡','🌐'];
+  const icon = icons[attempt - 1] || '🔄';
+
+  // Update status bar di AI chat
+  const status = document.getElementById('ai-chat-status');
+  if (status) {
+    status.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:.3rem;animation:pulse .8s infinite"></span>
+      Beralih ke ${newProviderLabel}...`;
+  }
+
+  // Update provider pills di typing indicator (real-time)
+  const pillsEl = document.getElementById('ai-typing-provider-status');
+  if (pillsEl) {
+    function _pill(name, label, picon) {
+      const s = _aiProviderStatus[name];
+      const ready = !s || s.ok || (Date.now() - s.failedAt > _AI_COOLDOWN_MS);
+      // Highlight yang sedang aktif dicoba
+      const isActive = label === newProviderLabel.split(' · ')[0] || newProviderLabel.includes(label);
+      const color  = isActive  ? 'rgba(245,158,11,.2)' : ready ? 'rgba(16,185,129,.1)'  : 'rgba(239,68,68,.08)';
+      const border = isActive  ? 'rgba(245,158,11,.5)' : ready ? 'rgba(16,185,129,.25)' : 'rgba(239,68,68,.2)';
+      const tc     = isActive  ? '#f59e0b'             : ready ? '#10b981'              : '#f87171';
+      const dot    = isActive  ? '#f59e0b'             : ready ? '#10b981'              : '#ef4444';
+      const anim   = isActive  ? 'animation:pulse .8s infinite;' : '';
+      return `<span style="display:inline-flex;align-items:center;gap:.25rem;background:${color};border:1px solid ${border};border-radius:99px;padding:.12rem .45rem;font-size:.55rem;font-weight:700;color:${tc};">
+        <span style="width:5px;height:5px;border-radius:50%;background:${dot};flex-shrink:0;${anim}"></span>${picon} ${label}
+      </span>`;
+    }
+    pillsEl.innerHTML =
+      _pill('groq','Groq','⚡') +
+      _pill('openrouter','OpenRouter','🔀') +
+      _pill('pollinations','Pollinations','🌐');
+  }
+
+  // Toast kecil
+  _toastAI(`${icon} Beralih ke <strong>${newProviderLabel}</strong>`, 'warn', 3000);
+}
+
+// ── Notifikasi: provider gagal ──
+function _showAIProviderFailed(providerLabel, isLimit) {
+  const reason = isLimit ? 'limit tercapai' : 'tidak tersedia';
+  _toastAI(`⚠️ ${providerLabel} ${reason} — mencoba backup...`, 'warn', 4000);
+}
+
+// ── Notifikasi: fallback berhasil ──
+function _showAIFallbackSuccess(providerLabel) {
+  _toastAI(`✅ Terhubung via <strong>${providerLabel}</strong>`, 'ok', 3500);
+}
+
+// ── Notifikasi: semua provider gagal ──
+function _showAIAllFailed() {
+  const status = document.getElementById('ai-chat-status');
+  if (status) {
+    status.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:.3rem"></span>
+      Semua AI tidak tersedia saat ini`;
+  }
+  _toastAI('❌ Semua AI provider tidak tersedia. Coba lagi dalam beberapa menit.', 'err', 6000);
+}
+
+// ── Mini toast khusus AI (tidak ganggu toast utama) ──
+let _aiToastTimer = null;
+function _toastAI(html, type = 'ok', duration = 3500) {
+  let el = document.getElementById('ai-provider-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ai-provider-toast';
+    el.style.cssText = `
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);
+      z-index:9999;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:.55rem 1rem;font-size:.75rem;font-weight:600;
+      color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.35);
+      display:flex;align-items:center;gap:.5rem;pointer-events:none;
+      max-width:320px;text-align:center;white-space:nowrap;
+    `;
+    document.body.appendChild(el);
+  }
+
+  const colors = {
+    ok:   { border: 'rgba(16,185,129,.5)',  dot: '#10b981' },
+    warn: { border: 'rgba(245,158,11,.5)',  dot: '#f59e0b' },
+    err:  { border: 'rgba(239,68,68,.5)',   dot: '#ef4444' },
+  };
+  const c = colors[type] || colors.ok;
+  el.style.borderColor = c.border;
+  el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block"></span><span>${html}</span>`;
+
+  // Animate in
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  clearTimeout(_aiToastTimer);
+  _aiToastTimer = setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(-50%) translateY(12px)';
+  }, duration);
+}
+
+// ── callAIRaw — untuk fungsi yang butuh format JSON (news translate, dll) ──
+// Sama seperti callAI tapi hanya 1 pesan user, tanpa system role terpisah
+async function callAIRaw(userPrompt, maxTokens = 2000) {
+  return callAI('Kamu adalah asisten AI yang membantu. Balas sesuai instruksi user.', [{ role: 'user', content: userPrompt }], maxTokens);
 }
 
 async function sendAIMessage(overrideText) {
@@ -12555,8 +13034,21 @@ async function sendAIMessage(overrideText) {
   } catch(e) {
     console.error('[z-AI]', e);
     removeAITyping();
-    appendAIMessage('model', `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${e.message}`, Date.now());
-    if (status) status.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:.3rem"></span>Error · Coba lagi';
+    appendAIMessage('model',
+      `<div style="display:flex;flex-direction:column;gap:.5rem">
+        <div style="display:flex;align-items:center;gap:.5rem;color:#f59e0b">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <strong>Semua AI tidak tersedia saat ini</strong>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);line-height:1.5">
+          Groq, OpenRouter, dan Pollinations sedang tidak bisa dihubungi.<br>
+          Kemungkinan semua sedang rate-limit atau ada masalah koneksi.<br>
+          <span style="color:var(--accent4)">⏱ Coba lagi dalam ~5 menit ya.</span>
+        </div>
+      </div>`,
+      Date.now()
+    );
+    if (status) status.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:.3rem"></span>Semua AI tidak tersedia · Coba lagi nanti';
   } finally {
     aiIsStreaming = false;
     if (btn) btn.disabled = false;
@@ -12821,19 +13313,15 @@ async function loadCryptoNews(forceRefresh = false) {
       }
     } catch(rssErr) { console.warn('[News] RSS error:', rssErr.message); }
 
-    // ── Step 2: Fallback Groq jika RSS kosong ──
+    // ── Step 2: Fallback AI jika RSS kosong ──
     if (!rawPosts.length) {
       const today = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-      const fbRes = await fetch(_GROQ_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:_GROQ_MODEL, max_tokens:2000, temperature:0.6,
-          messages:[{role:'user',content:'Hari ini '+today+'. Buat 10 berita kripto terkini dalam Bahasa Indonesia.\n\nBalas HANYA JSON array:\n[{"judul":"...","ringkasan":"...","sentimen":"POSITIF/NEGATIF/NETRAL","coins":["BTC"],"source":"CoinDesk"}]'}]
-        })
-      });
-      if (fbRes.ok) {
-        const fbData = await fbRes.json();
-        let fbText = (fbData.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+      try {
+        const fbResult = await callAIRaw(
+          'Hari ini '+today+'. Buat 10 berita kripto terkini dalam Bahasa Indonesia.\n\nBalas HANYA JSON array:\n[{"judul":"...","ringkasan":"...","sentimen":"POSITIF/NEGATIF/NETRAL","coins":["BTC"],"source":"CoinDesk"}]',
+          2000
+        );
+        let fbText = (fbResult.text||'').replace(/```json|```/g,'').trim();
         const fbMatch = fbText.match(/\[[\s\S]*\]/);
         if (fbMatch) {
           const fbParsed = JSON.parse(fbMatch[0]);
@@ -12848,7 +13336,7 @@ async function loadCryptoNews(forceRefresh = false) {
           renderNewsList(fbArticles);
           return;
         }
-      }
+      } catch(fbErr) { console.warn('[News] AI fallback error:', fbErr.message); }
       throw new Error('Tidak ada berita tersedia');
     }
 
@@ -12863,17 +13351,11 @@ async function loadCryptoNews(forceRefresh = false) {
 
     const beritaList = rawPosts.map((p,i) => ({...p, id:i}));
 
-    // ── Step 4: Groq terjemahkan ──
+    // ── Step 4: AI terjemahkan (chain: Groq → OpenRouter → Pollinations) ──
     const prompt = 'Terjemahkan judul berita kripto berikut ke Bahasa Indonesia dan tentukan sentimennya.\n\nBalas HANYA JSON array tanpa teks lain:\n[\n  {\n    "id": 0,\n    "judul_id": "terjemahan (max 100 karakter)",\n    "ringkasan": "konteks singkat (max 120 karakter)",\n    "sentimen": "POSITIF atau NEGATIF atau NETRAL"\n  }\n]\n\nBerita:\n' + beritaList.map(b=>'['+b.id+'] '+b.judul_en).join('\n');
 
-    const groqRes = await fetch(_GROQ_URL, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({model:_GROQ_MODEL, max_tokens:2500, temperature:0.3, messages:[{role:'user',content:prompt}]})
-    });
-
-    if (!groqRes.ok) throw new Error('Gagal menerjemahkan berita');
-    const groqData = await groqRes.json();
-    let text = (groqData.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+    const aiResult = await callAIRaw(prompt, 2500);
+    let text = (aiResult.text||'').replace(/```json|```/g,'').trim();
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('Format AI tidak valid');
     const translated = JSON.parse(jsonMatch[0]);
@@ -13071,7 +13553,7 @@ function openNewsModal(id) {
   ).join(' ');
   document.getElementById('nm-meta').innerHTML =
     `<span style="color:var(--accent3);font-weight:700">${article.source}</span>
-     <span>·</span><span style="font-style:italic;opacity:.7">via Groq AI</span>
+     <span>·</span><span class="nm-provider-label" style="font-style:italic;opacity:.7">via AI</span>
      ${coinsHtml}`;
 
   document.getElementById('nm-body').innerHTML =
@@ -13088,16 +13570,7 @@ function openNewsModal(id) {
 
 async function _generateNewsBody(article) {
   try {
-    const res = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 700,
-        temperature: 0.65,
-        messages: [{
-          role: 'user',
-          content: `Tulis isi berita kripto dalam Bahasa Indonesia yang informatif dan natural berdasarkan judul ini:
+    const prompt = `Tulis isi berita kripto dalam Bahasa Indonesia yang informatif dan natural berdasarkan judul ini:
 
 "${article.judulID}"
 
@@ -13105,16 +13578,21 @@ Sumber: ${article.source}
 Sentimen: ${article.sentimen}
 ${article.ringkasan ? 'Ringkasan: ' + article.ringkasan : ''}
 
-Tulis 3-4 paragraf isi berita dengan gaya jurnalistik. Jangan tulis ulang judulnya. Langsung isi beritanya saja.`
-        }]
-      })
-    });
+Tulis 3-4 paragraf isi berita dengan gaya jurnalistik. Jangan tulis ulang judulnya. Langsung isi beritanya saja.`;
 
-    if (!res.ok) throw new Error('Gagal memuat');
-    const data = await res.json();
-    const text = (data.choices?.[0]?.message?.content || '').trim();
-    if (!text) throw new Error('Respons kosong');
-    document.getElementById('nm-body').textContent = text;
+    const result = await callAI(
+      'Kamu adalah jurnalis kripto profesional yang menulis berita informatif dan akurat dalam Bahasa Indonesia.',
+      [{ role: 'user', content: prompt }],
+      700
+    );
+
+    document.getElementById('nm-body').textContent = result.text;
+    // Update provider label
+    const meta = document.getElementById('nm-meta');
+    if (meta) {
+      const providerSpan = meta.querySelector('.nm-provider-label');
+      if (providerSpan) providerSpan.textContent = 'via ' + result.provider;
+    }
   } catch(e) {
     document.getElementById('nm-body').innerHTML =
       `<span style="font-size:.82rem;line-height:1.65;">${article.ringkasan || 'Tidak dapat memuat isi berita.'}</span>
