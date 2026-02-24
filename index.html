@@ -33,6 +33,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- WalletConnect Universal Provider + Modal (UMD, no bundler needed) -->
+<!-- Polyfill process untuk WalletConnect (butuh ini karena wc.js dibuat untuk Node.js) -->
+<script>window.process = window.process || { env: { NODE_ENV: 'production' }, version: 'v16.0.0', browser: true };</script>
 <!-- WalletConnect — dari file lokal di Vercel (cepat, tidak butuh CDN) -->
 <script src="/wc.js"></script>
 <style>
