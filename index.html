@@ -3202,7 +3202,7 @@ span svg, div svg.inline {
 </div>
 
 <div style="text-align:center;font-size:.62rem;color:var(--muted);opacity:.5;padding:1rem 0">
-  Sumber: CryptoPanic · Diterjemahkan oleh Groq AI · Bukan saran investasi
+  Sumber: RSS Feed · Diterjemahkan oleh Groq AI · Bukan saran investasi
 </div>
 </div><!-- end page-news -->
 
@@ -12470,10 +12470,9 @@ function removeAITyping() {
 }
 
 async function callAI(systemPrompt, messages, maxTokens = 1500) {
-  // Try Groq first (faster, more generous quota)
-  const groqKey = getGroqKey();
-  if (groqKey) {
-    try {
+  // Try Groq first via proxy /api/groq
+  try {
+    if (true) {
       const body = {
         model: _GROQ_MODEL,
         messages: [
@@ -12810,10 +12809,10 @@ let _newsLoading = false;
 
 async function loadCryptoNews(forceRefresh = false) {
   if (_newsLoading && !forceRefresh) return;
-  if (_newsLoading && forceRefresh) _newsLoading = false;
-  if (_newsCache && !forceRefresh) { renderNewsList(_newsCache); return; }
-
   _newsLoading = true;
+  if (forceRefresh) _newsCache = null;
+  if (_newsCache) { renderNewsList(_newsCache); _newsLoading = false; return; }
+
   const btn = document.getElementById('news-refresh-btn');
   const icon = document.getElementById('news-spin-icon');
   if (btn) btn.disabled = true;
@@ -12828,130 +12827,100 @@ async function loadCryptoNews(forceRefresh = false) {
     </div>`).join('');
 
   try {
-    // ── Step 1: Ambil dari CryptoPanic + RSS Feed secara paralel ──
-    const [cpRes, rssRes] = await Promise.allSettled([
-      fetch('/api/cryptopanic', { headers: { 'Accept': 'application/json' } }),
-      fetch('/api/rss', { headers: { 'Accept': 'application/json' } })
-    ]);
-
+    // ── Step 1: RSS Feed ──
     let rawPosts = [];
+    try {
+      const rssRes = await fetch('/api/rss');
+      if (rssRes.ok) {
+        const rssData = await rssRes.json();
+        rawPosts = (rssData.articles || []).map(a => ({
+          judul_en: a.title || '',
+          source: a.source || 'News',
+          url: a.url || '',
+          published: a.published || new Date().toISOString(),
+          coins: guessCoinsFromTitle(a.title || '')
+        }));
+      }
+    } catch(rssErr) { console.warn('[News] RSS error:', rssErr.message); }
 
-    // Proses CryptoPanic
-    if (cpRes.status === 'fulfilled' && cpRes.value.ok) {
-      const cpData = await cpRes.value.json();
-      const cpPosts = (cpData.results || []).slice(0, 10).map(p => ({
-        judul_en: p.title || '',
-        source: p.source?.title || p.domain || 'CryptoPanic',
-        url: p.url || '',
-        published: p.published_at || new Date().toISOString(),
-        coins: (p.currencies || []).map(c => c.code).slice(0, 3)
-      }));
-      rawPosts = rawPosts.concat(cpPosts);
-      console.log('[News] CryptoPanic:', cpPosts.length, 'artikel');
-    } else {
-      console.warn('[News] CryptoPanic gagal:', cpRes.status);
+    // ── Step 2: Fallback Groq jika RSS kosong ──
+    if (!rawPosts.length) {
+      const today = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      const fbRes = await fetch(_GROQ_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:_GROQ_MODEL, max_tokens:2000, temperature:0.6,
+          messages:[{role:'user',content:'Hari ini '+today+'. Buat 10 berita kripto terkini dalam Bahasa Indonesia.\n\nBalas HANYA JSON array:\n[{"judul":"...","ringkasan":"...","sentimen":"POSITIF/NEGATIF/NETRAL","coins":["BTC"],"source":"CoinDesk"}]'}]
+        })
+      });
+      if (fbRes.ok) {
+        const fbData = await fbRes.json();
+        let fbText = (fbData.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+        const fbMatch = fbText.match(/\[[\s\S]*\]/);
+        if (fbMatch) {
+          const fbParsed = JSON.parse(fbMatch[0]);
+          const fbArticles = fbParsed.map((a,i)=>({
+            id:i, judulID:(a.judul||'').trim(), judulEN:a.judul||'',
+            ringkasan:(a.ringkasan||'').trim(),
+            sentimen:(a.sentimen||'NETRAL').toUpperCase().replace(/[^A-Z]/g,'')||'NETRAL',
+            coins:Array.isArray(a.coins)?a.coins:[], source:a.source||'Kripto News',
+            url:null, published:new Date().toISOString()
+          })).filter(a=>a.judulID.length>3);
+          _newsCache = fbArticles;
+          renderNewsList(fbArticles);
+          return;
+        }
+      }
+      throw new Error('Tidak ada berita tersedia');
     }
 
-    // Proses RSS Feed (CoinDesk, CoinTelegraph, Reuters, BBC, dll)
-    if (rssRes.status === 'fulfilled' && rssRes.value.ok) {
-      const rssData = await rssRes.value.json();
-      const rssPosts = (rssData.articles || []).map(a => ({
-        judul_en: a.title || '',
-        source: a.source || 'News',
-        url: a.url || '',
-        published: a.published || new Date().toISOString(),
-        coins: guessCoinsFromTitle(a.title || '')
-      }));
-      rawPosts = rawPosts.concat(rssPosts);
-      console.log('[News] RSS:', rssPosts.length, 'artikel');
-    } else {
-      console.warn('[News] RSS gagal:', rssRes.status);
-    }
-
-    // Deduplikasi & filter
+    // ── Step 3: Deduplikasi ──
     const seen = new Set();
     rawPosts = rawPosts.filter(p => {
       if (!p.judul_en || p.judul_en.length < 5) return false;
-      const key = p.judul_en.substring(0, 50).toLowerCase();
+      const key = p.judul_en.substring(0,50).toLowerCase();
       if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 20);
+      seen.add(key); return true;
+    }).slice(0,20);
 
-    if (!rawPosts.length) throw new Error('Tidak ada berita tersedia saat ini');
+    const beritaList = rawPosts.map((p,i) => ({...p, id:i}));
 
-    const beritaList = rawPosts.map((p, i) => ({ ...p, id: i }));
-    console.log('[News] Total berita:', beritaList.length);
-
-    // ── Step 2: Groq terjemahkan + analisis sentimen ──
-    const prompt = `Terjemahkan judul berita kripto berikut ke Bahasa Indonesia dan tentukan sentimennya.
-
-Balas HANYA JSON array tanpa teks lain:
-[
-  {
-    "id": 0,
-    "judul_id": "terjemahan judul dalam Bahasa Indonesia (max 100 karakter)",
-    "ringkasan": "satu kalimat konteks singkat dalam Bahasa Indonesia (max 120 karakter)",
-    "sentimen": "POSITIF atau NEGATIF atau NETRAL"
-  }
-]
-
-Berita:
-${beritaList.map(b => `[${b.id}] ${b.judul_en}`).join('
-')}`;
+    // ── Step 4: Groq terjemahkan ──
+    const prompt = 'Terjemahkan judul berita kripto berikut ke Bahasa Indonesia dan tentukan sentimennya.\n\nBalas HANYA JSON array tanpa teks lain:\n[\n  {\n    "id": 0,\n    "judul_id": "terjemahan (max 100 karakter)",\n    "ringkasan": "konteks singkat (max 120 karakter)",\n    "sentimen": "POSITIF atau NEGATIF atau NETRAL"\n  }\n]\n\nBerita:\n' + beritaList.map(b=>'['+b.id+'] '+b.judul_en).join('\n');
 
     const groqRes = await fetch(_GROQ_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: _GROQ_MODEL,
-        max_tokens: 2500,
-        temperature: 0.3,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:_GROQ_MODEL, max_tokens:2500, temperature:0.3, messages:[{role:'user',content:prompt}]})
     });
 
-    if (!groqRes.ok) {
-      const errData = await groqRes.json().catch(() => ({}));
-      throw new Error('Groq error: ' + (errData.error?.message || groqRes.status));
-    }
-
+    if (!groqRes.ok) throw new Error('Gagal menerjemahkan berita');
     const groqData = await groqRes.json();
-    let text = groqData.choices?.[0]?.message?.content || '';
-    text = text.replace(/```json|```/g, '').trim();
-
+    let text = (groqData.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
     const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('Format respons AI tidak valid');
+    if (!jsonMatch) throw new Error('Format AI tidak valid');
     const translated = JSON.parse(jsonMatch[0]);
 
-    // ── Step 3: Gabungkan ──
     const articles = beritaList.map(b => {
-      const t = translated.find(x => Number(x.id) === b.id) || {};
+      const t = translated.find(x=>Number(x.id)===b.id)||{};
       return {
-        id: b.id,
-        judulID: (t.judul_id || b.judul_en).trim(),
-        judulEN: b.judul_en,
-        ringkasan: (t.ringkasan || '').trim(),
-        sentimen: (t.sentimen || 'NETRAL').toUpperCase().replace(/[^A-Z]/g, '') || 'NETRAL',
-        coins: b.coins.length ? b.coins : guessCoinsFromTitle(b.judul_en),
-        source: b.source,
-        url: b.url,
-        published: b.published
+        id:b.id, judulID:(t.judul_id||b.judul_en).trim(), judulEN:b.judul_en,
+        ringkasan:(t.ringkasan||'').trim(),
+        sentimen:(t.sentimen||'NETRAL').toUpperCase().replace(/[^A-Z]/g,'')||'NETRAL',
+        coins:b.coins.length?b.coins:guessCoinsFromTitle(b.judul_en),
+        source:b.source, url:b.url, published:b.published
       };
-    }).filter(a => a.judulID.length > 3);
+    }).filter(a=>a.judulID.length>3);
 
-    console.log('[News] Selesai! Artikel:', articles.length);
     _newsCache = articles;
     renderNewsList(articles);
 
   } catch(e) {
-    console.error('[News] ERROR:', e.message, e);
+    console.error('[News]', e);
     document.getElementById('news-list').innerHTML = `
       <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
-        <div style="font-size:2.5rem;margin-bottom:.7rem"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
         <div style="font-weight:700;color:var(--text);margin-bottom:.4rem">Gagal memuat berita</div>
-        <div style="font-size:.78rem;line-height:1.5;margin-bottom:1.2rem;max-width:260px;margin-left:auto;margin-right:auto">${e.message}</div>
-        <button onclick="loadCryptoNews(true)" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.55rem 1.4rem;font-weight:700;cursor:pointer;font-size:.85rem">Coba Lagi</button>
+        <div style="font-size:.78rem;margin-bottom:1.2rem">${e.message}</div>
+        <button onclick="loadCryptoNews(true)" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.55rem 1.4rem;font-weight:700;cursor:pointer;">Coba Lagi</button>
       </div>`;
   } finally {
     _newsLoading = false;
