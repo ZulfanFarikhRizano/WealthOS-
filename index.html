@@ -12713,7 +12713,12 @@ async function openWalletConnect() {
   closeWalletModal(null, true);
   if (_wcConnecting) { toast('⏳ Sedang menghubungkan...', 1); return; }
 
+  // wc.js menyimpan provider di window["@walletconnect/ethereum-provider"]
+  const wcPkg = window['@walletconnect/ethereum-provider'];
   const EthereumProvider =
+    wcPkg?.EthereumProvider ||
+    wcPkg?.default?.EthereumProvider ||
+    (typeof wcPkg === 'function' ? wcPkg : null) ||
     window.WalletConnectEthereumProvider?.EthereumProvider ||
     window.EthereumProvider;
 
