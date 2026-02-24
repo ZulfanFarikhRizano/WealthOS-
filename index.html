@@ -33,8 +33,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- WalletConnect Universal Provider + Modal (UMD, no bundler needed) -->
-<script src="https://unpkg.com/@walletconnect/modal@2.7.0/dist/index.umd.js"></script>
-<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.17.0/dist/index.umd.js"></script>
+<!-- WalletConnect — dari file lokal di Vercel (cepat, tidak butuh CDN) -->
+<script src="/wc.js"></script>
 <style>
 :root {
   --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
@@ -12705,32 +12705,30 @@ function copyZWealthURL() {
   }
 }
 
-// ── WalletConnect: inisialisasi & buka QR modal ──
+// ── WalletConnect: QR modal menggunakan wc.js lokal ──
 let _wcProvider = null;
-let _wcInitializing = false;
+let _wcConnecting = false;
 
 async function openWalletConnect() {
   closeWalletModal(null, true);
+  if (_wcConnecting) { toast('⏳ Sedang menghubungkan...', 1); return; }
 
-  // Cek apakah library sudah load
-  const EthereumProvider = window.WalletConnectEthereumProvider?.EthereumProvider
-    || window.EthereumProvider
-    || window['@walletconnect/ethereum-provider']?.EthereumProvider;
+  const EthereumProvider =
+    window.WalletConnectEthereumProvider?.EthereumProvider ||
+    window.EthereumProvider;
 
-  const WalletConnectModal = window.WalletConnectModal?.WalletConnectModal
-    || window.WalletConnectModal;
-
-  if (!EthereumProvider || !WalletConnectModal) {
-    toast('⏳ WalletConnect sedang dimuat... coba lagi dalam 2 detik', 1);
-    setTimeout(() => openWalletConnect(), 2500);
+  if (!EthereumProvider) {
+    toast('❌ Library WalletConnect tidak tersedia. Coba refresh halaman.', 2);
     return;
   }
 
-  if (_wcInitializing) { toast('⏳ Sedang menghubungkan...', 1); return; }
-  _wcInitializing = true;
+  _wcConnecting = true;
+  const btn = document.getElementById('btn-connect-wallet');
+  const lbl = document.getElementById('wallet-btn-label');
+  if (lbl) lbl.textContent = 'Menghubungkan...';
+  if (btn) btn.disabled = true;
 
   try {
-    // Buat provider baru setiap kali (agar QR fresh)
     _wcProvider = await EthereumProvider.init({
       projectId: 'dec35dd23f44d3a833556dd8ff806420',
       chains: [1],
@@ -12744,11 +12742,8 @@ async function openWalletConnect() {
           '--wcm-z-index': '700',
         },
         explorerRecommendedWalletIds: [
-          // OKX Wallet
           '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709',
-          // MetaMask
           'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
-          // Trust Wallet
           '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
         ],
       },
@@ -12760,24 +12755,20 @@ async function openWalletConnect() {
       },
     });
 
-    // Event: user approve di wallet
     _wcProvider.on('connect', async () => {
       try {
         const accounts = _wcProvider.accounts;
         const chainId  = _wcProvider.chainId;
         if (!accounts?.[0]) return;
-
         walletState.connected    = true;
         walletState.providerName = 'WalletConnect';
         walletState.address      = accounts[0];
         walletState.chainId      = chainId || 1;
         walletState.tokens       = [];
         walletState.loading      = true;
-
         updateWalletUI();
-        toast('✅ Wallet terhubung via WalletConnect! Memuat token...');
+        toast('✅ Wallet terhubung via WalletConnect!');
         await fetchWalletTokens(accounts[0], chainId || 1);
-
         if (walletState.refreshInterval) clearInterval(walletState.refreshInterval);
         walletState.refreshInterval = setInterval(() => {
           if (walletState.connected) fetchWalletTokens(walletState.address, walletState.chainId);
@@ -12785,25 +12776,26 @@ async function openWalletConnect() {
       } catch(e) { console.error('[WC connect]', e); }
     });
 
-    // Event: user disconnect
     _wcProvider.on('disconnect', () => {
       if (walletState.providerName === 'WalletConnect') disconnectWallet();
     });
 
-    // Buka QR modal
     await _wcProvider.connect();
 
   } catch(e) {
-    if (e?.message?.includes('User rejected') || e?.code === 4001) {
+    const msg = e?.message || String(e);
+    if (msg.includes('rejected') || e?.code === 4001) {
       toast('Koneksi WalletConnect dibatalkan.', 1);
     } else {
-      console.error('[WC]', e);
-      toast('❌ Gagal connect WalletConnect: ' + (e?.message || e), 2);
+      toast('❌ WalletConnect: ' + msg, 2);
     }
   } finally {
-    _wcInitializing = false;
+    _wcConnecting = false;
+    if (lbl) lbl.textContent = 'Connect Wallet';
+    if (btn) btn.disabled = false;
   }
 }
+
 
 // ── connectWallet() tetap ada sebagai alias untuk backward compat ──
 async function connectWallet() {
