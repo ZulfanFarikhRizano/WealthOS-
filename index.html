@@ -12827,75 +12827,107 @@ async function loadCryptoNews(forceRefresh = false) {
     </div>`).join('');
 
   try {
-    // Key ditangani proxy /api/groq
+    // ── Step 1: Ambil berita dari CryptoPanic + NewsAPI secara paralel ──
+    const [cpRes, newsRes] = await Promise.allSettled([
+      fetch('/api/cryptopanic', { headers: { 'Accept': 'application/json' } }),
+      fetch('/api/news', { headers: { 'Accept': 'application/json' } })
+    ]);
 
-    const today = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    const todayEn = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    let rawPosts = [];
 
-    const res = await fetch(_GROQ_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, // Authorization ditangani proxy /api/groq
-      body: JSON.stringify({
-        model: _GROQ_MODEL,
-        messages: [{
-          role: 'user',
-          content: `Hari ini adalah ${today}.
+    // Proses CryptoPanic
+    if (cpRes.status === 'fulfilled' && cpRes.value.ok) {
+      const cpData = await cpRes.value.json();
+      const cpPosts = (cpData.results || []).slice(0, 10).map(p => ({
+        judul_en: p.title || '',
+        source: p.source?.title || p.domain || 'CryptoPanic',
+        url: p.url || '',
+        published: p.published_at || new Date().toISOString(),
+        coins: (p.currencies || []).map(c => c.code).slice(0, 3)
+      }));
+      rawPosts = rawPosts.concat(cpPosts);
+    }
 
-Kamu adalah jurnalis kripto Indonesia terpercaya. Buat 12 berita kripto TERKINI dalam Bahasa Indonesia berdasarkan pengetahuanmu tentang kondisi pasar kripto terbaru.
+    // Proses NewsAPI
+    if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
+      const newsData = await newsRes.value.json();
+      const newsPosts = (newsData.articles || []).slice(0, 10).map(a => ({
+        judul_en: a.title || '',
+        source: a.source?.name || 'News',
+        url: a.url || '',
+        published: a.publishedAt || new Date().toISOString(),
+        coins: guessCoinsFromTitle(a.title || '')
+      }));
+      rawPosts = rawPosts.concat(newsPosts);
+    }
 
-Topik yang harus dicakup (pilih yang paling relevan dan terkini):
-- Pergerakan harga Bitcoin, Ethereum, Solana, XRP
-- Kebijakan/regulasi kripto dari pemerintah atau lembaga keuangan
-- Adopsi Bitcoin oleh institusi atau perusahaan
-- Update ETF Bitcoin/Ethereum
-- Berita keamanan (hack, scam, fraud)  
-- Perkembangan DeFi dan Web3
-- Berita makroekonomi yang pengaruhi kripto
-- Mining dan hashrate Bitcoin
+    // Filter judul kosong & duplikat
+    const seen = new Set();
+    rawPosts = rawPosts.filter(p => {
+      if (!p.judul_en || p.judul_en.length < 5) return false;
+      const key = p.judul_en.substring(0, 40).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 20);
 
-PENTING: Buat berita yang realistis, akurat, dan sesuai dengan kondisi pasar kripto saat ini.
+    if (!rawPosts.length) throw new Error('Tidak ada berita tersedia saat ini');
 
-Balas HANYA JSON array ini tanpa teks lain:
+    // Assign id
+    const beritaList = rawPosts.map((p, i) => ({ ...p, id: i }));
+
+    // ── Step 2: Groq terjemahkan + analisis sentimen ──
+    const prompt = `Terjemahkan judul berita kripto berikut ke Bahasa Indonesia dan tentukan sentimennya.
+
+Balas HANYA JSON array tanpa teks lain:
 [
   {
-    "judul": "Judul berita menarik dalam Bahasa Indonesia (max 100 karakter)",
-    "ringkasan": "Satu kalimat ringkasan konteks berita (max 120 karakter)",
-    "sentimen": "POSITIF atau NEGATIF atau NETRAL",
-    "coins": ["BTC"],
-    "source": "Nama media (CoinDesk/Bloomberg/Reuters/CoinTelegraph/dll)"
+    "id": 0,
+    "judul_id": "terjemahan judul dalam Bahasa Indonesia (max 100 karakter)",
+    "ringkasan": "satu kalimat konteks singkat dalam Bahasa Indonesia (max 120 karakter)",
+    "sentimen": "POSITIF atau NEGATIF atau NETRAL"
   }
-]`
-        }],
-        max_tokens: 3000,
-        temperature: 0.6
+]
+
+Berita:
+${beritaList.map(b => `[${b.id}] ${b.judul_en}`).join('
+')}`;
+
+    const groqRes = await fetch(_GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: _GROQ_MODEL,
+        max_tokens: 2500,
+        temperature: 0.3,
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Error ${res.status}`);
-    }
-
-    const data = await res.json();
-    let text = data.choices?.[0]?.message?.content || '';
+    if (!groqRes.ok) throw new Error('Gagal menerjemahkan berita');
+    const groqData = await groqRes.json();
+    let text = groqData.choices?.[0]?.message?.content || '';
     text = text.replace(/```json|```/g, '').trim();
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) throw new Error('Format respons AI tidak valid');
+    const translated = JSON.parse(jsonMatch[0]);
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Tidak ada berita diterima dari AI');
-
-    const articles = parsed.map((a, i) => ({
-      id: i,
-      judulID: (a.judul || '').trim(),
-      ringkasan: (a.ringkasan || '').trim(),
-      sentimen: (a.sentimen || 'NETRAL').toUpperCase().replace(/[^A-Z]/g,'') || 'NETRAL',
-      coins: Array.isArray(a.coins) ? a.coins : guessCoinsFromTitle(a.judul || ''),
-      source: a.source || 'Kripto News',
-      url: null,
-      published: new Date().toISOString()
-    })).filter(a => a.judulID.length > 5).map((a, i) => ({...a, id: i}));
+    // ── Step 3: Gabungkan ──
+    const articles = beritaList.map(b => {
+      const t = translated.find(x => Number(x.id) === b.id) || {};
+      return {
+        id: b.id,
+        judulID: (t.judul_id || b.judul_en).trim(),
+        judulEN: b.judul_en,
+        ringkasan: (t.ringkasan || '').trim(),
+        sentimen: (t.sentimen || 'NETRAL').toUpperCase().replace(/[^A-Z]/g, '') || 'NETRAL',
+        coins: b.coins.length ? b.coins : guessCoinsFromTitle(b.judul_en),
+        source: b.source,
+        url: b.url,
+        published: b.published
+      };
+    }).filter(a => a.judulID.length > 3);
 
     _newsCache = articles;
     renderNewsList(articles);
@@ -12907,7 +12939,7 @@ Balas HANYA JSON array ini tanpa teks lain:
         <div style="font-size:2.5rem;margin-bottom:.7rem"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
         <div style="font-weight:700;color:var(--text);margin-bottom:.4rem">Gagal memuat berita</div>
         <div style="font-size:.78rem;line-height:1.5;margin-bottom:1.2rem;max-width:260px;margin-left:auto;margin-right:auto">${e.message}</div>
-        <button onclick="loadCryptoNews(true)" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.55rem 1.4rem;font-weight:700;cursor:pointer;font-size:.85rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Coba Lagi</button>
+        <button onclick="loadCryptoNews(true)" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.55rem 1.4rem;font-weight:700;cursor:pointer;font-size:.85rem">Coba Lagi</button>
       </div>`;
   } finally {
     _newsLoading = false;
@@ -12915,6 +12947,7 @@ Balas HANYA JSON array ini tanpa teks lain:
     if (icon) icon.style.animation = '';
   }
 }
+
 
 function guessCoinsFromTitle(title) {
   const t = (title || '').toLowerCase();
@@ -13138,53 +13171,14 @@ function closeNewsModal(event, force) {
 
 function searchNewsOnline() {
   if (!_currentNewsArticle) return;
-  const source = (_currentNewsArticle.source || '').toLowerCase();
-  const q = encodeURIComponent(_currentNewsArticle.judulID);
-
-  const sourceMap = {
-    'coindesk':      `https://www.coindesk.com/search?s=${q}`,
-    'cointelegraph': `https://cointelegraph.com/search?query=${q}`,
-    'bloomberg':     `https://www.bloomberg.com/search?query=${q}`,
-    'reuters':       `https://www.reuters.com/search/news?blob=${q}`,
-    'cnbc':          `https://www.cnbc.com/search/?query=${q}`,
-    'forbes':        `https://www.forbes.com/search/?q=${q}`,
-    'decrypt':       `https://decrypt.co/?s=${q}`,
-    'the block':     `https://www.theblock.co/search#q=${q}`,
-    'blockworks':    `https://blockworks.co/?s=${q}`,
-    'coinmarketcap': `https://coinmarketcap.com/headlines/news/`,
-    'coingecko':     `https://www.coingecko.com/en/news`,
-    'bisnis':        `https://bisnis.com/search?q=${q}`,
-    'detik':         `https://www.detik.com/search/searchall?query=${q}`,
-    'kompas':        `https://search.kompas.com/search/?q=${q}`,
-  };
-
-  let url = null;
-  for (const [key, val] of Object.entries(sourceMap)) {
-    if (source.includes(key)) { url = val; break; }
+  const url = _currentNewsArticle.url;
+  if (url) {
+    window.open(url, '_blank');
+  } else {
+    // fallback jika tidak ada URL
+    const q = encodeURIComponent(_currentNewsArticle.judulEN || _currentNewsArticle.judulID);
+    window.open('https://news.google.com/search?q=' + q + '&hl=id', '_blank');
   }
-
-  // Fallback: buka homepage sumber
-  if (!url) {
-    const homepageMap = {
-      'coindesk': 'https://www.coindesk.com',
-      'cointelegraph': 'https://cointelegraph.com',
-      'bloomberg': 'https://www.bloomberg.com',
-      'reuters': 'https://www.reuters.com',
-      'cnbc': 'https://www.cnbc.com/cryptoworld/',
-      'forbes': 'https://www.forbes.com/crypto-blockchain/',
-      'decrypt': 'https://decrypt.co',
-    };
-    for (const [key, val] of Object.entries(homepageMap)) {
-      if (source.includes(key)) { url = val; break; }
-    }
-  }
-
-  // Last fallback: Google tapi di tab news
-  if (!url) {
-    url = `https://news.google.com/search?q=${q}+kripto&hl=id`;
-  }
-
-  window.open(url, '_blank');
 }
 </script>
 
