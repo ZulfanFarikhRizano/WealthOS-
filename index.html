@@ -33,10 +33,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- WalletConnect Universal Provider + Modal (UMD, no bundler needed) -->
-<!-- Polyfill process untuk WalletConnect (butuh ini karena wc.js dibuat untuk Node.js) -->
-<script>window.process = window.process || { env: { NODE_ENV: 'production' }, version: 'v16.0.0', browser: true };</script>
-<!-- WalletConnect — dari file lokal di Vercel (cepat, tidak butuh CDN) -->
-<script src="/wc.js"></script>
+<!-- WalletConnect via AppKit CDN resmi (browser build) -->
+<script>window.process={env:{NODE_ENV:'production'},browser:true,version:'v18.0.0'};</script>
+<script src="https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.min.js"></script>
+<script>window.Buffer=window.Buffer||Buffer;</script>
 <style>
 :root {
   --bg:#050810; --surface:#0b1120; --surface2:#111827; --border:#1e2d45;
@@ -5189,7 +5189,7 @@ async function fetchM2Data(tf) {
 
   // CORS proxy untuk FRED WM2NS (Global M2, miliar USD)
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=WM2NS&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
 
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
@@ -5249,7 +5249,7 @@ async function fetchGoldData(tf) {
 
   // FRED: GOLDAMGBD228NLBM = Gold Fixing Price daily (USD per Troy Ounce)
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=GOLDAMGBD228NLBM&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(10000)});
     if (!r.ok) throw new Error('proxy error');
@@ -5866,7 +5866,7 @@ async function fetchSP500Data(tf) {
 
   // FRED: SP500 = S&P 500 Index
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
     if (!r.ok) throw new Error('proxy error');
@@ -10318,48 +10318,13 @@ function hideComingSoon() {
 }
 
 // ── PWA SERVICE WORKER REGISTRATION ──
-// Daftarkan SW via Blob URL agar notifikasi bekerja tanpa file sw.js terpisah
+// Daftarkan ServiceWorker dari /sw.js
 (function() {
   if (!('serviceWorker' in navigator)) return;
-
-  const swCode = `
-    self.addEventListener('install', e => { self.skipWaiting(); });
-    self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
-    self.addEventListener('push', e => {
-      const data = e.data ? e.data.json() : {};
-      e.waitUntil(self.registration.showNotification(data.title || 'z-wealth', {
-        body: data.body || 'Ada pesan baru',
-        icon: data.icon || '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: data.tag || 'chat',
-        renotify: true,
-      }));
-    });
-    self.addEventListener('notificationclick', e => {
-      e.notification.close();
-      e.waitUntil(clients.matchAll({type:'window'}).then(list => {
-        if (list.length) { list[0].focus(); } else { clients.openWindow('/'); }
-      }));
-    });
-    self.addEventListener('message', e => {
-      if (e.data && e.data.type === 'SHOW_NOTIF') {
-        const d = e.data;
-        self.registration.showNotification(d.title || 'z-wealth', {
-          body: d.body || 'Ada pesan baru',
-          icon: d.icon || '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: d.tag || 'chat',
-          renotify: true,
-          vibrate: [200, 100, 200],
-        });
-      }
-    });
-  `;
-
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const blobUrl = URL.createObjectURL(blob);
-
-  navigator.serviceWorker.register(blobUrl, { scope: '/' })
+  const notPreview = !location.hostname.includes('claudeusercontent.com') &&
+                     !location.hostname.includes('claude.ai');
+  if (!notPreview) return;
+  navigator.serviceWorker.register('/sw.js', { scope: '/' })
     .then(reg => {
       window._swReg = reg;
       reg.addEventListener('updatefound', () => {
@@ -10371,17 +10336,7 @@ function hideComingSoon() {
         });
       });
     })
-    .catch(err => {
-      // Fallback: coba /sw.js
-      console.warn('[SW] Blob registration failed, trying /sw.js:', err.message);
-      const notPreview = !location.hostname.includes('claudeusercontent.com') &&
-                         !location.hostname.includes('claude.ai');
-      if (notPreview) {
-        navigator.serviceWorker.register('/sw.js')
-          .then(r => { window._swReg = r; })
-          .catch(() => {});
-      }
-    });
+    .catch(() => {});
 
   window.showSWNotification = function(title, body, tag) {
     const msg = { type:'SHOW_NOTIF', title, body, icon:'/icon-192.png', tag: tag||('chat-'+Date.now()) };
@@ -12707,25 +12662,26 @@ function copyZWealthURL() {
   }
 }
 
-// ── WalletConnect: QR modal menggunakan wc.js lokal ──
-let _wcProvider = null;
+// ── WalletConnect — menggunakan /wc.js dari Vercel ──
+let _wcProvider  = null;
 let _wcConnecting = false;
 
 async function openWalletConnect() {
   closeWalletModal(null, true);
   if (_wcConnecting) { toast('⏳ Sedang menghubungkan...', 1); return; }
 
-  // wc.js menyimpan provider di window["@walletconnect/ethereum-provider"]
+  // Cek apakah wc.js sudah load dengan benar
   const wcPkg = window['@walletconnect/ethereum-provider'];
-  const EthereumProvider =
-    wcPkg?.EthereumProvider ||
-    wcPkg?.default?.EthereumProvider ||
-    (typeof wcPkg === 'function' ? wcPkg : null) ||
-    window.WalletConnectEthereumProvider?.EthereumProvider ||
-    window.EthereumProvider;
+  const EthereumProvider = wcPkg?.EthereumProvider || wcPkg?.default;
 
   if (!EthereumProvider) {
-    toast('❌ Library WalletConnect tidak tersedia. Coba refresh halaman.', 2);
+    // wc.js belum load atau gagal — tampilkan panduan manual sebagai fallback
+    toast('⚠️ Buka z-Wealth dari browser dalam wallet app (OKX/MetaMask) untuk connect.', 3);
+    // Buka modal kembali dengan panduan
+    setTimeout(() => {
+      const overlay = document.getElementById('wc-modal-overlay');
+      if (overlay) { overlay.style.display='flex'; overlay.classList.add('open'); }
+    }, 3000);
     return;
   }
 
@@ -12739,15 +12695,11 @@ async function openWalletConnect() {
     _wcProvider = await EthereumProvider.init({
       projectId: 'dec35dd23f44d3a833556dd8ff806420',
       chains: [1],
-      optionalChains: [56, 137, 42161, 10, 43114, 8453],
+      optionalChains: [56, 137, 42161, 10, 8453],
       showQrModal: true,
       qrModalOptions: {
         themeMode: 'dark',
-        themeVariables: {
-          '--wcm-accent-color': '#00e5ff',
-          '--wcm-background-color': '#0b1120',
-          '--wcm-z-index': '700',
-        },
+        themeVariables: { '--wcm-accent-color': '#00e5ff', '--wcm-background-color': '#0b1120', '--wcm-z-index': '700' },
         explorerRecommendedWalletIds: [
           '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709',
           'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
@@ -12802,7 +12754,6 @@ async function openWalletConnect() {
     if (btn) btn.disabled = false;
   }
 }
-
 
 // ── connectWallet() tetap ada sebagai alias untuk backward compat ──
 async function connectWallet() {
