@@ -12726,11 +12726,10 @@ async function _callGroq(systemPrompt, messages, maxTokens) {
 
 // ── Provider 2: OpenRouter (free tier, CORS enabled, 100+ models) ──
 // Model: mistralai/mistral-7b-instruct (gratis, kuat, cepat)
-const _OR_URL   = 'https://openrouter.ai/api/v1/chat/completions';
+const _OR_URL   = '/api/openrouter'; // Proxy aman via Vercel serverless function
 const _OR_MODEL = 'mistralai/mistral-7b-instruct:free';
-// OpenRouter membutuhkan API key bahkan untuk free tier
-// Dapatkan key gratis di https://openrouter.ai - masukkan di bawah atau via env
-const _OR_KEY = localStorage.getItem('zw_or_key') || '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';
+// Key disimpan aman di Vercel env (OPENROUTER_API_KEY), tidak di client
+const _OR_KEY = '';
 
 async function _callOpenRouter(systemPrompt, messages, maxTokens) {
   if (!_aiProviderReady('openrouter')) throw new Error('OpenRouter sedang cooldown');
