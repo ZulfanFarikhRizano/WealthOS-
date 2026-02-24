@@ -222,6 +222,9 @@ nav{
 /* ── PAGES ── */
 .page{display:none;padding:1.2rem;position:relative;z-index:1;max-width:1400px;margin:0 auto}
 .page.active{display:block;animation:fadeIn .2s ease}
+/* Chat & AI pages need flex layout */
+#page-chat.active,#page-ai-chat.active{display:flex !important;flex-direction:column;}
+#page-ai-predict.active{display:block !important;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1;transform:translateY(0)}}
 
 /* ── COMMON ── */
@@ -305,8 +308,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .pbar-fill{height:100%;border-radius:2px}
 
 /* ── TOAST ── */
-.toast{position:fixed;top:5rem;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--surface2);border:1px solid var(--accent3);border-radius:10px;padding:.65rem 1.2rem;font-size:.82rem;z-index:9999;opacity:0;transition:all .3s;color:var(--accent3);white-space:nowrap;max-width:calc(100vw - 2rem);text-align:center;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast {
+  position: fixed;
+  bottom: 5.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px) scale(.97);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .32s cubic-bezier(.34,1.3,.64,1), opacity .22s ease;
+  max-width: calc(100vw - 3rem);
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0) scale(1);
+  opacity: 1;
+}
 
 
 .sync-bar{position:fixed;top:calc(5rem + env(safe-area-inset-top,0px));right:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;font-size:.68rem;color:var(--muted);z-index:201;display:none;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;box-shadow:0 4px 16px rgba(0,0,0,.3)}
@@ -484,7 +503,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   .nav-topstrip{display:flex}
   nav{padding:0 1rem;min-height:44px}
   .nav-logo{font-size:1rem;padding:.7rem 0}
-  #app .page:not(#page-chat){padding-bottom:calc(10rem + env(safe-area-inset-bottom,0)) !important}
+  #app .page:not(#page-chat):not(#page-ai-chat):not(#page-ai-predict){padding-bottom:calc(10rem + env(safe-area-inset-bottom,0)) !important}
   #page-theme, #page-alerts { padding-bottom: calc(10rem + env(safe-area-inset-bottom,0)) !important; }
 }
 /* Desktop: bottom nav & topstrip hidden, normal nav */
@@ -648,6 +667,120 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 /* ══ BOTTOM NAV IMPROVEMENTS ══ */
 .bnav-item svg{width:22px;height:22px}
 
+
+/* ══════════════════════════════════════════════
+   PROPORTIONAL LAYOUT IMPROVEMENTS
+══════════════════════════════════════════════ */
+
+/* -- Fix SVG inline display everywhere -- */
+svg { display:inline-block; }
+
+/* -- Fix section-label flex display -- */
+.section-label {
+  display:flex !important;
+  align-items:center;
+  gap:.35rem;
+}
+
+/* -- Fix chat-topbar-title -- */
+.chat-topbar-title {
+  display:flex !important;
+  align-items:center;
+  gap:.4rem;
+  font-size:.92rem;
+  font-weight:800;
+}
+
+/* -- Fix chat empty state icon centering -- */
+.chat-empty-icon {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:.5rem;
+}
+
+/* -- Fix news sentiment badge alignment -- */
+.news-sentiment-badge {
+  display:inline-flex !important;
+  align-items:center;
+}
+
+/* -- AI chips better layout -- */
+.ai-suggestions {
+  padding:.55rem 1rem 0;
+  gap:.4rem;
+}
+.ai-chip {
+  display:inline-flex !important;
+  align-items:center;
+  gap:.35rem;
+  padding:.38rem .85rem;
+}
+
+/* -- pred-verdict icon alignment -- */
+#pred-verdict-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.3rem;
+  line-height:1;
+}
+.pred-verdict {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+
+/* -- Fix pred-level-row -- */
+.pred-level-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.pred-level-row > span:first-child {
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+}
+
+/* -- Fix toast SVG display -- */
+.toast-inner {
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+}
+
+/* -- Fix inline SVG alignment in spans -- */
+span svg, div svg.inline {
+  vertical-align:middle;
+  flex-shrink:0;
+}
+
+/* -- Page header proportional -- */
+.ph h1 {
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+
+/* -- Better sim-param-toggle -- */
+.sim-param-toggle {
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  width:100%;
+}
+.sim-param-toggle > span:first-child {
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+}
+
+/* -- Fix news page padding on mobile -- */
+@media(max-width:640px) {
+  #page-news { padding:.9rem .9rem 5rem; }
+  .news-card { padding:.85rem .95rem; }
+}
 </style>
 </head>
 <body>
@@ -747,6 +880,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="nav-tab" onclick="showPage('portfolio')">Portofolio</div>
     <div class="nav-tab" onclick="showPage('simulation')">Simulasi</div>
     <div class="nav-tab" onclick="showPage('cashflow')">Arus Kas</div>
+    <div class="nav-tab" onclick="showPage('ai-chat');initAIChat()">z-AI Chat</div>
   </div>
   <div class="nav-right-desktop" style="display:flex;align-items:center;gap:.6rem;margin-left:auto">
     <!-- PWA Install Button -->
@@ -796,6 +930,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </button>
     <button class="bnav-item" data-page="cashflow" onclick="showPage('cashflow')">
       <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="bnav-label">Kas</span>
+    </button>
+    <button class="bnav-item" data-page="ai-chat" onclick="showPage('ai-chat');initAIChat()">
+      <span class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="13" cy="10" r="1" fill="currentColor"/><circle cx="17" cy="10" r="1" fill="currentColor"/></svg></span><span class="bnav-label">z-AI</span>
     </button>
   </div>
 </div>
@@ -995,8 +1132,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="fb-label">Ganti Tema<br>Warna</div>
       </button>
 
-      <!-- 2. Prediksi AI -->
-      <button class="feat-btn" onclick="showComingSoon('Prediksi AI')" style="
+      <!-- 2. z-AI Chat -->
+      <button class="feat-btn" onclick="showPage('ai-chat');setTimeout(initAIChat,150);" style="
         background:linear-gradient(145deg,rgba(8,145,178,.55) 0%,rgba(6,182,212,.45) 50%,rgba(34,211,238,.4) 100%);
         box-shadow:0 10px 40px rgba(8,145,178,.5),inset 0 1px 0 rgba(255,255,255,.2);
       ">
@@ -1005,10 +1142,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="fb-icon">
           <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><path d="M9 14h.01M15 14h.01M9.5 17.5c.83.67 2 1 2.5 1s1.67-.33 2.5-1"/></svg>
         </div>
-        <div class="fb-label">Prediksi AI<br>Masa Depan</div>
+        <div class="fb-label">z-AI<br>Asisten Chat</div>
       </button>
 
-      <!-- 3. Chat -->
+      <!-- 3. Chat Komunitas (TERPISAH dari z-AI) -->
       <button class="feat-btn" onclick="showPage('chat');initChat();" style="
         background:linear-gradient(145deg,rgba(5,150,105,.55) 0%,rgba(16,185,129,.45) 50%,rgba(52,211,153,.4) 100%);
         box-shadow:0 10px 40px rgba(5,150,105,.5),inset 0 1px 0 rgba(255,255,255,.2);
@@ -1018,10 +1155,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="fb-icon">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
         </div>
-        <div class="fb-label">Chat &amp;<br>Komunitas</div>
+        <div class="fb-label">Chat<br>Komunitas</div>
       </button>
 
-      <!-- 4. Price Alert & DCA Reminder -->
+      <!-- 4. Prediksi AI -->
+      <button class="feat-btn" onclick="showPage('ai-predict')" style="
+        background:linear-gradient(145deg,rgba(124,58,237,.55) 0%,rgba(139,92,246,.45) 50%,rgba(167,139,250,.4) 100%);
+        box-shadow:0 10px 40px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#a78bfa"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="fb-label">Prediksi AI<br>Masa Depan</div>
+      </button>
+
+      <!-- 5. Price Alert & DCA Reminder -->
       <button class="feat-btn" onclick="showPage('alerts')" style="
         background:linear-gradient(145deg,rgba(217,119,6,.55) 0%,rgba(245,158,11,.45) 50%,rgba(251,191,36,.4) 100%);
         box-shadow:0 10px 40px rgba(217,119,6,.5),inset 0 1px 0 rgba(255,255,255,.2);
@@ -1034,17 +1184,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <div class="fb-label">Price Alert &amp;<br>Pengingat DCA</div>
       </button>
 
+      <!-- 6. Berita Kripto -->
+      <button class="feat-btn" onclick="showPage('news')" style="
+        background:linear-gradient(145deg,rgba(220,38,38,.55) 0%,rgba(239,68,68,.45) 50%,rgba(252,165,165,.35) 100%);
+        box-shadow:0 10px 40px rgba(220,38,38,.45),inset 0 1px 0 rgba(255,255,255,.2);
+      ">
+        <div class="fb-blob" style="background:#f87171"></div>
+        <div class="fb-dot3"><span></span><span></span><span></span></div>
+        <div class="fb-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/><path d="M4 6h2"/><path d="M4 10h2"/><path d="M4 14h2"/><path d="M4 18h2"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h4"/></svg>
+        </div>
+        <div class="fb-label">Berita<br>Kripto</div>
+      </button>
+
     </div>
   </div>
 
-  <!-- Coming Soon Popup -->
   <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
     <div id="coming-soon-box" onclick="event.stopPropagation()" style="background:rgba(15,20,35,.92);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:2rem 1.8rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1);position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.2) 0%,transparent 60%);pointer-events:none"></div>
       <div style="margin-bottom:.8rem;position:relative;display:flex;justify-content:center"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
       <div style="font-size:1.1rem;font-weight:800;color:#f1f5f9;margin-bottom:.4rem;position:relative">Segera Hadir!</div>
       <div id="coming-soon-name" style="font-size:.78rem;color:var(--accent);font-weight:700;letter-spacing:.05em;margin-bottom:.8rem;position:relative"></div>
-      <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem;position:relative">Fitur ini sedang dalam pengembangan.<br>Nantikan update selanjutnya! 🎉</div>
+      <div style="font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:1.4rem;position:relative">Fitur ini sedang dalam pengembangan.<br>Nantikan update selanjutnya! <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/></svg></div>
       <button onclick="hideComingSoon()" style="background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:12px;padding:.75rem 2rem;color:#fff;font-weight:800;font-size:.88rem;cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 20px rgba(124,58,237,.4)">Oke, Ditunggu!</button>
     </div>
   </div>
@@ -1151,21 +1313,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
       </div>
       <div id="overlay-returns" style="display:none;flex-direction:column;gap:.3rem;border-top:1px solid rgba(255,255,255,.06);padding-top:.4rem">
         <div id="ret-gold-row" style="display:none;align-items:center;justify-content:space-between">
-          <span style="font-size:.62rem;color:#fbbf24;font-family:'Space Mono',monospace">🥇 Emas</span>
+          <span style="font-size:.62rem;color:#fbbf24;font-family:'Space Mono',monospace"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Emas</span>
           <div style="display:flex;gap:.5rem;align-items:center">
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#fbbf24" id="ret-gold-usd">—</span>
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-gold-pct">—</span>
           </div>
         </div>
         <div id="ret-sp500-row" style="display:none;align-items:center;justify-content:space-between">
-          <span style="font-size:.62rem;color:#8b5cf6;font-family:'Space Mono',monospace">📈 S&amp;P500</span>
+          <span style="font-size:.62rem;color:#8b5cf6;font-family:'Space Mono',monospace"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> S&amp;P500</span>
           <div style="display:flex;gap:.5rem;align-items:center">
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#8b5cf6" id="ret-sp500-usd">—</span>
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-sp500-pct">—</span>
           </div>
         </div>
         <div id="ret-m2-row" style="display:none;align-items:center;justify-content:space-between">
-          <span style="font-size:.62rem;color:#f59e0b;font-family:'Space Mono',monospace">💧 Global M2</span>
+          <span style="font-size:.62rem;color:#f59e0b;font-family:'Space Mono',monospace"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> Global M2</span>
           <div style="display:flex;gap:.5rem;align-items:center">
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;color:#f59e0b" id="ret-m2-usd">—</span>
             <span style="font-size:.72rem;font-weight:700;font-family:'Space Mono',monospace;padding:.1rem .4rem;border-radius:4px" id="ret-m2-pct">—</span>
@@ -1436,8 +1598,85 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <!-- PORTFOLIO -->
 <div id="page-portfolio" class="page">
   <div class="ph"><h1>Portofolio</h1><p>Semua aset investasi kamu</p></div>
-  <div class="sec-hdr"><div class="sec-title">Aset</div><button class="btn btn-primary btn-sm" onclick="openModal('modal-port')">+ Tambah Aset</button></div>
-  <div class="port-grid" id="port-cards"><div class="empty" style="grid-column:1/-1"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div></div>
+  <div class="sec-hdr">
+    <div class="sec-title">Aset</div>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-port')" style="display:inline-flex;align-items:center;gap:.35rem">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tambah Aset
+      </button>
+      <button id="btn-connect-wallet" class="btn btn-sm" onclick="connectWallet()" style="display:inline-flex;align-items:center;gap:.35rem;background:transparent;border:1px solid rgba(124,58,237,.6);color:#a78bfa;transition:all .2s">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><path d="M1 10h22"/></svg>
+        <span id="wallet-btn-label">Connect Wallet</span>
+      </button>
+      <button class="btn btn-sm" onclick="toggleBTCInput()" id="btn-btc-input" style="display:inline-flex;align-items:center;gap:.35rem;background:transparent;border:1px solid rgba(245,158,11,.5);color:#f59e0b;transition:all .2s">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+        <span id="btc-btn-label">+ BTC Address</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- BTC Address Input Panel -->
+  <div id="btc-input-panel" style="display:none;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:.9rem 1rem;margin-bottom:.8rem">
+    <div style="font-size:.72rem;color:var(--accent4);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.55rem;display:flex;align-items:center;gap:.4rem">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+      Bitcoin Address (Read-Only)
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <input id="btc-addr-input" type="text" placeholder="bc1q... atau 1... atau 3..." style="flex:1;background:var(--bg);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.55rem .8rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.78rem;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='rgba(245,158,11,.7)'" onblur="this.style.borderColor='rgba(245,158,11,.3)'" onkeydown="if(event.key==='Enter')addBTCAddress()">
+      <button onclick="addBTCAddress()" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:.5rem .9rem;color:var(--accent4);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">Tambah</button>
+    </div>
+    <div id="btc-addr-list" style="margin-top:.6rem;display:flex;flex-direction:column;gap:.35rem"></div>
+    <div style="font-size:.65rem;color:var(--muted);margin-top:.5rem;line-height:1.5">
+      Data dari <strong style="color:rgba(245,158,11,.7)">Mempool.space</strong> · Tanpa API key · Saldo realtime · Hanya baca
+    </div>
+  </div>
+
+  <!-- EVM Wallet Status Bar -->
+  <div id="wallet-status-bar" style="display:none;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:12px;padding:.75rem 1rem;margin-bottom:.6rem;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+      <div style="width:8px;height:8px;border-radius:50%;background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.6);flex-shrink:0;animation:pulse 2s infinite"></div>
+      <span id="wallet-provider-badge" style="font-size:.62rem;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);color:#a78bfa;border-radius:5px;padding:.1rem .4rem;font-weight:700;font-family:'Inter',sans-serif">—</span>
+      <span style="font-size:.78rem;color:#c4b5fd;font-family:'Space Mono',monospace;font-weight:700" id="wallet-address-display">—</span>
+      <span style="font-size:.65rem;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.25);color:rgba(167,139,250,.8);border-radius:5px;padding:.1rem .4rem;font-family:'Inter',sans-serif;font-weight:600" id="wallet-chain-display">—</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <span style="font-size:.72rem;color:var(--muted)">EVM Total:</span>
+      <span style="font-family:'Space Mono',monospace;font-size:.82rem;color:#a78bfa;font-weight:700" id="wallet-balance-display">—</span>
+      <div id="wallet-balance-loading" style="display:none;width:12px;height:12px;border:2px solid rgba(167,139,250,.3);border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite"></div>
+      <button onclick="disconnectWallet()" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:.22rem .55rem;font-size:.65rem;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- ── Wallet Charts (muncul saat ada wallet terhubung) ── -->
+  <div id="wallet-chart-section" style="display:none;margin-bottom:1.2rem">
+    <!-- Summary bar -->
+    <div id="wallet-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin-bottom:.9rem"></div>
+    <!-- Charts row -->
+    <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:.8rem;align-items:start">
+      <!-- Donut: alokasi -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem">
+        <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.7rem">Alokasi Wallet</div>
+        <div style="position:relative;height:170px"><canvas id="c-wallet-alloc"></canvas></div>
+        <div id="wallet-alloc-legend" style="margin-top:.7rem;display:flex;flex-direction:column;gap:.3rem"></div>
+      </div>
+      <!-- Line: histori nilai total -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+          <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Histori Nilai Total</div>
+          <div style="display:flex;gap:.3rem">
+            <button onclick="setWalletHistRange(24)" id="whr-24" class="tf-btn active" style="font-size:.6rem;padding:.18rem .45rem">24J</button>
+            <button onclick="setWalletHistRange(168)" id="whr-168" class="tf-btn" style="font-size:.6rem;padding:.18rem .45rem">7H</button>
+            <button onclick="setWalletHistRange(720)" id="whr-720" class="tf-btn" style="font-size:.6rem;padding:.18rem .45rem">30H</button>
+          </div>
+        </div>
+        <div style="position:relative;height:170px"><canvas id="c-wallet-hist"></canvas></div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:.5rem;text-align:right">Snapshot otomatis tiap 30 menit · disimpan lokal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="port-grid" id="port-cards"><div class="empty" style="grid-column:1/-1"><div style="opacity:.5;color:var(--accent);margin-bottom:.5rem;display:flex;justify-content:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div></div>
   <div class="sec-hdr"><div class="sec-title">Detail</div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Aset</th><th>Qty</th><th>Avg Buy</th><th>Harga Kini</th><th>Nilai</th><th>P&amp;L</th><th>Return%</th><th>Alokasi</th><th></th></tr></thead><tbody id="port-tbody"></tbody></table></div>
 </div>
@@ -1449,7 +1688,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <!-- PARAMETER PANEL -->
   <div class="sim-param-card">
     <button class="sim-param-toggle" onclick="toggleSimParam()" id="sim-param-toggle">
-      <span>⚙️ Parameter Simulasi</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Parameter Simulasi</span>
       <span id="sim-param-arrow">▼</span>
     </button>
     <div class="sim-param-body" id="sim-param-body">
@@ -1785,15 +2024,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 /* ── CHAT PAGE GLOBAL ── */
 #page-chat {
   padding:0 !important;
-  display:flex;
   flex-direction:column;
-  height:calc(100vh - 80px);
   overflow:hidden;
+  min-height:0;
   position:relative;
 }
+#page-chat.active {
+  display:flex !important;
+  height:calc(100dvh - 56px - 100px);
+}
 @media(max-width:640px){
-  #page-chat {
-    height:calc(100dvh - 44px);
+  #page-chat.active {
+    height:calc(100dvh - 44px - 80px - env(safe-area-inset-bottom, 16px));
   }
   /* Saat chat-room-screen aktif (masuk room), gunakan full height */
   #page-chat:has(#chat-room-screen.active) {
@@ -2025,6 +2267,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   line-height:1.45;transition:border-color .2s;
   backdrop-filter:blur(8px);
 }
+/* AI input — fixed single line, no scroll */
+.ai-input-single {
+  flex:1;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:.7rem 1rem;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:.88rem;
+  outline:none;height:44px;line-height:1;
+  transition:border-color .2s;backdrop-filter:blur(8px);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ai-input-single:focus {
+  border-color:rgba(0,229,255,.4);
+  box-shadow:0 0 0 3px rgba(0,229,255,.08);
+}
+.ai-input-single::placeholder { color:var(--muted); }
 .chat-input:focus { border-color:rgba(0,229,255,.4);box-shadow:0 0 0 3px rgba(0,229,255,.08); }
 .chat-input::placeholder { color:var(--muted); }
 .chat-send-btn {
@@ -2237,7 +2494,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div>
-        <div class="chat-topbar-title">💬 Chat</div>
+        <div class="chat-topbar-title"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg> Chat</div>
         <div style="font-size:.65rem;color:var(--muted);margin-top:1px">Anonim · terenkripsi</div>
       </div>
     </div>
@@ -2258,21 +2515,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   </div>
 
   <div style="padding:0 1rem;flex:1;overflow-y:auto">
-    <div class="section-label">📢 Publik</div>
+    <div class="section-label" style="display:flex;align-items:center;gap:.35rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> Publik</div>
     <div id="public-rooms-list"></div>
 
-    <div class="section-label" style="margin-top:.8rem">👥 Grup Saya</div>
+    <div class="section-label" style="margin-top:.8rem"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Grup Saya</div>
     <div id="group-rooms-list">
       <div class="chat-empty" style="padding:1rem 0">
-        <div class="chat-empty-icon">👥</div>
+        <div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="chat-empty-text">Belum ada grup.<br>Buat grup baru!</div>
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:.8rem">✉️ Pesan Pribadi</div>
+    <div class="section-label" style="margin-top:.8rem"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Pesan Pribadi</div>
     <div id="dm-rooms-list">
       <div class="chat-empty" style="padding:1rem 0">
-        <div class="chat-empty-icon">✉️</div>
+        <div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
         <div class="chat-empty-text">Belum ada DM.<br>Masukkan kode anonim teman!</div>
       </div>
     </div>
@@ -2304,7 +2561,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
   <div class="messages-area" id="messages-area">
     <div class="chat-empty">
-      <div class="chat-empty-icon">💬</div>
+      <div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg></div>
       <div class="chat-empty-text">Belum ada pesan.<br>Jadilah yang pertama!</div>
     </div>
   </div>
@@ -2426,6 +2683,495 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <button class="sheet-btn" id="create-room-btn" onclick="createRoom()">Buat Room</button>
   </div>
 </div>
+
+</div><!-- end page-chat -->
+
+
+<!-- ══════════ AI CHAT PAGE ══════════ -->
+<div id="page-ai-chat" class="page">
+<style>
+#page-ai-chat {
+  padding:0 !important;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+}
+#page-ai-chat.active {
+  display:flex !important;
+  height:calc(100dvh - 56px - 100px);
+}
+@media(max-width:640px){
+  #page-ai-chat.active {
+    /* Full height when navbar hidden */
+    height:calc(100dvh - 44px);
+  }
+}
+/* Typing indicator */
+.ai-typing-dot {
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(0,229,255,.7);
+  animation:aiDot 1.4s infinite ease-in-out;
+}
+.ai-typing-dot:nth-child(2){animation-delay:.2s}
+.ai-typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes aiDot {
+  0%,80%,100%{transform:scale(.6);opacity:.4}
+  40%{transform:scale(1);opacity:1}
+}
+/* AI bubble markdown */
+.ai-bubble-content p { margin-bottom:.5rem; line-height:1.65; }
+.ai-bubble-content p:last-child { margin-bottom:0; }
+.ai-bubble-content strong { color:var(--accent);font-weight:700; }
+.ai-bubble-content em { color:rgba(255,255,255,.8);font-style:italic; }
+.ai-bubble-content ul,.ai-bubble-content ol { padding-left:1.2rem;margin:.4rem 0; }
+.ai-bubble-content li { margin-bottom:.25rem;line-height:1.5; }
+.ai-bubble-content code { background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);border-radius:5px;padding:.1rem .35rem;font-family:'Space Mono',monospace;font-size:.82em; }
+.ai-bubble-content blockquote { border-left:3px solid var(--accent);padding-left:.8rem;margin:.4rem 0;color:var(--muted); }
+.ai-bubble-content h3 { font-size:.92rem;font-weight:800;margin:.6rem 0 .3rem;color:var(--accent); }
+/* Suggestion chips */
+.ai-suggestions { display:flex;flex-wrap:wrap;gap:.45rem;padding:.6rem 1rem 0;flex-shrink:0; }
+.ai-chip {
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);
+  border-radius:100px;padding:.35rem .8rem;
+  font-size:.72rem;font-weight:600;color:rgba(0,229,255,.85);
+  cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+.ai-chip:hover{background:rgba(0,229,255,.14);border-color:rgba(0,229,255,.4);transform:translateY(-1px);}
+</style>
+
+<!-- Header -->
+<div class="room-header" style="background:linear-gradient(135deg,rgba(0,50,80,.7),rgba(0,30,60,.8));">
+  <button class="room-header-back" onclick="showPage('dashboard')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  </button>
+  <div class="room-header-avatar" style="background:linear-gradient(135deg,#0891b2,#22d3ee);font-size:.75rem">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+  </div>
+  <div class="room-header-info">
+    <div class="room-header-name">z-AI Assistant</div>
+    <div class="room-header-sub" id="ai-chat-status">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:.3rem;box-shadow:0 0 6px #10b981"></span>
+      Powered by Gemini · Siap membantu
+    </div>
+  </div>
+  <button onclick="clearAIChat()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.35rem .6rem;color:var(--muted);font-size:.65rem;font-weight:700;cursor:pointer;transition:all .2s" title="Hapus riwayat chat">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+  </button>
+</div>
+
+<!-- Messages -->
+<div class="messages-area" id="ai-messages-area">
+  <!-- Welcome message injected by JS -->
+</div>
+
+<!-- Suggestion chips -->
+<div class="ai-suggestions" id="ai-suggestions">
+  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Analisis BTC hari ini">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    Analisis BTC
+  </button>
+  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Tips DCA terbaik untuk Bitcoin">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+    Tips DCA
+  </button>
+  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Strategi investasi di Bear Market Bitcoin">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Bear Market
+  </button>
+  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Target harga Bitcoin 2025">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    Target 2025
+  </button>
+  <button class="ai-chip" onclick="aiChipSend(this)" data-prompt="Cara membaca Fear & Greed Index untuk investasi">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+    Fear & Greed
+  </button>
+</div>
+
+<!-- Input area (clone dari chat komunitas) -->
+<div class="chat-input-area">
+  <div class="chat-input-row">
+    <input type="text" class="chat-input ai-input-single" id="ai-chat-input"
+      placeholder="Tanya z-AI tentang Bitcoin, investasi, DCA..."
+      onkeydown="aiChatKeydown(event)">
+    <button class="chat-send-btn" id="ai-send-btn" onclick="sendAIMessage()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+  <div style="text-align:center;font-size:.6rem;color:var(--muted);margin-top:.35rem;opacity:.6">
+    z-AI bisa salah · Verifikasi info penting sebelum keputusan investasi
+  </div>
+</div>
+</div><!-- end page-ai-chat -->
+
+
+<!-- ══════════ AI PREDICT PAGE ══════════ -->
+<div id="page-ai-predict" class="page">
+<style>
+.pred-header-card {
+  background:linear-gradient(135deg,rgba(8,145,178,.15),rgba(124,58,237,.1));
+  border:1px solid rgba(8,145,178,.3);
+  border-radius:18px;padding:1.2rem;margin-bottom:1rem;
+  position:relative;overflow:hidden;
+}
+.pred-header-card::before {
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(8,145,178,.15),transparent 70%);
+  pointer-events:none;
+}
+.pred-verdict {
+  display:inline-flex;align-items:center;gap:.5rem;
+  border-radius:100px;padding:.4rem 1rem;
+  font-size:.8rem;font-weight:800;letter-spacing:.04em;
+  margin-bottom:.6rem;
+}
+.pred-verdict.bullish { background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981; }
+.pred-verdict.bearish { background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444; }
+.pred-verdict.neutral { background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:#f59e0b; }
+.pred-verdict.loading { background:rgba(100,116,139,.12);border:1px solid rgba(100,116,139,.3);color:var(--muted); }
+
+.pred-stat-grid {
+  display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1rem;
+}
+.pred-stat-card {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:.8rem;
+}
+.pred-stat-label { font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;font-weight:700; }
+.pred-stat-value { font-size:1rem;font-weight:900;font-family:'Space Mono',monospace; }
+.pred-stat-sub { font-size:.65rem;color:var(--muted);margin-top:.15rem; }
+
+.pred-section-title {
+  font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.1em;margin:.9rem 0 .6rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.pred-section-title::after { content:'';flex:1;height:1px;background:var(--border); }
+
+.pred-analysis-box {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:1rem;margin-bottom:.8rem;
+  font-size:.83rem;line-height:1.7;color:var(--text);
+  min-height:80px;
+}
+.pred-analysis-box strong { color:var(--accent);font-weight:700; }
+.pred-analysis-box .bullish-text { color:#10b981; }
+.pred-analysis-box .bearish-text { color:#ef4444; }
+
+/* Sentiment gauge */
+.fng-row {
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:.8rem 1rem;margin-bottom:.6rem;
+}
+.fng-label-text { font-size:.75rem;font-weight:700;flex-shrink:0; }
+.fng-bar-wrap { flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden; }
+.fng-bar-fill { height:100%;border-radius:99px;transition:width .8s ease; }
+.fng-val { font-size:.78rem;font-weight:900;font-family:'Space Mono',monospace;flex-shrink:0;min-width:28px;text-align:right; }
+
+/* Price levels */
+.pred-level-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.55rem .75rem;border-radius:10px;margin-bottom:.35rem;font-size:.8rem;
+}
+.pred-level-row.support { background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2); }
+.pred-level-row.resistance { background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2); }
+.pred-level-row.current { background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2); }
+
+/* Refresh button */
+.pred-refresh-btn {
+  display:flex;align-items:center;gap:.4rem;
+  background:linear-gradient(135deg,rgba(8,145,178,.2),rgba(124,58,237,.15));
+  border:1px solid rgba(8,145,178,.35);
+  border-radius:12px;padding:.6rem 1.1rem;
+  color:var(--accent);font-size:.78rem;font-weight:700;cursor:pointer;
+  transition:all .2s;margin-bottom:1rem;width:100%;justify-content:center;
+}
+.pred-refresh-btn:hover { transform:translateY(-1px);box-shadow:0 6px 20px rgba(8,145,178,.25); }
+.pred-refresh-btn:disabled { opacity:.5;pointer-events:none; }
+
+/* Confidence bar */
+.confidence-row { display:flex;align-items:center;gap:.6rem;margin-top:.5rem; }
+.confidence-label { font-size:.65rem;color:var(--muted);font-weight:700;flex-shrink:0; }
+.confidence-bar { flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden; }
+.confidence-fill { height:100%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#10b981);transition:width .8s ease; }
+.confidence-val { font-size:.65rem;font-weight:800;flex-shrink:0;min-width:28px;text-align:right; }
+
+/* AI narrative loading shimmer */
+.shimmer {
+  background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);
+  background-size:400% 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:6px;height:14px;margin:.35rem 0;
+}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+</style>
+
+<!-- Sticky header -->
+<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;position:sticky;top:0;z-index:10;background:var(--bg);padding-bottom:.5rem">
+  <button onclick="showPage('dashboard')"
+    style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer;flex-shrink:0;transition:all .2s"
+    onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+  </button>
+  <div>
+    <div style="font-size:1rem;font-weight:900;letter-spacing:-.02em">Prediksi AI Bitcoin</div>
+    <div style="font-size:.65rem;color:var(--muted)" id="pred-last-updated">Belum dimuat</div>
+  </div>
+  <div style="margin-left:auto">
+    <button onclick="runBTCPrediction()" class="pred-refresh-btn" id="pred-refresh-btn" style="margin:0;width:auto;padding:.4rem .8rem;font-size:.72rem">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Verdict card -->
+<div class="pred-header-card">
+  <div id="pred-verdict" class="pred-verdict loading">
+    <span id="pred-verdict-icon" style="font-size:1.4rem">⏳</span>
+    <span id="pred-verdict-text">Memuat analisis...</span>
+  </div>
+  <div style="font-size:1.6rem;font-weight:900;font-family:'Space Mono',monospace;color:var(--text);margin-bottom:.25rem" id="pred-price-big">—</div>
+  <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+    <span style="font-size:.8rem;color:var(--muted)" id="pred-price-idr">—</span>
+    <span id="pred-change-badge" style="font-size:.75rem;font-weight:700;border-radius:100px;padding:.2rem .6rem;background:rgba(100,116,139,.12);color:var(--muted)">—</span>
+  </div>
+  <div class="confidence-row" style="margin-top:.8rem">
+    <span class="confidence-label">Keyakinan AI</span>
+    <div class="confidence-bar"><div class="confidence-fill" id="pred-confidence-fill" style="width:0%"></div></div>
+    <span class="confidence-val" id="pred-confidence-val">—</span>
+  </div>
+</div>
+
+<!-- Stats grid -->
+<div class="pred-stat-grid">
+  <div class="pred-stat-card">
+    <div class="pred-stat-label">Volume 24J</div>
+    <div class="pred-stat-value" id="pred-vol">—</div>
+    <div class="pred-stat-sub">Total transaksi global</div>
+  </div>
+  <div class="pred-stat-card">
+    <div class="pred-stat-label">Market Cap</div>
+    <div class="pred-stat-value" id="pred-mcap">—</div>
+    <div class="pred-stat-sub">Kapitalisasi pasar</div>
+  </div>
+  <div class="pred-stat-card">
+    <div class="pred-stat-label">High 24J</div>
+    <div class="pred-stat-value pos" id="pred-high">—</div>
+    <div class="pred-stat-sub">Harga tertinggi</div>
+  </div>
+  <div class="pred-stat-card">
+    <div class="pred-stat-label">Low 24J</div>
+    <div class="pred-stat-value neg" id="pred-low">—</div>
+    <div class="pred-stat-sub">Harga terendah</div>
+  </div>
+</div>
+
+<!-- Sentiment -->
+<div class="pred-section-title">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+  Sentimen Pasar
+</div>
+<div class="fng-row">
+  <span class="fng-label-text" style="width:80px" id="fng-category-text">—</span>
+  <div class="fng-bar-wrap">
+    <div class="fng-bar-fill" id="fng-bar" style="width:0%;background:#64748b"></div>
+  </div>
+  <span class="fng-val" id="fng-value-text">—</span>
+</div>
+
+<!-- Price levels -->
+<div class="pred-section-title">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  Level Harga Kunci
+</div>
+<div id="pred-levels">
+  <div class="pred-level-row resistance"><span style="color:#ef4444;font-weight:700"><svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#ef4444"/></svg> Resistance 1</span><span id="pred-r1" style="font-family:'Space Mono',monospace;font-weight:700">—</span></div>
+  <div class="pred-level-row resistance"><span style="color:#f87171;font-weight:700"><svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#ef4444"/></svg> Resistance 2</span><span id="pred-r2" style="font-family:'Space Mono',monospace;font-weight:700">—</span></div>
+  <div class="pred-level-row current"><span style="color:var(--accent);font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Harga Sekarang</span><span id="pred-cur-level" style="font-family:'Space Mono',monospace;font-weight:700;color:var(--accent)">—</span></div>
+  <div class="pred-level-row support"><span style="color:#34d399;font-weight:700"><svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#10b981"/></svg> Support 1</span><span id="pred-s1" style="font-family:'Space Mono',monospace;font-weight:700">—</span></div>
+  <div class="pred-level-row support"><span style="color:#10b981;font-weight:700"><svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#10b981"/></svg> Support 2</span><span id="pred-s2" style="font-family:'Space Mono',monospace;font-weight:700">—</span></div>
+</div>
+
+<!-- AI Narrative -->
+<div class="pred-section-title">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+  Analisis AI (Gemini)
+</div>
+<div class="pred-analysis-box" id="pred-ai-narrative">
+  <div class="shimmer" style="width:90%"></div>
+  <div class="shimmer" style="width:75%"></div>
+  <div class="shimmer" style="width:85%"></div>
+  <div class="shimmer" style="width:60%"></div>
+</div>
+
+<!-- Chart -->
+<div class="pred-section-title">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  Pergerakan Harga (30H)
+</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:1rem">
+  <div style="position:relative;height:180px"><canvas id="c-pred-price"></canvas></div>
+</div>
+
+<!-- Gemini API Key config -->
+<div id="pred-apikey-warning" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:.9rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--accent4)">
+  <div style="font-weight:700;margin-bottom:.3rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gemini API Key belum diset</div>
+  <div style="color:var(--muted);line-height:1.6">Untuk analisis AI, masukkan Gemini API key gratis di bawah. Daftar di <strong style="color:var(--accent4)">aistudio.google.com</strong></div>
+  <div style="display:flex;gap:.5rem;margin-top:.7rem;align-items:center">
+    <input id="gemini-key-input" type="password" placeholder="AIza..." style="flex:1;background:var(--bg);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.45rem .75rem;color:var(--text);font-family:'Space Mono',monospace;font-size:.75rem;outline:none">
+    <button onclick="saveGeminiKey()" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:8px;padding:.45rem .8rem;color:var(--accent4);font-weight:700;font-size:.75rem;cursor:pointer;white-space:nowrap">Simpan</button>
+  </div>
+</div>
+
+<div style="text-align:center;font-size:.63rem;color:var(--muted);padding:1rem 0 2rem;line-height:1.7;opacity:.7">
+  Prediksi AI bersifat informatif, bukan saran investasi.<br>
+  Data: CoinGecko · Fear & Greed Index · Gemini AI
+</div>
+</div><!-- end page-ai-predict -->
+
+<!-- ══════════ NEWS PAGE ══════════ -->
+<div id="page-news" class="page">
+<style>
+#page-news { padding-bottom: 6rem; }
+
+/* ── News Back Header ── */
+.news-back-header {
+  display:flex;align-items:center;gap:.7rem;margin-bottom:.9rem;
+  padding:.6rem 0;
+}
+
+/* ── News Card ── */
+.news-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;padding:1rem 1.1rem;margin-bottom:.65rem;
+  cursor:pointer;transition:all .22s;position:relative;overflow:hidden;
+  text-align:left;width:100%;box-sizing:border-box;
+  display:block;
+}
+.news-card:hover { 
+  border-color:rgba(0,229,255,.3);
+  box-shadow:0 4px 20px rgba(0,0,0,.25),0 0 0 1px rgba(0,229,255,.08);
+  transform:translateY(-2px); 
+}
+.news-card::before {
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3.5px;border-radius:3.5px 0 0 3.5px;
+}
+.news-card.positif::before  { background:linear-gradient(180deg,#10b981,#34d399); }
+.news-card.negatif::before  { background:linear-gradient(180deg,#ef4444,#f87171); }
+.news-card.netral::before   { background:rgba(100,116,139,.4); }
+.news-card.loading-card::before { background:rgba(255,255,255,.08); }
+
+/* ── Badge ── */
+.news-sentiment-badge {
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.2rem .65rem;border-radius:100px;font-size:.62rem;font-weight:800;
+  letter-spacing:.04em;margin-bottom:.55rem;
+}
+.badge-positif { background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25); }
+.badge-negatif { background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25); }
+.badge-netral  { background:rgba(100,116,139,.1);color:#94a3b8;border:1px solid rgba(100,116,139,.18); }
+.badge-loading { background:rgba(255,255,255,.06);color:var(--muted);border:1px solid rgba(255,255,255,.1); }
+
+/* ── Content ── */
+.news-title { font-size:.87rem;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:.4rem; }
+.news-orig  { font-size:.72rem;color:var(--muted);line-height:1.4;margin-bottom:.4rem;font-style:italic;opacity:.65; }
+.news-meta  { display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.65rem;color:var(--muted);margin-top:.5rem; }
+.news-source-tag { font-weight:700;color:var(--accent3);display:inline-flex;align-items:center;gap:.3rem; }
+.news-coins { display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem; }
+.news-coin-tag {
+  background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.18);
+  border-radius:6px;padding:.12rem .45rem;font-size:.6rem;
+  font-weight:800;color:var(--accent);font-family:'Space Mono',monospace;
+  letter-spacing:.04em;
+}
+
+/* ── Sentiment Bar ── */
+.news-sentiment-bar-wrap {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:.85rem 1.1rem;margin-bottom:.9rem;
+}
+
+/* ── Filter Pills ── */
+.news-filter-row { display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem; }
+.nf-btn {
+  padding:.32rem .8rem;border-radius:100px;font-size:.69rem;font-weight:700;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:.3rem;
+}
+.nf-btn:hover { border-color:var(--accent);color:var(--accent); }
+.nf-btn.active { 
+  background:var(--accent);color:#050810;border-color:var(--accent);
+  box-shadow:0 2px 12px rgba(0,229,255,.25);
+}
+</style>
+
+<div class="ph" style="margin-bottom:.7rem">
+  <!-- News Header Bar -->
+  <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem">
+    <!-- Back button -->
+    <button onclick="showPage('dashboard')" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer;flex-shrink:0;transition:all .2s" title="Kembali" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='var(--muted)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <!-- Icon + Title -->
+    <div style="display:flex;align-items:center;gap:.5rem;flex:1">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(0,229,255,.05));border:1px solid rgba(0,229,255,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2 2 2 0 0 0 2 2z"/><rect x="10" y="4" width="8" height="5"/><path d="M10 13h8M10 16h8M10 19h4"/></svg>
+      </div>
+      <div>
+        <div style="font-size:1.15rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2">Berita Kripto</div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:.05rem">Terkini · Terjemahan Indonesia · Sentimen</div>
+      </div>
+    </div>
+    <!-- Refresh button -->
+    <button id="news-refresh-btn" onclick="loadCryptoNews(true)" style="display:flex;align-items:center;gap:.35rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);border-radius:10px;padding:.5rem .85rem;color:var(--accent);font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .2s" onmouseover="this.style.background='rgba(0,229,255,.18)'" onmouseout="this.style.background='rgba(0,229,255,.1)'">
+      <svg id="news-spin-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<!-- Sentiment summary -->
+<div class="news-sentiment-bar-wrap" id="news-sent-wrap" style="display:none">
+  <div style="font-size:.6rem;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Sentimen Berita Saat Ini</div>
+  <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem">
+    <div style="flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden">
+      <div id="news-pos-bar" style="height:100%;border-radius:99px 0 0 99px;background:linear-gradient(90deg,#10b981,#34d399);width:0%;transition:width .6s ease"></div>
+    </div>
+    <span style="font-size:.68rem;color:var(--muted);white-space:nowrap"><span id="news-pos-pct" style="color:#10b981;font-weight:800">0%</span> positif</span>
+  </div>
+  <div style="display:flex;gap:.8rem;font-size:.65rem;align-items:center">
+    <span style="display:inline-flex;align-items:center;gap:.3rem"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#10b981"/></svg><span id="news-cnt-pos" style="color:#10b981;font-weight:700">0</span> Positif</span>
+    <span style="display:inline-flex;align-items:center;gap:.3rem"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#ef4444"/></svg><span id="news-cnt-neg" style="color:#ef4444;font-weight:700">0</span> Negatif</span>
+    <span style="display:inline-flex;align-items:center;gap:.3rem"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="none" stroke="#64748b" stroke-width="1.5"/></svg><span id="news-cnt-neu" style="color:var(--muted);font-weight:700">0</span> Netral</span>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="news-filter-row">
+  <button class="nf-btn active" onclick="filterNews('semua',this)">Semua</button>
+  <button class="nf-btn" onclick="filterNews('positif',this)" style="display:inline-flex;align-items:center;gap:.3rem"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#10b981"/></svg> Positif</button>
+  <button class="nf-btn" onclick="filterNews('negatif',this)" style="display:inline-flex;align-items:center;gap:.3rem"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="#ef4444"/></svg> Negatif</button>
+  <button class="nf-btn" onclick="filterNews('bitcoin',this)">₿ Bitcoin</button>
+  <button class="nf-btn" onclick="filterNews('ethereum',this)">Ξ Ethereum</button>
+</div>
+
+<div id="news-list">
+  <!-- Shimmer awal -->
+  <div class="news-card loading-card"><div class="shimmer" style="width:70px;height:18px;border-radius:99px;margin-bottom:.5rem"></div><div class="shimmer" style="width:90%;height:16px;margin-bottom:.35rem"></div><div class="shimmer" style="width:70%;height:14px;margin-bottom:.5rem"></div><div class="shimmer" style="width:50%;height:12px"></div></div>
+  <div class="news-card loading-card"><div class="shimmer" style="width:60px;height:18px;border-radius:99px;margin-bottom:.5rem"></div><div class="shimmer" style="width:85%;height:16px;margin-bottom:.35rem"></div><div class="shimmer" style="width:60%;height:14px;margin-bottom:.5rem"></div><div class="shimmer" style="width:45%;height:12px"></div></div>
+  <div class="news-card loading-card"><div class="shimmer" style="width:75px;height:18px;border-radius:99px;margin-bottom:.5rem"></div><div class="shimmer" style="width:95%;height:16px;margin-bottom:.35rem"></div><div class="shimmer" style="width:75%;height:14px;margin-bottom:.5rem"></div><div class="shimmer" style="width:55%;height:12px"></div></div>
+  <div class="news-card loading-card"><div class="shimmer" style="width:65px;height:18px;border-radius:99px;margin-bottom:.5rem"></div><div class="shimmer" style="width:80%;height:16px;margin-bottom:.35rem"></div><div class="shimmer" style="width:65%;height:14px;margin-bottom:.5rem"></div><div class="shimmer" style="width:40%;height:12px"></div></div>
+</div>
+
+<div style="text-align:center;font-size:.62rem;color:var(--muted);opacity:.5;padding:1rem 0">
+  Sumber: CryptoPanic · Diterjemahkan oleh Groq AI · Bukan saran investasi
+</div>
+</div><!-- end page-news -->
 
 <!-- ══════════ THEME PAGE ══════════ -->
 </div><!-- end #app -->
@@ -2580,8 +3326,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <style>
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── THEME TRANSITION ── */
-body{transition:background .4s ease,color .3s ease}
+/* ── WALLET BUTTON ── */
+#btn-connect-wallet:hover{border-color:rgba(167,139,250,.8)!important;background:rgba(124,58,237,.15)!important;box-shadow:0 0 14px rgba(124,58,237,.2);transform:translateY(-1px)}
+
 .stat-card,.modal,.login-box,.fi,.card,.overlay>div{transition:background .3s ease,border-color .3s ease,box-shadow .3s ease}
 
 /* ── THEME TOGGLE ── */
@@ -3076,6 +3823,22 @@ async function dbSet(seed, data){
 /* ══════════ STATE ══════════ */
 const S={btcPrice:null,btcPriceIDR:null,btcChange:null,usdIdr:16000,dca:[],port:[],cf:[]};
 let curSeed=null, lastSync=null, syncTmr=null;
+
+/* ── Wallet State (Read-Only, Multi-Token, Multi-Chain incl. BTC) ── */
+const walletState = {
+  // EVM (MetaMask / OKX / Phantom)
+  connected: false,
+  providerName: null,
+  address: null,
+  chainId: null,
+  tokens: [],
+  loading: false,
+  refreshInterval: null,
+  // BTC addresses (manual / auto dari OKX/Phantom)
+  btcAddresses: [],
+  btcRefreshInterval: null,
+  btcPanelOpen: false,
+};
 const SVG_CLK='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;opacity:.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 
 /* ══════════ LOGIN ══════════ */
@@ -3125,7 +3888,7 @@ async function doCreate(){
   }catch(e){
     hideLL();
     await enterApp(genSeed,{dca:[],port:[],cf:[]});
-    toast('⚠️ Mode offline — data lokal saja',1);
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Mode offline — data lokal saja',1);
   }
 }
 
@@ -3215,7 +3978,7 @@ function showLL(m){
 }
 function hideLL(){document.getElementById('lloading').style.display='none'}
 function showLerr(m){
-  document.getElementById('lerr').textContent='❌ '+m;
+  document.getElementById('lerr').textContent='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> '+m;
   document.getElementById('lerr').style.display='block';
   document.getElementById('tab-existing').style.display='block';
 }
@@ -3300,7 +4063,7 @@ async function saveState(){
       lastSync=new Date();setSyncStatus('synced');
     }catch(e){
       setSyncStatus('err');
-      toast('⚠️ Gagal sync cloud — data lokal aman',1);
+      toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal sync cloud — data lokal aman',1);
     }
   },2000);
 }
@@ -3338,9 +4101,11 @@ function animateNavIndicator(activeBtn){
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
+  const pageEl = document.getElementById('page-'+id);
+  if(!pageEl){ console.warn('Page not found: page-'+id); return; }
+  pageEl.classList.add('active');
   const tabs=document.querySelectorAll('.nav-tab');
-  ['dashboard','dca','portfolio','simulation','cashflow'].forEach((p,i)=>{if(p===id)tabs[i].classList.add('active')});
+  ['dashboard','dca','portfolio','simulation','cashflow','ai-chat'].forEach((p,i)=>{if(p===id&&tabs[i])tabs[i].classList.add('active')});
   // Bottom nav active + animate indicator
   let activeBtn=null;
   document.querySelectorAll('.bnav-item').forEach(b=>{
@@ -3351,14 +4116,11 @@ function showPage(id){
   animateNavIndicator(activeBtn);
 
   // ── Bottom nav: selalu tampil KECUALI saat dalam room chat ──
-  // Hiding dikontrol oleh openRoom() dan chatGoBack()
   const bnav = document.getElementById('bottom-nav');
   if(bnav && id !== 'chat'){
-    // Halaman non-chat: pastikan nav tampil
     bnav.style.display = 'block';
     bnav.classList.remove('bnav-hidden');
   } else if(bnav && id === 'chat'){
-    // Halaman chat rooms list: nav TETAP tampil
     bnav.style.display = 'block';
     bnav.classList.remove('bnav-hidden');
   }
@@ -3368,7 +4130,6 @@ function showPage(id){
   if(syncBar && id === 'chat'){
     syncBar.style.display = 'none';
   }
-  // Sync-bar hanya ditampilkan oleh setSyncStatus() saat sedang menyimpan/error
 
   // ── Chat: init + reset unread badge ──
   if(id === 'chat'){
@@ -3383,6 +4144,18 @@ function showPage(id){
   if(id==='cashflow')renderCF();
   if(id==='theme')initThemePage();
   if(id==='alerts'){initAlertsPage();}
+  if(id==='news'){ setTimeout(()=>loadCryptoNews(), 100); }
+  if(id==='ai-predict'){ setTimeout(()=>{ if(!predData) runBTCPrediction(); }, 100); }
+  if(id==='ai-chat'){
+    setTimeout(()=>initAIChat(), 100);
+    // Hide bottom nav saat di AI chat untuk full screen experience
+    const bnav = document.getElementById('bottom-nav');
+    if(bnav){ bnav.style.opacity='0'; bnav.style.pointerEvents='none'; setTimeout(()=>{ bnav.style.display='none'; },200); }
+  } else {
+    // Restore bottom nav saat keluar dari AI chat
+    const bnav = document.getElementById('bottom-nav');
+    if(bnav && window.innerWidth <= 640){ bnav.style.display='block'; bnav.style.opacity='1'; bnav.style.pointerEvents=''; }
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -3403,13 +4176,13 @@ document.addEventListener('click',e=>{
 });
 
 /* ══════════ TOAST ══════════ */
-function toast(m,err){
-  const t=document.getElementById('toast');
-  t.textContent=m;
-  t.style.borderColor=err?'var(--danger)':'var(--accent3)';
-  t.style.color=err?'var(--danger)':'var(--accent3)';
+function toast(m, err, dur) {
+  const t = document.getElementById('toast');
+  // Wrap content in a flex container for icon+text alignment
+  t.innerHTML = `<span style="display:inline-flex;align-items:center;gap:.45rem;padding:.58rem 1.1rem .58rem .85rem;border-radius:100px;font-size:.79rem;font-weight:600;letter-spacing:.01em;background:rgba(10,16,30,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid ${err ? 'rgba(239,68,68,.35)' : 'rgba(255,255,255,.1)'};color:${err ? '#f87171' : 'var(--accent3)'};box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)">${m}</span>`;
   t.classList.add('show');
-  clearTimeout(t._tmr);t._tmr=setTimeout(()=>t.classList.remove('show'),3000);
+  clearTimeout(t._tmr);
+  t._tmr = setTimeout(() => t.classList.remove('show'), dur || 3000);
 }
 
 /* ══════════ FORMAT ══════════ */
@@ -3939,7 +4712,7 @@ async function loadBTCChart(tf){
     console.warn('BTC chart error:',e);
     if(loading){
       loading.innerHTML=`<div style="text-align:center">
-        <div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div>
+        <div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal memuat data</div>
         <button onclick="loadBTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↺ Coba Lagi</button>
       </div>`;
       loading.style.display='flex';
@@ -5625,7 +6398,7 @@ async function loadDCABTCChart(tf){
     if(!avgUSD){['dca-label-avg','dca-label-pnl'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});}
   }catch(e){
     console.warn('DCA BTC chart error:',e);
-    if(loading){loading.innerHTML=`<div style="text-align:center"><div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div><button onclick="loadDCABTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↺ Coba Lagi</button></div>`;loading.style.display='flex';}
+    if(loading){loading.innerHTML=`<div style="text-align:center"><div style="color:var(--muted);font-size:.78rem;margin-bottom:.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal memuat data</div><button onclick="loadDCABTCChart('${tf}')" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:.3rem .8rem;font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">↺ Coba Lagi</button></div>`;loading.style.display='flex';}
     return;
   }
   if(loading)loading.style.display='none';
@@ -5969,7 +6742,7 @@ function addDCA(){
   document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-date').value='';
   document.getElementById('m-dca-idr').value='';
   document.getElementById('m-dca-note').value='';
-  toast('✅ Transaksi ditambahkan!');renderDCA();
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Transaksi ditambahkan!');renderDCA();
 }
 function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('Dihapus');renderDCA()}
 function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('Semua data DCA dihapus');renderDCA()}
@@ -6135,7 +6908,7 @@ function applyPreset(id) {
   localStorage.setItem('zw_theme', id);
   localStorage.setItem('zw_theme_custom', JSON.stringify(preset));
   renderThemePresets();
-  toast('✅ Tema diterapkan!');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tema diterapkan!');
 }
 
 function applyCustomTheme() {
@@ -6144,7 +6917,7 @@ function applyCustomTheme() {
   localStorage.setItem('zw_theme', 'custom');
   localStorage.setItem('zw_theme_custom', JSON.stringify({accent:color, accent2:'#7c3aed', accent3:'#10b981', accent4:'#f59e0b'}));
   renderThemePresets();
-  toast('✅ Warna custom diterapkan!');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Warna custom diterapkan!');
 }
 
 function setDisplayMode(mode) {
@@ -6156,7 +6929,7 @@ function setDisplayMode(mode) {
     localStorage.setItem('zw_display_mode', 'dark');
   }
   updateModeBtns();
-  toast(mode==='light' ? '☀️ Light mode aktif' : '🌙 Dark mode aktif');
+  toast(mode==='light' ? '&#9728; Light mode aktif' : '&#9790; Dark mode aktif');
 }
 
 function updateModeBtns() {
@@ -6177,7 +6950,7 @@ function resetTheme() {
   document.documentElement.style.removeProperty('--glow');
   document.documentElement.style.removeProperty('--glow2');
   renderThemePresets();
-  toast('🔄 Tema direset ke default');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Tema direset ke default');
 }
 
 /* ══════════ THEME ══════════ */
@@ -6252,7 +7025,7 @@ async function fillBTCPriceByDate(dateStr){
       input.placeholder='';
       const rateEl=document.getElementById('m-dca-rate');
       if(rateEl&&S.usdIdr) rateEl.value=S.usdIdr.toLocaleString('id-ID');
-      toast(`✅ Harga BTC ${d} dari ${result.source}: $${Math.round(result.price).toLocaleString('en-US')}`);
+      toast(`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Harga BTC ${d} dari ${result.source}: $${Math.round(result.price).toLocaleString('en-US')}`);
     } else {
       input.placeholder='Masukkan manual';
       toast('Harga historis tidak ditemukan, isi manual',1);
@@ -6272,9 +7045,88 @@ function renderPort(){
   const ICONS={crypto:'◈',stock:'↗',gold:'◆',reksadana:'▣',other:'○'};
   const cards=document.getElementById('port-cards');
   const tb=document.getElementById('port-tbody');
-  if(!S.port.length){
+
+  // ── EVM Wallet rows ──
+  let walletRows = '';
+  const hasBTC = walletState.btcAddresses && walletState.btcAddresses.length > 0;
+  const hasEVM = walletState.connected && walletState.address;
+
+  if (hasEVM) {
+    if (walletState.loading && walletState.tokens.length === 0) {
+      walletRows += `<tr style="background:rgba(124,58,237,.04)">
+        <td colspan="9" style="padding:1.2rem;text-align:center">
+          <div style="display:inline-flex;align-items:center;gap:.7rem;color:rgba(167,139,250,.8);font-size:.8rem">
+            <div style="width:14px;height:14px;border:2px solid rgba(167,139,250,.3);border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div>
+            Memuat token dari ${walletState.providerName||'wallet'}...
+          </div>
+        </td>
+      </tr>`;
+    } else {
+      const grandTotalIDR = total
+        + walletState.tokens.reduce((s,t)=>s+(t.valueIDR||0),0)
+        + walletState.btcAddresses.reduce((s,b)=>s+(b.valueIDR||0),0);
+      walletRows += walletState.tokens.map((t, idx) => {
+        const gradArr = (NATIVE_GRAD[t.chainId]||'#627EEA,#8FA8F5').split(',');
+        const gradCss = t.isNative
+          ? `linear-gradient(135deg,${gradArr[0]},${gradArr[1]})`
+          : 'linear-gradient(135deg,rgba(124,58,237,.7),rgba(167,139,250,.8))';
+        const icon = t.isNative ? (NATIVE_ICON[t.chainId]||'Ξ') : t.symbol.slice(0,2);
+        const logoEl = t.logo
+          ? `<img src="${t.logo}" style="width:22px;height:22px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none';this.nextSibling.style.display='inline-flex'"><span style="display:none;width:22px;height:22px;border-radius:6px;background:${gradCss};align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;flex-shrink:0">${icon}</span>`
+          : `<span style="display:inline-flex;width:22px;height:22px;border-radius:6px;background:${gradCss};align-items:center;justify-content:center;font-size:.55rem;font-weight:900;color:#fff;flex-shrink:0">${icon}</span>`;
+        const badge = idx===0 ? `<span style="font-size:.58rem;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa;border-radius:4px;padding:.08rem .32rem;font-weight:700;font-family:'Inter',sans-serif;margin-left:.3rem">(Wallet)</span>` : '';
+        const priceCell = t.priceIDR ? `<span>${fmtIDR(t.priceIDR)}</span>` : `<span style="color:var(--muted)">—</span>`;
+        const valueCell = t.valueIDR ? `<span style="color:#a78bfa;font-weight:700">${fmtIDR(t.valueIDR)}</span>` : `<span style="color:var(--muted)">—</span>`;
+        const alloc = (grandTotalIDR>0&&t.valueIDR) ? (t.valueIDR/grandTotalIDR*100).toFixed(1)+'%' : '—';
+        const usdTip = t.valueUSD ? `$${t.valueUSD.toLocaleString('en-US',{maximumFractionDigits:2})}` : '';
+        return `<tr style="background:rgba(124,58,237,${idx===0?'.07':'.04'});border-left:3px solid rgba(167,139,250,${idx===0?'.5':'.2'})" title="${usdTip}">
+          <td><span style="display:inline-flex;align-items:center;gap:.4rem">${logoEl}<span><strong>${esc(t.symbol)}</strong><span style="color:var(--muted);font-size:.7rem;margin-left:.25rem">${esc(t.name.length>18?t.name.slice(0,18)+'…':t.name)}</span>${badge}</span></span>
+          ${idx===0?`<div style="font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(167,139,250,.6);margin-top:.15rem">${truncateAddr(walletState.address)} · ${CHAIN_NAME[walletState.chainId]||'Chain '+walletState.chainId} · ${walletState.providerName||''}</div>`:''}
+          </td>
+          <td style="font-size:.78rem">${fmtQty(t.balance)}</td>
+          <td style="color:var(--muted)">—</td><td>${priceCell}</td><td>${valueCell}</td>
+          <td style="color:var(--muted)">—</td><td style="color:var(--muted)">—</td>
+          <td style="color:rgba(167,139,250,.7)">${alloc}</td>
+          <td style="color:var(--muted);font-size:.62rem">read-only</td></tr>`;
+      }).join('');
+    }
+  }
+
+  // ── BTC rows ──
+  if (hasBTC) {
+    const grandTotalIDR = total
+      + walletState.tokens.reduce((s,t)=>s+(t.valueIDR||0),0)
+      + walletState.btcAddresses.reduce((s,b)=>s+(b.valueIDR||0),0);
+    walletRows += walletState.btcAddresses.map((b, idx) => {
+      const btcBal  = b.btc !== null ? b.btc : 0;
+      const priceCell = b._btcPriceIDR ? `<span>${fmtIDR(b._btcPriceIDR)}</span>` : `<span style="color:var(--muted)">${b.loading?'…':'—'}</span>`;
+      const valueCell = b.valueIDR ? `<span style="color:#f59e0b;font-weight:700">${fmtIDR(b.valueIDR)}</span>` : `<span style="color:var(--muted)">${b.loading?'…':'—'}</span>`;
+      const alloc = (grandTotalIDR>0&&b.valueIDR) ? (b.valueIDR/grandTotalIDR*100).toFixed(1)+'%' : '—';
+      const badge = idx===0 ? `<span style="font-size:.58rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b;border-radius:4px;padding:.08rem .32rem;font-weight:700;font-family:'Inter',sans-serif;margin-left:.3rem">(Wallet)</span>` : '';
+      const usdTip = b.valueUSD ? `$${b.valueUSD.toLocaleString('en-US',{maximumFractionDigits:2})}` : '';
+      return `<tr style="background:rgba(245,158,11,${idx===0?'.07':'.04'});border-left:3px solid rgba(245,158,11,${idx===0?'.5':'.2'})" title="${usdTip}">
+        <td><span style="display:inline-flex;align-items:center;gap:.4rem">
+          <span style="display:inline-flex;width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#f59e0b,#fbbf24);align-items:center;justify-content:center;font-size:.7rem;font-weight:900;color:#fff;flex-shrink:0">₿</span>
+          <span><strong>BTC</strong><span style="color:var(--muted);font-size:.7rem;margin-left:.25rem">Bitcoin</span>${badge}</span>
+        </span>
+        <div style="font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(245,158,11,.6);margin-top:.15rem">${truncateAddr(b.address)}${b._auto?' · OKX/Phantom':''}</div></td>
+        <td style="font-size:.78rem">${b.loading?'…':fmtQty(btcBal)}</td>
+        <td style="color:var(--muted)">—</td><td>${priceCell}</td><td>${valueCell}</td>
+        <td style="color:var(--muted)">—</td><td style="color:var(--muted)">—</td>
+        <td style="color:rgba(245,158,11,.7)">${alloc}</td>
+        <td style="color:var(--muted);font-size:.62rem">read-only</td></tr>`;
+    }).join('');
+  }
+
+  if(!S.port.length && !walletRows){
     cards.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset</h3><p>Tambah aset kamu</p></div>';
-    tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">—</td></tr>';return;
+    tb.innerHTML = walletRows || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">—</td></tr>';
+    return;
+  }
+  if(!S.port.length && walletRows){
+    cards.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="emoji" style="opacity:.4;color:var(--accent)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><h3>Belum ada aset manual</h3><p>Token wallet ditampilkan di tabel bawah</p></div>';
+    tb.innerHTML = walletRows;
+    return;
   }
   cards.innerHTML=S.port.map(x=>{
     const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=pnl/inv*100;
@@ -6292,7 +7144,7 @@ function renderPort(){
       <div style="font-size:.7rem;color:var(--muted)">${fmtIDR(val)} · ${total>0?(val/total*100).toFixed(1):'0'}% portofolio</div>
     </div>`;
   }).join('');
-  tb.innerHTML=S.port.map(x=>{
+  tb.innerHTML=walletRows+S.port.map(x=>{
     const val=x.qty*x.currentPrice,inv=x.qty*x.avgPrice,pnl=val-inv,pp=pnl/inv*100;
     return`<tr>
       <td>${ICONS[x.type]||'○'} <strong>${esc(x.name)}</strong> <span style="color:var(--muted);font-size:.7rem">${esc(x.ticker)}</span></td>
@@ -6316,7 +7168,7 @@ function addPort(){
   S.port.push({id:Date.now().toString(),name,ticker,type,qty,avgPrice:avg,currentPrice:cur});
   saveState();closeModal('modal-port');
   ['m-p-name','m-p-ticker','m-p-qty','m-p-avg','m-p-cur'].forEach(id=>document.getElementById(id).value='');
-  toast('✅ Aset ditambahkan!');renderPort();
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Aset ditambahkan!');renderPort();
 }
 function delPort(id){S.port=S.port.filter(x=>x.id!==id);saveState();toast('Dihapus');renderPort()}
 
@@ -6453,7 +7305,7 @@ async function runSimDynamic(){
     const validPrices=prices.filter(p=>p&&p>100);
 
     if(validDates.length===0){
-      if(status){status.style.color='var(--danger)';status.textContent='⚠️ Gagal mendapatkan data harga historis. Cek koneksi internet.';}
+      if(status){status.style.color='var(--danger)';status.textContent='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal mendapatkan data harga historis. Cek koneksi internet.';}
       toast('Gagal ambil data harga historis',1);
       resetBtn();return;
     }
@@ -6501,12 +7353,12 @@ async function runSimDynamic(){
       {label:'Modal (juta)',data:ci,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',fill:true,tension:.4,pointRadius:2,borderDash:[5,5],pointBackgroundColor:'#7c3aed'}
     ]);
 
-    if(status){status.style.color='var(--accent3)';status.textContent=`✅ ${validPeriods.length} periode · ${validDates[0]} → ${validDates[validDates.length-1]} · harga Kraken/CoinGecko`;}
-    toast('✅ Simulasi selesai!');
+    if(status){status.style.color='var(--accent3)';status.textContent=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${validPeriods.length} periode · ${validDates[0]} → ${validDates[validDates.length-1]} · harga Kraken/CoinGecko`;}
+    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Simulasi selesai!');
 
   }catch(err){
     console.error('runSimDynamic error:',err);
-    if(status){status.style.color='var(--danger)';status.textContent='⚠️ Gagal — cek koneksi dan coba lagi';}
+    if(status){status.style.color='var(--danger)';status.textContent='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal — cek koneksi dan coba lagi';}
     toast('Gagal ambil data historis',1);
   }finally{
       resetBtn();
@@ -6552,7 +7404,7 @@ function addCF(){
   S.cf.push({id:Date.now().toString(),date,type,category:cat,desc,amount:amt});
   saveState();closeModal('modal-cf');
   ['m-cf-cat','m-cf-desc','m-cf-amt'].forEach(id=>document.getElementById(id).value='');
-  toast('✅ Transaksi ditambahkan!');renderCF();
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Transaksi ditambahkan!');renderCF();
 }
 function delCF(id){S.cf=S.cf.filter(e=>e.id!==id);saveState();toast('Dihapus');renderCF()}
 
@@ -7035,7 +7887,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
         ${CARD('#06b6d4','Total Inv. Kas',idr(cfInv),'','c')}
       </div>
       <div style="margin-top:12px;background:#fffbeb;border:1px solid #fef08a;border-left:4px solid #f59e0b;border-radius:6px;padding:11px 14px">
-        <div style="font-size:10.5px;font-weight:800;color:#92400e;margin-bottom:5px">⚠ Disclaimer</div>
+        <div style="font-size:10.5px;font-weight:800;color:#92400e;margin-bottom:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Disclaimer</div>
         <div style="font-size:9.5px;line-height:1.85;color:#374151">
           Laporan ini dibuat otomatis oleh z-wealth untuk keperluan dokumentasi pribadi. Data portofolio berdasarkan harga Bitcoin real-time saat laporan digenerate.<br>
           Dokumen ini <strong>bukan merupakan rekomendasi investasi</strong>. Nilai investasi dapat naik maupun turun. Selalu lakukan riset mandiri (DYOR).<br>
@@ -7073,14 +7925,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   const win=window.open(url,'_blank');
   if(win){
     setTimeout(()=>URL.revokeObjectURL(url),20000);
-    toast('📄 Laporan dibuka! Klik "Simpan PDF" di halaman tersebut');
+    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Laporan dibuka! Klik "Simpan PDF" di halaman tersebut');
   } else {
     const a=document.createElement('a');
     a.href=url;
     a.download=`z-wealth-laporan-${now.toISOString().slice(0,10)}.html`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    toast('📥 File laporan diunduh — buka lalu klik Simpan PDF');
+    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> File laporan diunduh — buka lalu klik Simpan PDF');
   }
 }
 
@@ -7786,7 +8638,7 @@ async function loadDashChatPreview() {
       const initials = (m.sender_code||'?').slice(5,7).toUpperCase();
       const color = m.sender_color || '#00e5ff';
       const time = new Date(m.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-      const text = m.media_url ? '📎 Media' : (m.content||'').slice(0,60) + ((m.content||'').length>60?'...':'');
+      const text = m.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : (m.content||'').slice(0,60) + ((m.content||'').length>60?'...':'');
       html += `<div style="display:flex;align-items:flex-start;gap:.5rem">
         <div style="width:28px;height:28px;border-radius:8px;background:${color};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${initials}</div>
         <div style="flex:1;min-width:0">
@@ -7820,7 +8672,7 @@ function showChatOffline() {
           margin-top:1rem;padding:.6rem 1.4rem;border-radius:12px;border:none;
           background:var(--accent);color:var(--bg);font-weight:700;cursor:pointer;
           font-family:'Inter',sans-serif;font-size:.85rem;">
-          🔄 Coba Lagi
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Coba Lagi
         </button>
       </div>
     </div>`;
@@ -7833,8 +8685,8 @@ async function loadRooms() {
   // Reset dulu agar tidak duplikat saat dipanggil ulang
   const groupEl = document.getElementById('group-rooms-list');
   const dmEl = document.getElementById('dm-rooms-list');
-  if (groupEl) groupEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon">👥</div><div class="chat-empty-text">Belum ada grup.<br>Buat grup baru!</div></div>';
-  if (dmEl) dmEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon">✉️</div><div class="chat-empty-text">Belum ada DM.<br>Masukkan kode anonim teman!</div></div>';
+  if (groupEl) groupEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="chat-empty-text">Belum ada grup.<br>Buat grup baru!</div></div>';
+  if (dmEl) dmEl.innerHTML = '<div class="chat-empty" style="padding:1rem 0"><div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div class="chat-empty-text">Belum ada DM.<br>Masukkan kode anonim teman!</div></div>';
 
   // Public rooms
   const { data: publicRooms } = await chatSB
@@ -7946,7 +8798,7 @@ async function loadMessages(roomId) {
 function renderMessages(msgs) {
   const area = document.getElementById('messages-area');
   if (!msgs.length) {
-    area.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">Belum ada pesan.<br>Jadilah yang pertama!</div></div>';
+    area.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg></div><div class="chat-empty-text">Belum ada pesan.<br>Jadilah yang pertama!</div></div>';
     return;
   }
 
@@ -8014,7 +8866,7 @@ function buildMsgBubble(msg) {
       ${!isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
       <div class="msg-bubble-wrap">
         ${!isMine ? `<div class="msg-sender-name">${escHtml(msg.sender_code||'anon')}</div>` : ''}
-        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'📎 Media')}">
+        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media')}">
           ${replyHtml}${contentHtml}
         </div>
         <div class="msg-time">${t}</div>
@@ -8543,7 +9395,7 @@ async function createRoom() {
 
     document.getElementById('chat-new-room-modal').classList.remove('open');
     openRoom(room.id, room.name, 'group', room.avatar_color);
-    toast('✅ Berhasil join grup: ' + room.name);
+    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Berhasil join grup: ' + room.name);
     await loadRooms();
     return;
   }
@@ -8612,7 +9464,7 @@ async function createRoom() {
 
     document.getElementById('chat-new-room-modal').classList.remove('open');
     openRoom(room.id, name, 'group', chatState.newRoomColor);
-    toast(`✅ Grup dibuat! Kode undangan: ${inviteCode}`);
+    toast(`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Grup dibuat! Kode undangan: ${inviteCode}`);
   }
 }
 
@@ -8750,7 +9602,7 @@ function saveAlert() {
   const rawPrice = (document.getElementById('alert-price')?.value || '').replace(/\./g,'').replace(',','.');
   const price = parseFloat(rawPrice);
   const note = document.getElementById('alert-note')?.value?.trim() || '';
-  if (!price || isNaN(price)) { toast('⚠️ Masukkan target harga!', 2); return; }
+  if (!price || isNaN(price)) { toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Masukkan target harga!', 2); return; }
   const alerts = getAlerts();
   alerts.push({ id: Date.now(), type, price, note, active: true, triggered: false });
   saveAlerts(alerts);
@@ -8758,14 +9610,14 @@ function saveAlert() {
   document.getElementById('alert-price').value = '';
   document.getElementById('alert-note').value = '';
   renderAlertsList();
-  toast('✅ Alert disimpan!');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Alert disimpan!');
 }
 
 function deleteAlert(id) {
   const alerts = getAlerts().filter(a => a.id !== id);
   saveAlerts(alerts);
   renderAlertsList();
-  toast('🗑️ Alert dihapus');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Alert dihapus');
 }
 
 function renderAlertsList() {
@@ -8798,8 +9650,8 @@ function checkPriceAlerts(currentPrice) {
     if (hit) {
       a.triggered = true; changed = true;
       const msg = `BTC ${a.type==='above'?'naik di atas':'turun di bawah'} $${a.price.toLocaleString()}! Harga sekarang: $${currentPrice.toLocaleString()}`;
-      toast('🔔 ' + msg, 3);
-      sendBrowserNotif('⚡ Price Alert BTC!', msg);
+      toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> ' + msg, 3);
+      sendBrowserNotif('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Price Alert BTC!', msg);
     }
   });
   if (changed) { saveAlerts(alerts); renderAlertsList(); }
@@ -8863,7 +9715,7 @@ function saveReminder() {
   const specificDatetime = document.getElementById('reminder-specific-datetime')?.value;
 
   if (freq === 'specific' && !specificDatetime) {
-    toast('⚠️ Pilih tanggal & jam dulu!', 1); return;
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Pilih tanggal & jam dulu!', 1); return;
   }
 
   const reminders = getReminders();
@@ -8879,14 +9731,14 @@ function saveReminder() {
   scheduleReminderNotif(r);
   // Reset form
   if (freq==='specific') document.getElementById('reminder-specific-datetime').value = '';
-  toast('✅ Pengingat DCA disimpan!');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Pengingat DCA disimpan!');
 }
 
 function deleteReminder(id) {
   const reminders = getReminders().filter(r=>r.id!==id);
   saveReminders(reminders);
   renderRemindersList();
-  toast('🗑️ Pengingat dihapus');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg> Pengingat dihapus');
 }
 
 function renderRemindersList() {
@@ -8927,7 +9779,7 @@ function renderRemindersList() {
 
 function scheduleReminderNotif(r) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const msg = `Pengingat DCA kamu! ${r.amount ? '💰 Rp'+parseInt(r.amount).toLocaleString('id-ID') : 'Lakukan DCA sekarang!'}`;
+  const msg = `Pengingat DCA kamu! ${r.amount ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Rp'+parseInt(r.amount).toLocaleString('id-ID') : 'Lakukan DCA sekarang!'}`;
   const now = new Date();
 
   if (r.freq === 'specific' && r.specificDatetime) {
@@ -8971,11 +9823,11 @@ async function requestNotifPermission() {
   if (!('Notification' in window)) { toast('Browser tidak mendukung notifikasi'); return; }
   const perm = await Notification.requestPermission();
   if (perm === 'granted') {
-    toast('✅ Notifikasi diaktifkan!');
+    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi diaktifkan!');
     document.getElementById('notif-perm-card').style.display = 'none';
-    sendBrowserNotif('✅ Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
+    sendBrowserNotif('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
   } else {
-    toast('⚠️ Notifikasi tidak diizinkan', 2);
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Notifikasi tidak diizinkan', 2);
   }
 }
 
@@ -9078,7 +9930,7 @@ window.addEventListener('beforeinstallprompt', e => {
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  toast('✅ z-wealth berhasil diinstall! Buka dari homescreen ya 🚀');
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> z-wealth berhasil diinstall! Buka dari homescreen');
   // Simpan status installed
   try { localStorage.setItem('pwa-installed', '1'); } catch(e) {}
   // Sembunyikan banner dengan animasi
@@ -9129,13 +9981,13 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', e => 
 
 function triggerPWAInstall() {
   if (!deferredInstallPrompt) {
-    toast('Buka di Chrome/Edge browser untuk install sebagai app 📱');
+    toast('Buka di Chrome/Edge browser untuk install sebagai app');
     return;
   }
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.then(result => {
     if (result.outcome === 'accepted') {
-      toast('✅ z-wealth sedang diinstall...');
+      toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> z-wealth sedang diinstall...');
       try { localStorage.setItem('pwa-installed', '1'); } catch(e) {}
     }
     deferredInstallPrompt = null;
@@ -9326,7 +10178,7 @@ const ChatNotif = (() => {
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
       Notification.requestPermission().then(perm => {
-        if (perm === 'granted') toast('✅ Notifikasi aktif!', 0);
+        if (perm === 'granted') toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi aktif!', 0);
       });
     }
   }
@@ -9424,11 +10276,11 @@ const ChatNotif = (() => {
 
     if (avatarEl) {
       avatarEl.style.background = roomData?.color || 'linear-gradient(135deg,#00b4d8,#0096c7)';
-      avatarEl.textContent = roomData?.type === 'dm' ? '@' : roomData?.type === 'public' ? '#' : (roomData?.name?.charAt(0)?.toUpperCase() || '💬');
+      avatarEl.textContent = roomData?.type === 'dm' ? '@' : roomData?.type === 'public' ? '#' : (roomData?.name?.charAt(0)?.toUpperCase() || '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg>');
     }
     if (roomEl) roomEl.textContent = roomData?.name || 'Chat';
     if (senderEl) senderEl.textContent = msg.sender_code || 'anon';
-    if (textEl) textEl.textContent = msg.content || (msg.media_url ? '📎 Mengirim media' : '...');
+    if (textEl) textEl.textContent = msg.content || (msg.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Mengirim media' : '...');
 
     // Reset & animate
     toast.classList.remove('show');
@@ -9507,8 +10359,8 @@ const ChatNotif = (() => {
     showToast(msg, roomData);
 
     // Browser push notif (saat tab tidak aktif)
-    const pushTitle = `💬 ${roomData?.name || 'Chat'}`;
-    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '📎 Media' : '...');
+    const pushTitle = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg> ${roomData?.name || 'Chat'}`;
+    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : '...');
     const pushBody = `${msg.sender_code}: ${msgPreview}`;
     sendPushNotif(pushTitle, pushBody, msg.room_id, roomData);
   }
@@ -10161,7 +11013,7 @@ function downloadQRCard() {
   link.download = `z-wealth-qr-${code}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  toast('Visual card berhasil didownload! 🎉');
+  toast('Visual card berhasil didownload! <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/></svg>');
 }
 
 function _roundRect(ctx, x, y, w, h, r) {
@@ -10199,7 +11051,7 @@ async function _handleChatDeepLink() {
         const { data: targetRooms } = await chatSB.from('room_members').select('room_id').eq('user_code', dmCode).in('room_id', ids);
         if (targetRooms?.length) {
           const { data: existDM } = await chatSB.from('chat_rooms').select('*').eq('type','dm').in('id', targetRooms.map(r=>r.room_id)).single();
-          if (existDM) { openRoom(existDM.id, dmCode, 'dm', '#7c3aed'); toast('DM dibuka! 💬'); return; }
+          if (existDM) { openRoom(existDM.id, dmCode, 'dm', '#7c3aed'); toast('DM dibuka! <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg>'); return; }
         }
       }
       const { data: room, error } = await chatSB.from('chat_rooms').insert({
@@ -10211,7 +11063,7 @@ async function _handleChatDeepLink() {
         { room_id:room.id, user_code:dmCode }
       ]);
       openRoom(room.id, dmCode, 'dm', '#7c3aed');
-      toast('DM baru dibuka! 💬');
+      toast('DM baru dibuka! <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg>');
     } catch(e) { toast('Error: '+e.message, 2); }
 
   } else if (joinCode) {
@@ -10233,7 +11085,7 @@ async function _handleChatDeepLink() {
         { onConflict: 'room_id,user_code' }
       );
       openRoom(roomData.id, roomData.name, roomData.type, roomData.avatar_color);
-      toast(`Bergabung ke "${roomData.name}"! 🎉`);
+      toast(`Bergabung ke "${roomData.name}"! <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/></svg>`);
     } catch(e) { toast('Error: '+e.message, 2); }
   }
 }
@@ -10574,7 +11426,7 @@ function showPushPermissionBanner(reg) {
     const perm = await requestNotifPermission();
     if (perm === 'granted') {
       const sub = await subscribePush(reg);
-      if (sub) { await savePushSubscription(sub); toast('🔔 Notifikasi chat aktif!'); }
+      if (sub) { await savePushSubscription(sub); toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Notifikasi chat aktif!'); }
     } else { toast('Notifikasi tidak diizinkan', 2); }
   });
   document.getElementById('_push-deny-btn').addEventListener('click', () => {
@@ -10583,6 +11435,1543 @@ function showPushPermissionBanner(reg) {
   });
   setTimeout(() => { if (document.getElementById('_push-banner')) banner.remove(); }, 15000);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   WALLET CONNECT — Read-Only · MetaMask / OKX / Phantom + BTC
+   EVM tokens: Moralis API  |  BTC: Mempool.space (no key needed)
+   ZERO transaksi — murni baca saldo
+═══════════════════════════════════════════════════════════ */
+
+// ── Detect available wallet providers ──
+function detectProviders() {
+  const providers = [];
+  // OKX
+  if (window.okxwallet) providers.push({ name:'OKX', evm: window.okxwallet, btc: window.okxwallet.bitcoin || null });
+  // Phantom
+  if (window.phantom?.ethereum) providers.push({ name:'Phantom', evm: window.phantom.ethereum, btc: window.phantom.bitcoin || null });
+  // MetaMask (detect last so OKX/Phantom don't masquerade)
+  if (window.ethereum && !window.okxwallet && !window.phantom?.ethereum) providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
+  // MetaMask alongside others (window.ethereum.isMetaMask)
+  if (window.ethereum?.isMetaMask && (window.okxwallet || window.phantom)) providers.push({ name:'MetaMask', evm: window.ethereum, btc: null });
+  // Fallback: any EIP-1193 provider
+  if (!providers.length && window.ethereum) providers.push({ name:'Browser Wallet', evm: window.ethereum, btc: null });
+  return providers;
+}
+
+// ── Moralis API key ──
+const MORALIS_API_KEY = 'GANTI_DENGAN_API_KEY_MORALIS_KAMU';
+
+const CHAIN_SLUG = { 1:'eth',56:'bsc',137:'polygon',42161:'arbitrum',10:'optimism',43114:'avalanche',8453:'base',250:'fantom',25:'cronos' };
+const CHAIN_NAME = { 1:'Ethereum',56:'BNB Chain',137:'Polygon',42161:'Arbitrum',10:'Optimism',43114:'Avalanche',8453:'Base',250:'Fantom',25:'Cronos' };
+const COINGECKO_PLATFORM = { 1:'ethereum',56:'binance-smart-chain',137:'polygon-pos',42161:'arbitrum-one',10:'optimistic-ethereum',43114:'avalanche',8453:'base',250:'fantom' };
+const NATIVE_SYMBOL = { 1:'ETH',56:'BNB',137:'MATIC',42161:'ETH',10:'ETH',43114:'AVAX',8453:'ETH',250:'FTM',25:'CRO' };
+const NATIVE_CG_ID  = { ETH:'ethereum',BNB:'binancecoin',MATIC:'matic-network',AVAX:'avalanche-2',FTM:'fantom',CRO:'crypto-com-chain' };
+const NATIVE_ICON   = { 1:'Ξ',56:'⬡',137:'⬡',42161:'Ξ',10:'Ξ',43114:'▲',8453:'Ξ',250:'F',25:'◈' };
+const NATIVE_GRAD   = { 1:'#627EEA,#8FA8F5',56:'#F3BA2F,#F5CC5E',137:'#8247E5,#A66FEF',42161:'#2D374B,#96BEDC',10:'#FF0420,#FF6B80',43114:'#E84142,#F08080',8453:'#0052FF,#4D8EFF',250:'#1969FF,#5FA4FF',25:'#002D74,#1565C0' };
+const PROVIDER_COLOR = { MetaMask:'#F6851B',OKX:'#00d1b2',Phantom:'#ab9ff2','Browser Wallet':'#64748b' };
+
+function truncateAddr(addr) { if(!addr)return'—'; return addr.slice(0,6)+'…'+addr.slice(-4); }
+function fmtQty(n) { if(n===null||n===undefined||isNaN(n))return'—'; if(n>=1e9)return(n/1e9).toFixed(3)+'B'; if(n>=1e6)return(n/1e6).toFixed(3)+'M'; if(n>=1e3)return(n/1e3).toFixed(3)+'K'; if(n>=1)return n.toFixed(4); return n.toFixed(8); }
+
+// ══════════════════════════════════════════
+//  BTC ADDRESS SECTION
+// ══════════════════════════════════════════
+
+function toggleBTCInput() {
+  walletState.btcPanelOpen = !walletState.btcPanelOpen;
+  const panel = document.getElementById('btc-input-panel');
+  const btn   = document.getElementById('btn-btc-input');
+  const lbl   = document.getElementById('btc-btn-label');
+  if (panel) panel.style.display = walletState.btcPanelOpen ? 'block' : 'none';
+  if (btn) {
+    btn.style.background     = walletState.btcPanelOpen ? 'rgba(245,158,11,.15)' : 'transparent';
+    btn.style.borderColor    = 'rgba(245,158,11,.5)';
+  }
+  if (lbl) lbl.textContent = walletState.btcPanelOpen ? '▲ BTC Address' : '+ BTC Address';
+}
+
+function isValidBTCAddress(addr) {
+  return /^(bc1[ac-hj-np-z02-9]{6,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/.test(addr.trim());
+}
+
+async function addBTCAddress() {
+  const input = document.getElementById('btc-addr-input');
+  if (!input) return;
+  const raw = input.value.trim();
+  if (!raw) { toast('Masukkan BTC address dulu!', 1); return; }
+  if (!isValidBTCAddress(raw)) { toast('Format BTC address tidak valid', 1); return; }
+  if (walletState.btcAddresses.find(x => x.address === raw)) { toast('Address sudah ada', 1); return; }
+
+  const entry = { address: raw, btc: null, valueIDR: null, valueUSD: null, loading: true };
+  walletState.btcAddresses.push(entry);
+  saveBTCAddresses();
+  input.value = '';
+  renderBTCAddrList();
+  renderPort();
+
+  await fetchBTCSingle(entry);
+  renderBTCAddrList();
+  renderPort();
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> BTC address ditambahkan!');
+}
+
+function removeBTCAddress(addr) {
+  walletState.btcAddresses = walletState.btcAddresses.filter(x => x.address !== addr);
+  saveBTCAddresses();
+  renderBTCAddrList();
+  renderPort();
+  toast('BTC address dihapus.');
+}
+
+function saveBTCAddresses() {
+  try {
+    const data = walletState.btcAddresses.map(x => ({ address: x.address }));
+    localStorage.setItem('zw_btc_addrs', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadBTCAddresses() {
+  try {
+    const raw = localStorage.getItem('zw_btc_addrs');
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    arr.forEach(x => {
+      if (isValidBTCAddress(x.address) && !walletState.btcAddresses.find(e => e.address === x.address)) {
+        walletState.btcAddresses.push({ address: x.address, btc: null, valueIDR: null, valueUSD: null, loading: true });
+      }
+    });
+    if (walletState.btcAddresses.length > 0) refreshAllBTC();
+  } catch(e) {}
+}
+
+async function fetchBTCSingle(entry) {
+  entry.loading = true;
+  try {
+    // Mempool.space public API — no key needed
+    const r = await fetch(`https://mempool.space/api/address/${entry.address}`);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+    entry.btc = satoshi / 1e8;
+
+    // BTC price in IDR from CoinGecko
+    try {
+      const pr = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr');
+      if (pr.ok) {
+        const pd = await pr.json();
+        const priceIDR = pd?.bitcoin?.idr;
+        const priceUSD = pd?.bitcoin?.usd;
+        entry.valueIDR = priceIDR ? entry.btc * priceIDR : null;
+        entry.valueUSD = priceUSD ? entry.btc * priceUSD : null;
+        entry._btcPriceIDR = priceIDR;
+        entry._btcPriceUSD = priceUSD;
+      }
+    } catch(e) {}
+  } catch(e) {
+    console.warn('[BTC] fetch error for', entry.address, e);
+    entry.btc = null;
+  } finally {
+    entry.loading = false;
+  }
+}
+
+async function refreshAllBTC() {
+  if (!walletState.btcAddresses.length) return;
+  // Fetch BTC price once, reuse for all
+  let priceIDR = null, priceUSD = null;
+  try {
+    const pr = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr');
+    if (pr.ok) { const pd = await pr.json(); priceIDR = pd?.bitcoin?.idr; priceUSD = pd?.bitcoin?.usd; }
+  } catch(e) {}
+
+  await Promise.all(walletState.btcAddresses.map(async entry => {
+    try {
+      const r = await fetch(`https://mempool.space/api/address/${entry.address}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      const satoshi = (d.chain_stats?.funded_txo_sum || 0) - (d.chain_stats?.spent_txo_sum || 0);
+      entry.btc = satoshi / 1e8;
+      entry.valueIDR = priceIDR ? entry.btc * priceIDR : null;
+      entry.valueUSD = priceUSD ? entry.btc * priceUSD : null;
+      entry._btcPriceIDR = priceIDR;
+      entry._btcPriceUSD = priceUSD;
+      entry.loading = false;
+    } catch(e) { entry.loading = false; }
+  }));
+  renderBTCAddrList();
+  renderPort();
+}
+
+function renderBTCAddrList() {
+  const el = document.getElementById('btc-addr-list');
+  if (!el) return;
+  if (!walletState.btcAddresses.length) { el.innerHTML = ''; return; }
+  el.innerHTML = walletState.btcAddresses.map(entry => {
+    const btcStr  = entry.loading ? '…' : (entry.btc !== null ? entry.btc.toFixed(8) + ' BTC' : 'Error');
+    const idrStr  = entry.valueIDR ? ' ≈ ' + fmtIDR(entry.valueIDR) : '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:.45rem .7rem;gap:.5rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:.5rem;min-width:0">
+        <span style="font-size:.75rem;font-weight:900;color:#f59e0b;flex-shrink:0">₿</span>
+        <span style="font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(245,158,11,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${truncateAddr(entry.address)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        <span style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent4);font-weight:700">${btcStr}${idrStr}</span>
+        <button onclick="removeBTCAddress('${entry.address}')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:5px;padding:.15rem .4rem;font-size:.62rem;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  EVM WALLET (MetaMask / OKX / Phantom)
+// ══════════════════════════════════════════
+
+async function fetchAllTokens(address, chainId) {
+  const chain = CHAIN_SLUG[chainId] || 'eth';
+  const headers = { 'accept':'application/json','X-API-Key': MORALIS_API_KEY };
+  let nativeBalance = 0;
+  try {
+    const r = await fetch(`https://deep-index.moralis.io/api/v2.2/${address}/balance?chain=${chain}`, { headers });
+    if (r.ok) { const d = await r.json(); nativeBalance = Number(d.balance||0)/1e18; }
+  } catch(e) {}
+  let erc20Tokens = [];
+  try {
+    const r = await fetch(`https://deep-index.moralis.io/api/v2.2/${address}/erc20?chain=${chain}&exclude_spam=true&exclude_unverified_contracts=true`, { headers });
+    if (r.ok) {
+      const d = await r.json();
+      const items = Array.isArray(d) ? d : (d.result||[]);
+      erc20Tokens = items.filter(t=>t.balance&&t.balance!=='0').map(t=>({
+        symbol:(t.symbol||'?').toUpperCase(), name:t.name||t.symbol||'Unknown',
+        address:t.token_address, balance:Number(t.balance)/Math.pow(10,Number(t.decimals||18)),
+        logo:t.logo||t.thumbnail||null, decimals:Number(t.decimals||18), usdPrice:t.usd_price||null,
+      }));
+    }
+  } catch(e) {}
+  return { nativeBalance, erc20Tokens };
+}
+
+async function fetchAllTokensFallback(address) {
+  let nativeBalance = 0;
+  try {
+    const hex = await window.ethereum.request({ method:'eth_getBalance', params:[address,'latest'] });
+    nativeBalance = Number(BigInt(hex))/1e18;
+  } catch(e) {}
+  return { nativeBalance, erc20Tokens: [] };
+}
+
+async function fetchTokenPrices(nativeSymbol, erc20Tokens, chainId) {
+  const priceMap = {};
+  const cgPlatform = COINGECKO_PLATFORM[chainId] || 'ethereum';
+  const nativeCGId = NATIVE_CG_ID[nativeSymbol] || 'ethereum';
+  try {
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${nativeCGId}&vs_currencies=usd,idr`);
+    if (r.ok) { const d = await r.json(); if(d[nativeCGId]) priceMap[nativeSymbol]=d[nativeCGId]; }
+  } catch(e) {}
+  const contractAddrs = erc20Tokens.filter(t=>t.address).slice(0,48).map(t=>t.address).join(',');
+  if (contractAddrs) {
+    try {
+      const r = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${cgPlatform}?contract_addresses=${contractAddrs}&vs_currencies=usd,idr`);
+      if (r.ok) {
+        const d = await r.json();
+        erc20Tokens.forEach(t=>{ const a=t.address?.toLowerCase(); if(a&&d[a]) priceMap[t.symbol]=d[a]; });
+      }
+    } catch(e) {}
+  }
+  erc20Tokens.forEach(t=>{ if(!priceMap[t.symbol]&&t.usdPrice) priceMap[t.symbol]={usd:t.usdPrice,idr:t.usdPrice*(S.usdIdr||16000)}; });
+  return priceMap;
+}
+
+async function fetchWalletTokens(address, chainId) {
+  walletState.loading = true;
+  walletState.tokens = [];
+  updateWalletUI();
+  renderPort();
+  try {
+    let result;
+    const isMoralisKeySet = MORALIS_API_KEY && !MORALIS_API_KEY.includes('GANTI');
+    if (isMoralisKeySet) {
+      try { result = await fetchAllTokens(address, chainId); }
+      catch(e) { result = await fetchAllTokensFallback(address); }
+    } else {
+      result = await fetchAllTokensFallback(address);
+      if (walletState.tokens.length === 0) toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Set MORALIS_API_KEY untuk lihat semua ERC-20 token', 1);
+    }
+    const { nativeBalance, erc20Tokens } = result;
+    const nativeSym = NATIVE_SYMBOL[chainId] || 'ETH';
+    const allTokens = [];
+    allTokens.push({ symbol:nativeSym, name:CHAIN_NAME[chainId]||nativeSym, balance:nativeBalance, isNative:true, chainId, valueUSD:null, valueIDR:null, priceUSD:null, priceIDR:null });
+    erc20Tokens.forEach(t => allTokens.push({ symbol:t.symbol, name:t.name, balance:t.balance, isNative:false, address:t.address, logo:t.logo, chainId, valueUSD:null, valueIDR:null, priceUSD:t.usdPrice||null, priceIDR:t.usdPrice?t.usdPrice*(S.usdIdr||16000):null }));
+    walletState.tokens = allTokens;
+    walletState.loading = false;
+    renderPort();
+    const priceMap = await fetchTokenPrices(nativeSym, erc20Tokens, chainId);
+    walletState.tokens = walletState.tokens.map(t => {
+      const p = priceMap[t.symbol];
+      const priceUSD = p?.usd||t.priceUSD||null, priceIDR = p?.idr||t.priceIDR||null;
+      return { ...t, priceUSD, priceIDR, valueUSD:priceUSD?t.balance*priceUSD:null, valueIDR:priceIDR?t.balance*priceIDR:null };
+    });
+    walletState.tokens.sort((a,b) => { if(a.isNative&&!b.isNative)return -1; if(!a.isNative&&b.isNative)return 1; return(b.valueUSD||0)-(a.valueUSD||0); });
+    updateWalletUI();
+    renderPort();
+  } catch(e) {
+    console.error('[Wallet] fetchWalletTokens:', e);
+    walletState.loading = false;
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal memuat token wallet', 1);
+    updateWalletUI(); renderPort();
+  }
+}
+
+// ── OKX: also fetch BTC address automatically
+async function tryFetchOKXBTC(provider) {
+  try {
+    if (!provider.btc) return;
+    const res = await provider.btc.getAccounts();
+    const btcAddr = Array.isArray(res) ? res[0] : res?.address;
+    if (!btcAddr || !isValidBTCAddress(btcAddr)) return;
+    if (walletState.btcAddresses.find(x => x.address === btcAddr)) return;
+    const entry = { address: btcAddr, btc: null, valueIDR: null, valueUSD: null, loading: true, _auto: true };
+    walletState.btcAddresses.push(entry);
+    saveBTCAddresses();
+    renderBTCAddrList();
+    await fetchBTCSingle(entry);
+    renderBTCAddrList();
+    renderPort();
+    toast('₿ BTC address OKX ditemukan & ditambahkan!');
+  } catch(e) { console.warn('[OKX BTC]', e); }
+}
+
+// ── Phantom: also fetch BTC address automatically
+async function tryFetchPhantomBTC(provider) {
+  try {
+    if (!provider.btc) return;
+    const res = await provider.btc.requestAccounts();
+    const btcAddr = Array.isArray(res) ? res[0]?.address || res[0] : null;
+    if (!btcAddr || !isValidBTCAddress(btcAddr)) return;
+    if (walletState.btcAddresses.find(x => x.address === btcAddr)) return;
+    const entry = { address: btcAddr, btc: null, valueIDR: null, valueUSD: null, loading: true, _auto: true };
+    walletState.btcAddresses.push(entry);
+    saveBTCAddresses();
+    renderBTCAddrList();
+    await fetchBTCSingle(entry);
+    renderBTCAddrList();
+    renderPort();
+    toast('₿ BTC address Phantom ditemukan & ditambahkan!');
+  } catch(e) { console.warn('[Phantom BTC]', e); }
+}
+
+async function connectWallet() {
+  const providers = detectProviders();
+  if (!providers.length) {
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tidak ada wallet browser terdeteksi. Install MetaMask, OKX, atau Phantom!', 2);
+    return;
+  }
+  // If multiple providers, pick best one (OKX > Phantom > MetaMask)
+  const order = ['OKX','Phantom','MetaMask','Browser Wallet'];
+  let chosen = providers[0];
+  for (const name of order) { const p = providers.find(x=>x.name===name); if(p){chosen=p;break;} }
+
+  const btn = document.getElementById('btn-connect-wallet');
+  const lbl = document.getElementById('wallet-btn-label');
+  if (btn) btn.disabled = true;
+  if (lbl) lbl.textContent = 'Menghubungkan...';
+
+  try {
+    const evmProvider = chosen.evm;
+    const accounts = await evmProvider.request({ method:'eth_requestAccounts' });
+    if (!accounts || !accounts.length) { toast('Tidak ada akun yang dipilih.', 1); return; }
+    const address = accounts[0];
+    const chainHex = await evmProvider.request({ method:'eth_chainId' });
+    const chainId = parseInt(chainHex, 16);
+
+    walletState.connected = true;
+    walletState.providerName = chosen.name;
+    walletState.address = address;
+    walletState.chainId = chainId;
+    walletState.tokens = [];
+    walletState.loading = true;
+
+    updateWalletUI();
+    toast(`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${chosen.name} terhubung! Memuat semua token...`);
+
+    // EVM tokens
+    await fetchWalletTokens(address, chainId);
+
+    // Try auto-fetch BTC for OKX & Phantom
+    if (chosen.name === 'OKX') tryFetchOKXBTC(chosen);
+    if (chosen.name === 'Phantom') tryFetchPhantomBTC(chosen);
+
+    // Auto-refresh EVM every 60s, BTC every 120s
+    if (walletState.refreshInterval) clearInterval(walletState.refreshInterval);
+    walletState.refreshInterval = setInterval(() => {
+      if (walletState.connected) fetchWalletTokens(walletState.address, walletState.chainId);
+    }, 60000);
+    if (walletState.btcRefreshInterval) clearInterval(walletState.btcRefreshInterval);
+    walletState.btcRefreshInterval = setInterval(() => {
+      if (walletState.btcAddresses.length) refreshAllBTC();
+    }, 120000);
+
+    // Listen events
+    evmProvider.on?.('accountsChanged', accs => {
+      if (!accs||!accs.length) { disconnectWallet(); return; }
+      walletState.address = accs[0]; updateWalletUI();
+      fetchWalletTokens(accs[0], walletState.chainId);
+    });
+    evmProvider.on?.('chainChanged', hex => {
+      walletState.chainId = parseInt(hex,16);
+      walletState.tokens = [];
+      fetchWalletTokens(walletState.address, walletState.chainId);
+    });
+  } catch(e) {
+    if (e.code===4001) toast('Koneksi wallet dibatalkan.', 1);
+    else toast('Gagal connect: '+(e.message||e), 2);
+    if (lbl) lbl.textContent = 'Connect Wallet';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function disconnectWallet() {
+  walletState.connected = false;
+  walletState.providerName = null;
+  walletState.address = null;
+  walletState.chainId = null;
+  walletState.tokens = [];
+  walletState.loading = false;
+  if (walletState.refreshInterval) { clearInterval(walletState.refreshInterval); walletState.refreshInterval=null; }
+  updateWalletUI();
+  renderPort();
+  toast('Wallet EVM terputus.');
+}
+
+function updateWalletUI() {
+  const bar     = document.getElementById('wallet-status-bar');
+  const btnLabel = document.getElementById('wallet-btn-label');
+  const addrEl  = document.getElementById('wallet-address-display');
+  const btn     = document.getElementById('btn-connect-wallet');
+  const chainEl = document.getElementById('wallet-chain-display');
+  const provEl  = document.getElementById('wallet-provider-badge');
+  const balEl   = document.getElementById('wallet-balance-display');
+  const ldEl    = document.getElementById('wallet-balance-loading');
+
+  if (walletState.connected && walletState.address) {
+    if (bar) bar.style.display = 'flex';
+    if (addrEl) addrEl.textContent = truncateAddr(walletState.address);
+    if (chainEl) chainEl.textContent = CHAIN_NAME[walletState.chainId]||'Chain '+walletState.chainId;
+    if (provEl) {
+      const col = PROVIDER_COLOR[walletState.providerName]||'#a78bfa';
+      provEl.textContent = walletState.providerName||'Wallet';
+      provEl.style.color = col;
+      provEl.style.borderColor = col+'55';
+      provEl.style.background = col+'18';
+    }
+    if (btnLabel) btnLabel.textContent = `${walletState.providerName||'Wallet'} ✓`;
+    if (btn) { btn.style.background='rgba(124,58,237,.15)'; btn.style.borderColor='rgba(167,139,250,.5)'; btn.style.color='#a78bfa'; }
+    if (walletState.loading && walletState.tokens.length===0) {
+      if (ldEl) ldEl.style.display='inline-block';
+      if (balEl) balEl.textContent='Memuat...';
+    } else {
+      if (ldEl) ldEl.style.display='none';
+      const totalUSD = walletState.tokens.reduce((s,t)=>s+(t.valueUSD||0),0);
+      const totalIDR = walletState.tokens.reduce((s,t)=>s+(t.valueIDR||0),0);
+      if (balEl) {
+        balEl.textContent = walletState.tokens.length+' token · $'+totalUSD.toLocaleString('en-US',{maximumFractionDigits:2});
+        balEl.title = totalIDR>0?'≈ '+fmtIDR(totalIDR):'';
+      }
+    }
+  } else {
+    if (bar) bar.style.display='none';
+    if (btnLabel) btnLabel.textContent='Connect Wallet';
+    if (btn) { btn.style.background='transparent'; btn.style.borderColor='rgba(124,58,237,.6)'; btn.style.color='#a78bfa'; }
+    if (balEl) balEl.textContent='—';
+    if (ldEl) ldEl.style.display='none';
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   WALLET CHARTS — Alokasi Donut + Histori Nilai Line Chart
+   Snapshot disimpan di localStorage, max 720 data points
+═══════════════════════════════════════════════════════════ */
+
+let cWalletAlloc = null;
+let cWalletHist  = null;
+let walletHistRange = 24; // jam
+let walletSnapshotInterval = null;
+
+// ── Warna palette untuk token ──
+const WALLET_COLORS = [
+  '#00e5ff','#7c3aed','#f59e0b','#10b981','#f43f5e',
+  '#8b5cf6','#06b6d4','#84cc16','#fb923c','#ec4899',
+  '#14b8a6','#a78bfa','#fbbf24','#34d399','#f87171',
+];
+const BTC_COLOR  = '#f59e0b';
+const EVM_COLORS = ['#627EEA','#8247E5','#F3BA2F','#FF0420','#E84142','#0052FF','#1969FF'];
+
+// ── Ambil semua token dari walletState sebagai flat array ──
+function getWalletAllAssets() {
+  const assets = [];
+  // EVM tokens
+  if (walletState.connected && walletState.tokens.length) {
+    walletState.tokens.forEach((t, i) => {
+      if (t.valueIDR && t.valueIDR > 100) { // filter dust < Rp100
+        assets.push({
+          label: t.symbol,
+          valueIDR: t.valueIDR,
+          valueUSD: t.valueUSD || 0,
+          color: t.isNative ? (EVM_COLORS[i] || WALLET_COLORS[i % WALLET_COLORS.length]) : WALLET_COLORS[i % WALLET_COLORS.length],
+          type: 'evm',
+        });
+      }
+    });
+  }
+  // BTC addresses
+  walletState.btcAddresses.forEach((b, i) => {
+    if (b.valueIDR && b.valueIDR > 100) {
+      assets.push({
+        label: 'BTC' + (walletState.btcAddresses.length > 1 ? ` #${i+1}` : ''),
+        valueIDR: b.valueIDR,
+        valueUSD: b.valueUSD || 0,
+        color: i === 0 ? BTC_COLOR : '#fbbf24',
+        type: 'btc',
+      });
+    }
+  });
+  return assets;
+}
+
+// ── Hitung total nilai wallet dalam IDR ──
+function getWalletTotalIDR() {
+  const evmTotal = walletState.tokens.reduce((s, t) => s + (t.valueIDR || 0), 0);
+  const btcTotal = walletState.btcAddresses.reduce((s, b) => s + (b.valueIDR || 0), 0);
+  return evmTotal + btcTotal;
+}
+function getWalletTotalUSD() {
+  const evmTotal = walletState.tokens.reduce((s, t) => s + (t.valueUSD || 0), 0);
+  const btcTotal = walletState.btcAddresses.reduce((s, b) => s + (b.valueUSD || 0), 0);
+  return evmTotal + btcTotal;
+}
+
+// ── Snapshot: simpan nilai total ke localStorage tiap 30 menit ──
+const SNAP_KEY = 'zw_wallet_snapshots';
+const SNAP_MAX = 1440; // max ~30 hari pada interval 30 menit
+
+function saveWalletSnapshot() {
+  const totalIDR = getWalletTotalIDR();
+  if (totalIDR <= 0) return; // jangan simpan kalau 0
+  try {
+    const raw = localStorage.getItem(SNAP_KEY);
+    const snaps = raw ? JSON.parse(raw) : [];
+    const now = Date.now();
+    // Hindari duplikat jika interval terlalu rapat (< 5 menit)
+    if (snaps.length && (now - snaps[snaps.length-1].t) < 5 * 60 * 1000) {
+      // Update snapshot terakhir saja
+      snaps[snaps.length-1] = { t: now, v: Math.round(totalIDR) };
+    } else {
+      snaps.push({ t: now, v: Math.round(totalIDR) });
+    }
+    // Buang yang terlalu lama (> 30 hari)
+    const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    const trimmed = snaps.filter(s => s.t >= cutoff).slice(-SNAP_MAX);
+    localStorage.setItem(SNAP_KEY, JSON.stringify(trimmed));
+  } catch(e) {}
+}
+
+function loadWalletSnapshots(hoursBack) {
+  try {
+    const raw = localStorage.getItem(SNAP_KEY);
+    if (!raw) return [];
+    const snaps = JSON.parse(raw);
+    const cutoff = Date.now() - hoursBack * 60 * 60 * 1000;
+    return snaps.filter(s => s.t >= cutoff);
+  } catch(e) { return []; }
+}
+
+function setWalletHistRange(hours) {
+  walletHistRange = hours;
+  ['24','168','720'].forEach(h => {
+    const btn = document.getElementById('whr-'+h);
+    if (btn) btn.classList.toggle('active', h == hours);
+  });
+  renderWalletHistChart();
+}
+
+// ── Format label waktu singkat ──
+function fmtSnapTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffH = (now - d) / 3600000;
+  if (diffH < 24) return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  return (d.getDate()) + '/' + (d.getMonth()+1) + ' ' + d.getHours().toString().padStart(2,'0') + 'h';
+}
+
+// ── Render donut alokasi ──
+function renderWalletAllocChart() {
+  const assets = getWalletAllAssets();
+  const section = document.getElementById('wallet-chart-section');
+  const legendEl = document.getElementById('wallet-alloc-legend');
+  const canvasEl = document.getElementById('c-wallet-alloc');
+  if (!canvasEl) return;
+
+  if (!assets.length) {
+    if (cWalletAlloc) { cWalletAlloc.destroy(); cWalletAlloc = null; }
+    canvasEl.style.opacity = '.3';
+    if (legendEl) legendEl.innerHTML = '<div style="font-size:.7rem;color:var(--muted);text-align:center">Belum ada data harga</div>';
+    return;
+  }
+  canvasEl.style.opacity = '1';
+
+  const total = assets.reduce((s, a) => s + a.valueIDR, 0);
+  const labels = assets.map(a => a.label);
+  const data   = assets.map(a => a.valueIDR);
+  const colors = assets.map(a => a.color);
+
+  if (cWalletAlloc) cWalletAlloc.destroy();
+  const ctx = canvasEl.getContext('2d');
+  cWalletAlloc = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+    options: {
+      ...CO,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: item => {
+              const val = item.raw;
+              const pct = total > 0 ? (val/total*100).toFixed(1) : '0';
+              return ` ${fmtIDR(val)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Legend manual
+  if (legendEl) {
+    legendEl.innerHTML = assets.map(a => {
+      const pct = total > 0 ? (a.valueIDR/total*100).toFixed(1) : '0';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:.68rem;line-height:1.4">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <span style="width:8px;height:8px;border-radius:50%;background:${a.color};flex-shrink:0;display:inline-block"></span>
+          <span style="color:var(--text);font-weight:700">${a.label}</span>
+        </div>
+        <span style="color:var(--muted)">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── Render line chart histori ──
+function renderWalletHistChart() {
+  const snaps = loadWalletSnapshots(walletHistRange);
+  const canvasEl = document.getElementById('c-wallet-hist');
+  if (!canvasEl) return;
+
+  // Selalu tambahkan snapshot terkini sebagai titik terakhir
+  const totalNow = getWalletTotalIDR();
+  const displaySnaps = [...snaps];
+  if (totalNow > 0) {
+    displaySnaps.push({ t: Date.now(), v: Math.round(totalNow) });
+  }
+
+  if (displaySnaps.length < 2) {
+    if (cWalletHist) { cWalletHist.destroy(); cWalletHist = null; }
+    // Tampilkan placeholder jika belum ada histori
+    const ctx = canvasEl.getContext('2d');
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    if (cWalletHist) return;
+    cWalletHist = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Sekarang'],
+        datasets: [{
+          label: 'Total (IDR)',
+          data: [totalNow > 0 ? Math.round(totalNow/1e6) : 0],
+          borderColor: '#00e5ff',
+          backgroundColor: 'rgba(0,229,255,.08)',
+          fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: '#00e5ff',
+        }]
+      },
+      options: {
+        ...CO,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: item => ' ' + fmtIDR(item.raw * 1e6) } } },
+        scales: {
+          x: { ticks: TK, grid: getGR() },
+          y: { ticks: { ...TK, callback: v => v >= 1000 ? (v/1000)+'M' : v+'jt' }, grid: getGR() }
+        }
+      }
+    });
+    return;
+  }
+
+  const labels = displaySnaps.map(s => fmtSnapTime(s.t));
+  const data   = displaySnaps.map(s => +(s.v / 1e6).toFixed(3));
+
+  // Hitung perubahan
+  const first = data[0], last = data[data.length-1];
+  const isUp  = last >= first;
+  const lineColor = isUp ? '#10b981' : '#f43f5e';
+  const fillColor = isUp ? 'rgba(16,185,129,.08)' : 'rgba(244,63,94,.08)';
+
+  if (cWalletHist) cWalletHist.destroy();
+  const ctx = canvasEl.getContext('2d');
+  cWalletHist = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Wallet (juta IDR)',
+        data,
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        fill: true,
+        tension: .4,
+        pointRadius: displaySnaps.length > 50 ? 0 : 3,
+        pointBackgroundColor: lineColor,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      ...CO,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => {
+              const s = displaySnaps[items[0].dataIndex];
+              return new Date(s.t).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+            },
+            label: item => ' ' + fmtIDR(item.raw * 1e6),
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { ...TK, maxTicksLimit: 8, maxRotation: 0 }, grid: getGR() },
+        y: {
+          ticks: { ...TK, callback: v => v >= 1000 ? Math.round(v/1000)+'M' : v.toFixed(1)+'jt' },
+          grid: getGR()
+        }
+      }
+    }
+  });
+}
+
+// ── Summary cards di atas chart ──
+function renderWalletSummaryBar() {
+  const el = document.getElementById('wallet-summary-bar');
+  if (!el) return;
+
+  const totalIDR = getWalletTotalIDR();
+  const totalUSD = getWalletTotalUSD();
+  const assets = getWalletAllAssets();
+
+  // Hitung perubahan vs snapshot sebelumnya (1 jam lalu)
+  const snaps1h = loadWalletSnapshots(1);
+  let changePct = null, changeIDR = null;
+  if (snaps1h.length >= 1) {
+    const oldest = snaps1h[0].v;
+    if (oldest > 0) {
+      changeIDR = totalIDR - oldest;
+      changePct = (changeIDR / oldest) * 100;
+    }
+  }
+
+  const changeEl = changePct !== null
+    ? `<div style="font-size:.7rem;font-weight:700;color:${changePct>=0?'#10b981':'#f43f5e'};margin-top:.15rem">
+        ${changePct>=0?'▲':'▼'} ${Math.abs(changePct).toFixed(2)}% (1J)
+       </div>`
+    : `<div style="font-size:.65rem;color:var(--muted);margin-top:.15rem">Butuh histori 1J+</div>`;
+
+  const tokenCount = assets.length;
+  const hasEVM  = walletState.connected;
+  const hasBTC  = walletState.btcAddresses.some(b => b.btc !== null);
+
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,58,237,.08));border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:.8rem 1rem">
+      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Total Wallet</div>
+      <div style="font-size:1.1rem;font-weight:900;color:var(--text);font-family:'Space Mono',monospace">
+        ${totalIDR > 0 ? fmtIDR(Math.round(totalIDR)) : '<span style="color:var(--muted)">Memuat...</span>'}
+      </div>
+      <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">${totalUSD > 0 ? '$'+totalUSD.toLocaleString('en-US',{maximumFractionDigits:2}) : ''}</div>
+      ${changeEl}
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem">
+      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Jumlah Token</div>
+      <div style="font-size:1.1rem;font-weight:900;color:var(--accent);font-family:'Space Mono',monospace">${tokenCount}</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem">
+        ${hasEVM ? '<span style="color:#a78bfa">● EVM</span> ' : ''}${hasBTC ? '<span style="color:#f59e0b">₿ BTC</span>' : ''}
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem">
+      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Terbesar</div>
+      ${assets.length > 0
+        ? `<div style="font-size:1rem;font-weight:900;color:${assets.sort((a,b)=>b.valueIDR-a.valueIDR)[0].color};font-family:'Space Mono',monospace">${assets[0].label}</div>
+           <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">${fmtIDR(assets[0].valueIDR)}</div>`
+        : `<div style="font-size:.85rem;color:var(--muted)">—</div>`
+      }
+    </div>
+  `;
+}
+
+// ── Master render: panggil semua chart wallet ──
+function renderWalletCharts() {
+  const hasAny = (walletState.connected && walletState.address) || walletState.btcAddresses.some(b => b.btc !== null);
+  const section = document.getElementById('wallet-chart-section');
+  if (!section) return;
+
+  if (!hasAny) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  renderWalletSummaryBar();
+  renderWalletAllocChart();
+  renderWalletHistChart();
+  saveWalletSnapshot();
+}
+
+// ── Auto snapshot tiap 30 menit ──
+function startWalletSnapshotInterval() {
+  if (walletSnapshotInterval) clearInterval(walletSnapshotInterval);
+  walletSnapshotInterval = setInterval(() => {
+    if (getWalletTotalIDR() > 0) saveWalletSnapshot();
+  }, 30 * 60 * 1000);
+}
+
+// ── Hook ke renderPort: tambahkan wallet charts setelah render ──
+const _origRenderPort_wallet = renderPort;
+renderPort = function() {
+  _origRenderPort_wallet();
+  renderWalletCharts();
+};
+
+// Start snapshot interval on load
+startWalletSnapshotInterval();
+
+
+/* ═══════════════════════════════════════════════════════════
+   z-AI CHAT — Gemini 1.5 Flash via Google AI Studio API
+   Streaming teks realtime · Riwayat percakapan tersimpan
+═══════════════════════════════════════════════════════════ */
+
+const AI_CHAT_SYSTEM = `Kamu adalah z-AI, asisten investasi cerdas yang terintegrasi dalam aplikasi z-wealth — aplikasi Bitcoin DCA Tracker. Kamu ahli dalam:
+- Bitcoin, cryptocurrency, dan blockchain
+- Strategi DCA (Dollar Cost Averaging)
+- Analisis teknikal & fundamental crypto
+- Manajemen risiko investasi
+- Pasar keuangan Indonesia
+
+Gunakan bahasa Indonesia yang natural dan mudah dipahami. Jawaban terstruktur, padat, dan actionable. Gunakan emoji secukupnya. Selalu ingatkan bahwa analisis ini bukan saran investasi finansial jika relevan.`;
+
+let aiChatHistory = [];    // [{role:'user'|'model', parts:[{text}]}]
+let aiIsStreaming = false;
+let aiInitialized = false;
+
+const _BUILT_IN_GEMINI_KEY = 'AIzaSyAjRkczUz9MDytofC5IsPSI8cux_N6gKpU';
+// Groq API - gratis & cepat (Llama 3.3 70B)
+const _GROQ_KEY = ''; // Key disimpan aman di server Vercel, tidak di sini
+const _GROQ_URL = '/api/groq'; // Proxy aman via Vercel serverless function
+const _GROQ_MODEL = 'llama-3.3-70b-versatile';
+
+function getGeminiKey() {
+  return localStorage.getItem('zw_gemini_key') || _BUILT_IN_GEMINI_KEY;
+}
+function getGroqKey() {
+  return 'proxy'; // Key ditangani aman oleh server Vercel
+}
+function saveGeminiKey() {
+  const k = document.getElementById('gemini-key-input')?.value?.trim();
+  if (!k) { toast('Masukkan API key dulu!', 1); return; }
+  localStorage.setItem('zw_gemini_key', k);
+  const warnEl = document.getElementById('pred-apikey-warning');
+  if (warnEl) warnEl.style.display = 'none';
+  toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Gemini API key disimpan!');
+  runBTCPrediction();
+}
+
+function initAIChat() {
+  // Load history from localStorage if not yet loaded
+  if (!aiInitialized) {
+    aiInitialized = true;
+    try {
+      const saved = localStorage.getItem('zw_ai_chat_history');
+      if (saved) aiChatHistory = JSON.parse(saved);
+    } catch(e) { aiChatHistory = []; }
+  }
+
+  const area = document.getElementById('ai-messages-area');
+  if (!area) return;
+
+  if (aiChatHistory.length === 0 && area.children.length === 0) {
+    // Welcome message
+    appendAIMessage('model', `Halo! Saya **z-AI**, asisten investasi kamu yang didukung oleh Gemini AI <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M12 11V3"/><circle cx="12" cy="3" r="1"/><line x1="8" y1="15" x2="8.01" y2="15" stroke-width="3"/><line x1="16" y1="15" x2="16.01" y2="15" stroke-width="3"/><path d="M9 19h6"/></svg>\n\nSaya bisa membantu kamu dengan:\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Analisis & prediksi Bitcoin\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> Strategi DCA terbaik\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg> Membaca indikator pasar\n- <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Rencana investasi jangka panjang\n\nApa yang ingin kamu tanyakan hari ini?`, Date.now(), true);
+  } else if (aiChatHistory.length > 0 && area.children.length === 0) {
+    // Re-render history if area is empty
+    aiChatHistory.forEach(msg => {
+      appendAIMessage(msg.role === 'user' ? 'user' : 'model', msg.parts[0].text, Date.now(), true);
+    });
+  }
+  area.scrollTop = area.scrollHeight;
+}
+
+function clearAIChat() {
+  if (!confirm('Hapus semua riwayat chat dengan z-AI?')) return;
+  aiChatHistory = [];
+  localStorage.removeItem('zw_ai_chat_history');
+  aiInitialized = false;
+  const area = document.getElementById('ai-messages-area');
+  if (area) area.innerHTML = '';
+  initAIChat();
+  toast('Riwayat chat dihapus.');
+}
+
+function saveAIChatHistory() {
+  try {
+    // Simpan max 40 pesan terakhir
+    const trimmed = aiChatHistory.slice(-40);
+    localStorage.setItem('zw_ai_chat_history', JSON.stringify(trimmed));
+  } catch(e) {}
+}
+
+// ── Simple markdown → HTML converter ──
+function aiMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hul])/gm, '')
+    .replace(/\n/g, '<br>')
+    || text;
+}
+
+function appendAIMessage(role, text, ts, skipHistory) {
+  const area = document.getElementById('ai-messages-area');
+  if (!area) return null;
+
+  const isUser = role === 'user';
+  const time = new Date(ts).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  const id = 'ai-msg-' + Date.now() + Math.random().toString(36).slice(2,5);
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (isUser ? 'mine' : 'theirs');
+  row.id = id;
+
+  if (!isUser) {
+    // AI avatar
+    row.innerHTML = `
+      <div class="msg-avatar" style="background:linear-gradient(135deg,#0891b2,#22d3ee);flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+      </div>
+      <div class="msg-bubble-wrap">
+        <div class="msg-sender-name">z-AI</div>
+        <div class="msg-bubble">
+          <div class="ai-bubble-content" id="${id}-content">${aiMarkdown(text)}</div>
+        </div>
+        <div class="msg-time">${time}</div>
+      </div>`;
+  } else {
+    row.innerHTML = `
+      <div class="msg-bubble-wrap">
+        <div class="msg-sender-name">Kamu</div>
+        <div class="msg-bubble">${esc(text).replace(/\n/g,'<br>')}</div>
+        <div class="msg-time">${time}</div>
+      </div>`;
+  }
+
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+  return id;
+}
+
+function showAITyping() {
+  const area = document.getElementById('ai-messages-area');
+  if (!area) return;
+  const el = document.createElement('div');
+  el.className = 'msg-row theirs';
+  el.id = 'ai-typing-indicator';
+  el.innerHTML = `
+    <div class="msg-avatar" style="background:linear-gradient(135deg,#0891b2,#22d3ee)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 0 2h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1 0-2h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+    </div>
+    <div class="msg-bubble-wrap">
+      <div class="msg-sender-name">z-AI</div>
+      <div class="msg-bubble">
+        <div style="display:flex;gap:.35rem;align-items:center;padding:.1rem 0">
+          <div class="ai-typing-dot"></div>
+          <div class="ai-typing-dot"></div>
+          <div class="ai-typing-dot"></div>
+        </div>
+      </div>
+    </div>`;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeAITyping() {
+  document.getElementById('ai-typing-indicator')?.remove();
+}
+
+async function callAI(systemPrompt, messages, maxTokens = 1500) {
+  // Try Groq first (faster, more generous quota)
+  const groqKey = getGroqKey();
+  if (groqKey) {
+    try {
+      const body = {
+        model: _GROQ_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.content || m.parts?.[0]?.text || '' }))
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.7
+      };
+      const res = await fetch(_GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // Authorization ditangani proxy /api/groq
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text) return { text, provider: 'Groq (Llama 3.3)' };
+      }
+      const errData = await res.clone().json().catch(() => ({}));
+      console.warn('[AI] Groq error:', errData.error?.message);
+      // Fall through to Gemini
+    } catch(e) {
+      console.warn('[AI] Groq failed, trying Gemini...', e.message);
+    }
+  }
+
+  // Fallback: Gemini
+  const geminiKey = getGeminiKey();
+  if (geminiKey) {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+    const geminiMessages = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : m.role, parts: [{ text: m.content || m.parts?.[0]?.text || '' }] }));
+    const body = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: geminiMessages,
+      generationConfig: { temperature: 0.7, maxOutputTokens: maxTokens }
+    };
+    const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.ok) {
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return { text, provider: 'Gemini' };
+    }
+    const errData = await res.clone().json().catch(() => ({}));
+    throw new Error(errData.error?.message || 'Semua AI tidak tersedia saat ini.');
+  }
+
+  throw new Error('Tidak ada API key tersedia.');
+}
+
+async function sendAIMessage(overrideText) {
+  if (aiIsStreaming) return;
+  const input = document.getElementById('ai-chat-input');
+  const text = overrideText || input?.value?.trim();
+  if (!text) return;
+
+  // Show user message
+  appendAIMessage('user', text, Date.now());
+  if (input) { input.value = ''; if(input.style) input.style.height = ''; }
+
+  // Hide suggestion chips after first message
+  const chips = document.getElementById('ai-suggestions');
+  if (chips) chips.style.display = 'none';
+
+  // Add to history (Gemini format)
+  aiChatHistory.push({ role: 'user', parts: [{ text }] });
+
+  // Show typing
+  aiIsStreaming = true;
+  showAITyping();
+
+  const status = document.getElementById('ai-chat-status');
+  if (status) status.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:.3rem;animation:pulse 1s infinite"></span>z-AI sedang mengetik...';
+
+  const btn = document.getElementById('ai-send-btn');
+  if (btn) btn.disabled = true;
+
+  try {
+    let systemContext = AI_CHAT_SYSTEM;
+    if (S.btcPrice) {
+      systemContext += `\n\nData realtime saat ini:\n- Harga BTC: $${S.btcPrice.toLocaleString()}\n- BTC/IDR: ${fmtIDR(S.btcPrice * (S.usdIdr||16000))}\n- Kurs USD/IDR: ${S.usdIdr?.toLocaleString()||'16.000'}`;
+    }
+
+    // Convert history to universal format for callAI
+    const messages = aiChatHistory.slice(-20).map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.parts?.[0]?.text || m.content || '' }));
+
+    const result = await callAI(systemContext, messages);
+
+    removeAITyping();
+    appendAIMessage('model', result.text, Date.now());
+    aiChatHistory.push({ role: 'model', parts: [{ text: result.text }] });
+    saveAIChatHistory();
+
+    if (status) status.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:.3rem;box-shadow:0 0 6px #10b981"></span>Powered by ${result.provider} · Siap membantu`;
+
+  } catch(e) {
+    console.error('[z-AI]', e);
+    removeAITyping();
+    appendAIMessage('model', `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${e.message}`, Date.now());
+    if (status) status.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:.3rem"></span>Error · Coba lagi';
+  } finally {
+    aiIsStreaming = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+function aiChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+}
+
+function aiChipSend(btn) {
+  const text = btn.getAttribute('data-prompt') || btn.textContent.trim();
+  sendAIMessage(text);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   PREDIKSI HARGA BITCOIN — CoinGecko + Fear&Greed + Gemini
+═══════════════════════════════════════════════════════════ */
+
+let cPredPrice = null;
+let predData = null;
+
+async function runBTCPrediction() {
+  const key = getGeminiKey();
+  const warningEl = document.getElementById('pred-apikey-warning');
+
+  if (!key && warningEl) {
+    warningEl.style.display = 'block';
+  } else if (warningEl) {
+    warningEl.style.display = 'none';
+  }
+
+  const btn = document.getElementById('pred-refresh-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Memuat...'; }
+
+  // Reset UI
+  document.getElementById('pred-verdict').className = 'pred-verdict loading';
+  document.getElementById('pred-verdict-icon').textContent = '⏳';
+  document.getElementById('pred-verdict-text').textContent = 'Menganalisis...';
+  document.getElementById('pred-ai-narrative').innerHTML = '<div class="shimmer" style="width:90%"></div><div class="shimmer" style="width:75%"></div><div class="shimmer" style="width:85%"></div>';
+
+  try {
+    // 1. Fetch BTC market data from CoinGecko
+    const [cgRes, fngRes, histRes] = await Promise.allSettled([
+      fetch('https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false'),
+      fetch('https://api.alternative.me/fng/?limit=7'),
+      fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily'),
+    ]);
+
+    let cgData = null, fngData = null, histData = null;
+    if (cgRes.status==='fulfilled' && cgRes.value.ok) cgData = await cgRes.value.json();
+    if (fngRes.status==='fulfilled' && fngRes.value.ok) fngData = await fngRes.value.json();
+    if (histRes.status==='fulfilled' && histRes.value.ok) histData = await histRes.value.json();
+
+    if (!cgData) throw new Error('Gagal mengambil data harga BTC');
+
+    const md = cgData.market_data;
+    const price = md.current_price.usd;
+    const priceIDR = md.current_price.idr;
+    const change24h = md.price_change_percentage_24h;
+    const change7d = md.price_change_percentage_7d;
+    const high24 = md.high_24h.usd;
+    const low24 = md.low_24h.usd;
+    const vol24 = md.total_volume.usd;
+    const mcap = md.market_cap.usd;
+    const ath = md.ath.usd;
+    const athPct = ((price - ath) / ath * 100);
+
+    // FNG
+    const fngVal = fngData?.data?.[0]?.value ? parseInt(fngData.data[0].value) : null;
+    const fngCat = fngData?.data?.[0]?.value_classification || '—';
+
+    // Update price displays
+    document.getElementById('pred-price-big').textContent = '$' + price.toLocaleString('en-US');
+    document.getElementById('pred-price-idr').textContent = fmtIDR(priceIDR);
+    const changeBadge = document.getElementById('pred-change-badge');
+    changeBadge.textContent = (change24h>=0?'▲':'▼') + ' ' + Math.abs(change24h).toFixed(2) + '% (24J)';
+    changeBadge.style.background = change24h>=0 ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)';
+    changeBadge.style.border = change24h>=0 ? '1px solid rgba(16,185,129,.3)' : '1px solid rgba(239,68,68,.3)';
+    changeBadge.style.color = change24h>=0 ? '#10b981' : '#ef4444';
+
+    // Stats
+    document.getElementById('pred-vol').textContent = '$' + (vol24/1e9).toFixed(1)+'B';
+    document.getElementById('pred-mcap').textContent = '$' + (mcap/1e12).toFixed(2)+'T';
+    document.getElementById('pred-high').textContent = '$' + high24.toLocaleString();
+    document.getElementById('pred-low').textContent = '$' + low24.toLocaleString();
+
+    // FNG bar
+    if (fngVal !== null) {
+      const fngColor = fngVal <= 24 ? '#ef4444' : fngVal <= 44 ? '#f97316' : fngVal <= 54 ? '#f59e0b' : fngVal <= 74 ? '#84cc16' : '#10b981';
+      document.getElementById('fng-bar').style.width = fngVal + '%';
+      document.getElementById('fng-bar').style.background = fngColor;
+      document.getElementById('fng-value-text').textContent = fngVal;
+      document.getElementById('fng-value-text').style.color = fngColor;
+      document.getElementById('fng-category-text').textContent = fngCat;
+      document.getElementById('fng-category-text').style.color = fngColor;
+    }
+
+    // Price levels (simple calc based on ATH and current)
+    const r2 = Math.round(price * 1.15);
+    const r1 = Math.round(price * 1.07);
+    const s1 = Math.round(price * 0.93);
+    const s2 = Math.round(price * 0.85);
+    document.getElementById('pred-r2').textContent = '$' + r2.toLocaleString();
+    document.getElementById('pred-r1').textContent = '$' + r1.toLocaleString();
+    document.getElementById('pred-cur-level').textContent = '$' + price.toLocaleString();
+    document.getElementById('pred-s1').textContent = '$' + s1.toLocaleString();
+    document.getElementById('pred-s2').textContent = '$' + s2.toLocaleString();
+
+    // 30-day price chart
+    if (histData?.prices) {
+      const labels = histData.prices.map(p => {
+        const d = new Date(p[0]);
+        return (d.getDate()) + '/' + (d.getMonth()+1);
+      });
+      const prices = histData.prices.map(p => p[1]);
+      const isUpTrend = prices[prices.length-1] > prices[0];
+      if (cPredPrice) cPredPrice.destroy();
+      const ctx = document.getElementById('c-pred-price')?.getContext('2d');
+      if (ctx) {
+        cPredPrice = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'BTC/USD',
+              data: prices,
+              borderColor: isUpTrend ? '#10b981' : '#ef4444',
+              backgroundColor: isUpTrend ? 'rgba(16,185,129,.08)' : 'rgba(239,68,68,.08)',
+              fill: true, tension: .4, pointRadius: 0, borderWidth: 2,
+            }]
+          },
+          options: {
+            ...CO,
+            plugins: { legend:{display:false}, tooltip:{callbacks:{label:i=>' $'+Math.round(i.raw).toLocaleString()}} },
+            scales: {
+              x: { ticks:{...TK,maxTicksLimit:8,maxRotation:0}, grid:getGR() },
+              y: { ticks:{...TK,callback:v=>'$'+(v/1000).toFixed(0)+'K'}, grid:getGR() }
+            }
+          }
+        });
+      }
+    }
+
+    // Store for AI analysis
+    predData = { price, priceIDR, change24h, change7d, high24, low24, vol24, mcap, fngVal, fngCat, ath, athPct };
+    document.getElementById('pred-last-updated').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+
+    // AI Analysis with Gemini
+    await runGeminiPrediction(predData, key);
+
+  } catch(e) {
+    console.error('[Prediksi]', e);
+    toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ' + e.message, 1);
+    document.getElementById('pred-ai-narrative').textContent = 'Gagal memuat data: ' + e.message;
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh'; }
+  }
+}
+
+async function runGeminiPrediction(data, key) {
+  const verdictEl = document.getElementById('pred-verdict');
+  const verdictIcon = document.getElementById('pred-verdict-icon');
+  const verdictText = document.getElementById('pred-verdict-text');
+  const narrativeEl = document.getElementById('pred-ai-narrative');
+  const confFill = document.getElementById('pred-confidence-fill');
+  const confVal = document.getElementById('pred-confidence-val');
+
+  try {
+    const prompt = `Kamu adalah analis Bitcoin profesional. Berikan analisis singkat dan prediksi berdasarkan data berikut:
+
+DATA REAL-TIME:
+- Harga BTC: $${data.price.toLocaleString()} (${data.change24h?.toFixed(2)}% 24J, ${data.change7d?.toFixed(2)}% 7H)
+- High/Low 24J: $${data.high24?.toLocaleString()} / $${data.low24?.toLocaleString()}
+- Volume 24J: $${(data.vol24/1e9)?.toFixed(1)}B
+- Market Cap: $${(data.mcap/1e12)?.toFixed(2)}T
+- Fear & Greed Index: ${data.fngVal} (${data.fngCat})
+- ATH: $${data.ath?.toLocaleString()} (${data.athPct?.toFixed(1)}% dari ATH)
+
+Berikan:
+1. **Verdict**: BULLISH / BEARISH / NETRAL dengan alasan 1 kalimat
+2. **Analisis teknikal**: 2-3 poin utama tentang kondisi pasar sekarang
+3. **Proyeksi jangka pendek**: prediksi 1-2 minggu ke depan
+4. **Saran untuk DCA investor**: apakah bagus untuk DCA sekarang?
+5. **Risiko utama**: 1-2 risiko yang perlu diwaspadai
+
+Format: Padat, gunakan bullet points, max 300 kata. Jawab dalam Bahasa Indonesia.`;
+
+    const result = await callAI('Kamu adalah analis Bitcoin profesional yang memberikan analisis objektif dan bertanggung jawab.', [{ role: 'user', content: prompt }], 800);
+    const aiText = result.text;
+
+    const lower = aiText.toLowerCase();
+    const isBullish = lower.includes('bullish') && !lower.includes('tidak bullish');
+    const isBearish = lower.includes('bearish') && !lower.includes('tidak bearish');
+    const verdict = isBullish ? 'bullish' : isBearish ? 'bearish' : 'neutral';
+
+    verdictEl.className = 'pred-verdict ' + verdict;
+    verdictIcon.innerHTML = verdict==='bullish'?'<span style="font-size:1.3rem">&#128640;</span>':verdict==='bearish'?'<span style="font-size:1.3rem">&#128059;</span>':'<span style="font-size:1.3rem">&#9878;</span>';
+    verdictText.textContent = verdict==='bullish'?'BULLISH':verdict==='bearish'?'BEARISH':'NETRAL';
+
+    const conf = Math.min(55 + Math.abs(data.change24h)*3 + (data.fngVal?Math.abs(data.fngVal-50)*0.4:0), 92);
+    if(confFill) confFill.style.width = Math.round(conf)+'%';
+    if(confVal) confVal.textContent = Math.round(conf)+'%';
+
+    narrativeEl.innerHTML = '<div class="ai-bubble-content">' + aiMarkdown(aiText) + '</div>';
+
+  } catch(e) {
+    console.error('[AI Predict]', e);
+    // Fallback tanpa AI jika semua gagal
+    const verdict = data.change24h > 2 && data.fngVal > 50 ? 'bullish' : data.change24h < -2 && data.fngVal < 40 ? 'bearish' : 'neutral';
+    verdictEl.className = 'pred-verdict ' + verdict;
+    verdictIcon.innerHTML = verdict==='bullish'?'<span style="font-size:1.3rem">&#128640;</span>':verdict==='bearish'?'<span style="font-size:1.3rem">&#128059;</span>':'<span style="font-size:1.3rem">&#9878;</span>';
+    verdictText.textContent = verdict==='bullish'?'BULLISH':verdict==='bearish'?'BEARISH':'NETRAL';
+    const pct = Math.min(Math.abs(data.change24h) * 8 + 40, 85);
+    if(confFill) confFill.style.width = pct+'%';
+    if(confVal) confVal.textContent = Math.round(pct)+'%';
+    narrativeEl.innerHTML = `<p><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg> Analisis data pasar (AI tidak tersedia):</p>
+      <p>• Harga BTC: <strong>$${data.price.toLocaleString()}</strong> (${data.change24h>0?'+':''}${data.change24h.toFixed(2)}% 24J)</p>
+      <p>• Fear & Greed: <strong>${data.fngVal||'—'} — ${data.fngCat}</strong></p>
+      <p>• Perubahan 7 hari: ${data.change7d>0?'+':''}${data.change7d?.toFixed(2)||'—'}%</p>
+      <p style="margin-top:.7rem;padding:.6rem;background:rgba(245,158,11,.08);border-radius:8px;font-size:.78rem;color:var(--accent4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${e.message}</p>`;
+  }
+}
+
+// Auto-run prediction when page shown — handled directly in showPage above
+
+/* ══════════════════════════════════════════════════════
+   BERITA KRIPTO — Fetch + Terjemah Groq + Sentimen
+══════════════════════════════════════════════════════ */
+let _newsCache = null;
+let _newsFilter = 'semua';
+let _newsLoading = false;
+
+async function loadCryptoNews(forceRefresh = false) {
+  if (_newsLoading) return;
+  if (_newsCache && !forceRefresh) { renderNewsList(_newsCache); return; }
+
+  _newsLoading = true;
+  const btn = document.getElementById('news-refresh-btn');
+  const icon = document.getElementById('news-spin-icon');
+  if (btn) btn.disabled = true;
+  if (icon) icon.style.animation = 'spin .8s linear infinite';
+
+  document.getElementById('news-list').innerHTML = [1,2,3,4,5].map(() => `
+    <div class="news-card loading-card">
+      <div class="shimmer" style="width:70px;height:18px;border-radius:99px;margin-bottom:.5rem"></div>
+      <div class="shimmer" style="width:90%;height:16px;margin-bottom:.35rem"></div>
+      <div class="shimmer" style="width:70%;height:14px;margin-bottom:.5rem"></div>
+      <div class="shimmer" style="width:50%;height:12px"></div>
+    </div>`).join('');
+
+  try {
+    const groqKey = getGroqKey();
+    if (!groqKey) throw new Error('API key Groq tidak tersedia');
+
+    const today = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const todayEn = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    const res = await fetch(_GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // Authorization ditangani proxy /api/groq
+      body: JSON.stringify({
+        model: _GROQ_MODEL,
+        messages: [{
+          role: 'user',
+          content: `Hari ini adalah ${today}.
+
+Kamu adalah jurnalis kripto Indonesia terpercaya. Buat 12 berita kripto TERKINI dalam Bahasa Indonesia berdasarkan pengetahuanmu tentang kondisi pasar kripto terbaru.
+
+Topik yang harus dicakup (pilih yang paling relevan dan terkini):
+- Pergerakan harga Bitcoin, Ethereum, Solana, XRP
+- Kebijakan/regulasi kripto dari pemerintah atau lembaga keuangan
+- Adopsi Bitcoin oleh institusi atau perusahaan
+- Update ETF Bitcoin/Ethereum
+- Berita keamanan (hack, scam, fraud)  
+- Perkembangan DeFi dan Web3
+- Berita makroekonomi yang pengaruhi kripto
+- Mining dan hashrate Bitcoin
+
+PENTING: Buat berita yang realistis, akurat, dan sesuai dengan kondisi pasar kripto saat ini.
+
+Balas HANYA JSON array ini tanpa teks lain:
+[
+  {
+    "judul": "Judul berita menarik dalam Bahasa Indonesia (max 100 karakter)",
+    "ringkasan": "Satu kalimat ringkasan konteks berita (max 120 karakter)",
+    "sentimen": "POSITIF atau NEGATIF atau NETRAL",
+    "coins": ["BTC"],
+    "source": "Nama media (CoinDesk/Bloomberg/Reuters/CoinTelegraph/dll)"
+  }
+]`
+        }],
+        max_tokens: 3000,
+        temperature: 0.6
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    let text = data.choices?.[0]?.message?.content || '';
+    text = text.replace(/```json|```/g, '').trim();
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('Format respons AI tidak valid');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Tidak ada berita diterima dari AI');
+
+    const articles = parsed.map((a, i) => ({
+      id: i,
+      judulID: (a.judul || '').trim(),
+      ringkasan: (a.ringkasan || '').trim(),
+      sentimen: (a.sentimen || 'NETRAL').toUpperCase().replace(/[^A-Z]/g,'') || 'NETRAL',
+      coins: Array.isArray(a.coins) ? a.coins : guessCoinsFromTitle(a.judul || ''),
+      source: a.source || 'Kripto News',
+      url: null,
+      published: new Date().toISOString()
+    })).filter(a => a.judulID.length > 5);
+
+    _newsCache = articles;
+    renderNewsList(articles);
+
+  } catch(e) {
+    console.error('[News]', e);
+    document.getElementById('news-list').innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;color:var(--muted)">
+        <div style="font-size:2.5rem;margin-bottom:.7rem"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:.4rem">Gagal memuat berita</div>
+        <div style="font-size:.78rem;line-height:1.5;margin-bottom:1.2rem;max-width:260px;margin-left:auto;margin-right:auto">${e.message}</div>
+        <button onclick="loadCryptoNews(true)" style="background:var(--accent);color:#050810;border:none;border-radius:10px;padding:.55rem 1.4rem;font-weight:700;cursor:pointer;font-size:.85rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Coba Lagi</button>
+      </div>`;
+  } finally {
+    _newsLoading = false;
+    if (btn) btn.disabled = false;
+    if (icon) icon.style.animation = '';
+  }
+}
+
+function guessCoinsFromTitle(title) {
+  const t = (title || '').toLowerCase();
+  const coins = [];
+  if (t.includes('bitcoin') || /\bbtc\b/.test(t)) coins.push('BTC');
+  if (t.includes('ethereum') || /\beth\b/.test(t)) coins.push('ETH');
+  if (t.includes('solana') || /\bsol\b/.test(t)) coins.push('SOL');
+  if (t.includes('xrp') || t.includes('ripple')) coins.push('XRP');
+  if (t.includes('bnb') || t.includes('binance')) coins.push('BNB');
+  if (t.includes('doge') || t.includes('dogecoin')) coins.push('DOGE');
+  return coins;
+}
+
+function detectSentimentLocal(title) {
+  const t = (title || '').toLowerCase();
+  const pos = ['naik','rally','bull','rekor','adopsi','disetujui','positif','surge','rise','gain','record','adopt','approve','launch','soar','growth','etf','melonjak','tumbuh'];
+  const neg = ['turun','crash','jatuh','bear','rugi','hack','diretas','banned','larangan','bangkrut','scam','penipuan','fall','drop','loss','ban','fraud','collapse','plunge','dump'];
+  const posScore = pos.filter(w => t.includes(w)).length;
+  const negScore = neg.filter(w => t.includes(w)).length;
+  if (posScore > negScore) return 'POSITIF';
+  if (negScore > posScore) return 'NEGATIF';
+  return 'NETRAL';
+}
+
+function renderNewsList(articles) {
+  const pos = articles.filter(a => a.sentimen === 'POSITIF').length;
+  const neg = articles.filter(a => a.sentimen === 'NEGATIF').length;
+  const neu = articles.filter(a => a.sentimen === 'NETRAL').length;
+  const total = articles.length || 1;
+
+  const sentWrap = document.getElementById('news-sent-wrap');
+  if (sentWrap) {
+    sentWrap.style.display = 'block';
+    document.getElementById('news-pos-bar').style.width = Math.round(pos/total*100) + '%';
+    document.getElementById('news-pos-pct').textContent = Math.round(pos/total*100) + '%';
+    document.getElementById('news-cnt-pos').textContent = pos;
+    document.getElementById('news-cnt-neg').textContent = neg;
+    document.getElementById('news-cnt-neu').textContent = neu;
+  }
+
+  let filtered = articles;
+  if (_newsFilter === 'positif') filtered = articles.filter(a => a.sentimen === 'POSITIF');
+  else if (_newsFilter === 'negatif') filtered = articles.filter(a => a.sentimen === 'NEGATIF');
+  else if (_newsFilter === 'bitcoin') filtered = articles.filter(a =>
+    (a.coins||[]).some(c => c.toUpperCase() === 'BTC') ||
+    (a.judulID||'').toLowerCase().includes('bitcoin') ||
+    (a.judulID||'').toLowerCase().includes('btc'));
+  else if (_newsFilter === 'ethereum') filtered = articles.filter(a =>
+    (a.coins||[]).some(c => c.toUpperCase() === 'ETH') ||
+    (a.judulID||'').toLowerCase().includes('ethereum') ||
+    (a.judulID||'').toLowerCase().includes('eth'));
+
+  if (filtered.length === 0) {
+    document.getElementById('news-list').innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--muted)">
+        <div style="font-size:1.8rem;margin-bottom:.5rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div>Tidak ada berita untuk filter ini</div>
+      </div>`;
+    return;
+  }
+
+  const html = filtered.map(a => {
+    const sClass = a.sentimen === 'POSITIF' ? 'positif' : a.sentimen === 'NEGATIF' ? 'negatif' : 'netral';
+    const badgeIcon = a.sentimen === 'POSITIF' ? '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#10b981"/></svg>' : a.sentimen === 'NEGATIF' ? '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4.5" fill="#ef4444"/></svg>' : '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="5" cy="5" r="4" fill="none" stroke="#64748b" stroke-width="1.5"/></svg>';
+    const badgeTxt = a.sentimen === 'POSITIF' ? 'Positif' : a.sentimen === 'NEGATIF' ? 'Negatif' : 'Netral';
+    const coinsHTML = (a.coins||[]).length
+      ? `<div class="news-coins">${a.coins.slice(0,4).map(c=>`<span class="news-coin-tag">${c}</span>`).join('')}</div>`
+      : '';
+    const ringkasanHTML = a.ringkasan
+      ? `<div style="font-size:.76rem;color:var(--muted);line-height:1.45;margin-bottom:.4rem">${a.ringkasan}</div>`
+      : '';
+
+    return `<div class="news-card ${sClass}">
+      <span class="news-sentiment-badge badge-${sClass}">${badgeIcon} ${badgeTxt}</span>
+      <div class="news-title">${a.judulID}</div>
+      ${ringkasanHTML}
+      ${coinsHTML}
+      <div class="news-meta">
+        <span class="news-source-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2 2 2 0 0 0 2 2z"/><rect x="10" y="4" width="8" height="5"/><path d="M10 13h8M10 16h8"/></svg> ${a.source}</span>
+        <span style="color:var(--muted);font-size:.6rem;font-style:italic">· via Groq AI</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('news-list').innerHTML = html;
+}
+
+function filterNews(filter, btn) {
+  _newsFilter = filter;
+  document.querySelectorAll('.nf-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (_newsCache) renderNewsList(_newsCache);
+}
+
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 60) return 'Baru saja';
+    if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+    if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+    return Math.floor(diff/86400) + ' hari lalu';
+  } catch(e) { return ''; }
+}
+
+// ── Load saved BTC addresses on app start ──
+document.addEventListener('DOMContentLoaded', () => { setTimeout(loadBTCAddresses, 1000); });
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', e => {
