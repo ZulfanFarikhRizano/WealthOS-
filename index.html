@@ -6497,19 +6497,42 @@ async function fetchKlines(symbol, interval, limit=150) {
 }
 
 async function fetchTicker24h(symbol) {
-  // 1. Vercel proxy
+  // 1. Vercel proxy /api/ticker (paling andal)
   try {
     const r = await fetch(`/api/ticker?symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
     const d = await r.json();
     if (d.ok && d.data) return d.data;
   } catch(e) { console.warn('[/api/ticker]', e.message); }
+
   // 2. Bybit langsung
-  try { return await bybitTicker(symbol); } catch(e) { console.warn('[Bybit ticker]', e.message); }
-  // 3. Binance proxy fallback
   try {
-    const text = await (await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)}`, {signal:AbortSignal.timeout(6000)})).text();
+    const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.retCode === 0 && d.result?.list?.length) {
+      const t = d.result.list[0];
+      return { lastPrice: t.lastPrice, priceChangePercent: (parseFloat(t.price24hPcnt) * 100).toFixed(2) };
+    }
+  } catch(e) { console.warn('[Bybit ticker]', e.message); }
+
+  // 3. OKX langsung
+  try {
+    const instId = symbol.replace('USDT', '-USDT');
+    const r = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.code === '0' && d.data?.length) {
+      const t = d.data[0];
+      return { lastPrice: t.last, priceChangePercent: (parseFloat(t.sodUtc8) > 0 ? ((parseFloat(t.last) - parseFloat(t.sodUtc8)) / parseFloat(t.sodUtc8) * 100).toFixed(2) : '0') };
+    }
+  } catch(e) { console.warn('[OKX ticker]', e.message); }
+
+  // 4. Binance via allorigins proxy
+  try {
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
+    const text = await r.text();
     if (!text.trim().startsWith('<')) return JSON.parse(text);
-  } catch(e) {}
+  } catch(e) { console.warn('[Binance proxy ticker]', e.message); }
+
   return null;
 }
 
@@ -14125,6 +14148,11 @@ async function loadLiqData() {
     if (tickerData) {
       btcPrice = parseFloat(tickerData.lastPrice) || 0;
       btcChange = parseFloat(tickerData.priceChangePercent) || 0;
+    }
+
+    // Fallback: ambil harga dari klines close terakhir jika ticker gagal
+    if (!btcPrice && klines.length > 0) {
+      btcPrice = parseFloat(klines[klines.length - 1][4]) || 0;
     }
 
     // OI optional dari Binance futures
