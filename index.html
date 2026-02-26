@@ -10650,6 +10650,10 @@ let chatState = {
   msgSubscription: null,
   newRoomType: 'group',
   newRoomColor: AVATAR_COLORS[0],
+  // Pagination
+  msgOffset: 0,
+  msgHasMore: false,
+  msgLoadingMore: false,
 };
 
 let chatSB = null;
@@ -10949,20 +10953,127 @@ async function openRoom(roomId, name, type, color) {
 }
 
 // ── LOAD MESSAGES ──
+const MSG_PAGE_SIZE = 40;
+
 async function loadMessages(roomId) {
   const area = document.getElementById('messages-area');
   area.innerHTML = '<div class="msg-skeleton" style="width:60%;margin:.5rem 0"></div><div class="msg-skeleton" style="width:40%;margin:.5rem 0 .5rem auto"></div>';
+
+  // Reset pagination state
+  chatState.msgOffset = 0;
+  chatState.msgHasMore = false;
 
   const { data: msgs, error } = await chatSB
     .from('messages')
     .select('*')
     .eq('room_id', roomId)
-    .order('created_at', { ascending: true })
-    .limit(100);
+    .order('created_at', { ascending: false })
+    .limit(MSG_PAGE_SIZE);
+
+  // Guard: jika user sudah pindah room saat fetch berlangsung, batalkan render
+  if (chatState.currentRoomId !== roomId) return;
 
   if (error) { area.innerHTML = '<div class="chat-empty"><div class="chat-empty-text">Gagal memuat pesan</div></div>'; return; }
 
-  renderMessages(msgs || []);
+  const list = (msgs || []).reverse();
+  chatState.msgOffset = list.length;
+  chatState.msgHasMore = (msgs || []).length === MSG_PAGE_SIZE;
+
+  renderMessages(list);
+  renderLoadMoreBtn();
+}
+
+async function loadMoreMessages() {
+  if (!chatState.msgHasMore || chatState.msgLoadingMore) return;
+  const roomId = chatState.currentRoomId;
+  if (!roomId) return;
+
+  chatState.msgLoadingMore = true;
+
+  // Update tombol jadi loading
+  const btn = document.getElementById('load-more-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,229,255,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px"></span>Memuat...`;
+  }
+
+  const { data: msgs, error } = await chatSB
+    .from('messages')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('created_at', { ascending: false })
+    .range(chatState.msgOffset, chatState.msgOffset + MSG_PAGE_SIZE - 1);
+
+  chatState.msgLoadingMore = false;
+
+  if (chatState.currentRoomId !== roomId) return;
+  if (error) { if (btn) { btn.disabled = false; btn.textContent = 'Gagal, coba lagi'; } return; }
+
+  const list = (msgs || []).reverse();
+  chatState.msgOffset += list.length;
+  chatState.msgHasMore = (msgs || []).length === MSG_PAGE_SIZE;
+
+  // Simpan scroll position supaya tidak loncat ke atas
+  const area = document.getElementById('messages-area');
+  const oldScrollHeight = area.scrollHeight;
+
+  // Hapus tombol load more lama
+  const oldBtn = document.getElementById('load-more-wrap');
+  if (oldBtn) oldBtn.remove();
+
+  // Prepend pesan lama ke atas
+  let html = '';
+  let lastDate = '';
+  list.forEach(msg => {
+    const d = new Date(msg.created_at);
+    const dateLabel = d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+    if (dateLabel !== lastDate) {
+      html += `<div class="msg-date-sep">${dateLabel}</div>`;
+      lastDate = dateLabel;
+    }
+    html += buildMsgBubble(msg);
+  });
+
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  // Bind reply gesture pada pesan lama
+  temp.querySelectorAll('.msg-bubble').forEach(b => bindReplyGesture(b));
+
+  // Insert semua node sebelum pesan pertama yang ada
+  const firstChild = area.firstChild;
+  while (temp.firstChild) {
+    area.insertBefore(temp.firstChild, firstChild);
+  }
+
+  // Kembalikan scroll position supaya tidak loncat
+  area.scrollTop = area.scrollHeight - oldScrollHeight;
+
+  // Render tombol load more baru jika masih ada
+  renderLoadMoreBtn();
+}
+
+function renderLoadMoreBtn() {
+  const area = document.getElementById('messages-area');
+  // Hapus tombol lama jika ada
+  const old = document.getElementById('load-more-wrap');
+  if (old) old.remove();
+
+  if (!chatState.msgHasMore) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'load-more-wrap';
+  wrap.style.cssText = 'display:flex;justify-content:center;padding:.6rem 0 .4rem';
+  wrap.innerHTML = `<button id="load-more-btn" onclick="loadMoreMessages()" style="
+    background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);
+    border-radius:20px;padding:.4rem 1.1rem;color:var(--accent);
+    font-size:.72rem;font-weight:700;font-family:'Inter',sans-serif;
+    cursor:pointer;display:flex;align-items:center;gap:.4rem;
+    transition:background .2s,border-color .2s;
+  " onmouseover="this.style.background='rgba(0,229,255,.15)'" onmouseout="this.style.background='rgba(0,229,255,.08)'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+    Muat pesan sebelumnya
+  </button>`;
+  area.insertBefore(wrap, area.firstChild);
 }
 
 function renderMessages(msgs) {
@@ -10990,6 +11101,9 @@ function renderMessages(msgs) {
   area.querySelectorAll('.msg-bubble').forEach(b => {
     bindReplyGesture(b);
   });
+
+  // Render tombol load more di atas jika ada lebih banyak pesan
+  renderLoadMoreBtn();
 }
 
 function buildMsgBubble(msg) {
@@ -11067,6 +11181,8 @@ function subscribeRoom(roomId) {
 function appendMessage(msg) {
   const area = document.getElementById('messages-area');
   if (!area) return;
+  // Deduplication: jangan append jika pesan sudah ada
+  if (msg.id && area.querySelector(`[data-msg-id="${msg.id}"]`)) return;
   // Remove empty state
   const empty = area.querySelector('.chat-empty');
   if (empty) empty.remove();
