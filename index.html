@@ -6443,28 +6443,79 @@ async function fetchWithTimeout(url, ms=8000, retries=1){
 
 // ── BINANCE FETCH WITH PROXY FALLBACK ──
 // Binance diblokir ISP di Indonesia — coba langsung dulu, fallback ke proxy CORS
-const BINANCE_PROXIES = [
-  url => url, // langsung (tidak diproxy)
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-];
+// ── MULTI-SOURCE KLINES FETCH ──
+// Bybit (primary) → OKX (fallback) → Binance proxy (last resort)
+// Bybit & OKX tidak diblokir ISP Indonesia, CORS terbuka
+
+const BYBIT_TF_MAP = {'1m':'1','3m':'3','5m':'5','15m':'15','30m':'30','1h':'60','2h':'120','4h':'240','6h':'360','12h':'720','1d':'D','1w':'W','1M':'M'};
+const OKX_TF_MAP = {'1m':'1m','3m':'3m','5m':'5m','15m':'15m','30m':'30m','1h':'1H','2h':'2H','4h':'4H','6h':'6H','12h':'12H','1d':'1Dutc','1w':'1Wutc','1M':'1Mutc'};
+
+async function bybitKlines(symbol, interval, limit) {
+  const tf = BYBIT_TF_MAP[interval] || '60';
+  const url = `https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${tf}&limit=${limit}`;
+  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if (!r.ok) throw new Error('Bybit HTTP ' + r.status);
+  const d = await r.json();
+  if (d.retCode !== 0) throw new Error('Bybit: ' + d.retMsg);
+  return d.result.list.reverse().map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+}
+
+async function okxKlines(symbol, interval, limit) {
+  const tf = OKX_TF_MAP[interval] || '1H';
+  const instId = symbol.replace('USDT','-USDT');
+  const url = `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=${tf}&limit=${limit}`;
+  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if (!r.ok) throw new Error('OKX HTTP ' + r.status);
+  const d = await r.json();
+  if (d.code !== '0') throw new Error('OKX: ' + d.msg);
+  return d.data.reverse().map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+}
+
+async function fetchKlines(symbol, interval, limit=150) {
+  try { return await bybitKlines(symbol, interval, limit); } catch(e) { console.warn('[Bybit klines]', e.message); }
+  try { return await okxKlines(symbol, interval, limit); } catch(e) { console.warn('[OKX klines]', e.message); }
+  // Last resort: Binance via proxy
+  const bnUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+  for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
+    try {
+      const r = await fetch(fn(bnUrl), {signal: AbortSignal.timeout(8000)});
+      const text = await r.text();
+      if (text.trim().startsWith('<')) continue;
+      const data = JSON.parse(text);
+      return data.map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+    } catch(e) { console.warn('[Binance proxy]', e.message); }
+  }
+  throw new Error('Semua sumber data gagal. Coba lagi nanti.');
+}
+
+async function fetchTicker24h(symbol) {
+  // Bybit ticker
+  try {
+    const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.retCode === 0 && d.result.list.length) {
+      const t = d.result.list[0];
+      return {lastPrice: t.lastPrice, priceChangePercent: parseFloat(t.price24hPcnt)*100};
+    }
+  } catch(e) { console.warn('[Bybit ticker]', e.message); }
+  // Binance proxy fallback
+  try {
+    const text = await (await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)}`, {signal:AbortSignal.timeout(6000)})).text();
+    if (!text.trim().startsWith('<')) return JSON.parse(text);
+  } catch(e) {}
+  return null;
+}
+
+// Legacy binanceFetch — untuk kompatibilitas
 async function binanceFetch(path, ms=8000) {
   let lastErr;
-  for (const proxyFn of BINANCE_PROXIES) {
+  for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
     try {
-      const proxiedUrl = proxyFn(path);
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), ms);
-      const r = await fetch(proxiedUrl, { signal: controller.signal });
-      clearTimeout(tid);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const r = await fetch(fn(path), {signal: AbortSignal.timeout(ms)});
       const text = await r.text();
-      // Pastikan respons adalah JSON valid (bukan HTML error page)
-      if (text.trim().startsWith('<')) throw new Error('Bukan JSON (mungkin diblokir)');
+      if (text.trim().startsWith('<')) throw new Error('Bukan JSON');
       return JSON.parse(text);
-    } catch(e) {
-      lastErr = e;
-    }
+    } catch(e) { lastErr = e; }
   }
   throw new Error('Binance tidak dapat diakses: ' + (lastErr?.message || 'Unknown'));
 }
@@ -13057,9 +13108,9 @@ async function runSignalAnalysis() {
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Menganalisis...`;
 
   try {
-    // 1. Fetch candle data (dengan proxy fallback untuk Indonesia)
+    // 1. Fetch candle data (Bybit → OKX → Binance proxy)
     const [raw, fngRaw, newsData] = await Promise.all([
-      binanceFetch(`https://api.binance.com/api/v3/klines?symbol=${_sigPair}&interval=${_sigTf}&limit=150`),
+      fetchKlines(_sigPair, _sigTf, 150),
       fetchFearGreed().catch(()=>null),
       fetchMarketMomentum(_sigPair).catch(()=>null)
     ]);
@@ -13566,8 +13617,8 @@ function enterTrade() {
   // Polling harga setiap 5 detik untuk trade ini
   const intervalId = setInterval(async () => {
     try {
-      const d = await binanceFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
-      const price = parseFloat(d.price);
+      const d = await fetchTicker24h(pair);
+      const price = parseFloat(d?.lastPrice || d?.price || 0);
 
       // Update UI untuk pair ini
       const card = document.getElementById('sig-trade-card-' + pair);
@@ -13660,9 +13711,9 @@ function manualCloseTrade(pair) {
   const t = _sigActiveTrades[pair].tradeData;
   delete _sigActiveTrades[pair];
   // Fetch current price and close
-  binanceFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`)
+  fetchTicker24h(pair)
     .then(d=>{
-      const price = parseFloat(d.price);
+      const price = parseFloat(d?.lastPrice || d?.price || t.entry);
       closeTrade(t, price, 'MANUAL');
     })
     .catch(()=>{ closeTrade(t, t.entry, 'MANUAL'); });
@@ -14047,26 +14098,24 @@ async function loadLiqData() {
     };
     const tf = tfMap[_liqTF] || tfMap['1d'];
 
-    // ── Ambil data paralel: harga BTC + klines + OI (dengan proxy fallback)
-    const [tickerData, klinesData, oiData] = await Promise.all([
-      binanceFetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').catch(()=>null),
-      binanceFetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf.interval}&limit=${tf.limit}`).catch(()=>null),
-      binanceFetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT').catch(()=>null),
+    // ── Ambil data paralel: harga BTC + klines + OI (Bybit/OKX → Binance proxy)
+    const [tickerData, klines] = await Promise.all([
+      fetchTicker24h('BTCUSDT').catch(()=>null),
+      fetchKlines('BTCUSDT', tf.interval, tf.limit),
     ]);
 
     let btcPrice = 0, btcChange = 0, openInterest = 0;
-    let klines = [];
 
     if (tickerData) {
       btcPrice = parseFloat(tickerData.lastPrice) || 0;
       btcChange = parseFloat(tickerData.priceChangePercent) || 0;
     }
-    if (klinesData && Array.isArray(klinesData)) {
-      klines = klinesData;
-    }
-    if (oiData) {
-      openInterest = parseFloat(oiData.openInterest) * btcPrice || 0;
-    }
+
+    // OI optional dari Binance futures
+    try {
+      const oiData = await binanceFetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT', 5000).catch(()=>null);
+      if (oiData) openInterest = parseFloat(oiData.openInterest) * btcPrice || 0;
+    } catch(e) {}
 
     if (klines.length === 0) throw new Error('Gagal memuat data klines BTC');
 
