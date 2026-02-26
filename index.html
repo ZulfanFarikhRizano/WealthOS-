@@ -11048,6 +11048,7 @@ async function loadMessages(roomId) {
   // Reset pagination state
   chatState.msgOffset = 0;
   chatState.msgHasMore = false;
+  chatState.msgLoadingMore = false; // reset lock supaya load more tidak terkunci di room baru
 
   const { data: msgs, error } = await chatSB
     .from('messages')
@@ -11083,14 +11084,13 @@ async function loadMoreMessages() {
     btn.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,229,255,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px"></span>Memuat...`;
   }
 
+  try {
   const { data: msgs, error } = await chatSB
     .from('messages')
     .select('*')
     .eq('room_id', roomId)
     .order('created_at', { ascending: false })
     .range(chatState.msgOffset, chatState.msgOffset + MSG_PAGE_SIZE - 1);
-
-  chatState.msgLoadingMore = false;
 
   if (chatState.currentRoomId !== roomId) return;
   if (error) { if (btn) { btn.disabled = false; btn.textContent = 'Gagal, coba lagi'; } return; }
@@ -11136,6 +11136,12 @@ async function loadMoreMessages() {
 
   // Render tombol load more baru jika masih ada
   renderLoadMoreBtn();
+  } catch(e) {
+    console.error('[loadMoreMessages]', e);
+    if (btn) { btn.disabled = false; btn.textContent = 'Gagal, coba lagi'; }
+  } finally {
+    chatState.msgLoadingMore = false; // selalu reset, bahkan jika error/exception
+  }
 }
 
 function renderLoadMoreBtn() {
@@ -12279,7 +12285,7 @@ let _sigCandles = [];
 let _sigCurrentSignal = null; // {direction, entry, sl, tp, pair, tf, time}
 let _sigActiveTimer   = null; // kept for backward compat (monitors all trades)
 let _sigActiveTrades  = {};   // {pair: {tradeData, intervalId}} — multi-trade support
-let _sigHistory = JSON.parse(localStorage.getItem('sig_history') || '[]');
+let _sigHistory = (() => { try { return JSON.parse(localStorage.getItem('sig_history') || '[]'); } catch(e) { return []; } })();
 
 function selectSigPair(el) {
   document.querySelectorAll('.sig-pair-btn').forEach(b => b.classList.remove('active'));
@@ -13626,6 +13632,9 @@ function enterTrade() {
     try {
       const d = await fetchTicker24h(pair);
       const price = parseFloat(d?.lastPrice || d?.price || 0);
+
+      // Guard: skip jika harga tidak valid (0 atau NaN) — mencegah false SL/TP
+      if (!price || price < 100) return;
 
       // Update UI untuk pair ini
       const card = document.getElementById('sig-trade-card-' + pair);
