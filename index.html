@@ -6472,9 +6472,17 @@ async function okxKlines(symbol, interval, limit) {
 }
 
 async function fetchKlines(symbol, interval, limit=150) {
+  // 1. Vercel proxy (paling andal — request dari server, tidak kena blokir ISP)
+  try {
+    const r = await fetch(`/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`, {signal: AbortSignal.timeout(10000)});
+    const d = await r.json();
+    if (d.ok && d.data && d.data.length) return d.data;
+  } catch(e) { console.warn('[/api/klines]', e.message); }
+  // 2. Bybit langsung (fallback jika Vercel lambat/error)
   try { return await bybitKlines(symbol, interval, limit); } catch(e) { console.warn('[Bybit klines]', e.message); }
+  // 3. OKX langsung
   try { return await okxKlines(symbol, interval, limit); } catch(e) { console.warn('[OKX klines]', e.message); }
-  // Last resort: Binance via proxy
+  // 4. Binance via proxy
   const bnUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
   for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
     try {
@@ -6489,16 +6497,15 @@ async function fetchKlines(symbol, interval, limit=150) {
 }
 
 async function fetchTicker24h(symbol) {
-  // Bybit ticker
+  // 1. Vercel proxy
   try {
-    const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
+    const r = await fetch(`/api/ticker?symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
     const d = await r.json();
-    if (d.retCode === 0 && d.result.list.length) {
-      const t = d.result.list[0];
-      return {lastPrice: t.lastPrice, priceChangePercent: parseFloat(t.price24hPcnt)*100};
-    }
-  } catch(e) { console.warn('[Bybit ticker]', e.message); }
-  // Binance proxy fallback
+    if (d.ok && d.data) return d.data;
+  } catch(e) { console.warn('[/api/ticker]', e.message); }
+  // 2. Bybit langsung
+  try { return await bybitTicker(symbol); } catch(e) { console.warn('[Bybit ticker]', e.message); }
+  // 3. Binance proxy fallback
   try {
     const text = await (await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)}`, {signal:AbortSignal.timeout(6000)})).text();
     if (!text.trim().startsWith('<')) return JSON.parse(text);
