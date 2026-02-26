@@ -6441,6 +6441,34 @@ async function fetchWithTimeout(url, ms=8000, retries=1){
   }
 }
 
+// ── BINANCE FETCH WITH PROXY FALLBACK ──
+// Binance diblokir ISP di Indonesia — coba langsung dulu, fallback ke proxy CORS
+const BINANCE_PROXIES = [
+  url => url, // langsung (tidak diproxy)
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
+async function binanceFetch(path, ms=8000) {
+  let lastErr;
+  for (const proxyFn of BINANCE_PROXIES) {
+    try {
+      const proxiedUrl = proxyFn(path);
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), ms);
+      const r = await fetch(proxiedUrl, { signal: controller.signal });
+      clearTimeout(tid);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const text = await r.text();
+      // Pastikan respons adalah JSON valid (bukan HTML error page)
+      if (text.trim().startsWith('<')) throw new Error('Bukan JSON (mungkin diblokir)');
+      return JSON.parse(text);
+    } catch(e) {
+      lastErr = e;
+    }
+  }
+  throw new Error('Binance tidak dapat diakses: ' + (lastErr?.message || 'Unknown'));
+}
+
 async function krakenOHLC(interval, since){
   const url=`https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=${interval}&since=${since}`;
   const r=await fetchWithTimeout(url, 12000);
@@ -13029,13 +13057,12 @@ async function runSignalAnalysis() {
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Menganalisis...`;
 
   try {
-    // 1. Fetch candle data
-    const [candleRes, fngRaw, newsData] = await Promise.all([
-      fetch(`https://api.binance.com/api/v3/klines?symbol=${_sigPair}&interval=${_sigTf}&limit=150`),
+    // 1. Fetch candle data (dengan proxy fallback untuk Indonesia)
+    const [raw, fngRaw, newsData] = await Promise.all([
+      binanceFetch(`https://api.binance.com/api/v3/klines?symbol=${_sigPair}&interval=${_sigTf}&limit=150`),
       fetchFearGreed().catch(()=>null),
       fetchMarketMomentum(_sigPair).catch(()=>null)
     ]);
-    const raw = await candleRes.json();
     // Normalize fng data (original function returns {current:{value,classification}, history:[]})
     let fngData = null;
     if(fngRaw && fngRaw.current) {
@@ -13539,8 +13566,7 @@ function enterTrade() {
   // Polling harga setiap 5 detik untuk trade ini
   const intervalId = setInterval(async () => {
     try {
-      const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
-      const d = await r.json();
+      const d = await binanceFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
       const price = parseFloat(d.price);
 
       // Update UI untuk pair ini
@@ -13634,8 +13660,7 @@ function manualCloseTrade(pair) {
   const t = _sigActiveTrades[pair].tradeData;
   delete _sigActiveTrades[pair];
   // Fetch current price and close
-  fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`)
-    .then(r=>r.json())
+  binanceFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`)
     .then(d=>{
       const price = parseFloat(d.price);
       closeTrade(t, price, 'MANUAL');
@@ -14022,27 +14047,25 @@ async function loadLiqData() {
     };
     const tf = tfMap[_liqTF] || tfMap['1d'];
 
-    // ── Ambil data paralel: harga BTC + klines + OI
-    const [tickerRes, klinesRes, oiRes] = await Promise.all([
-      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').catch(()=>null),
-      fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf.interval}&limit=${tf.limit}`).catch(()=>null),
-      fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT').catch(()=>null),
+    // ── Ambil data paralel: harga BTC + klines + OI (dengan proxy fallback)
+    const [tickerData, klinesData, oiData] = await Promise.all([
+      binanceFetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').catch(()=>null),
+      binanceFetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${tf.interval}&limit=${tf.limit}`).catch(()=>null),
+      binanceFetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT').catch(()=>null),
     ]);
 
     let btcPrice = 0, btcChange = 0, openInterest = 0;
     let klines = [];
 
-    if (tickerRes && tickerRes.ok) {
-      const d = await tickerRes.json();
-      btcPrice = parseFloat(d.lastPrice) || 0;
-      btcChange = parseFloat(d.priceChangePercent) || 0;
+    if (tickerData) {
+      btcPrice = parseFloat(tickerData.lastPrice) || 0;
+      btcChange = parseFloat(tickerData.priceChangePercent) || 0;
     }
-    if (klinesRes && klinesRes.ok) {
-      klines = await klinesRes.json(); // [[openTime, open, high, low, close, volume, ...]]
+    if (klinesData && Array.isArray(klinesData)) {
+      klines = klinesData;
     }
-    if (oiRes && oiRes.ok) {
-      const od = await oiRes.json();
-      openInterest = parseFloat(od.openInterest) * btcPrice || 0;
+    if (oiData) {
+      openInterest = parseFloat(oiData.openInterest) * btcPrice || 0;
     }
 
     if (klines.length === 0) throw new Error('Gagal memuat data klines BTC');
