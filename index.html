@@ -2479,10 +2479,10 @@ span svg, div svg.inline {
 
       <!-- 5. Price Alert & DCA Reminder -->
       <button class="feat-btn" onclick="showPage('alerts')" style="
-        background:linear-gradient(145deg,rgba(217,119,6,.55) 0%,rgba(245,158,11,.45) 50%,rgba(251,191,36,.4) 100%);
-        box-shadow:0 10px 40px rgba(217,119,6,.5),inset 0 1px 0 rgba(255,255,255,.2);
+        background:linear-gradient(145deg,rgba(13,148,136,.6) 0%,rgba(20,184,166,.5) 50%,rgba(94,234,212,.35) 100%);
+        box-shadow:0 10px 40px rgba(13,148,136,.5),inset 0 1px 0 rgba(255,255,255,.2);
       ">
-        <div class="fb-blob" style="background:#fbbf24"></div>
+        <div class="fb-blob" style="background:#14b8a6"></div>
         <div class="fb-dot3"><span></span><span></span><span></span></div>
         <div class="fb-icon">
           <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
@@ -2504,7 +2504,36 @@ span svg, div svg.inline {
       </button>
 
     </div>
+
   </div>
+
+  <!-- ══ BITCOIN EDUCATION CARD (compact) ══ -->
+  <button class="feat-btn" onclick="showPage('btc-edu')" style="
+    background:linear-gradient(145deg,rgba(180,100,10,.65) 0%,rgba(247,147,26,.45) 55%,rgba(255,179,71,.35) 100%);
+    box-shadow:0 10px 40px rgba(247,147,26,.4),inset 0 1px 0 rgba(255,255,255,.2);
+    display:flex;align-items:center;gap:.85rem;
+    padding:.85rem 1rem;border-radius:18px;margin-bottom:1.2rem;
+    text-align:left;width:100%;
+  ">
+    <div class="fb-blob" style="background:#f7931a"></div>
+    <div style="flex-shrink:0;position:relative;z-index:3;width:38px;height:38px;border-radius:12px;overflow:hidden;background:#f7931a;display:flex;align-items:center;justify-content:center">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/240px-Bitcoin.svg.png"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+        style="width:38px;height:38px;object-fit:cover;display:block" alt="BTC">
+      <svg style="display:none;width:22px;height:22px" viewBox="0 0 32 32" fill="none">
+        <path d="M21.2 13.8c.3-1.8-1.1-2.8-3-3.4l.6-2.5-1.5-.4-.6 2.4c-.4-.1-.8-.2-1.2-.3l.6-2.4-1.5-.4-.6 2.5c-.3-.1-.6-.2-.9-.2l-2-.5-.4 1.6s1.1.3 1.1.3c.6.2.7.6.7.9l-1.7 6.8c-.1.3-.4.6-.9.5 0 0-1.1-.3-1.1-.3l-.8 1.7 1.9.5c.4.1.7.2 1.1.3l-.6 2.5 1.5.4.6-2.5c.4.1.8.2 1.2.3l-.6 2.5 1.5.4.6-2.5c2.5.5 4.4.3 5.2-2 .6-1.8 0-2.8-1.3-3.5.9-.2 1.6-.8 1.8-2.1zm-3.2 4.5c-.4 1.8-3.3.8-4.3.6l.8-3c1 .2 4 .7 3.5 2.4zm.5-4.5c-.4 1.6-2.8.8-3.6.6l.7-2.8c.8.2 3.3.6 2.9 2.2z" fill="white"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0;position:relative;z-index:3">
+      <div class="fb-label" style="font-size:.85rem">Apa itu Bitcoin? &amp; Tesis Investasi</div>
+      <div style="font-size:.65rem;color:rgba(255,255,255,.65);margin-top:.18rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        Panduan lengkap · Proyeksi 2045 · Whitepaper Satoshi
+      </div>
+    </div>
+    <div style="position:relative;z-index:3;display:flex;align-items:center;flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </button>
 
 
 
@@ -3211,6 +3240,207 @@ span svg, div svg.inline {
 </div>
 
 <!-- ══════════ CHAT PAGE ══════════ -->
+<div id="page-btc-edu" class="page">
+  <!-- Back -->
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+    <button onclick="showPage('dashboard')"
+      style="display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
+    </button>
+    <div style="font-size:.78rem;color:var(--muted)">Home</div>
+  </div>
+
+  <!-- Hero Banner -->
+  <div style="position:relative;overflow:hidden;border-radius:20px;margin-bottom:1.2rem;
+    background:linear-gradient(135deg,#0a0f1e 0%,#0d1628 50%,#1a1000 100%);
+    border:1px solid rgba(247,147,26,.3);
+    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(247,147,26,.1)">
+    <div style="position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse at 85% 40%,rgba(247,147,26,.18) 0%,transparent 55%),
+                radial-gradient(ellipse at 10% 80%,rgba(0,229,255,.07) 0%,transparent 50%);"></div>
+    <div style="position:absolute;inset:0;pointer-events:none;
+      background-image:linear-gradient(rgba(247,147,26,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(247,147,26,.04) 1px,transparent 1px);
+      background-size:28px 28px;"></div>
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,transparent,#f7931a 35%,#ffb347 65%,transparent);"></div>
+    <div style="position:relative;z-index:2;padding:1.4rem 1.3rem 1.3rem">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.65rem">
+        <div style="width:42px;height:42px;border-radius:13px;flex-shrink:0;
+          background:linear-gradient(135deg,rgba(247,147,26,.3),rgba(255,179,71,.15));
+          border:1px solid rgba(247,147,26,.4);
+          display:flex;align-items:center;justify-content:center;
+          box-shadow:0 0 18px rgba(247,147,26,.25)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#f7931a"><circle cx="16" cy="16" r="14" fill="#f7931a"/>
+          <path d="M21.2 13.8c.3-1.8-1.1-2.8-3-3.4l.6-2.5-1.5-.4-.6 2.4c-.4-.1-.8-.2-1.2-.3l.6-2.4-1.5-.4-.6 2.5c-.3-.1-.6-.2-.9-.2l-2-.5-.4 1.6s1.1.3 1.1.3c.6.2.7.6.7.9l-1.7 6.8c-.1.3-.4.6-.9.5 0 0-1.1-.3-1.1-.3l-.8 1.7 1.9.5c.4.1.7.2 1.1.3l-.6 2.5 1.5.4.6-2.5c.4.1.8.2 1.2.3l-.6 2.5 1.5.4.6-2.5c2.5.5 4.4.3 5.2-2 .6-1.8 0-2.8-1.3-3.5.9-.2 1.6-.8 1.8-2.1zm-3.2 4.5c-.4 1.8-3.3.8-4.3.6l.8-3c1 .2 4 .7 3.5 2.4zm.5-4.5c-.4 1.6-2.8.8-3.6.6l.7-2.8c.8.2 3.3.6 2.9 2.2z" fill="white"/></svg>
+        </div>
+        <div>
+          <div style="font-size:1.15rem;font-weight:900;color:#f1f5f9;letter-spacing:-.01em;line-height:1.1">Apa itu Bitcoin?</div>
+          <div style="font-size:.68rem;color:#f7931a;font-weight:700;margin-top:.1rem;letter-spacing:.04em">Panduan Lengkap & Tesis Investasi 2025–2045</div>
+        </div>
+      </div>
+      <div style="font-size:.76rem;color:rgba(203,213,225,.8);line-height:1.7;margin-bottom:.9rem">
+        Bitcoin adalah uang digital terdesentralisasi pertama di dunia — tidak ada bank, tidak ada pemerintah, tidak ada perantara. Diciptakan tahun 2009 oleh <strong style="color:#f1f5f9">Satoshi Nakamoto</strong>, Bitcoin berjalan di atas protokol Blockchain yang transparan, aman, dan tak bisa dimanipulasi siapapun.
+      </div>
+      <!-- 3 Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:.55rem .4rem;text-align:center">
+          <div style="font-size:.88rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">21Jt</div>
+          <div style="font-size:.52rem;color:var(--muted);margin-top:.2rem;line-height:1.3">Supply Maks<br>Selamanya</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:.55rem .4rem;text-align:center">
+          <div style="font-size:.88rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">~4Th</div>
+          <div style="font-size:.52rem;color:var(--muted);margin-top:.2rem;line-height:1.3">Halving<br>Cycle</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:.55rem .4rem;text-align:center">
+          <div style="font-size:.88rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">15Th</div>
+          <div style="font-size:.52rem;color:var(--muted);margin-top:.2rem;line-height:1.3">Track Record<br>Berjalan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Apa itu Bitcoin -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem">
+    <div style="font-size:.6rem;font-weight:800;color:#f7931a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.35rem;padding-bottom:.4rem;border-bottom:1px solid rgba(247,147,26,.15)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+      Apa itu Bitcoin?
+    </div>
+    <div style="background:rgba(247,147,26,.07);border-left:3px solid #f7931a;border-radius:0 10px 10px 0;padding:.75rem 1rem;margin-bottom:.75rem;font-size:.74rem;color:rgba(203,213,225,.9);line-height:1.7;font-style:italic">
+      "Bitcoin adalah sistem uang elektronik peer-to-peer yang memungkinkan pembayaran langsung antar pihak tanpa melalui lembaga keuangan manapun." — <strong style="color:#f7931a;font-style:normal">Satoshi Nakamoto, 2008</strong>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">1</div>
+        <div style="font-size:.74px;font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Desentralisasi total.</strong> Bitcoin berjalan di 15.000+ node di seluruh dunia. Tidak ada satu entitas — termasuk penciptanya — yang bisa mengubah aturan atau membekukan aset siapapun.</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">2</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Proof of Work (PoW).</strong> Setiap transaksi dikonfirmasi oleh ribuan miner di seluruh dunia menggunakan kekuatan komputasi nyata — menjadikan blockchain Bitcoin paling aman di dunia.</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">3</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Supply 21 juta — tak bisa diubah.</strong> Tidak ada bank sentral, tidak ada quantitative easing. Bitcoin adalah satu-satunya aset di dunia yang memiliki kelangkaan dijamin oleh matematika dan kode.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Data Fundamental -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem">
+    <div style="font-size:.6rem;font-weight:800;color:#f7931a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.35rem;padding-bottom:.4rem;border-bottom:1px solid rgba(247,147,26,.15)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Data & Fundamental Kunci
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.7rem;text-align:center">
+        <div style="font-size:1rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">1%</div>
+        <div style="font-size:.58rem;color:var(--muted);margin-top:.2rem;line-height:1.4">Pangsa dari total aset global — ruang tumbuh masih 99%</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.7rem;text-align:center">
+        <div style="font-size:1rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">230.6%</div>
+        <div style="font-size:.58rem;color:var(--muted);margin-top:.2rem;line-height:1.4">Return tahunan rata-rata BTC selama 10 tahun</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.7rem;text-align:center">
+        <div style="font-size:1rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">$20B+</div>
+        <div style="font-size:.58rem;color:var(--muted);margin-top:.2rem;line-height:1.4">Inflow Bitcoin ETF tahun pertama — kalahkan Gold ETF</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.7rem;text-align:center">
+        <div style="font-size:1rem;font-weight:900;color:#f7931a;font-family:'Space Mono',monospace">20.037.142%</div>
+        <div style="font-size:.58rem;color:var(--muted);margin-top:.2rem;line-height:1.4">Return kumulatif BTC 2011–2021 vs semua aset</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.15);border-radius:10px;padding:.65rem .75rem">
+      <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.25);display:flex;align-items:center;justify-content:center;font-size:.7rem">★</div>
+      <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">BTC outperform SEMUA aset secara historis.</strong> Selama 10 tahun terakhir, Bitcoin menempati posisi "Highest Return" di setiap tahun kecuali 2018. Tidak ada aset lain — saham, emas, properti, obligasi — yang mendekati performa ini.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: 4 Katalis -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem">
+    <div style="font-size:.6rem;font-weight:800;color:#f7931a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.35rem;padding-bottom:.4rem;border-bottom:1px solid rgba(247,147,26,.15)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      4 Katalis Bullish Jangka Panjang
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">1</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Halving 4 tahunan.</strong> Setiap ~4 tahun, reward mining dipotong 50%. Supply baru terus berkurang — sementara demand terus naik. Historis, setiap siklus post-halving Bitcoin mencetak ATH baru.</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">2</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Adopsi institusional masif.</strong> MicroStrategy, Tesla, BlackRock, Fidelity — korporasi dan fund manajer terbesar dunia kini hold Bitcoin. Ini bukan lagi "aset spekulatif niche".</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">3</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Inflation rate menuju nol.</strong> Pada 2040, Bitcoin mendekati supply maksimum 21 juta — inflasi mendekati 0%. Di tengah hyperinflasi fiat global, ini properti moneter yang belum pernah ada dalam sejarah manusia.</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.1);border-radius:10px;padding:.65rem .75rem">
+        <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(247,147,26,.2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:900;color:#f7931a">4</div>
+        <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.6"><strong style="color:#f1f5f9">Network Effect & Kelangkaan Digital.</strong> Adopsi Bitcoin lebih cepat dari internet — 300M+ user dalam 10 tahun vs internet yang butuh 25 tahun. Semakin banyak pengguna, semakin kuat jaringan (Metcalfe's Law).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Proyeksi 2045 -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem">
+    <div style="font-size:.6rem;font-weight:800;color:#f7931a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.35rem;padding-bottom:.4rem;border-bottom:1px solid rgba(247,147,26,.15)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Proyeksi Harga BTC Tahun 2045
+    </div>
+    <div style="font-size:.73rem;color:rgba(203,213,225,.75);line-height:1.65;margin-bottom:.8rem">
+      Berdasarkan <strong style="color:#f1f5f9">Power Law Model</strong> oleh Michael Saylor dan analisis on-chain, harga BTC mengikuti pola matematis yang konsisten sejak 2010. Model ini memproyeksikan tiga skenario untuk 2045:
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.75rem">
+      <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:.75rem .5rem;text-align:center">
+        <div style="font-size:.55rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#ef4444;margin-bottom:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M18 4a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A6 6 0 0 1 12 18a6 6 0 0 1-7.5-6.4A3 3 0 0 1 3 9V7a3 3 0 0 1 3-3h12z"/><circle cx="9" cy="10" r="1" fill="#ef4444"/><circle cx="15" cy="10" r="1" fill="#ef4444"/><path d="M9.5 13.5c.8.7 2.2 1 2.5 1s1.7-.3 2.5-1"/><circle cx="6" cy="5" r="2" fill="#ef4444" stroke="none"/><circle cx="18" cy="5" r="2" fill="#ef4444" stroke="none"/></svg> Bear</div>
+        <div style="font-size:.9rem;font-weight:900;font-family:'Space Mono',monospace;color:#f1f5f9">$3M</div>
+        <div style="font-size:.52rem;color:var(--muted);margin-top:.25rem;line-height:1.4">Market cap $68T<br>2% aset global<br>ARR 21%</div>
+      </div>
+      <div style="background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.3);border-radius:12px;padding:.75rem .5rem;text-align:center">
+        <div style="font-size:.55rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#f7931a;margin-bottom:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M12 3v18M3 8l9-5 9 5M6 8l-3 7a4 4 0 0 0 6 0L6 8zM18 8l-3 7a4 4 0 0 0 6 0L18 8z"/></svg> Base</div>
+        <div style="font-size:.9rem;font-weight:900;font-family:'Space Mono',monospace;color:#f1f5f9">$13M</div>
+        <div style="font-size:.52rem;color:var(--muted);margin-top:.25rem;line-height:1.4">Market cap $280T<br>7% aset global<br>ARR 29%</div>
+      </div>
+      <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:.75rem .5rem;text-align:center">
+        <div style="font-size:.55rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#10b981;margin-bottom:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Bull</div>
+        <div style="font-size:.9rem;font-weight:900;font-family:'Space Mono',monospace;color:#f1f5f9">$49M</div>
+        <div style="font-size:.52rem;color:var(--muted);margin-top:.25rem;line-height:1.4">Market cap $1.030T<br>22% aset global<br>ARR 37%</div>
+      </div>
+    </div>
+    <div style="background:rgba(247,147,26,.07);border-left:3px solid #f7931a;border-radius:0 10px 10px 0;padding:.7rem 1rem;font-size:.72rem;color:rgba(203,213,225,.9);line-height:1.65;font-style:italic;margin-bottom:.5rem">
+      Bahkan di skenario paling pesimis (Bear), BTC di 2045 diproyeksikan mencapai $3 juta per koin. Ini bukan janji — ini output dari model matematis berbasis data 15 tahun.
+    </div>
+    <div style="font-size:.6rem;color:rgba(100,116,139,.65);text-align:center;font-style:italic">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Bukan rekomendasi investasi. Selalu lakukan riset mandiri (DYOR).
+    </div>
+  </div>
+
+  <!-- SECTION 5: Strategi DCA -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1.2rem">
+    <div style="font-size:.6rem;font-weight:800;color:#f7931a;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.35rem;padding-bottom:.4rem;border-bottom:1px solid rgba(247,147,26,.15)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Strategi: Dollar Cost Averaging (DCA)
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;padding:.7rem .75rem">
+      <div style="width:22px;height:22px;border-radius:7px;flex-shrink:0;background:rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;font-size:.75rem">✓</div>
+      <div style="font-size:.74rem;color:rgba(203,213,225,.85);line-height:1.65"><strong style="color:#10b981">DCA adalah strategi terbaik untuk investor jangka panjang.</strong> Beli jumlah tetap secara rutin (mingguan/bulanan) tanpa mempedulikan harga. Ini menghilangkan risiko timing market dan memaksimalkan return jangka panjang. Gunakan fitur <strong style="color:#f1f5f9">DCA Tracker di z-wealth</strong> untuk memantau progresmu!</div>
+    </div>
+  </div>
+
+  <!-- Whitepaper Button -->
+  <button onclick="window.open('https://bitcoin.org/files/bitcoin-paper/bitcoin_id.pdf','_blank')"
+    style="width:100%;padding:.9rem;border-radius:14px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,#f7931a,#e67d00);
+      color:#fff;font-size:.85rem;font-weight:900;font-family:'Inter',sans-serif;
+      letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:.55rem;
+      box-shadow:0 4px 24px rgba(247,147,26,.45);margin-bottom:1.5rem">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Baca Bitcoin Whitepaper (Bahasa Indonesia)
+  </button>
+
+</div>
+
 <div id="page-theme" class="page">
   <!-- Back button -->
   <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
@@ -4504,7 +4734,7 @@ span svg, div svg.inline {
     <div class="sig-pair-btn" data-pair="SOLUSDT" onclick="selectSigPair(this)">SOL/USDT</div>
     <div class="sig-pair-btn" data-pair="BNBUSDT" onclick="selectSigPair(this)">BNB/USDT</div>
     <div class="sig-pair-btn" data-pair="XRPUSDT" onclick="selectSigPair(this)">XRP/USDT</div>
-    <div class="sig-pair-btn" data-pair="XAUUSD" onclick="selectSigPair(this)">XAU/USD</div>
+    <div class="sig-pair-btn" data-pair="XAUUSD" onclick="selectSigPair(this)" style="position:relative;opacity:.65">XAU/USD <span style="font-size:.45rem;font-weight:800;background:rgba(245,158,11,.25);color:#f59e0b;border:1px solid rgba(245,158,11,.4);border-radius:4px;padding:.05rem .25rem;letter-spacing:.06em;vertical-align:middle;margin-left:2px">SOON</span></div>
   </div>
 
   <!-- Timeframe -->
@@ -10624,6 +10854,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
   </button>
 </div>
 <div class="wrap">${P1}${P2}${P3}${P4}${P5}${P6}</div>
+
 </body></html>`;
 
   /* DELIVER */
@@ -10906,243 +11137,214 @@ function drawZWealthLogo(ctx, x, y, size, accentColor){
 }
 
 function drawShareCard(){
-  const p=S.btcPrice||0, r=S.usdIdr||16000;
+  const p=S.btcPrice||0, usdIdr=S.usdIdr||16000;
   let ti=0,tb=0;
   S.dca.forEach(e=>{ti+=e.amountIDR||0;tb+=e.btcAmount||0});
-  const cv=tb*p*r, pnl=cv-ti, pp=ti>0?pnl/ti*100:0;
-  const avg=tb>0?ti/tb/r:0;
+  const cv=tb*p*usdIdr, pnl=cv-ti, pp=ti>0?pnl/ti*100:0;
+  const avg=tb>0?ti/tb/usdIdr:0;
   const isProfit=pnl>=0;
   const now=new Date();
-  const dateStr=now.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
-  const timeStr=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  const dtStr=now.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
   const since=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date||'—';
 
-  /* ── CANVAS 1080×1350 ── */
   const W=1080,H=1350;
   const cv2=document.getElementById('share-canvas');
   cv2.width=W;cv2.height=H;
   const ctx=cv2.getContext('2d');
 
-  /* helper: rounded rect path */
-  function rr(x,y,w,h,r){
+  // Colors
+  const GREEN='#00f5a0', CYAN='#00d4ff', PURPLE='#a855f7', RED='#ff4d6d';
+  const accentColor=isProfit?GREEN:RED;
+  const accentR=isProfit?'0,245,160':'255,77,109';
+  const PAD=72;
+  function ac(a){return 'rgba('+accentR+','+a+')';}
+  function rr(x,y,w,h,rad){
+    if(w<=0||h<=0)return; rad=Math.min(rad,w/2,h/2);
     ctx.beginPath();
-    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.moveTo(x+rad,y);ctx.lineTo(x+w-rad,y);ctx.quadraticCurveTo(x+w,y,x+w,y+rad);
+    ctx.lineTo(x+w,y+h-rad);ctx.quadraticCurveTo(x+w,y+h,x+w-rad,y+h);
+    ctx.lineTo(x+rad,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-rad);
+    ctx.lineTo(x,y+rad);ctx.quadraticCurveTo(x,y,x+rad,y);
     ctx.closePath();
   }
 
-  /* ── 1. BACKGROUND ── */
-  ctx.fillStyle='#07090f';
-  ctx.fillRect(0,0,W,H);
+  // ── 1. BACKGROUND ──
+  const bgG=ctx.createLinearGradient(0,0,0,H);
+  if(isProfit){bgG.addColorStop(0,'#060d10');bgG.addColorStop(1,'#040810');}
+  else        {bgG.addColorStop(0,'#0d0608');bgG.addColorStop(1,'#080410');}
+  ctx.fillStyle=bgG;ctx.fillRect(0,0,W,H);
 
-  /* Subtle red grid (like Bybit) */
-  ctx.strokeStyle=isProfit?'rgba(0,200,255,0.04)':'rgba(220,30,50,0.05)';
-  ctx.lineWidth=1;
-  for(let x=0;x<=W;x+=54){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=54){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Grid
+  ctx.strokeStyle=ac(0.03);ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  /* Large radial glow bottom-right (Bybit style) */
-  const glowC=isProfit?'rgba(0,180,255,0.10)':'rgba(220,30,50,0.12)';
-  const grd=ctx.createRadialGradient(W*0.82,H*0.72,0,W*0.82,H*0.72,W*0.75);
-  grd.addColorStop(0,glowC);grd.addColorStop(1,'transparent');
-  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+  // ── 2. GLOW BLOBS ──
+  if(isProfit){
+    [[W*.9,H*.08,W*.6,'rgba(0,245,160,0.13)'],[W*.05,H*.85,W*.55,'rgba(168,85,247,0.1)'],[W*.5,0,W*.45,'rgba(0,212,255,0.07)']].forEach(function(g){
+      var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+    });
+  } else {
+    [[W*.85,H*.12,W*.6,'rgba(255,77,109,0.14)'],[W*.05,H*.88,W*.5,'rgba(120,20,50,0.1)']].forEach(function(g){
+      var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+    });
+  }
 
-  /* Diagonal decorative lines */
-  ctx.save();ctx.globalAlpha=0.05;
-  ctx.strokeStyle=isProfit?'#00c8ff':'#dd1e32';ctx.lineWidth=1.5;
-  for(let i=0;i<12;i++){
-    const oy=H*0.35+i*120;
-    ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(W*0.6,oy-240);ctx.stroke();
+  // ── 3. TOP RAINBOW BAR ──
+  var tl=ctx.createLinearGradient(0,0,W,0);
+  if(isProfit){tl.addColorStop(0,'transparent');tl.addColorStop(.15,GREEN);tl.addColorStop(.5,CYAN);tl.addColorStop(.8,PURPLE);tl.addColorStop(1,'transparent');}
+  else        {tl.addColorStop(0,'transparent');tl.addColorStop(.3,RED);tl.addColorStop(.7,'rgba(200,30,60,.6)');tl.addColorStop(1,'transparent');}
+  ctx.fillStyle=tl;ctx.fillRect(0,0,W,5);
+
+  // ── 4. DECORATIVE CANDLESTICK CHART (BG) ──
+  ctx.save();
+  var cdata=isProfit?[.2,.35,.25,.5,.4,.6,.55,.75,.65,.85,.8,1,.9]:[1,.85,.9,.7,.8,.6,.65,.45,.5,.35,.4,.2,.1];
+  var chartX=W-390,chartY=175,chartW=350,chartH=260,cww=chartW/cdata.length;
+  ctx.globalAlpha=0.10;
+  for(var ci=0;ci<cdata.length;ci++){
+    var cv3=cdata[ci],cprev=ci>0?cdata[ci-1]:cv3,isBull=cv3>=cprev;
+    var cbodyH=Math.max(Math.abs(cv3-cprev)*chartH,8);
+    var cbodyY=chartY+(1-Math.max(cv3,cprev))*chartH;
+    ctx.strokeStyle=isBull?GREEN:RED;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(chartX+ci*cww+cww*.35,chartY+(1-cv3)*chartH-12);ctx.lineTo(chartX+ci*cww+cww*.35,chartY+(1-cv3)*chartH+cbodyH+12);ctx.stroke();
+    ctx.fillStyle=isBull?GREEN:RED;rr(chartX+ci*cww+cww*.15,cbodyY,cww*.7,cbodyH,3);ctx.fill();
+  }
+  ctx.globalAlpha=0.18;ctx.strokeStyle=accentColor;ctx.lineWidth=3;
+  ctx.beginPath();
+  for(var ci2=0;ci2<cdata.length;ci2++){ctx.lineTo(chartX+ci2*cww+cww*.5,chartY+(1-cdata[ci2])*chartH);}
+  ctx.stroke();
+  ctx.restore();
+
+  // ── 5. ROCKET SILHOUETTE ──
+  ctx.save();
+  var rs=1.6,rx=W-120,ry=H*.41;
+  ctx.translate(rx,ry);
+  if(!isProfit){ctx.scale(1,-1);}
+  if(isProfit){
+    var bodyG=ctx.createLinearGradient(0,-110*rs,0,75*rs);
+    bodyG.addColorStop(0,'rgba(168,85,247,0.18)');bodyG.addColorStop(.4,'rgba(0,212,255,0.16)');bodyG.addColorStop(1,'rgba(0,245,160,0.12)');
+    ctx.fillStyle=bodyG;
+  } else {ctx.fillStyle='rgba(255,60,90,0.10)';}
+  ctx.beginPath();ctx.moveTo(0,-110*rs);ctx.bezierCurveTo(40*rs,-78*rs,50*rs,18*rs,30*rs,78*rs);ctx.lineTo(-30*rs,78*rs);ctx.bezierCurveTo(-50*rs,18*rs,-40*rs,-78*rs,0,-110*rs);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=isProfit?'rgba(0,212,255,0.3)':'rgba(255,60,90,0.25)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,-110*rs);ctx.bezierCurveTo(40*rs,-78*rs,50*rs,18*rs,30*rs,78*rs);ctx.lineTo(-30*rs,78*rs);ctx.bezierCurveTo(-50*rs,18*rs,-40*rs,-78*rs,0,-110*rs);ctx.closePath();ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.07)';
+  ctx.beginPath();ctx.arc(0,-32*rs,17*rs,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=isProfit?'rgba(0,212,255,0.4)':'rgba(255,60,90,0.35)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(0,-32*rs,17*rs,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=isProfit?'rgba(0,245,160,0.10)':'rgba(255,60,90,0.08)';
+  [-1,1].forEach(function(side){ctx.beginPath();ctx.moveTo(side*28*rs,32*rs);ctx.lineTo(side*78*rs,88*rs);ctx.lineTo(side*28*rs,78*rs);ctx.closePath();ctx.fill();});
+  if(isProfit){
+    var flG=ctx.createRadialGradient(0,108*rs,0,0,118*rs,60*rs);
+    flG.addColorStop(0,'rgba(255,240,80,0.7)');flG.addColorStop(.3,'rgba(255,140,0,0.5)');flG.addColorStop(1,'transparent');
+    ctx.fillStyle=flG;ctx.beginPath();ctx.ellipse(0,105*rs,24*rs,55*rs,0,0,Math.PI*2);ctx.fill();
+  } else {
+    var flG2=ctx.createRadialGradient(0,108*rs,0,0,108*rs,50*rs);
+    flG2.addColorStop(0,'rgba(255,80,30,0.5)');flG2.addColorStop(1,'transparent');
+    ctx.fillStyle=flG2;ctx.beginPath();ctx.ellipse(0,102*rs,22*rs,48*rs,0,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
 
-  /* ── 2. TOP ACCENT BAR ── */
-  const accentColor=isProfit?'#00c8ff':'#dd1e32';
-  const accentGrd=ctx.createLinearGradient(0,0,W,0);
-  accentGrd.addColorStop(0,accentColor);
-  accentGrd.addColorStop(0.6,isProfit?'rgba(0,200,255,0.3)':'rgba(220,30,50,0.3)');
-  accentGrd.addColorStop(1,'transparent');
-  ctx.fillStyle=accentGrd;ctx.fillRect(0,0,W,4);
+  // ── 6. LOGO ──
+  drawZWealthLogo(ctx,PAD,110,50,accentColor);
+  ctx.font='400 20px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.4)';
+  ctx.fillText('z-wealth.vercel.app',PAD,142);
+  ctx.textAlign='right';ctx.font='400 24px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.5)';
+  ctx.fillText(dtStr,W-PAD,110);ctx.textAlign='left';
 
-  /* ── 3. HEADER: LOGO + DATE ── */
-  const PAD=80;
+  // Sep line
+  var sl1=ctx.createLinearGradient(PAD,165,W-PAD,165);
+  if(isProfit){sl1.addColorStop(0,'transparent');sl1.addColorStop(.1,ac(.7));sl1.addColorStop(.5,'rgba(0,212,255,.35)');sl1.addColorStop(1,'transparent');}
+  else        {sl1.addColorStop(0,ac(.7));sl1.addColorStop(.7,ac(.1));sl1.addColorStop(1,'transparent');}
+  ctx.strokeStyle=sl1;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,165);ctx.lineTo(W-PAD,165);ctx.stroke();
 
-  /* z-wealth logo */
-  drawZWealthLogo(ctx,PAD,108,54,accentColor);
+  // ── 7. PAIR HEADER ──
+  ctx.font='900 80px "Segoe UI Black",Arial,sans-serif';ctx.fillStyle='#ffffff';
+  ctx.fillText('BTC / IDR',PAD,268);
+  var pw=ctx.measureText('BTC / IDR').width;
+  // DCA badge
+  ctx.font='800 27px "Segoe UI",Arial,sans-serif';
+  var dcaTxt='● DCA', dcaW=ctx.measureText(dcaTxt).width+44, dcaX=PAD+pw+28, dcaY=268-60, dcaH=52;
+  ctx.fillStyle=ac(.18);rr(dcaX,dcaY,dcaW,dcaH,dcaH/2);ctx.fill();
+  ctx.strokeStyle=ac(.6);ctx.lineWidth=1.5;rr(dcaX,dcaY,dcaW,dcaH,dcaH/2);ctx.stroke();
+  ctx.fillStyle=accentColor;ctx.fillText(dcaTxt,dcaX+dcaW/2-ctx.measureText(dcaTxt).width/2,dcaY+dcaH*.68);
 
-  /* Domain — mepet ke logo, hanya 6px gap di bawah baseline logo */
-  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.55)';
-  ctx.fillText('z-wealth.vercel.app',PAD,138);
+  // ── 8. ROI LABEL + NUMBER ──
+  ctx.font='500 30px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.7)';
+  ctx.fillText('ROI Unrealized',PAD,330);
+  var roiStr=(isProfit?'+':'')+pp.toFixed(2)+'%';
+  var rfs=155;
+  ctx.font='900 '+rfs+'px "Segoe UI Black",Arial,sans-serif';
+  while(ctx.measureText(roiStr).width>W-PAD*2-20&&rfs>80){rfs-=6;ctx.font='900 '+rfs+'px "Segoe UI Black",Arial,sans-serif';}
+  ctx.shadowColor=accentColor;ctx.shadowBlur=80;ctx.fillStyle=accentColor;
+  ctx.fillText(roiStr,PAD,510);ctx.shadowBlur=35;ctx.fillText(roiStr,PAD,510);ctx.shadowBlur=0;
 
-  /* Date right — sejajar dengan logo */
-  ctx.textAlign='right';
-  ctx.font='400 26px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.7)';
-  ctx.fillText(dateStr+' '+timeStr,W-PAD,110);
-  ctx.textAlign='left';
+  // Sep line 2
+  var sl2=ctx.createLinearGradient(PAD,565,W-PAD,565);
+  sl2.addColorStop(0,ac(.5));sl2.addColorStop(.6,ac(.1));sl2.addColorStop(1,'transparent');
+  ctx.strokeStyle=sl2;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,565);ctx.lineTo(W-PAD,565);ctx.stroke();
 
-  /* ── 4. PAIR BADGE ── */
-  const pairY=240;
-  ctx.font='800 82px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='#f8fafc';
-  ctx.fillText('BTC / IDR',PAD,pairY);
-
-  /* DCA tag */
-  const pw=ctx.measureText('BTC / IDR').width;
-  const tx=PAD+pw+32,ty=pairY-66,tw=148,th=52;
-  const tagBg=isProfit?'rgba(0,200,255,0.12)':'rgba(220,30,50,0.15)';
-  ctx.fillStyle=tagBg;
-  ctx.strokeStyle=isProfit?'rgba(0,200,255,0.5)':'rgba(220,30,50,0.5)';
-  ctx.lineWidth=1.5;
-  rr(tx,ty,tw,th,10);ctx.fill();ctx.stroke();
-  ctx.font='700 28px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle=accentColor;
-  const tl='DCA';
-  ctx.fillText(tl,tx+tw/2-ctx.measureText(tl).width/2,ty+36);
-
-  /* ── 5. THIN SEPARATOR ── */
-  const sepY=290;
-  const sepGrd=ctx.createLinearGradient(PAD,sepY,W-PAD,sepY);
-  sepGrd.addColorStop(0,isProfit?'rgba(0,200,255,0.5)':'rgba(220,30,50,0.5)');
-  sepGrd.addColorStop(1,'transparent');
-  ctx.strokeStyle=sepGrd;ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(PAD,sepY);ctx.lineTo(W-PAD,sepY);ctx.stroke();
-
-  /* ── 6. ROI LABEL ── */
-  ctx.font='500 36px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.85)';
-  ctx.fillText('ROI',PAD,360);
-
-  /* ── 7. ROI GIANT NUMBER ── */
-  const roiStr=(isProfit?'+':'')+pp.toFixed(2)+'%';
-  ctx.font='900 200px "Segoe UI",Arial,sans-serif';
-  let roiFontSize=200;
-  while(ctx.measureText(roiStr).width>W-PAD*2-40&&roiFontSize>100){
-    roiFontSize-=10;
-    ctx.font=`900 ${roiFontSize}px "Segoe UI",Arial,sans-serif`;
-  }
-  ctx.shadowColor=accentColor;ctx.shadowBlur=80;
-  ctx.fillStyle=accentColor;
-  ctx.fillText(roiStr,PAD,360+roiFontSize*0.85);
-  ctx.shadowBlur=0;
-  const roiBottom=360+roiFontSize*0.85;
-
-  /* ── 8. STAT CARDS GRID 2×2 (glass style) ── */
-  const gridY = roiBottom + 60;
-  const gridGap = 24;
-  const cardW2 = (W - PAD*2 - gridGap) / 2;
-  const cardH2 = 195;
-  const accentLine = isProfit ? '#00c8ff' : '#dd1e32';
-
-  function drawStatCard(label, value, cx2, cy2, valueColor){
-    // Glass background
+  // ── 9. STAT CARDS 2x2 ──
+  var CW=(W-PAD*2-18)/2,CH=155,CG=18,CY1=605,CY2=CY1+CH+CG;
+  function sCard(label,value,cx,cy,vc){
     ctx.save();
-    const cardBg = ctx.createLinearGradient(cx2, cy2, cx2, cy2+cardH2);
-    cardBg.addColorStop(0,'rgba(255,255,255,0.07)');
-    cardBg.addColorStop(1,'rgba(255,255,255,0.02)');
-    ctx.fillStyle = cardBg;
-    rr(cx2, cy2, cardW2, cardH2, 20); ctx.fill();
-
-    // Border glass (subtle white)
-    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-    ctx.lineWidth = 1.5;
-    rr(cx2, cy2, cardW2, cardH2, 20); ctx.stroke();
-
-    // Shine top edge
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx2+20, cy2+1);
-    ctx.lineTo(cx2+cardW2-20, cy2+1);
-    ctx.stroke();
-
-    // Accent left border line (colored, subtle)
-    const acLineGrd = ctx.createLinearGradient(cx2, cy2, cx2, cy2+cardH2);
-    acLineGrd.addColorStop(0, isProfit?'rgba(0,200,255,0.7)':'rgba(220,30,50,0.7)');
-    acLineGrd.addColorStop(1, 'transparent');
-    ctx.strokeStyle = acLineGrd;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx2+1.5, cy2+20);
-    ctx.lineTo(cx2+1.5, cy2+cardH2-20);
-    ctx.stroke();
-
-    // Label
-    ctx.font = '400 26px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle = 'rgba(148,163,184,0.75)';
-    ctx.fillText(label, cx2+36, cy2+60);
-
-    // Value
-    ctx.font = '800 52px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle = valueColor || '#f1f5f9';
-    ctx.fillText(value, cx2+36, cy2+140);
-
+    var bg=ctx.createLinearGradient(cx,cy,cx+CW,cy+CH);
+    bg.addColorStop(0,'rgba(255,255,255,.065)');bg.addColorStop(1,'rgba(255,255,255,.02)');
+    ctx.fillStyle=bg;rr(cx,cy,CW,CH,20);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.09)';ctx.lineWidth=1;rr(cx,cy,CW,CH,20);ctx.stroke();
+    var sh=ctx.createLinearGradient(cx+20,cy,cx+CW-20,cy);
+    sh.addColorStop(0,'transparent');sh.addColorStop(.4,'rgba(255,255,255,.2)');sh.addColorStop(1,'transparent');
+    ctx.strokeStyle=sh;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx+20,cy+1);ctx.lineTo(cx+CW-20,cy+1);ctx.stroke();
+    ctx.fillStyle=vc+'33';ctx.fillRect(cx+20,cy+CH-4,CW-40,3);
+    ctx.font='500 22px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.6)';ctx.fillText(label,cx+26,cy+44);
+    ctx.font='800 48px "Segoe UI Black",Arial,sans-serif';
+    var fz=48;while(ctx.measureText(value).width>CW-44&&fz>24){fz-=4;ctx.font='800 '+fz+'px "Segoe UI Black",Arial,sans-serif';}
+    ctx.fillStyle=vc;ctx.shadowColor=vc;ctx.shadowBlur=12;ctx.fillText(value,cx+26,cy+116);ctx.shadowBlur=0;
     ctx.restore();
   }
+  var colL=PAD,colR=PAD+CW+CG;
+  sCard('Avg Entry','$'+Math.round(avg).toLocaleString('en-US'),colL,CY1,'#e2e8f0');
+  sCard('Harga Kini','$'+Math.round(p).toLocaleString('en-US'),colR,CY1,isProfit?GREEN:RED);
+  sCard('DCA Sejak',since,colL,CY2,'#94a3b8');
+  sCard('Transaksi',S.dca.length+' kali',colR,CY2,'#94a3b8');
 
-  const colL = PAD;
-  const colR = PAD + cardW2 + gridGap;
-  const row1 = gridY;
-  const row2 = gridY + cardH2 + gridGap;
+  // ── 10. PROGRESS BAR ──
+  var barY=CY2+CH+46,barW=W-PAD*2,barH2=12;
+  ctx.fillStyle='rgba(255,255,255,.06)';rr(PAD,barY,barW,barH2,6);ctx.fill();
+  var pctF=Math.min(Math.max((pp+100)/200,.02),1),fw=barW*pctF;
+  var bf=ctx.createLinearGradient(PAD,barY,PAD+fw,barY);
+  bf.addColorStop(0,isProfit?'rgba(0,245,160,.25)':'rgba(255,77,109,.25)');bf.addColorStop(1,isProfit?GREEN:RED);
+  ctx.fillStyle=bf;rr(PAD,barY,fw,barH2,6);ctx.fill();
+  ctx.fillStyle='#fff';ctx.shadowColor=accentColor;ctx.shadowBlur=14;
+  ctx.beginPath();ctx.arc(PAD+fw,barY+barH2/2,8,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.font='600 22px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(148,163,184,.5)';ctx.fillText('-100%',PAD,barY+36);
+  ctx.textAlign='center';ctx.fillText('0%',PAD+barW/2,barY+36);
+  ctx.textAlign='right';ctx.fillText('+100%',PAD+barW,barY+36);ctx.textAlign='left';
 
-  drawStatCard('Harga Entry', '$'+Math.round(avg).toLocaleString('en-US'), colL, row1, '#f1f5f9');
-  drawStatCard('Harga Kini',  '$'+Math.round(p).toLocaleString('en-US'),   colR, row1, isProfit?accentColor:'#ef4444');
-  drawStatCard('DCA Sejak',   since,                                         colL, row2, '#f1f5f9');
-  drawStatCard('Transaksi',   S.dca.length+' kali',                          colR, row2, '#f1f5f9');
+  // ── 11. STATUS BANNER ──
+  var stY=barY+62,stH=148,stW=W-PAD*2;
+  var stBg=ctx.createLinearGradient(PAD,stY,PAD+stW,stY);
+  stBg.addColorStop(0,ac(.11));stBg.addColorStop(.6,ac(.05));stBg.addColorStop(1,'rgba(120,40,255,.05)');
+  ctx.fillStyle=stBg;rr(PAD,stY,stW,stH,20);ctx.fill();
+  ctx.strokeStyle=ac(.28);ctx.lineWidth=1;rr(PAD,stY,stW,stH,20);ctx.stroke();
+  var dotCy2=stY+stH/2;
+  ctx.fillStyle=accentColor;ctx.shadowColor=accentColor;ctx.shadowBlur=20;
+  ctx.beginPath();ctx.arc(PAD+42,dotCy2,12,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle=ac(.28);ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(PAD+42,dotCy2,20,0,Math.PI*2);ctx.stroke();
+  ctx.font='800 36px "Segoe UI",Arial,sans-serif';ctx.fillStyle=accentColor;
+  ctx.fillText(isProfit?'POSISI PROFIT 🚀':'POSISI RUGI',PAD+76,dotCy2-10);
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.7)';
+  ctx.fillText('DCA sejak '+since+' · Unrealized P&L',PAD+76,dotCy2+28);
 
-  const tableBottom = row2 + cardH2;
-
-  /* ── 9. PERFORMANCE BAR ── */
-  const barY=tableBottom+60, barH=10, barX=PAD, barW=W-PAD*2;
-  ctx.fillStyle='rgba(255,255,255,0.06)';rr(barX,barY,barW,barH,5);ctx.fill();
-  const pctFill=Math.min(Math.max((pp+100)/200,0.01),1);
-  const barFill=ctx.createLinearGradient(barX,barY,barX+barW*pctFill,barY);
-  if(isProfit){barFill.addColorStop(0,'#0369a1');barFill.addColorStop(1,'#00c8ff');}
-  else{barFill.addColorStop(0,'#7f1d1d');barFill.addColorStop(1,'#dd1e32');}
-  ctx.fillStyle=barFill;rr(barX,barY,barW*pctFill,barH,5);ctx.fill();
-  ctx.font='400 24px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.5)';
-  ctx.fillText('-100%',barX,barY+34);
-  ctx.textAlign='center';ctx.fillText('0%',barX+barW/2,barY+34);
-  ctx.textAlign='right';ctx.fillText('+100%',barX+barW,barY+34);
-  ctx.textAlign='left';
-
-  /* ── 10. STATUS CARD ── */
-  const cardY=barY+80,cardH=180,cardW=W-PAD*2,cardX=PAD;
-  const cBg=isProfit?'rgba(0,200,255,0.06)':'rgba(220,30,50,0.07)';
-  const cBorder=isProfit?'rgba(0,200,255,0.2)':'rgba(220,30,50,0.25)';
-  ctx.fillStyle=cBg;ctx.strokeStyle=cBorder;ctx.lineWidth=1.5;
-  rr(cardX,cardY,cardW,cardH,18);ctx.fill();ctx.stroke();
-  ctx.fillStyle=accentColor;
-  ctx.beginPath();ctx.arc(cardX+42,cardY+cardH/2,11,0,Math.PI*2);ctx.fill();
-  ctx.font='800 38px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle=accentColor;
-  ctx.fillText(isProfit?'POSISI PROFIT':'POSISI RUGI',cardX+72,cardY+cardH/2-12);
-  ctx.font='400 28px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.75)';
-  ctx.fillText('DCA sejak '+since+' · Unrealized P&L',cardX+72,cardY+cardH/2+32);
-
-  /* ── 11. BOTTOM ACCENT LINE + TEXT ── */
-  const botY=H-80;
-
-  /* Accent line */
-  const bLineGrd=ctx.createLinearGradient(PAD,botY,W-PAD,botY);
-  bLineGrd.addColorStop(0,'transparent');
-  bLineGrd.addColorStop(0.3,isProfit?'rgba(0,200,255,0.25)':'rgba(220,30,50,0.25)');
-  bLineGrd.addColorStop(0.7,isProfit?'rgba(124,58,237,0.25)':'rgba(220,30,50,0.15)');
-  bLineGrd.addColorStop(1,'transparent');
-  ctx.strokeStyle=bLineGrd;ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(PAD,botY);ctx.lineTo(W-PAD,botY);ctx.stroke();
-
-  /* "Not financial advice" — below the line */
-  ctx.textAlign='center';
-  ctx.font='400 22px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle='rgba(148,163,184,0.28)';
-  ctx.fillText('Not financial advice',W/2,botY+42);
-  ctx.textAlign='left';
+  // ── 12. BOTTOM ──
+  var botY=H-72;
+  var bln=ctx.createLinearGradient(PAD,botY,W-PAD,botY);
+  bln.addColorStop(0,'transparent');bln.addColorStop(.3,ac(.22));bln.addColorStop(.7,'rgba(120,40,255,.22)');bln.addColorStop(1,'transparent');
+  ctx.strokeStyle=bln;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,botY);ctx.lineTo(W-PAD,botY);ctx.stroke();
+  ctx.textAlign='center';ctx.font='400 20px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.2)';
+  ctx.fillText('Not financial advice',W/2,botY+38);ctx.textAlign='left';
 }
 
 /* helper used elsewhere */
@@ -11217,248 +11419,465 @@ function drawFuturesCard(t, currentPrice, pnlStr) {
   const rawPnl = isLong
     ? (currentPrice - t.entry) / t.entry * 100
     : (t.entry - currentPrice) / t.entry * 100;
-  const pnlVal = rawPnl * lev; // PnL dengan leverage
+  const pnlVal = rawPnl * lev;
   const isProfit = pnlVal >= 0;
-  const accentColor = isLong ? '#10b981' : '#ef4444';
-  const accentDim   = isLong ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
-  const PAD = 80;
 
-  // ── helper: rounded rect ──
+  // ── COLORS — ditentukan oleh PROFIT/LOSS, bukan direction ──
+  const GREEN   = '#00f5a0';
+  const CYAN    = '#00d4ff';
+  const PURPLE  = '#a855f7';
+  const RED     = '#ff4d6d';
+  const ORANGE  = '#ff9500';
+
+  // accentColor = hijau neon saat profit, merah saat rugi
+  const accentColor  = isProfit ? GREEN : RED;
+  const accentR      = isProfit ? '0,245,160' : '255,77,109';
+  // dirColor = warna khusus badge direction (tetap ikut LONG/SHORT)
+  const dirColor     = isLong ? GREEN : RED;
+  const dirR         = isLong ? '0,245,160' : '255,77,109';
+  const levColor     = lev >= 50 ? RED : lev >= 20 ? ORANGE : '#ffcc00';
+  const PAD = 72;
+
+  function ac(a){ return `rgba(${accentR},${a})`; }
+  function dc(a){ return `rgba(${dirR},${a})`; }
+
+  // ── HELPER: rounded rect ──
   function rr(x,y,w,h,r){
+    if(w<=0||h<=0) return;
+    r = Math.min(r, w/2, h/2);
     ctx.beginPath();
-    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
   }
 
+  // ── FIXED LAYOUT (calculated so everything fits in H=1350) ──
+  // Logo row:     y=80-148
+  // Sep line:     y=165
+  // Pair row:     y=200-285
+  // PnL label:    y=330
+  // PnL number:   y=330-555 (max 155px font → height ~136)
+  // Sep line2:    y=575
+  // Cards row1:   y=608-763 (h=155)
+  // Cards row2:   y=783-938 (h=155)
+  // Progress bar: y=980
+  // Status:       y=1040-1180
+  // Bottom:       y=1270
+
+  const LOGO_Y      = 110;
+  const SEP1_Y      = 162;
+  const PAIR_Y      = 268;
+  const PNL_LABEL_Y = 328;
+  const PNL_NUM_Y   = 510;   // fixed baseline — font capped at 155px
+  const PNL_FS      = 155;   // fixed font size for PnL
+  const SEP2_Y      = 565;
+  const CARD_Y1     = 605;
+  const CARD_H      = 155;
+  const CARD_GAP    = 18;
+  const CARD_Y2     = CARD_Y1 + CARD_H + CARD_GAP;
+  const BAR_Y       = CARD_Y2 + CARD_H + 46;
+  const BAR_H       = 12;
+  const ST_Y        = BAR_Y + 62;
+  const ST_H        = 148;
+  const BOT_Y       = H - 72;
+
   // ── 1. BACKGROUND ──
-  ctx.fillStyle = '#060910';
-  ctx.fillRect(0, 0, W, H);
+  const bgG = ctx.createLinearGradient(0,0,0,H);
+  if(isProfit){
+    // PROFIT: dark teal-green depth
+    bgG.addColorStop(0,'#060d10'); bgG.addColorStop(0.4,'#060b0e'); bgG.addColorStop(1,'#040810');
+  } else {
+    // LOSS: dark crimson depth
+    bgG.addColorStop(0,'#0d0608'); bgG.addColorStop(0.4,'#0a0508'); bgG.addColorStop(1,'#080410');
+  }
+  ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
 
-  // Grid
-  ctx.strokeStyle = isLong ? 'rgba(16,185,129,0.04)' : 'rgba(239,68,68,0.05)';
+  // ── 2. GRID PATTERN ──
+  ctx.save();
+  ctx.strokeStyle = isProfit ? 'rgba(0,245,160,0.03)' : 'rgba(255,77,109,0.035)';
   ctx.lineWidth = 1;
-  for(let x=0;x<=W;x+=54){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=54){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  for(let x=0;x<=W;x+=60){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0;y<=H;y+=60){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.restore();
 
-  // Radial glow
-  const grd = ctx.createRadialGradient(W*0.8, H*0.3, 0, W*0.8, H*0.3, W*0.8);
-  grd.addColorStop(0, accentDim+'0.10)');
-  grd.addColorStop(1, 'transparent');
-  ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+  // ── 3. GLOW BLOBS ──
+  if(isProfit){
+    // PROFIT: multi-color liquid glass blobs
+    // Green blob top-right
+    const g1 = ctx.createRadialGradient(W*0.9,H*0.08,0,W*0.9,H*0.08,W*0.65);
+    g1.addColorStop(0,'rgba(0,245,160,0.14)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+    // Cyan blob top-center
+    const g2 = ctx.createRadialGradient(W*0.5,H*0.0,0,W*0.5,H*0.0,W*0.5);
+    g2.addColorStop(0,'rgba(0,212,255,0.09)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+    // Purple blob bottom-left
+    const g3 = ctx.createRadialGradient(W*0.05,H*0.85,0,W*0.05,H*0.85,W*0.55);
+    g3.addColorStop(0,'rgba(168,85,247,0.12)'); g3.addColorStop(1,'transparent');
+    ctx.fillStyle=g3; ctx.fillRect(0,0,W,H);
+    // Blue blob bottom-right
+    const g4 = ctx.createRadialGradient(W*0.9,H*0.9,0,W*0.9,H*0.9,W*0.45);
+    g4.addColorStop(0,'rgba(59,130,246,0.08)'); g4.addColorStop(1,'transparent');
+    ctx.fillStyle=g4; ctx.fillRect(0,0,W,H);
+  } else {
+    // LOSS: red + dark orange blobs
+    const g1 = ctx.createRadialGradient(W*0.85,H*0.12,0,W*0.85,H*0.12,W*0.6);
+    g1.addColorStop(0,'rgba(255,77,109,0.14)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+    const g2 = ctx.createRadialGradient(W*0.05,H*0.88,0,W*0.05,H*0.88,W*0.5);
+    g2.addColorStop(0,'rgba(120,20,50,0.12)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+  }
 
-  // Second glow bottom-left
-  const grd2 = ctx.createRadialGradient(W*0.15, H*0.85, 0, W*0.15, H*0.85, W*0.5);
-  grd2.addColorStop(0, 'rgba(124,58,237,0.08)');
-  grd2.addColorStop(1, 'transparent');
-  ctx.fillStyle = grd2; ctx.fillRect(0, 0, W, H);
+  // ── 4. TOP ACCENT LINE ──
+  const tl = ctx.createLinearGradient(0,0,W,0);
+  if(isProfit){
+    // rainbow: green → cyan → purple
+    tl.addColorStop(0,'transparent');
+    tl.addColorStop(0.15,'#00f5a0');
+    tl.addColorStop(0.45,'#00d4ff');
+    tl.addColorStop(0.75,'#a855f7');
+    tl.addColorStop(1,'transparent');
+  } else {
+    tl.addColorStop(0,'transparent');
+    tl.addColorStop(0.3,'#ff4d6d');
+    tl.addColorStop(0.7,'rgba(200,30,60,0.6)');
+    tl.addColorStop(1,'transparent');
+  }
+  ctx.fillStyle=tl; ctx.fillRect(0,0,W,5);
 
-  // ── 2. TOP ACCENT BAR ──
-  const barGrd = ctx.createLinearGradient(0,0,W,0);
-  barGrd.addColorStop(0, accentColor);
-  barGrd.addColorStop(0.5, isLong ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)');
-  barGrd.addColorStop(1, 'transparent');
-  ctx.fillStyle = barGrd; ctx.fillRect(0, 0, W, 5);
+  // ── 5. DECORATIVE BG ART ──
+  ctx.save();
 
-  // ── 3. LOGO + DATE ──
-  drawZWealthLogo(ctx, PAD, 108, 54, accentColor);
-  ctx.font = '400 24px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.5)';
-  ctx.fillText('z-wealth.vercel.app', PAD, 138);
+  // 5a. Mini candlestick chart (top-right background)
+  const candleData = isProfit
+    ? [0.2,0.35,0.25,0.5,0.4,0.6,0.55,0.75,0.65,0.85,0.8,1.0,0.9]
+    : [1.0,0.85,0.9,0.7,0.8,0.6,0.65,0.45,0.5,0.35,0.4,0.2,0.1];
+  const chartX = W - 390, chartY = 175, chartW = 350, chartH = 270;
+  const cw2 = chartW / candleData.length;
+  ctx.globalAlpha = 0.11;
+  for(let i=0;i<candleData.length;i++){
+    const v = candleData[i];
+    const prev = i>0 ? candleData[i-1] : v;
+    const isBull = v >= prev;
+    const cx2 = chartX + i*cw2 + cw2*0.15;
+    const bodyH = Math.max(Math.abs(v-prev)*chartH, 8);
+    const bodyY = chartY + (1-Math.max(v,prev))*chartH;
+    ctx.strokeStyle = isBull ? GREEN : RED; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx2+cw2*0.35, chartY+(1-v)*chartH-12);
+    ctx.lineTo(cx2+cw2*0.35, chartY+(1-v)*chartH+bodyH+12);
+    ctx.stroke();
+    ctx.fillStyle = isBull ? GREEN : RED;
+    rr(cx2, bodyY, cw2*0.7, bodyH, 3); ctx.fill();
+  }
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
-  const timeStr = now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-  ctx.textAlign = 'right';
-  ctx.font = '400 26px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.65)';
-  ctx.fillText(dateStr + ' ' + timeStr, W - PAD, 110);
-  ctx.textAlign = 'left';
+  // Trend line
+  ctx.globalAlpha = 0.2;
+  ctx.strokeStyle = accentColor; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for(let i=0;i<candleData.length;i++){
+    const px2 = chartX + i*cw2 + cw2*0.5;
+    const py2 = chartY + (1-candleData[i])*chartH;
+    if(i===0) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+  }
+  ctx.stroke();
 
-  // ── 4. PAIR + DIRECTION BADGE ──
-  const pairY = 240;
-  const pairLabel = t.pair.replace('USDT', '/USDT');
-  ctx.font = '800 78px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillText(pairLabel, PAD, pairY);
+  // Area fill under trend
+  ctx.globalAlpha = 0.055;
+  const tFill = ctx.createLinearGradient(0,chartY,0,chartY+chartH);
+  tFill.addColorStop(0, accentColor); tFill.addColorStop(1, 'transparent');
+  ctx.fillStyle = tFill;
+  ctx.beginPath();
+  for(let i=0;i<candleData.length;i++){
+    const px2 = chartX + i*cw2 + cw2*0.5;
+    const py2 = chartY + (1-candleData[i])*chartH;
+    if(i===0) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+  }
+  ctx.lineTo(chartX+chartW, chartY+chartH); ctx.lineTo(chartX, chartY+chartH);
+  ctx.closePath(); ctx.fill();
 
-  // Direction badge (LONG / SHORT)
-  const pw = ctx.measureText(pairLabel).width;
-  const bx = PAD + pw + 28, by = pairY - 66, bw = 180, bh = 56;
-  ctx.fillStyle = accentDim + '0.15)';
-  ctx.strokeStyle = accentDim + '0.55)';
-  ctx.lineWidth = 2;
-  rr(bx, by, bw, bh, 12); ctx.fill(); ctx.stroke();
-  ctx.font = '800 30px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = accentColor;
-  const dirLabel = (isLong ? '▲ LONG' : '▼ SHORT');
-  ctx.fillText(dirLabel, bx + bw/2 - ctx.measureText(dirLabel).width/2, by + 39);
+  // 5b. Rocket silhouette — PROFIT=colorful keatas, LOSS=merah kebawah
+  ctx.globalAlpha = 1;
+  ctx.save();
+  const rs = 1.7;
+  const rx = W - 120, ry = H * 0.41;
+  ctx.translate(rx, ry);
+  // PROFIT = rocket ke atas normal, LOSS = terbalik (jatuh ke bawah)
+  if(!isProfit){ ctx.scale(1,-1); }
 
-  // TF badge
-  const tfLabels = {'1m':'1M','5m':'5M','15m':'15M','1h':'1H','4h':'4H','1d':'1D'};
-  const tfStr = tfLabels[t.tf] || t.tf?.toUpperCase() || '1H';
-  const tx2 = bx + bw + 16, tw2 = 100;
-  ctx.fillStyle = 'rgba(255,255,255,0.07)';
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  // body gradient — PROFIT: green→cyan rainbow, LOSS: dark red
+  if(isProfit){
+    const bodyG = ctx.createLinearGradient(0,-110*rs,0,75*rs);
+    bodyG.addColorStop(0,'rgba(168,85,247,0.18)');
+    bodyG.addColorStop(0.4,'rgba(0,212,255,0.16)');
+    bodyG.addColorStop(1,'rgba(0,245,160,0.12)');
+    ctx.fillStyle = bodyG;
+  } else {
+    ctx.fillStyle = 'rgba(255,60,90,0.10)';
+  }
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.moveTo(0,-110*rs);
+  ctx.bezierCurveTo(40*rs,-78*rs,50*rs,18*rs,30*rs,78*rs);
+  ctx.lineTo(-30*rs,78*rs);
+  ctx.bezierCurveTo(-50*rs,18*rs,-40*rs,-78*rs,0,-110*rs);
+  ctx.closePath(); ctx.fill();
+
+  // body border stroke
+  if(isProfit){
+    const strokeG = ctx.createLinearGradient(0,-110*rs,0,78*rs);
+    strokeG.addColorStop(0,'rgba(168,85,247,0.5)');
+    strokeG.addColorStop(0.5,'rgba(0,212,255,0.4)');
+    strokeG.addColorStop(1,'rgba(0,245,160,0.3)');
+    ctx.strokeStyle = strokeG;
+  } else {
+    ctx.strokeStyle = 'rgba(255,60,90,0.3)';
+  }
   ctx.lineWidth = 1.5;
-  rr(tx2, by, tw2, bh, 12); ctx.fill(); ctx.stroke();
-  ctx.font = '700 28px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(248,250,252,0.7)';
-  ctx.fillText(tfStr, tx2 + tw2/2 - ctx.measureText(tfStr).width/2, by + 39);
+  ctx.beginPath();
+  ctx.moveTo(0,-110*rs);
+  ctx.bezierCurveTo(40*rs,-78*rs,50*rs,18*rs,30*rs,78*rs);
+  ctx.lineTo(-30*rs,78*rs);
+  ctx.bezierCurveTo(-50*rs,18*rs,-40*rs,-78*rs,0,-110*rs);
+  ctx.closePath(); ctx.stroke();
 
-  // Leverage badge (jika > 1x)
-  if (lev > 1) {
-    const lx = tx2 + tw2 + 16, lw = 120;
-    const levColor = lev >= 50 ? '#ef4444' : lev >= 20 ? '#f97316' : '#f59e0b';
-    const levBgAlpha = lev >= 50 ? '0.15' : '0.12';
-    ctx.fillStyle = `rgba(245,158,11,${levBgAlpha})`;
-    ctx.strokeStyle = levColor;
-    ctx.lineWidth = 2;
-    rr(lx, by, lw, bh, 12); ctx.fill(); ctx.stroke();
-    ctx.font = '800 30px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle = levColor;
-    const levStr = lev + 'x';
-    ctx.fillText(levStr, lx + lw/2 - ctx.measureText(levStr).width/2, by + 39);
+  // nose shine
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(0,-110*rs);
+  ctx.bezierCurveTo(18*rs,-85*rs,22*rs,-35*rs,0,-18*rs);
+  ctx.bezierCurveTo(-22*rs,-35*rs,-18*rs,-85*rs,0,-110*rs);
+  ctx.closePath(); ctx.fill();
+
+  // window/porthole
+  if(isProfit){
+    const winG = ctx.createRadialGradient(-5*rs,-32*rs,0,-5*rs,-32*rs,17*rs);
+    winG.addColorStop(0,'rgba(0,212,255,0.4)'); winG.addColorStop(1,'rgba(0,212,255,0.05)');
+    ctx.fillStyle = winG;
+  } else {
+    ctx.fillStyle = 'rgba(255,60,90,0.2)';
+  }
+  ctx.beginPath(); ctx.arc(0,-32*rs,17*rs,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = isProfit ? 'rgba(0,212,255,0.5)' : 'rgba(255,60,90,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0,-32*rs,17*rs,0,Math.PI*2); ctx.stroke();
+
+  // fins
+  ctx.fillStyle = isProfit ? 'rgba(0,245,160,0.12)' : 'rgba(255,60,90,0.10)';
+  ctx.strokeStyle = isProfit ? 'rgba(0,245,160,0.3)' : 'rgba(255,60,90,0.25)';
+  ctx.lineWidth = 1;
+  [-1,1].forEach(side=>{
+    ctx.beginPath();
+    ctx.moveTo(side*28*rs,32*rs); ctx.lineTo(side*78*rs,88*rs); ctx.lineTo(side*28*rs,78*rs);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  });
+
+  // exhaust flame
+  if(isProfit){
+    // colorful flame: yellow→orange→transparent
+    const flG = ctx.createRadialGradient(0,108*rs,0,0,118*rs,60*rs);
+    flG.addColorStop(0,'rgba(255,240,80,0.7)');
+    flG.addColorStop(0.3,'rgba(255,140,0,0.5)');
+    flG.addColorStop(0.7,'rgba(255,60,120,0.2)');
+    flG.addColorStop(1,'transparent');
+    ctx.fillStyle = flG;
+    ctx.beginPath(); ctx.ellipse(0,105*rs,24*rs,55*rs,0,0,Math.PI*2); ctx.fill();
+    // inner bright core
+    const flCore = ctx.createRadialGradient(0,105*rs,0,0,105*rs,18*rs);
+    flCore.addColorStop(0,'rgba(255,255,200,0.8)');
+    flCore.addColorStop(1,'transparent');
+    ctx.fillStyle = flCore;
+    ctx.beginPath(); ctx.ellipse(0,105*rs,10*rs,22*rs,0,0,Math.PI*2); ctx.fill();
+  } else {
+    // dim red flame for loss
+    const flG = ctx.createRadialGradient(0,108*rs,0,0,108*rs,50*rs);
+    flG.addColorStop(0,'rgba(255,80,30,0.5)');
+    flG.addColorStop(0.5,'rgba(200,20,60,0.25)');
+    flG.addColorStop(1,'transparent');
+    ctx.fillStyle = flG;
+    ctx.beginPath(); ctx.ellipse(0,102*rs,22*rs,48*rs,0,0,Math.PI*2); ctx.fill();
   }
 
-  // ── 5. SEPARATOR ──
-  const sepY = 290;
-  const sepGrd = ctx.createLinearGradient(PAD, sepY, W-PAD, sepY);
-  sepGrd.addColorStop(0, accentDim + '0.6)');
-  sepGrd.addColorStop(1, 'transparent');
-  ctx.strokeStyle = sepGrd; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(PAD, sepY); ctx.lineTo(W-PAD, sepY); ctx.stroke();
-
-  // ── 6. PnL LABEL ──
-  const pnlLabel = lev > 1 ? `PnL  ×${lev} Leverage` : 'PnL';
-  ctx.font = '500 36px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.8)';
-  ctx.fillText(pnlLabel, PAD, 360);
-
-  // ── 7. PnL GIANT NUMBER ──
-  const pnlDisplay = (pnlVal >= 0 ? '+' : '') + pnlVal.toFixed(2) + '%';
-  ctx.font = '900 190px "Segoe UI",Arial,sans-serif';
-  let pnlFontSize = 190;
-  while (ctx.measureText(pnlDisplay).width > W - PAD*2 - 40 && pnlFontSize > 90) {
-    pnlFontSize -= 10;
-    ctx.font = `900 ${pnlFontSize}px "Segoe UI",Arial,sans-serif`;
+  // PROFIT: sparkle dots around rocket
+  if(isProfit){
+    [[-55,-80],[-45,-40],[50,-70],[60,-20],[40,30],[-50,50]].forEach(([sx,sy])=>{
+      const sparkR = 3+Math.random()*3;
+      const sparkColors = ['rgba(0,245,160,0.7)','rgba(0,212,255,0.6)','rgba(168,85,247,0.5)','rgba(255,220,0,0.5)'];
+      ctx.fillStyle = sparkColors[Math.floor(Math.abs(sx+sy)%sparkColors.length)];
+      ctx.beginPath(); ctx.arc(sx*rs*0.5, sy*rs*0.5, sparkR, 0, Math.PI*2); ctx.fill();
+    });
   }
-  ctx.shadowColor = isProfit ? accentColor : '#ef4444';
-  ctx.shadowBlur = 70;
-  ctx.fillStyle = isProfit ? accentColor : '#ef4444';
-  ctx.fillText(pnlDisplay, PAD, 360 + pnlFontSize * 0.85);
-  ctx.shadowBlur = 0;
-  const pnlBottom = 360 + pnlFontSize * 0.85;
 
-  // ── 8. STAT CARDS 2×2 ──
-  const gridY = pnlBottom + 55;
-  const gridGap = 24;
-  const cardW2 = (W - PAD*2 - gridGap) / 2;
-  const cardH2 = 185;
+  ctx.restore(); // rocket
+  ctx.restore(); // main save
 
-  function drawStatCard2(label, value, cx, cy, valueColor) {
-    ctx.save();
-    const bg = ctx.createLinearGradient(cx, cy, cx, cy+cardH2);
-    bg.addColorStop(0, 'rgba(255,255,255,0.07)');
-    bg.addColorStop(1, 'rgba(255,255,255,0.02)');
-    ctx.fillStyle = bg;
-    rr(cx, cy, cardW2, cardH2, 20); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-    ctx.lineWidth = 1.5;
-    rr(cx, cy, cardW2, cardH2, 20); ctx.stroke();
-    // Shine top
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(cx+20, cy+1); ctx.lineTo(cx+cardW2-20, cy+1); ctx.stroke();
-    // Accent left
-    const acLn = ctx.createLinearGradient(cx, cy, cx, cy+cardH2);
-    acLn.addColorStop(0, accentDim + '0.8)');
-    acLn.addColorStop(1, 'transparent');
-    ctx.strokeStyle = acLn; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(cx+1.5, cy+20); ctx.lineTo(cx+1.5, cy+cardH2-20); ctx.stroke();
-    // Label
-    ctx.font = '400 25px "Segoe UI",Arial,sans-serif';
-    ctx.fillStyle = 'rgba(148,163,184,0.7)';
-    ctx.fillText(label, cx+36, cy+56);
-    // Value (auto-shrink)
-    ctx.font = '800 50px "Segoe UI",Arial,sans-serif';
-    let fz = 50;
-    while(ctx.measureText(value).width > cardW2 - 50 && fz > 28) {
-      fz -= 4; ctx.font = `800 ${fz}px "Segoe UI",Arial,sans-serif`;
+  // ── 6. LOGO — pakai drawZWealthLogo yang sudah bagus ──
+  drawZWealthLogo(ctx, PAD, LOGO_Y, 50, accentColor);
+  ctx.font='400 20px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.4)';
+  ctx.fillText('z-wealth.vercel.app', PAD, LOGO_Y+30);
+
+  // Date/time right — sejajar dengan logo
+  const now=new Date();
+  const dtStr = now.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  ctx.textAlign='right'; ctx.font='400 24px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.5)';
+  ctx.fillText(dtStr, W-PAD, LOGO_Y); ctx.textAlign='left';
+
+  // ── 7. SEP LINE 1 ──
+  function sepLine(y){
+    const sg=ctx.createLinearGradient(PAD,y,W-PAD,y);
+    if(isProfit){
+      sg.addColorStop(0,'transparent');
+      sg.addColorStop(0.1,'rgba(0,245,160,0.7)');
+      sg.addColorStop(0.5,'rgba(0,212,255,0.4)');
+      sg.addColorStop(0.8,'rgba(168,85,247,0.2)');
+      sg.addColorStop(1,'transparent');
+    } else {
+      sg.addColorStop(0,ac(0.7)); sg.addColorStop(0.7,ac(0.1)); sg.addColorStop(1,'transparent');
     }
-    ctx.fillStyle = valueColor || '#f1f5f9';
-    ctx.fillText(value, cx+36, cy+135);
-    ctx.restore();
+    ctx.strokeStyle=sg; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD,y); ctx.lineTo(W-PAD,y); ctx.stroke();
+  }
+  sepLine(SEP1_Y);
+
+  // ── 8. PAIR + BADGES ──
+  const pairLabel = t.pair.replace('USDT','/USDT');
+  ctx.font='900 80px "Segoe UI Black",Arial,sans-serif'; ctx.fillStyle='#ffffff';
+  ctx.fillText(pairLabel, PAD, PAIR_Y);
+  const pw=ctx.measureText(pairLabel).width;
+
+  // badges
+  function badge(text, x, y, bh, bgColor, borderColor, textColor){
+    ctx.font=`800 27px "Segoe UI",Arial,sans-serif`;
+    const bw=ctx.measureText(text).width+44;
+    ctx.fillStyle=bgColor; rr(x,y,bw,bh,bh/2); ctx.fill();
+    ctx.strokeStyle=borderColor; ctx.lineWidth=1.5; rr(x,y,bw,bh,bh/2); ctx.stroke();
+    ctx.fillStyle=textColor; ctx.fillText(text, x+bw/2-ctx.measureText(text).width/2, y+bh*0.68);
+    return bw;
+  }
+  const badgeY=PAIR_Y-60, badgeH=52;
+  let bx=PAD+pw+28;
+  bx += badge(isLong?'▲ LONG':'▼ SHORT', bx, badgeY, badgeH, dc(0.18), dc(0.65), dirColor)+14;
+  const tfLabels={'1m':'1M','5m':'5M','15m':'15M','1h':'1H','4h':'4H','1d':'1D'};
+  bx += badge(tfLabels[t.tf]||t.tf?.toUpperCase()||'4H', bx, badgeY, badgeH, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.18)', 'rgba(248,250,252,0.75)')+14;
+  if(lev>1){
+    ctx.shadowColor=levColor; ctx.shadowBlur=10;
+    badge(lev+'x', bx, badgeY, badgeH, lev>=20?'rgba(255,70,0,0.14)':'rgba(255,200,0,0.11)', levColor, levColor);
+    ctx.shadowBlur=0;
   }
 
-  const colL = PAD, colR = PAD + cardW2 + gridGap;
-  const row1 = gridY, row2 = gridY + cardH2 + gridGap;
+  // ── 9. PnL LABEL ──
+  ctx.font='500 30px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.7)';
+  ctx.fillText(lev>1?`PnL  ×${lev} Leverage`:'PnL', PAD, PNL_LABEL_Y);
 
-  const entryStr = '$' + Math.round(t.entry).toLocaleString('en-US');
-  const nowStr   = currentPrice > 0 ? '$' + Math.round(currentPrice).toLocaleString('en-US') : '—';
-  const slStr    = '$' + Math.round(t.sl).toLocaleString('en-US');
-  const tpStr    = '$' + Math.round(t.tp).toLocaleString('en-US');
+  // ── 10. PnL NUMBER (fixed size, scaled down only if too wide) ──
+  const pnlDisplay=(pnlVal>=0?'+':'')+pnlVal.toFixed(2)+'%';
+  const pnlColor=isProfit?accentColor:RED;
+  let pfs=PNL_FS;
+  ctx.font=`900 ${pfs}px "Segoe UI Black",Arial,sans-serif`;
+  while(ctx.measureText(pnlDisplay).width > W-PAD*2-20 && pfs>80){
+    pfs-=6; ctx.font=`900 ${pfs}px "Segoe UI Black",Arial,sans-serif`;
+  }
+  ctx.shadowColor=pnlColor; ctx.shadowBlur=80;
+  ctx.fillStyle=pnlColor; ctx.fillText(pnlDisplay, PAD, PNL_NUM_Y);
+  ctx.shadowBlur=35; ctx.fillText(pnlDisplay, PAD, PNL_NUM_Y);
+  ctx.shadowBlur=0;
 
-  drawStatCard2('Harga Entry', entryStr,   colL, row1, '#f1f5f9');
-  drawStatCard2('Harga Kini',  nowStr,     colR, row1, isProfit ? accentColor : '#ef4444');
-  drawStatCard2('Stop Loss',   slStr,      colL, row2, '#ef4444');
-  drawStatCard2('Take Profit', tpStr,      colR, row2, '#10b981');
+  // ── 11. SEP LINE 2 ──
+  sepLine(SEP2_Y);
 
-  const tableBottom = row2 + cardH2;
+  // ── 12. STAT CARDS 2×2 ──
+  const cw=(W-PAD*2-CARD_GAP)/2;
+  function statCard(label, value, cx, cy, vColor){
+    ctx.save();
+    // bg glass
+    const bg=ctx.createLinearGradient(cx,cy,cx+cw,cy+CARD_H);
+    bg.addColorStop(0,'rgba(255,255,255,0.065)'); bg.addColorStop(1,'rgba(255,255,255,0.02)');
+    ctx.fillStyle=bg; rr(cx,cy,cw,CARD_H,20); ctx.fill();
+    // border
+    ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=1; rr(cx,cy,cw,CARD_H,20); ctx.stroke();
+    // shine
+    const sh=ctx.createLinearGradient(cx+20,cy,cx+cw-20,cy);
+    sh.addColorStop(0,'transparent'); sh.addColorStop(0.4,'rgba(255,255,255,0.2)'); sh.addColorStop(1,'transparent');
+    ctx.strokeStyle=sh; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx+20,cy+1); ctx.lineTo(cx+cw-20,cy+1); ctx.stroke();
+    // bottom color accent
+    ctx.fillStyle=vColor+'33'; ctx.fillRect(cx+20, cy+CARD_H-4, cw-40, 3);
+    // label
+    ctx.font='500 22px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.6)';
+    ctx.fillText(label, cx+26, cy+44);
+    // value
+    ctx.font=`800 48px "Segoe UI Black",Arial,sans-serif`;
+    let fz=48;
+    while(ctx.measureText(value).width>cw-44&&fz>24){ fz-=4; ctx.font=`800 ${fz}px "Segoe UI Black",Arial,sans-serif`; }
+    ctx.fillStyle=vColor; ctx.shadowColor=vColor; ctx.shadowBlur=12;
+    ctx.fillText(value, cx+26, cy+116);
+    ctx.shadowBlur=0; ctx.restore();
+  }
 
-  // ── 9. PROGRESS BAR (SL → Entry → TP) ──
-  const barY2 = tableBottom + 55, barH2 = 10, barW2 = W - PAD*2;
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  rr(PAD, barY2, barW2, barH2, 5); ctx.fill();
-  // Fill sesuai PnL
-  const pctFill = Math.min(Math.max((pnlVal + t.slPct) / (t.slPct + t.tpPct), 0.01), 1);
-  const barFill = ctx.createLinearGradient(PAD, barY2, PAD + barW2 * pctFill, barY2);
-  if (isProfit) { barFill.addColorStop(0, '#065f46'); barFill.addColorStop(1, '#10b981'); }
-  else          { barFill.addColorStop(0, '#7f1d1d'); barFill.addColorStop(1, '#ef4444'); }
-  ctx.fillStyle = barFill;
-  rr(PAD, barY2, barW2 * pctFill, barH2, 5); ctx.fill();
-  ctx.font = '400 24px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.5)';
-  ctx.fillText('SL', PAD, barY2 + 36);
-  ctx.textAlign = 'center'; ctx.fillText('Entry', PAD + barW2/2, barY2 + 36);
-  ctx.textAlign = 'right';  ctx.fillText('TP', PAD + barW2, barY2 + 36);
-  ctx.textAlign = 'left';
+  const colL=PAD, colR=PAD+cw+CARD_GAP;
+  const eStr='$'+Number(t.entry).toLocaleString('en-US');
+  const nStr=currentPrice>0?'$'+Number(currentPrice).toLocaleString('en-US'):'—';
+  const sStr='$'+Number(t.sl).toLocaleString('en-US');
+  const pStr='$'+Number(t.tp).toLocaleString('en-US');
 
-  // ── 10. STATUS CARD ──
-  const stY = barY2 + 75, stH = 175, stW = W - PAD*2;
-  ctx.fillStyle = accentDim + '0.07)';
-  ctx.strokeStyle = accentDim + '0.22)';
-  ctx.lineWidth = 1.5;
-  rr(PAD, stY, stW, stH, 18); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = accentColor;
-  ctx.beginPath(); ctx.arc(PAD + 42, stY + stH/2, 11, 0, Math.PI*2); ctx.fill();
-  ctx.font = '800 36px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = accentColor;
-  const statusLabel = isProfit ? (isLong ? 'POSISI PROFIT 🟢' : 'SHORT PROFIT 🟢') : (isLong ? 'POSISI RUGI 🔴' : 'SHORT RUGI 🔴');
-  ctx.fillText(statusLabel, PAD + 70, stY + stH/2 - 14);
-  ctx.font = '400 27px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.7)';
-  const durMin = t.entryTime ? Math.round((Date.now() - t.entryTime) / 60000) : 0;
-  const durStr = durMin < 60 ? durMin + ' menit' : Math.floor(durMin/60) + ' jam ' + (durMin%60) + ' menit';
-  const levInfo = lev > 1 ? ` · Leverage ${lev}x` : '';
-  ctx.fillText('Durasi: ' + durStr + levInfo + ' · Unrealized P&L', PAD + 70, stY + stH/2 + 28);
+  statCard('Harga Entry', eStr, colL, CARD_Y1, '#e2e8f0');
+  statCard('Harga Kini',  nStr, colR, CARD_Y1, isProfit?accentColor:RED);
+  statCard('Stop Loss',   sStr, colL, CARD_Y2, RED);
+  statCard('Take Profit', pStr, colR, CARD_Y2, GREEN);
 
-  // ── 11. BOTTOM ──
-  const botY = H - 80;
-  const bln = ctx.createLinearGradient(PAD, botY, W-PAD, botY);
-  bln.addColorStop(0, 'transparent');
-  bln.addColorStop(0.3, accentDim + '0.2)');
-  bln.addColorStop(0.7, 'rgba(124,58,237,0.2)');
-  bln.addColorStop(1, 'transparent');
-  ctx.strokeStyle = bln; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(PAD, botY); ctx.lineTo(W-PAD, botY); ctx.stroke();
-  ctx.textAlign = 'center';
-  ctx.font = '400 22px "Segoe UI",Arial,sans-serif';
-  ctx.fillStyle = 'rgba(148,163,184,0.25)';
-  ctx.fillText('Not financial advice', W/2, botY + 42);
-  ctx.textAlign = 'left';
+  // ── 13. PROGRESS BAR ──
+  const barW=W-PAD*2;
+  ctx.fillStyle='rgba(255,255,255,0.06)'; rr(PAD,BAR_Y,barW,BAR_H,6); ctx.fill();
+  const pct=Math.min(Math.max((pnlVal+(t.slPct||5))/((t.slPct||5)+(t.tpPct||5)),0.02),1);
+  const fw=barW*pct;
+  if(fw>0){
+    const bf=ctx.createLinearGradient(PAD,BAR_Y,PAD+fw,BAR_Y);
+    bf.addColorStop(0,isProfit?'rgba(0,245,160,0.25)':'rgba(255,77,109,0.25)');
+    bf.addColorStop(1,isProfit?GREEN:RED);
+    ctx.fillStyle=bf; rr(PAD,BAR_Y,fw,BAR_H,6); ctx.fill();
+  }
+  // dot
+  ctx.fillStyle='#fff'; ctx.shadowColor=accentColor; ctx.shadowBlur=14;
+  ctx.beginPath(); ctx.arc(PAD+fw,BAR_Y+BAR_H/2,8,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  // labels
+  ctx.font='600 22px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle='rgba(239,68,68,0.7)'; ctx.fillText('SL',PAD,BAR_Y+36);
+  ctx.textAlign='center'; ctx.fillStyle='rgba(148,163,184,0.5)'; ctx.fillText('Entry',PAD+barW/2,BAR_Y+36);
+  ctx.textAlign='right'; ctx.fillStyle='rgba(0,245,160,0.7)'; ctx.fillText('TP',PAD+barW,BAR_Y+36);
+  ctx.textAlign='left';
+
+  // ── 14. STATUS BANNER ──
+  const stW=W-PAD*2;
+  const stBg=ctx.createLinearGradient(PAD,ST_Y,PAD+stW,ST_Y);
+  stBg.addColorStop(0,ac(0.11)); stBg.addColorStop(0.6,ac(0.05)); stBg.addColorStop(1,'rgba(120,40,255,0.05)');
+  ctx.fillStyle=stBg; rr(PAD,ST_Y,stW,ST_H,20); ctx.fill();
+  ctx.strokeStyle=ac(0.28); ctx.lineWidth=1; rr(PAD,ST_Y,stW,ST_H,20); ctx.stroke();
+  // pulse dot
+  const dotCy=ST_Y+ST_H/2;
+  ctx.fillStyle=accentColor; ctx.shadowColor=accentColor; ctx.shadowBlur=20;
+  ctx.beginPath(); ctx.arc(PAD+42,dotCy,12,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+  ctx.strokeStyle=ac(0.28); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(PAD+42,dotCy,20,0,Math.PI*2); ctx.stroke();
+  // text
+  ctx.font='800 36px "Segoe UI",Arial,sans-serif'; ctx.fillStyle=accentColor;
+  const statusLabel=isProfit?(isLong?'POSISI PROFIT':'SHORT PROFIT'):(isLong?'POSISI RUGI':'SHORT RUGI');
+  ctx.fillText(statusLabel,PAD+76,dotCy-10);
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.7)';
+  const durMin=t.entryTime?Math.round((Date.now()-t.entryTime)/60000):0;
+  const durStr=durMin<60?durMin+' menit':Math.floor(durMin/60)+' jam '+(durMin%60)+' menit';
+  ctx.fillText('Durasi: '+durStr+(lev>1?' · Leverage '+lev+'x':'')+' · Unrealized P&L',PAD+76,dotCy+28);
+
+  // ── 15. BOTTOM DIVIDER + WATERMARK ──
+  const bln=ctx.createLinearGradient(PAD,BOT_Y,W-PAD,BOT_Y);
+  bln.addColorStop(0,'transparent'); bln.addColorStop(0.3,ac(0.22)); bln.addColorStop(0.7,'rgba(120,40,255,0.22)'); bln.addColorStop(1,'transparent');
+  ctx.strokeStyle=bln; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD,BOT_Y); ctx.lineTo(W-PAD,BOT_Y); ctx.stroke();
+  ctx.textAlign='center'; ctx.font='400 20px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,0.2)';
+  ctx.fillText('Not financial advice',W/2,BOT_Y+38); ctx.textAlign='left';
 }
 
 // ══════════════════════════════════════════════
@@ -13200,6 +13619,11 @@ function selectLeverage(el) {
 }
 
 function selectSigPair(el) {
+  if (el.dataset.pair === 'XAUUSD') {
+    // Show coming soon toast - don't activate
+    toast('<span style="font-size:.9rem">⏳</span> <b>XAU/USD</b> — Segera Hadir! Fitur ini sedang dalam pengembangan.', 3500);
+    return;
+  }
   document.querySelectorAll('.sig-pair-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   _sigPair = el.dataset.pair;
@@ -16032,39 +16456,264 @@ function renderSigHistory() {
     list.innerHTML = '<div style="text-align:center;padding:1.2rem;color:#64748b;font-size:.75rem">Belum ada riwayat. Tekan Entry untuk mulai tracking.</div>';
     return;
   }
-  list.innerHTML = _sigHistory.slice(0, 20).map(r => {
+  // Store records in window map so share buttons can access them without nested backtick issues
+  window._sigShareMap = {};
+  const rows = _sigHistory.slice(0, 20).map((r, i) => {
+    window._sigShareMap[i] = r;
     const isTP      = r.result === 'TP';
     const isExpired = r.result === 'EXPIRED';
     const isManual  = r.result === 'MANUAL';
     const pnl = parseFloat(r.pnlPct);
     const d = new Date(r.time);
-    const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    const dateStr = d.getDate()+'/'+(d.getMonth()+1)+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
     const icon    = isTP ? '🎯' : isExpired ? '⏰' : isManual ? '✋' : '🛑';
     const bgColor = isTP ? 'rgba(16,185,129,.06)' : isExpired ? 'rgba(100,116,139,.06)' : isManual ? 'rgba(139,92,246,.06)' : 'rgba(239,68,68,.06)';
     const bdColor = isTP ? 'rgba(16,185,129,.15)' : isExpired ? 'rgba(100,116,139,.15)' : isManual ? 'rgba(139,92,246,.15)' : 'rgba(239,68,68,.12)';
     const resColor = isTP ? '#10b981' : isExpired ? '#64748b' : isManual ? '#a78bfa' : '#ef4444';
+    const pnlColor = isExpired ? '#64748b' : pnl >= 0 ? '#10b981' : '#ef4444';
+    const pnlText  = isExpired ? '—' : (pnl >= 0 ? '+' : '') + r.pnlPct + '%';
     const entryTypeLabel = r.entryType === 'limit' ? ' · LIMIT' : '';
-    return `<div style="display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;
-      background:${bgColor};border:1px solid ${bdColor};border-radius:12px;margin-bottom:.4rem">
-      <div style="width:30px;height:30px;border-radius:8px;flex-shrink:0;background:${bgColor};
-        display:flex;align-items:center;justify-content:center;font-size:.9rem">${icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.15rem;flex-wrap:wrap">
-          <span style="font-size:.7rem;font-weight:800;color:#f1f5f9">${r.pair.replace('USDT','')}</span>
-          <span style="font-size:.52rem;font-weight:700;padding:.04rem .3rem;border-radius:4px;
-            background:${r.direction==='LONG'?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'};
-            color:${r.direction==='LONG'?'#10b981':'#ef4444'}">${r.direction}</span>
-          <span style="font-size:.52rem;color:#475569">${r.tf?.toUpperCase()||'—'}${entryTypeLabel}</span>
-        </div>
-        <div style="font-size:.58rem;color:#64748b">${dateStr} · ${r.duration || 0}m</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:.78rem;font-weight:800;font-family:'Space Mono',monospace;
-          color:${isExpired?'#64748b':pnl>=0?'#10b981':'#ef4444'}">${isExpired?'—':((pnl>=0?'+':'')+r.pnlPct+'%')}</div>
-        <div style="font-size:.58rem;font-weight:700;color:${resColor}">${r.result}</div>
-      </div>
-    </div>`;
-  }).join('');
+    const shareBtn = !isExpired
+      ? '<button onclick="openSigHistShare('+i+')" style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(148,163,184,.7);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s" title="Bagikan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>'
+      : '';
+    return '<div style="display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;background:'+bgColor+';border:1px solid '+bdColor+';border-radius:12px;margin-bottom:.4rem">'
+      + '<div style="width:30px;height:30px;border-radius:8px;flex-shrink:0;background:'+bgColor+';display:flex;align-items:center;justify-content:center;font-size:.9rem">'+icon+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.15rem;flex-wrap:wrap">'
+          + '<span style="font-size:.7rem;font-weight:800;color:#f1f5f9">'+r.pair.replace('USDT','')+'</span>'
+          + '<span style="font-size:.52rem;font-weight:700;padding:.04rem .3rem;border-radius:4px;background:'+(r.direction==='LONG'?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)')+';color:'+(r.direction==='LONG'?'#10b981':'#ef4444')+'">'+r.direction+'</span>'
+          + '<span style="font-size:.52rem;color:#475569">'+(r.tf||'—').toUpperCase()+entryTypeLabel+'</span>'
+        + '</div>'
+        + '<div style="font-size:.58rem;color:#64748b">'+dateStr+' · '+(r.duration||0)+'m</div>'
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0;display:flex;align-items:center;gap:.5rem">'
+        + '<div>'
+          + '<div style="font-size:.78rem;font-weight:800;font-family:\'Space Mono\',monospace;color:'+pnlColor+'">'+pnlText+'</div>'
+          + '<div style="font-size:.58rem;font-weight:700;color:'+resColor+'">'+r.result+'</div>'
+        + '</div>'
+        + shareBtn
+      + '</div>'
+      + '</div>';
+  });
+  list.innerHTML = rows.join('');
+}
+
+// ── SIGNAL HISTORY SHARE CARD ──
+function openSigHistShare(idx) {
+  const r = (window._sigShareMap && window._sigShareMap[idx]) || _sigHistory[idx];
+  if (!r) { toast('Data tidak ditemukan'); return; }
+  const modal = document.getElementById('modal-sighist-share');
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => drawSigHistCard(r));
+}
+function closeSigHistShare() {
+  document.getElementById('modal-sighist-share').style.display = 'none';
+}
+function downloadSigHistCard() {
+  const canvas = document.getElementById('sighist-canvas');
+  const link = document.createElement('a');
+  link.download = 'z-wealth-SIGNAL-' + Date.now() + '.jpg';
+  link.href = canvas.toDataURL('image/jpeg', 0.96);
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  toast('Kartu signal berhasil disimpan 🎯');
+}
+
+function drawSigHistCard(r) {
+  const canvas = document.getElementById('sighist-canvas');
+  const W = 1080, H = 1350;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const pnl = parseFloat(r.pnlPct) || 0;
+  const isProfit = pnl >= 0;
+  const isLong = r.direction === 'LONG';
+  const isTP = r.result === 'TP';
+  const isSL = r.result === 'SL';
+  const isManual = r.result === 'MANUAL';
+  const lev = r.leverage || 1;
+
+  // Colors
+  const GREEN = '#00f5a0'; const RED = '#ff4d6d';
+  const CYAN = '#00d4ff'; const PURPLE = '#a855f7'; const GOLD = '#f59e0b';
+  const accentColor = isProfit ? GREEN : RED;
+  const accentR = isProfit ? '0,245,160' : '255,77,109';
+  const dirColor = isLong ? GREEN : RED;
+  const resColor = isTP ? GREEN : isSL ? RED : isManual ? '#a78bfa' : '#64748b';
+  const PAD = 72;
+  function ac(a){ return `rgba(${accentR},${a})`; }
+  function rr(x,y,w,h,rad){
+    if(w<=0||h<=0) return; rad=Math.min(rad,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rad,y); ctx.lineTo(x+w-rad,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rad);
+    ctx.lineTo(x+w,y+h-rad); ctx.quadraticCurveTo(x+w,y+h,x+w-rad,y+h);
+    ctx.lineTo(x+rad,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rad);
+    ctx.lineTo(x,y+rad); ctx.quadraticCurveTo(x,y,x+rad,y);
+    ctx.closePath();
+  }
+
+  // ── BACKGROUND ──
+  const bgG = ctx.createLinearGradient(0,0,0,H);
+  if(isProfit){ bgG.addColorStop(0,'#060d10'); bgG.addColorStop(1,'#040810'); }
+  else         { bgG.addColorStop(0,'#0d0608'); bgG.addColorStop(1,'#080410'); }
+  ctx.fillStyle=bgG; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.save(); ctx.strokeStyle=ac(0.03); ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.restore();
+
+  // Glow blobs
+  if(isProfit){
+    [[W*.9,H*.08,W*.6,'rgba(0,245,160,0.13)'],[W*.05,H*.85,W*.55,'rgba(168,85,247,0.1)'],[W*.5,H*.0,W*.45,'rgba(0,212,255,0.07)']].forEach(([gx,gy,gr,gc])=>{
+      const g=ctx.createRadialGradient(gx,gy,0,gx,gy,gr); g.addColorStop(0,gc); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    });
+  } else {
+    [[W*.85,H*.12,W*.6,'rgba(255,77,109,0.14)'],[W*.05,H*.88,W*.5,'rgba(120,20,50,0.1)']].forEach(([gx,gy,gr,gc])=>{
+      const g=ctx.createRadialGradient(gx,gy,0,gx,gy,gr); g.addColorStop(0,gc); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    });
+  }
+
+  // Top rainbow bar
+  const tl=ctx.createLinearGradient(0,0,W,0);
+  if(isProfit){ tl.addColorStop(0,'transparent'); tl.addColorStop(.15,GREEN); tl.addColorStop(.5,CYAN); tl.addColorStop(.8,PURPLE); tl.addColorStop(1,'transparent'); }
+  else         { tl.addColorStop(0,'transparent'); tl.addColorStop(.3,RED); tl.addColorStop(.7,'rgba(200,30,60,.6)'); tl.addColorStop(1,'transparent'); }
+  ctx.fillStyle=tl; ctx.fillRect(0,0,W,5);
+
+  // ── DECORATIVE: mini candlestick chart BG ──
+  ctx.save();
+  const cdata = isProfit ? [.2,.35,.25,.5,.4,.6,.55,.75,.65,.85,.8,1,.9] : [1,.85,.9,.7,.8,.6,.65,.45,.5,.35,.4,.2,.1];
+  const chartX=W-390, chartY=175, chartW2=350, chartH2=260;
+  const cww=chartW2/cdata.length;
+  ctx.globalAlpha=0.10;
+  cdata.forEach((v,i)=>{
+    const prev=i>0?cdata[i-1]:v, isBull=v>=prev;
+    const cx2=chartX+i*cww+cww*.15, bodyH=Math.max(Math.abs(v-prev)*chartH2,8);
+    const bodyY2=chartY+(1-Math.max(v,prev))*chartH2;
+    ctx.strokeStyle=isBull?GREEN:RED; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx2+cww*.35,chartY+(1-v)*chartH2-12); ctx.lineTo(cx2+cww*.35,chartY+(1-v)*chartH2+bodyH+12); ctx.stroke();
+    ctx.fillStyle=isBull?GREEN:RED; rr(cx2,bodyY2,cww*.7,bodyH,3); ctx.fill();
+  });
+  ctx.globalAlpha=0.18; ctx.strokeStyle=accentColor; ctx.lineWidth=3;
+  ctx.beginPath();
+  cdata.forEach((v,i)=>{ const px=chartX+i*cww+cww*.5, py=chartY+(1-v)*chartH2; i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+  ctx.stroke();
+  ctx.restore();
+
+  // ── LOGO ──
+  drawZWealthLogo(ctx, PAD, 110, 50, accentColor);
+  ctx.font='400 20px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.4)';
+  ctx.fillText('z-wealth.vercel.app', PAD, 142);
+  const d2=new Date(r.time);
+  const dtStr=d2.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' '+d2.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  ctx.textAlign='right'; ctx.font='400 24px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.5)';
+  ctx.fillText(dtStr,W-PAD,110); ctx.textAlign='left';
+
+  // Sep line
+  const sl2=ctx.createLinearGradient(PAD,165,W-PAD,165);
+  if(isProfit){ sl2.addColorStop(0,'transparent'); sl2.addColorStop(.1,ac(.7)); sl2.addColorStop(.5,`rgba(0,212,255,.35)`); sl2.addColorStop(1,'transparent'); }
+  else         { sl2.addColorStop(0,ac(.7)); sl2.addColorStop(.7,ac(.1)); sl2.addColorStop(1,'transparent'); }
+  ctx.strokeStyle=sl2; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD,165); ctx.lineTo(W-PAD,165); ctx.stroke();
+
+  // ── PAIR + BADGES ──
+  const pairLabel2 = r.pair.replace('USDT','/USDT');
+  ctx.font='900 80px "Segoe UI Black",Arial,sans-serif'; ctx.fillStyle='#ffffff';
+  ctx.fillText(pairLabel2, PAD, 268);
+  const pw2=ctx.measureText(pairLabel2).width;
+  function badge2(text,x,y,bh,bg,border,tc){
+    ctx.font='800 27px "Segoe UI",Arial,sans-serif';
+    const bw2=ctx.measureText(text).width+44;
+    ctx.fillStyle=bg; rr(x,y,bw2,bh,bh/2); ctx.fill();
+    ctx.strokeStyle=border; ctx.lineWidth=1.5; rr(x,y,bw2,bh,bh/2); ctx.stroke();
+    ctx.fillStyle=tc; ctx.fillText(text,x+bw2/2-ctx.measureText(text).width/2,y+bh*.68);
+    return bw2;
+  }
+  const badgeY2=268-60, bh2=52;
+  let bx2=PAD+pw2+28;
+  const dirR2=isLong?'0,245,160':'255,77,109';
+  bx2 += badge2(isLong?'▲ LONG':'▼ SHORT', bx2, badgeY2, bh2, `rgba(${dirR2},.18)`, `rgba(${dirR2},.65)`, dirColor)+14;
+  const tfMap={'1m':'1M','5m':'5M','15m':'15M','1h':'1H','4h':'4H','1d':'1D'};
+  bx2 += badge2(tfMap[r.tf]||r.tf?.toUpperCase()||'—', bx2, badgeY2, bh2, 'rgba(255,255,255,.06)', 'rgba(255,255,255,.18)', 'rgba(248,250,252,.75)')+14;
+  if(lev>1){
+    const levCol=lev>=50?RED:lev>=20?'#ff9500':'#ffcc00';
+    ctx.shadowColor=levCol; ctx.shadowBlur=10;
+    badge2(lev+'x', bx2, badgeY2, bh2, lev>=20?'rgba(255,70,0,.14)':'rgba(255,200,0,.11)', levCol, levCol);
+    ctx.shadowBlur=0;
+  }
+
+  // ── PnL SECTION ──
+  ctx.font='500 30px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.7)';
+  ctx.fillText(lev>1?`PnL  ×${lev} Leverage`:'PnL Realized', PAD, 330);
+
+  const pnlDisplay=(pnl>=0?'+':'')+pnl.toFixed(2)+'%';
+  let pfs=155;
+  ctx.font=`900 ${pfs}px "Segoe UI Black",Arial,sans-serif`;
+  while(ctx.measureText(pnlDisplay).width>W-PAD*2-20 && pfs>80){ pfs-=6; ctx.font=`900 ${pfs}px "Segoe UI Black",Arial,sans-serif`; }
+  ctx.shadowColor=accentColor; ctx.shadowBlur=80; ctx.fillStyle=accentColor;
+  ctx.fillText(pnlDisplay,PAD,510); ctx.shadowBlur=35; ctx.fillText(pnlDisplay,PAD,510); ctx.shadowBlur=0;
+
+  // Sep line 2
+  const sl3=ctx.createLinearGradient(PAD,565,W-PAD,565);
+  sl3.addColorStop(0,ac(.5)); sl3.addColorStop(.6,ac(.1)); sl3.addColorStop(1,'transparent');
+  ctx.strokeStyle=sl3; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD,565); ctx.lineTo(W-PAD,565); ctx.stroke();
+
+  // ── STAT CARDS 2x2 ──
+  const CW=(W-PAD*2-18)/2, CH=155, CG=18;
+  const CY1=605, CY2=CY1+CH+CG;
+  function sCard(label,value,cx,cy,vc){
+    ctx.save();
+    const bg=ctx.createLinearGradient(cx,cy,cx+CW,cy+CH);
+    bg.addColorStop(0,'rgba(255,255,255,.065)'); bg.addColorStop(1,'rgba(255,255,255,.02)');
+    ctx.fillStyle=bg; rr(cx,cy,CW,CH,20); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.09)'; ctx.lineWidth=1; rr(cx,cy,CW,CH,20); ctx.stroke();
+    const sh=ctx.createLinearGradient(cx+20,cy,cx+CW-20,cy);
+    sh.addColorStop(0,'transparent'); sh.addColorStop(.4,'rgba(255,255,255,.2)'); sh.addColorStop(1,'transparent');
+    ctx.strokeStyle=sh; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx+20,cy+1); ctx.lineTo(cx+CW-20,cy+1); ctx.stroke();
+    ctx.fillStyle=vc+'33'; ctx.fillRect(cx+20,cy+CH-4,CW-40,3);
+    ctx.font='500 22px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.6)'; ctx.fillText(label,cx+26,cy+44);
+    ctx.font='800 48px "Segoe UI Black",Arial,sans-serif';
+    let fz=48; while(ctx.measureText(value).width>CW-44&&fz>24){fz-=4;ctx.font=`800 ${fz}px "Segoe UI Black",Arial,sans-serif`;}
+    ctx.fillStyle=vc; ctx.shadowColor=vc; ctx.shadowBlur=12; ctx.fillText(value,cx+26,cy+116); ctx.shadowBlur=0;
+    ctx.restore();
+  }
+  const eStr='$'+Number(r.entry||0).toLocaleString('en-US');
+  const cStr=r.closePrice?'$'+Number(r.closePrice).toLocaleString('en-US'):'$'+Number(r.currentPrice||0).toLocaleString('en-US');
+  const slStr='$'+Number(r.sl||0).toLocaleString('en-US');
+  const tpStr='$'+Number(r.tp||0).toLocaleString('en-US');
+  sCard('Harga Entry',eStr,PAD,CY1,'#e2e8f0');
+  sCard('Harga Close',cStr,PAD+CW+CG,CY1,isProfit?GREEN:RED);
+  sCard('Stop Loss',slStr,PAD,CY2,RED);
+  sCard('Take Profit',tpStr,PAD+CW+CG,CY2,GREEN);
+
+  // ── RESULT BANNER ──
+  const RY=CY2+CH+46, RH=148, RW=W-PAD*2;
+  const rbg=ctx.createLinearGradient(PAD,RY,PAD+RW,RY);
+  rbg.addColorStop(0,isTP?'rgba(0,245,160,.12)':isSL?'rgba(255,77,109,.12)':'rgba(168,85,247,.1)');
+  rbg.addColorStop(1,'rgba(120,40,255,.04)');
+  ctx.fillStyle=rbg; rr(PAD,RY,RW,RH,20); ctx.fill();
+  ctx.strokeStyle=isTP?'rgba(0,245,160,.3)':isSL?'rgba(255,77,109,.3)':'rgba(168,85,247,.3)'; ctx.lineWidth=1;
+  rr(PAD,RY,RW,RH,20); ctx.stroke();
+
+  // Result icon + text
+  const icons={'TP':'🎯','SL':'🛑','MANUAL':'✋','EXPIRED':'⏰'};
+  const rcy=RY+RH/2;
+  ctx.font='44px serif'; ctx.fillText(icons[r.result]||'📊',PAD+18,rcy+16);
+  ctx.font='800 36px "Segoe UI",Arial,sans-serif'; ctx.fillStyle=resColor;
+  const resLabel=isTP?'TAKE PROFIT HIT! 🎯':isSL?'STOP LOSS HIT':isManual?'DITUTUP MANUAL':'EXPIRED';
+  ctx.fillText(resLabel,PAD+78,rcy-10);
+  ctx.font='400 24px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.7)';
+  const durStr2=r.duration<60?r.duration+' menit':Math.floor(r.duration/60)+' jam '+(r.duration%60)+' menit';
+  ctx.fillText('Durasi: '+durStr2+(lev>1?' · Leverage '+lev+'x':''),PAD+78,rcy+28);
+
+  // Bottom
+  const BOT=H-72;
+  const bln2=ctx.createLinearGradient(PAD,BOT,W-PAD,BOT);
+  bln2.addColorStop(0,'transparent'); bln2.addColorStop(.3,ac(.22)); bln2.addColorStop(.7,'rgba(120,40,255,.22)'); bln2.addColorStop(1,'transparent');
+  ctx.strokeStyle=bln2; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD,BOT); ctx.lineTo(W-PAD,BOT); ctx.stroke();
+  ctx.textAlign='center'; ctx.font='400 20px "Segoe UI",Arial,sans-serif'; ctx.fillStyle='rgba(148,163,184,.2)';
+  ctx.fillText('Not financial advice',W/2,BOT+38); ctx.textAlign='left';
 }
 
 // ── RENDER CANDLESTICK CHART ──
@@ -16872,156 +17521,232 @@ function triggerPWAInstall() {
 </script>
 
 
-<!-- SHARE CARD MODAL — LIQUID GLASS -->
+<!-- SHARE CARD MODAL DCA — LIQUID GLASS (upgraded) -->
 <style>
-  #modal-share-inner {
-    position:relative;
-    background:rgba(7,9,15,.55);
-    backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
-    border-radius:28px;
-    padding:1.6rem;
-    width:100%;max-width:420px;max-height:92vh;overflow-y:auto;
-    /* Multi-layer glass border */
-    border:1px solid rgba(255,255,255,.18);
-    border-bottom-color:rgba(255,255,255,.06);
-    border-right-color:rgba(255,255,255,.06);
-    box-shadow:
-      0 32px 80px rgba(0,0,0,.7),
-      0 0 0 1px rgba(0,200,255,.12),
-      inset 0 1px 0 rgba(255,255,255,.22),
-      inset 0 -1px 0 rgba(255,255,255,.04);
-  }
-  /* Top shine */
-  #modal-share-inner::before {
-    content:'';position:absolute;top:0;left:0;right:0;height:55%;
-    border-radius:28px 28px 0 0;
-    background:linear-gradient(175deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.03) 50%,transparent 100%);
-    pointer-events:none;
-  }
-  /* Ambient cyan glow top-right */
-  #modal-share-inner::after {
-    content:'';position:absolute;top:-40px;right:-40px;
-    width:200px;height:200px;border-radius:50%;
-    background:radial-gradient(circle,rgba(0,200,255,.18),transparent 70%);
-    filter:blur(20px);pointer-events:none;z-index:0;
-  }
-  /* Canvas container glass frame */
-  #share-canvas-wrap {
-    position:relative;
-    border-radius:18px;
-    overflow:hidden;
-    margin-bottom:1.3rem;
-    border:1px solid rgba(255,255,255,.14);
-    border-bottom-color:rgba(255,255,255,.05);
-    box-shadow:
-      0 16px 48px rgba(0,0,0,.6),
-      inset 0 1px 0 rgba(255,255,255,.2),
-      inset 0 0 0 1px rgba(0,200,255,.06);
-  }
-  /* thin rainbow top accent line */
-  #share-canvas-wrap::before {
-    content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
-    background:linear-gradient(90deg,rgba(124,58,237,.7),rgba(0,200,255,.9),rgba(16,185,129,.5));
-    pointer-events:none;
-  }
-  /* glass shine on canvas */
-  #share-canvas-wrap::after {
-    content:'';position:absolute;top:0;left:0;right:0;height:30%;z-index:2;
-    background:linear-gradient(180deg,rgba(255,255,255,.08),transparent);
-    pointer-events:none;
-  }
-  /* Close button glass */
-  #share-close-btn {
-    background:rgba(255,255,255,.07);
-    border:1px solid rgba(255,255,255,.15);
-    border-bottom-color:rgba(255,255,255,.04);
-    border-radius:12px;
-    color:#94a3b8;cursor:pointer;
-    padding:8px;display:flex;align-items:center;
-    transition:all .2s;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-    backdrop-filter:blur(8px);
-  }
-  #share-close-btn:hover { background:rgba(255,255,255,.13);color:#e2e8f0; }
-  /* Download button liquid */
-  #share-download-btn {
-    width:100%;
-    background:linear-gradient(135deg,rgba(3,105,161,.8),rgba(0,200,255,.75));
-    backdrop-filter:blur(12px);
-    border:1px solid rgba(0,200,255,.45);
-    border-top-color:rgba(0,200,255,.7);
-    border-radius:14px;padding:.95rem;
-    color:#fff;font-weight:800;font-size:.9rem;
-    cursor:pointer;letter-spacing:.06em;
-    display:flex;align-items:center;justify-content:center;gap:.55rem;
-    box-shadow:0 8px 28px rgba(0,200,255,.3),inset 0 1px 0 rgba(255,255,255,.25);
-    transition:all .2s;position:relative;overflow:hidden;
-  }
-  #share-download-btn::before {
-    content:'';position:absolute;top:0;left:0;right:0;height:50%;
-    background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);
-    border-radius:14px 14px 0 0;pointer-events:none;
-  }
-  #share-download-btn:hover { opacity:.88;transform:translateY(-1px);box-shadow:0 12px 36px rgba(0,200,255,.4),inset 0 1px 0 rgba(255,255,255,.25); }
-  #share-download-btn:active { transform:scale(.98); }
+#modal-share {
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(2,4,12,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  align-items:center;justify-content:center;padding:1rem;
+}
+#modal-share::before {
+  content:'';position:absolute;top:-20%;right:-10%;width:55%;height:55%;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,200,255,0.11),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+#modal-share::after {
+  content:'';position:absolute;bottom:-15%;left:-10%;width:50%;height:50%;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.12),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+#modal-share-inner {
+  position:relative;z-index:1;
+  background:rgba(8,11,22,0.55);
+  backdrop-filter:blur(48px) saturate(180%);
+  -webkit-backdrop-filter:blur(48px) saturate(180%);
+  border-radius:28px;padding:0;
+  width:100%;max-width:380px;max-height:94vh;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.13);
+  box-shadow:0 0 0 1px rgba(0,200,255,0.15),0 40px 100px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.18);
+}
+#modal-share-inner::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:10;
+  background:linear-gradient(90deg,transparent 0%,#00c8ff 25%,#a855f7 60%,#00f5a0 85%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+#modal-share-inner::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;z-index:0;
+  background:linear-gradient(175deg,rgba(255,255,255,.07) 0%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+.ms-header {
+  position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;
+  padding:1.15rem 1.3rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);
+}
+#share-canvas-wrap {
+  position:relative;z-index:1;padding:.85rem 1rem;overflow-y:auto;max-height:62vh;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+#share-canvas-wrap-inner {
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 12px 48px rgba(0,0,0,.7),0 0 28px rgba(0,200,255,.07);
+}
+#share-canvas-wrap-inner::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
+  background:linear-gradient(90deg,transparent,#00c8ff,#a855f7,transparent);pointer-events:none;
+}
+.ms-footer { position:relative;z-index:1;padding:.85rem 1rem 1.15rem; }
+#share-download-btn {
+  width:100%;padding:.9rem;border-radius:16px;border:none;
+  background:linear-gradient(135deg,#00c8ff 0%,#0070f3 50%,#a855f7 100%);
+  color:#fff;font-size:.82rem;font-weight:900;font-family:'Inter',sans-serif;
+  letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.55rem;
+  box-shadow:0 0 32px rgba(0,200,255,.3),0 4px 20px rgba(0,200,255,.15),inset 0 1px 0 rgba(255,255,255,.3);
+  transition:all .2s;
+}
+#share-download-btn:hover { transform:translateY(-2px);box-shadow:0 0 48px rgba(0,200,255,.45),0 8px 28px rgba(0,200,255,.2); }
+#share-close-btn {
+  width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);color:rgba(148,163,184,.7);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;padding:0;
+}
+#share-close-btn:hover { background:rgba(255,255,255,.14);color:#e2e8f0;border-color:rgba(0,200,255,.3); }
 </style>
 
-<div id="modal-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:1rem">
+<div id="modal-share">
   <div id="modal-share-inner">
-
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;position:relative;z-index:1">
+    <div class="ms-header">
       <div>
-        <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI DCA</div>
-        <div style="font-size:.68rem;color:rgba(148,163,184,.55);margin-top:3px;letter-spacing:.05em">z-wealth.vercel.app</div>
+        <div style="font-size:.88rem;font-weight:900;color:#f1f5f9;letter-spacing:.07em;text-transform:uppercase">Posisi DCA</div>
+        <div style="font-size:.64rem;color:rgba(0,200,255,.55);margin-top:2px;letter-spacing:.05em">z-wealth.vercel.app</div>
       </div>
       <button id="share-close-btn" onclick="closeShareModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-
-    <!-- Canvas preview (glass framed) -->
-    <div id="share-canvas-wrap" style="position:relative;z-index:1">
-      <canvas id="share-canvas" style="display:block;width:100%;height:auto;position:relative;z-index:1"></canvas>
+    <div id="share-canvas-wrap">
+      <div id="share-canvas-wrap-inner" style="position:relative;">
+        <canvas id="share-canvas" style="display:block;width:100%;height:auto"></canvas>
+      </div>
     </div>
-
-    <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,255,.2),rgba(124,58,237,.15),transparent);margin-bottom:1.2rem;position:relative;z-index:1"></div>
-
-    <!-- Download button -->
-    <button id="share-download-btn" onclick="downloadShareCard()" style="position:relative;z-index:1">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      SIMPAN SEBAGAI JPG
-    </button>
-
-    <div style="text-align:center;margin-top:.75rem;font-size:.65rem;color:rgba(100,116,139,.45);letter-spacing:.05em;position:relative;z-index:1">1080 × 1350 px · JPEG · Siap diposting</div>
+    <div class="ms-footer">
+      <button id="share-download-btn" onclick="downloadShareCard()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        SIMPAN SEBAGAI JPG
+      </button>
+      <div style="text-align:center;margin-top:.5rem;font-size:.6rem;color:rgba(100,116,139,.3);letter-spacing:.06em">1080 × 1350 px · JPEG · Siap diposting</div>
+    </div>
   </div>
 </div>
 <!-- FUTURES SIGNAL SHARE MODAL -->
-<div id="modal-futures-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);align-items:center;justify-content:center;padding:1rem">
-  <div id="modal-futures-share-inner" style="background:linear-gradient(145deg,rgba(15,20,35,.97),rgba(8,12,25,.99));border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:1.5rem 1.3rem 1.2rem;width:100%;max-width:360px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08)">
+<style>
+#modal-futures-share { display:none;position:fixed;inset:0;z-index:600;background:rgba(2,4,12,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);align-items:center;justify-content:center;padding:1rem; }
+
+/* Colorful ambient blobs in backdrop */
+#modal-futures-share::before {
+  content:'';position:absolute;top:-20%;right:-10%;width:55%;height:55%;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,245,160,0.12),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+#modal-futures-share::after {
+  content:'';position:absolute;bottom:-15%;left:-10%;width:50%;height:50%;border-radius:50%;
+  background:radial-gradient(circle,rgba(120,40,255,0.14),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+
+#mfs-inner {
+  position:relative;z-index:1;
+  background:rgba(8,11,22,0.55);
+  backdrop-filter:blur(48px) saturate(180%);
+  -webkit-backdrop-filter:blur(48px) saturate(180%);
+  border-radius:28px;
+  width:100%;max-width:380px;max-height:94vh;overflow:hidden;
+  /* Multi-layer colorful border */
+  border:1px solid rgba(255,255,255,0.13);
+  box-shadow:
+    0 0 0 1px rgba(0,245,160,0.18),
+    0 40px 100px rgba(0,0,0,0.9),
+    0 0 60px rgba(0,245,160,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(255,255,255,0.04);
+}
+
+/* Rainbow top border */
+#mfs-inner::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:10;
+  background:linear-gradient(90deg,transparent 0%,#00f5a0 25%,#00c8ff 55%,#a855f7 80%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+
+/* Glass shine overlay */
+#mfs-inner::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;z-index:0;
+  background:linear-gradient(175deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 50%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+
+#mfs-header {
+  position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.15rem 1.3rem 1rem;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(0,0,0,0.1);
+}
+
+#mfs-canvas-wrap {
+  position:relative;z-index:1;
+  padding:.85rem 1rem;
+  overflow-y:auto;max-height:62vh;
+}
+
+#mfs-canvas-wrap-inner {
+  border-radius:16px;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08),
+    0 12px 48px rgba(0,0,0,0.7),
+    0 0 32px rgba(0,245,160,0.08);
+}
+
+#mfs-footer {
+  position:relative;z-index:1;
+  padding:.85rem 1rem 1.15rem;
+  border-top:1px solid rgba(255,255,255,0.06);
+  background:rgba(0,0,0,0.15);
+}
+
+#mfs-dl-btn {
+  width:100%;padding:.9rem;border-radius:16px;border:none;
+  background:linear-gradient(135deg,#00f5a0 0%,#00d4c8 50%,#00b4ff 100%);
+  color:#030f08;font-size:.82rem;font-weight:900;
+  font-family:'Inter',sans-serif;letter-spacing:.1em;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:.55rem;
+  box-shadow:
+    0 0 32px rgba(0,245,160,0.35),
+    0 4px 20px rgba(0,245,160,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+  transition:all .2s;
+}
+#mfs-dl-btn:hover {
+  transform:translateY(-2px);
+  box-shadow:0 0 48px rgba(0,245,160,0.5),0 8px 28px rgba(0,245,160,0.25),inset 0 1px 0 rgba(255,255,255,0.4);
+}
+#mfs-dl-btn:active { transform:translateY(0); }
+
+#mfs-close-btn {
+  width:32px;height:32px;border-radius:10px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(148,163,184,0.7);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;
+}
+#mfs-close-btn:hover { background:rgba(255,255,255,0.14);color:#e2e8f0;border-color:rgba(0,245,160,0.3); }
+</style>
+<div id="modal-futures-share">
+  <div id="mfs-inner">
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+    <div id="mfs-header">
       <div>
-        <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI FUTURES</div>
-        <div style="font-size:.68rem;color:rgba(148,163,184,.5);margin-top:3px;letter-spacing:.05em">z-wealth.vercel.app</div>
+        <div style="font-size:.88rem;font-weight:900;color:#f1f5f9;letter-spacing:.07em;text-transform:uppercase">Posisi Futures</div>
+        <div style="font-size:.64rem;color:rgba(0,245,160,0.55);margin-top:2px;letter-spacing:.05em">z-wealth.vercel.app</div>
       </div>
-      <button onclick="closeFuturesShareModal()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(148,163,184,.8);cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button id="mfs-close-btn" onclick="closeFuturesShareModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <!-- Canvas preview -->
-    <div style="border-radius:14px;overflow:hidden;margin-bottom:1rem;box-shadow:0 8px 32px rgba(0,0,0,.6)">
-      <canvas id="futures-share-canvas" style="display:block;width:100%;height:auto"></canvas>
+    <div id="mfs-canvas-wrap">
+      <div id="mfs-canvas-wrap-inner">
+        <canvas id="futures-share-canvas" style="display:block;width:100%;height:auto"></canvas>
+      </div>
     </div>
-    <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.2),rgba(124,58,237,.15),transparent);margin-bottom:1rem"></div>
-    <!-- Download button -->
-    <button onclick="downloadFuturesCard()" style="width:100%;padding:.85rem;border-radius:14px;border:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-size:.82rem;font-weight:800;font-family:'Inter',sans-serif;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      SIMPAN SEBAGAI JPG
-    </button>
-    <div style="text-align:center;margin-top:.6rem;font-size:.62rem;color:rgba(100,116,139,.4);letter-spacing:.05em">1080 × 1350 px · JPEG · Siap diposting</div>
+    <!-- Footer -->
+    <div id="mfs-footer">
+      <button id="mfs-dl-btn" onclick="downloadFuturesCard()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        SIMPAN SEBAGAI JPG
+      </button>
+      <div style="text-align:center;margin-top:.5rem;font-size:.6rem;color:rgba(100,116,139,.32);letter-spacing:.06em">1080 × 1350 px · JPEG · Siap diposting</div>
+    </div>
   </div>
 </div>
 <!-- MEDIA LIGHTBOX -->
@@ -20925,6 +21650,91 @@ function searchNewsOnline() {
   display:flex;align-items:center;justify-content:center;
 }
 </style>
+
+<!-- SIGNAL HISTORY SHARE MODAL -->
+<style>
+#modal-sighist-share {
+  display:none;position:fixed;inset:0;z-index:601;
+  background:rgba(2,4,12,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  align-items:center;justify-content:center;padding:1rem;
+}
+#modal-sighist-share::before {
+  content:'';position:absolute;top:-20%;right:-10%;width:55%;height:55%;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,245,160,0.12),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+#modal-sighist-share::after {
+  content:'';position:absolute;bottom:-15%;left:-10%;width:50%;height:50%;border-radius:50%;
+  background:radial-gradient(circle,rgba(120,40,255,0.13),transparent 65%);
+  filter:blur(40px);pointer-events:none;
+}
+#msh-inner {
+  position:relative;z-index:1;
+  background:rgba(8,11,22,0.55);
+  backdrop-filter:blur(48px) saturate(180%);
+  -webkit-backdrop-filter:blur(48px) saturate(180%);
+  border-radius:28px;width:100%;max-width:380px;max-height:94vh;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.13);
+  box-shadow:0 0 0 1px rgba(0,245,160,0.18),0 40px 100px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.18);
+}
+#msh-inner::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:10;
+  background:linear-gradient(90deg,transparent 0%,#00f5a0 25%,#00d4ff 55%,#a855f7 80%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+#msh-inner::after {
+  content:'';position:absolute;top:0;left:0;right:0;height:50%;z-index:0;
+  background:linear-gradient(175deg,rgba(255,255,255,.07) 0%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;
+}
+#msh-header {
+  position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;
+  padding:1.15rem 1.3rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);
+}
+#msh-canvas-wrap { position:relative;z-index:1;padding:.85rem 1rem;overflow-y:auto;max-height:62vh; }
+#msh-canvas-inner { border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 12px 48px rgba(0,0,0,.7),0 0 32px rgba(0,245,160,.07); }
+#msh-footer { position:relative;z-index:1;padding:.85rem 1rem 1.15rem;border-top:1px solid rgba(255,255,255,.06); }
+#msh-dl-btn {
+  width:100%;padding:.9rem;border-radius:16px;border:none;
+  background:linear-gradient(135deg,#00f5a0 0%,#00d4c8 50%,#00b4ff 100%);
+  color:#030f08;font-size:.82rem;font-weight:900;font-family:'Inter',sans-serif;
+  letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.55rem;
+  box-shadow:0 0 32px rgba(0,245,160,.35),0 4px 20px rgba(0,245,160,.2),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:all .2s;
+}
+#msh-dl-btn:hover { transform:translateY(-2px);box-shadow:0 0 48px rgba(0,245,160,.5),0 8px 28px rgba(0,245,160,.25); }
+#msh-close-btn {
+  width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);color:rgba(148,163,184,.7);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;
+}
+#msh-close-btn:hover { background:rgba(255,255,255,.14);color:#e2e8f0;border-color:rgba(0,245,160,.3); }
+</style>
+<div id="modal-sighist-share">
+  <div id="msh-inner">
+    <div id="msh-header">
+      <div>
+        <div style="font-size:.88rem;font-weight:900;color:#f1f5f9;letter-spacing:.07em;text-transform:uppercase">Riwayat Signal</div>
+        <div style="font-size:.64rem;color:rgba(0,245,160,.55);margin-top:2px;letter-spacing:.05em">z-wealth.vercel.app</div>
+      </div>
+      <button id="msh-close-btn" onclick="closeSigHistShare()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="msh-canvas-wrap">
+      <div id="msh-canvas-inner">
+        <canvas id="sighist-canvas" style="display:block;width:100%;height:auto"></canvas>
+      </div>
+    </div>
+    <div id="msh-footer">
+      <button id="msh-dl-btn" onclick="downloadSigHistCard()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        SIMPAN SEBAGAI JPG
+      </button>
+      <div style="text-align:center;margin-top:.5rem;font-size:.6rem;color:rgba(100,116,139,.3);letter-spacing:.06em">1080 × 1350 px · JPEG · Siap diposting</div>
+    </div>
+  </div>
+</div>
 
 <!-- News Detail Modal -->
 <div id="news-modal-overlay" onclick="closeNewsModal(event)">
