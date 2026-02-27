@@ -1,101 +1,58 @@
-// /api/ticker.js — Vercel serverless proxy untuk ticker/harga live
-// Server-side: tidak kena CORS, bisa fetch Binance/OKX/Bybit bebas
+// /api/ticker.js — Vercel Serverless Proxy untuk harga ticker
+// Browser fetch /api/ticker?symbol=BTCUSDT
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Cache-Control', 'public, max-age=5'); // cache 5 detik
 
-  const { symbol } = req.query;
-  if (!symbol) return res.status(400).json({ ok: false, error: 'symbol required' });
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  // ── XAUUSD — route ke OKX ──
+  const { symbol = 'BTCUSDT' } = req.query;
+
+  // ── XAUUSD — OKX XAU-USDT (Bybit spot & Binance tidak punya pair ini) ──
   if (symbol === 'XAUUSD') {
-    // 1. OKX XAU-USDT spot
     try {
-      const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=XAU-USDT', {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(6000)
-      });
+      const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=XAU-USDT');
       const d = await r.json();
-      if (d.code === '0' && d.data?.length) {
-        const t = d.data[0];
-        const open = parseFloat(t.sodUtc8);
-        const last = parseFloat(t.last);
-        const pct = open > 0 ? ((last - open) / open * 100).toFixed(2) : '0';
-        return res.json({ ok: true, data: { lastPrice: String(last), priceChangePercent: pct }, source: 'okx' });
-      }
-    } catch (e) { console.warn('[ticker/OKX XAU]', e.message); }
-
-    // 2. Bybit XAUUSDT linear
-    try {
-      const r = await fetch('https://api.bybit.com/v5/market/tickers?category=linear&symbol=XAUUSDT', {
-        signal: AbortSignal.timeout(6000)
-      });
-      const d = await r.json();
-      if (d.retCode === 0 && d.result?.list?.length) {
-        const t = d.result.list[0];
-        return res.json({
-          ok: true,
-          data: { lastPrice: t.lastPrice, priceChangePercent: (parseFloat(t.price24hPcnt) * 100).toFixed(2) },
-          source: 'bybit'
-        });
-      }
-    } catch (e) { console.warn('[ticker/Bybit XAUUSDT]', e.message); }
-
-    return res.status(502).json({ ok: false, error: 'XAU ticker unavailable' });
-  }
-
-  // ── CRYPTO pairs ──
-
-  // 1. Binance (server-side bebas CORS)
-  try {
-    const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`, {
-      signal: AbortSignal.timeout(6000)
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (d.lastPrice) {
-        return res.json({
-          ok: true,
-          data: { lastPrice: d.lastPrice, priceChangePercent: parseFloat(d.priceChangePercent).toFixed(2) },
-          source: 'binance'
-        });
-      }
-    }
-  } catch (e) { console.warn('[ticker/Binance]', e.message); }
-
-  // 2. Bybit
-  try {
-    const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`, {
-      signal: AbortSignal.timeout(6000)
-    });
-    const d = await r.json();
-    if (d.retCode === 0 && d.result?.list?.length) {
-      const t = d.result.list[0];
-      return res.json({
-        ok: true,
-        data: { lastPrice: t.lastPrice, priceChangePercent: (parseFloat(t.price24hPcnt) * 100).toFixed(2) },
-        source: 'bybit'
-      });
-    }
-  } catch (e) { console.warn('[ticker/Bybit]', e.message); }
-
-  // 3. OKX
-  try {
-    const instId = symbol.replace('USDT', '-USDT');
-    const r = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`, {
-      signal: AbortSignal.timeout(6000)
-    });
-    const d = await r.json();
-    if (d.code === '0' && d.data?.length) {
+      if (d.code !== '0') throw new Error('OKX: ' + d.msg);
       const t = d.data[0];
       const open = parseFloat(t.sodUtc8);
       const last = parseFloat(t.last);
       const pct = open > 0 ? ((last - open) / open * 100).toFixed(2) : '0';
-      return res.json({ ok: true, data: { lastPrice: String(last), priceChangePercent: pct }, source: 'okx' });
+      return res.status(200).json({ ok: true, data: { lastPrice: String(last), priceChangePercent: pct } });
+    } catch(e) {
+      console.warn('[ticker/XAUUSD OKX]', e.message);
+      return res.status(502).json({ ok: false, error: 'Ticker XAU tidak tersedia' });
     }
-  } catch (e) { console.warn('[ticker/OKX]', e.message); }
+  }
 
-  return res.status(502).json({ ok: false, error: 'All sources failed' });
+  const sources = [
+    // 1. Bybit
+    async () => {
+      const r = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`);
+      const d = await r.json();
+      if (d.retCode !== 0) throw new Error('Bybit: ' + d.retMsg);
+      const t = d.result.list[0];
+      return { lastPrice: t.lastPrice, priceChangePercent: (parseFloat(t.price24hPcnt) * 100).toFixed(2) };
+    },
+    // 2. Binance
+    async () => {
+      const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+      const d = await r.json();
+      return { lastPrice: d.lastPrice, priceChangePercent: d.priceChangePercent };
+    },
+  ];
+
+  for (const fn of sources) {
+    try {
+      const data = await fn();
+      res.status(200).json({ ok: true, data });
+      return;
+    } catch(e) {
+      console.warn('[ticker proxy]', e.message);
+    }
+  }
+
+  res.status(502).json({ ok: false, error: 'Ticker tidak tersedia' });
 }
