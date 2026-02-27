@@ -2191,21 +2191,102 @@ span svg, div svg.inline {
     }
     @keyframes fmb-blink{0%,100%{opacity:1}50%{opacity:.25}}
 
-    /* Panel inline expand */
-    #fitur-more-panel {
-      display:none;overflow:hidden;
-      border:1px solid rgba(249,115,22,.15);
-      border-radius:16px;padding:.85rem;
-      margin-bottom:.85rem;
-      background:rgba(249,115,22,.04);
+    /* Panel inline - disembunyikan, diganti modal */
+    #fitur-more-panel { display:none !important; }
+
+    /* ── FITUR LAINNYA MODAL ── */
+    #fitur-modal-overlay {
+      display:none;position:fixed;inset:0;z-index:9998;
+      background:rgba(0,0,0,.7);
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      align-items:flex-end;justify-content:center;
     }
-    #fitur-more-panel.open {
-      display:block;
-      animation:panel-in .22s cubic-bezier(.34,1.08,.64,1) forwards;
+    #fitur-modal-overlay.open {
+      display:flex;
+      animation:fitur-overlay-in .25s ease forwards;
     }
-    @keyframes panel-in {
-      from{opacity:0;transform:translateY(-6px) scale(.98)}
-      to{opacity:1;transform:translateY(0) scale(1)}
+    @keyframes fitur-overlay-in {
+      from{opacity:0} to{opacity:1}
+    }
+    #fitur-modal-sheet {
+      width:100%;max-width:480px;
+      background:linear-gradient(180deg,#0d1520 0%,#060910 100%);
+      border-radius:24px 24px 0 0;
+      border-top:1px solid rgba(255,255,255,.1);
+      max-height:88vh;overflow-y:auto;
+      padding:0 0 env(safe-area-inset-bottom,16px);
+      transform:translateY(100%);
+      transition:transform .35s cubic-bezier(.34,1.08,.64,1);
+    }
+    #fitur-modal-overlay.open #fitur-modal-sheet {
+      transform:translateY(0);
+    }
+    #fitur-modal-overlay.closing #fitur-modal-sheet {
+      transform:translateY(100%);
+    }
+    #fitur-modal-overlay.closing {
+      opacity:0;transition:opacity .25s ease;
+    }
+    .fitur-modal-handle {
+      width:40px;height:4px;border-radius:99px;
+      background:rgba(255,255,255,.18);
+      margin:.75rem auto .2rem;
+    }
+    .fitur-modal-header {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.75rem 1.2rem .5rem;
+    }
+    .fitur-modal-title {
+      display:flex;align-items:center;gap:.5rem;
+    }
+    .fitur-modal-close {
+      width:32px;height:32px;border-radius:99px;
+      background:rgba(255,255,255,.08);border:none;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:var(--muted);transition:all .15s;
+      flex-shrink:0;
+    }
+    .fitur-modal-close:active{transform:scale(.9);background:rgba(255,255,255,.15)}
+    .fitur-modal-grid {
+      display:grid;grid-template-columns:1fr 1fr;gap:.75rem;
+      padding:.5rem 1rem 1.5rem;
+    }
+    .fmo-btn {
+      position:relative;overflow:hidden;cursor:pointer;border:none;
+      border-radius:20px;padding:1rem .9rem .9rem;text-align:left;
+      min-height:110px;display:flex;flex-direction:column;justify-content:flex-end;
+      transition:transform .18s,box-shadow .18s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .fmo-btn:active{transform:scale(.95)}
+    .fmo-blob {
+      position:absolute;width:90px;height:90px;border-radius:50%;
+      top:-20px;right:-20px;filter:blur(28px);opacity:.55;pointer-events:none;
+    }
+    .fmo-icon {
+      width:36px;height:36px;border-radius:12px;
+      background:rgba(255,255,255,.12);
+      display:flex;align-items:center;justify-content:center;margin-bottom:.55rem;
+      flex-shrink:0;
+    }
+    .fmo-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .fmo-label{font-size:.78rem;font-weight:800;color:#fff;line-height:1.25;letter-spacing:.01em}
+    .fmo-sub{font-size:.6rem;color:rgba(255,255,255,.55);margin-top:.2rem;line-height:1.3}
+    .fmo-badge{
+      position:absolute;top:.55rem;left:.7rem;
+      font-size:.48rem;font-weight:800;letter-spacing:.06em;
+      padding:.15rem .45rem;border-radius:99px;color:#fff;
+    }
+    .fmo-soon{opacity:.5;cursor:default}
+    .fmo-soon:active{transform:none}
+    .fitur-modal-divider{
+      margin:.2rem 1rem .6rem;
+      border:none;border-top:1px solid rgba(255,255,255,.06);
+    }
+    .fitur-modal-section-label{
+      font-size:.58rem;font-weight:700;letter-spacing:.1em;
+      color:rgba(249,115,22,.8);text-transform:uppercase;
+      padding:0 1rem .4rem;display:flex;align-items:center;gap:.35rem;
     }
     .fitur-popup-grid {
       display:grid;grid-template-columns:1fr 1fr;gap:.6rem;
@@ -2427,6 +2508,80 @@ span svg, div svg.inline {
 
 
 
+  <!-- ── FITUR LAINNYA MODAL ── -->
+  <div id="fitur-modal-overlay" onclick="closeFiturModal(event)">
+    <div id="fitur-modal-sheet" onclick="event.stopPropagation()">
+      <div class="fitur-modal-handle"></div>
+      <div class="fitur-modal-header">
+        <div class="fitur-modal-title">
+          <div style="width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f97316);animation:fmb-blink 2s ease infinite"></div>
+          <span style="font-size:.72rem;font-weight:800;letter-spacing:.1em;color:var(--text);text-transform:uppercase">Fitur Tambahan</span>
+        </div>
+        <button class="fitur-modal-close" onclick="closeFiturModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="fitur-modal-section-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Tersedia Sekarang
+      </div>
+
+      <div class="fitur-modal-grid">
+        <!-- Liquidation Heatmap -->
+        <button class="fmo-btn" onclick="closeFiturModal();openLiqHeatmap();" style="background:linear-gradient(145deg,rgba(239,68,68,.65),rgba(249,115,22,.55) 55%,rgba(251,191,36,.4));box-shadow:0 8px 32px rgba(239,68,68,.35)">
+          <div class="fmo-blob" style="background:#f97316"></div>
+          <div class="fmo-badge" style="background:linear-gradient(90deg,#ef4444,#f97316)">NEW</div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h2v5H6zM11 6h2v7h-2zM16 9h2v4h-2z"/></svg></div>
+          <div class="fmo-label">Liquidation<br>Heatmap BTC</div>
+          <div class="fmo-sub">Visualisasi likuidasi</div>
+        </button>
+
+        <!-- Signal AI Futures -->
+        <button class="fmo-btn" onclick="closeFiturModal();showPage('ai-signal')" style="background:linear-gradient(145deg,rgba(16,185,129,.6),rgba(5,150,105,.5) 50%,rgba(6,182,212,.4));box-shadow:0 8px 32px rgba(16,185,129,.35)">
+          <div class="fmo-blob" style="background:#10b981"></div>
+          <div class="fmo-badge" style="background:linear-gradient(90deg,#10b981,#06b6d4)">HOT</div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          <div class="fmo-label">Signal AI<br>Futures BTC</div>
+          <div class="fmo-sub">Entry & exit otomatis</div>
+        </button>
+      </div>
+
+      <hr class="fitur-modal-divider">
+      <div class="fitur-modal-section-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Segera Hadir
+      </div>
+
+      <div class="fitur-modal-grid">
+        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
+          <div class="fmo-blob" style="background:#475569"></div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="fmo-label">Segera<br>Hadir</div>
+          <div class="fmo-sub">Dalam pengembangan</div>
+        </button>
+        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
+          <div class="fmo-blob" style="background:#475569"></div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="fmo-label">Segera<br>Hadir</div>
+          <div class="fmo-sub">Dalam pengembangan</div>
+        </button>
+        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
+          <div class="fmo-blob" style="background:#475569"></div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="fmo-label">Segera<br>Hadir</div>
+          <div class="fmo-sub">Dalam pengembangan</div>
+        </button>
+        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
+          <div class="fmo-blob" style="background:#475569"></div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="fmo-label">Segera<br>Hadir</div>
+          <div class="fmo-sub">Dalam pengembangan</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
     <div id="coming-soon-box" onclick="event.stopPropagation()" style="background:rgba(15,20,35,.92);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:2rem 1.8rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1);position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.2) 0%,transparent 60%);pointer-events:none"></div>
@@ -2438,8 +2593,24 @@ span svg, div svg.inline {
     </div>
   </div>
   <!-- CHAT COMMUNITY PREVIEW -->
-  <div id="dash-chat-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:1.2rem;overflow:hidden;min-height:60px;display:flex;align-items:center;justify-content:center">
-    <div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Memuat preview chat...</div>
+  <div id="dash-chat-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:1.2rem;overflow:hidden;min-height:60px;display:block">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem 1rem .4rem;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="display:flex;align-items:center;gap:.45rem">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="font-size:.72rem;font-weight:800;color:var(--text);letter-spacing:.04em">PESAN TERBARU</span>
+      </div>
+      <button onclick="if(chatSB){renderDashFeed()}else{loadDashChatPreview()}" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.1rem;display:flex;align-items:center;gap:.3rem;font-size:.65rem;font-family:'Inter',sans-serif">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        muat ulang
+      </button>
+    </div>
+    <div style="color:var(--muted);font-size:.8rem;padding:1.2rem;text-align:center">Memuat pesan...</div>
+    <div style="border-top:1px solid rgba(255,255,255,.06);padding:.55rem 1rem;text-align:center">
+      <button onclick="showPage('chat');initChat();" style="background:none;border:none;color:var(--accent);font-size:.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Buka Chat Komunitas
+      </button>
+    </div>
   </div>
 
   <!-- PWA INSTALL BANNER -->
@@ -4333,6 +4504,7 @@ span svg, div svg.inline {
     <div class="sig-pair-btn" data-pair="SOLUSDT" onclick="selectSigPair(this)">SOL/USDT</div>
     <div class="sig-pair-btn" data-pair="BNBUSDT" onclick="selectSigPair(this)">BNB/USDT</div>
     <div class="sig-pair-btn" data-pair="XRPUSDT" onclick="selectSigPair(this)">XRP/USDT</div>
+    <div class="sig-pair-btn" data-pair="XAUUSD" onclick="selectSigPair(this)">XAU/USD</div>
   </div>
 
   <!-- Timeframe -->
@@ -4423,27 +4595,59 @@ span svg, div svg.inline {
   </div>
 
   <!-- Sentimen & Berita Row -->
-  <div id="sig-sentiment-row" style="display:none;gap:.6rem;margin-bottom:.9rem;overflow:hidden">
-    <div style="flex:1;min-width:0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
+  <div id="sig-sentiment-row" style="display:none;gap:.5rem;margin-bottom:.9rem;overflow:hidden;flex-wrap:wrap">
+    <div style="flex:1;min-width:calc(33% - .5rem);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
       <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">Fear & Greed</div>
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
         <div id="sig-fng-val" style="font-size:1.3rem;font-weight:900;font-family:'Space Mono',monospace">—</div>
         <div id="sig-fng-label" style="font-size:.6rem;font-weight:700;padding:.15rem .5rem;border-radius:100px;background:rgba(245,158,11,.15);color:#f59e0b">—</div>
       </div>
     </div>
-    <div style="flex:1;min-width:0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
-      <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">Momentum Pasar</div>
+    <div style="flex:1;min-width:calc(33% - .5rem);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
+      <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">Momentum</div>
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
         <div id="sig-news-val" style="font-size:1.3rem;font-weight:900;font-family:'Space Mono',monospace">—</div>
         <div id="sig-news-label" style="font-size:.6rem;font-weight:700;padding:.15rem .5rem;border-radius:100px;background:rgba(16,185,129,.15);color:#10b981">—</div>
       </div>
     </div>
-    <div style="flex:1;min-width:0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem;overflow:hidden">
+    <div style="flex:1;min-width:calc(33% - .5rem);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem;overflow:hidden">
       <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">Volume</div>
       <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
         <div id="sig-vol-val" style="font-size:1.2rem;font-weight:900;font-family:'Space Mono',monospace;white-space:nowrap">—</div>
         <div id="sig-vol-label" style="font-size:.58rem;font-weight:700;padding:.15rem .45rem;border-radius:100px;background:rgba(6,182,212,.15);color:#06b6d4;white-space:nowrap">—</div>
       </div>
+    </div>
+    <div id="sig-funding-card" style="flex:1;min-width:calc(50% - .5rem);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
+      <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">Funding Rate</div>
+      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+        <div id="sig-funding-val" style="font-size:1.1rem;font-weight:900;font-family:'Space Mono',monospace">—</div>
+        <div id="sig-funding-label" style="font-size:.58rem;font-weight:700;padding:.15rem .45rem;border-radius:100px;background:rgba(100,116,139,.15);color:#64748b">—</div>
+      </div>
+    </div>
+    <div id="sig-btcdom-card" style="flex:1;min-width:calc(50% - .5rem);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem .85rem">
+      <div style="font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:.3rem">BTC Dominance</div>
+      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+        <div id="sig-btcdom-val" style="font-size:1.1rem;font-weight:900;font-family:'Space Mono',monospace">—</div>
+        <div id="sig-btcdom-label" style="font-size:.58rem;font-weight:700;padding:.15rem .45rem;border-radius:100px;background:rgba(100,116,139,.15);color:#64748b">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEVERAGE SELECTOR -->
+  <div id="sig-leverage-section" style="display:none;margin-bottom:.7rem">
+    <div style="font-size:.62rem;font-weight:700;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.4rem">Leverage</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="lev-btn active" data-lev="1"  onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#f59e0b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">1x</button>
+      <button class="lev-btn" data-lev="2"  onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">2x</button>
+      <button class="lev-btn" data-lev="5"  onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">5x</button>
+      <button class="lev-btn" data-lev="10" onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">10x</button>
+      <button class="lev-btn" data-lev="20" onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">20x</button>
+      <button class="lev-btn" data-lev="50" onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">50x</button>
+      <button class="lev-btn" data-lev="100" onclick="selectLeverage(this)" style="flex:1;min-width:44px;padding:.35rem .2rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#64748b;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s">100x</button>
+    </div>
+    <!-- Liquidation warning -->
+    <div id="lev-warning" style="margin-top:.4rem;font-size:.6rem;color:#f59e0b;display:none">
+      ⚠️ Leverage tinggi — risiko likuidasi besar. Gunakan dengan bijak.
     </div>
   </div>
 
@@ -5910,6 +6114,7 @@ const SVG_CLK='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" strok
 let genSeed=null, confirmed=false;
 
 function switchTab(t){
+  _activeTab=t;
   document.getElementById('tab-new').style.display=t==='new'?'block':'none';
   document.getElementById('tab-existing').style.display=t==='existing'?'block':'none';
   document.getElementById('ltab-new').className='ltab'+(t==='new'?' active':'');
@@ -5969,9 +6174,8 @@ async function doLogin(){
     showLerr('Kata tidak valid. Pastikan kata sesuai dengan daftar seed phrase.');
     return;
   }
-  showLL('Mencari akun...');
+  showLL('Mencari di cloud...');
   try{
-      showLL('Mencari di cloud...');
     const data=await dbGet([w1,w2,w3]);
     if(!data){
       hideLL();
@@ -6058,36 +6262,58 @@ async function enterApp(seed,data){
   }
 
   // ── Auto-init chat segera setelah login ──
-  // Ini memastikan: chat preview di dashboard ter-load, notifikasi aktif, user terdaftar di DB
-  setTimeout(async () => {
+  // Retry loop: coba sampai berhasil, max 5x dengan interval 2 detik
+  let _chatAutoInitTries = 0;
+  async function tryChatAutoInit() {
+    _chatAutoInitTries++;
     try {
       if (!chatSB) {
         const lib = window.supabase || window.Supabase;
         if (lib) chatSB = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
       if (chatSB) {
-        // Boot chat di background (daftarkan user, load rooms untuk preview)
-        await chatBoot();
+        await chatBoot(); // chatBoot sudah memanggil loadDashChatPreview di akhir
+        if (!window._globalNotifReady) {
+          window._globalNotifReady = true;
+          subscribeGlobalChatNotif();
+        }
+        return; // sukses, stop retry
       }
-      if (chatSB && !window._globalNotifReady) {
-        window._globalNotifReady = true;
-        subscribeGlobalChatNotif();
-      }
-    } catch(e) { console.warn('Auto chat init:', e); }
+    } catch(e) { console.warn('Auto chat init attempt', _chatAutoInitTries, ':', e.message); }
 
-    if ('Notification' in window && Notification.permission === 'default') {
-      showNotifPermissionPrompt();
+    // Gagal: retry sampai 5x
+    if (_chatAutoInitTries < 5) {
+      setTimeout(tryChatAutoInit, 2000);
+    } else {
+      console.warn('[chat] Auto init gagal setelah 5 percobaan');
     }
-  }, 1500);
+  }
+  setTimeout(tryChatAutoInit, 800); // mulai lebih cepat
+
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => showNotifPermissionPrompt(), 3000);
+  }
 }
 
+let _activeTab='new'; // track active tab for showLL/hideLL
 function showLL(m){
+  // Determine which tab is currently visible before hiding
+  if(document.getElementById('tab-new').style.display!=='none') _activeTab='new';
+  else if(document.getElementById('tab-existing').style.display!=='none') _activeTab='existing';
   document.getElementById('tab-new').style.display='none';
   document.getElementById('tab-existing').style.display='none';
   document.getElementById('lloading').style.display='flex';
   document.getElementById('lmsg').textContent=m;
 }
-function hideLL(){document.getElementById('lloading').style.display='none'}
+function hideLL(){
+  document.getElementById('lloading').style.display='none';
+  // Restore the previously active tab only if login screen is still showing
+  const loginScreen = document.getElementById('login-screen');
+  if(loginScreen && loginScreen.style.display !== 'none'){
+    if(_activeTab==='new') document.getElementById('tab-new').style.display='block';
+    else document.getElementById('tab-existing').style.display='block';
+  }
+}
 function showLerr(m){
   document.getElementById('lerr').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:.3rem"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'+m;
   document.getElementById('lerr').style.display='block';
@@ -6136,6 +6362,13 @@ async function doLogout(){
   // Reset chat identity agar akun baru dapat identitas baru
   localStorage.removeItem('chat_code');
   localStorage.removeItem('chat_color');
+  // Clear posisi futures aktif agar tidak bocor ke akun lain
+  Object.values(_sigActiveTrades).forEach(t => { if(t.intervalId) clearInterval(t.intervalId); });
+  _sigActiveTrades = {};
+  localStorage.removeItem('sig_active_trades');
+  // Clear dashboard feed subscription
+  if (_dashFeedSub) { try { chatSB?.removeChannel(_dashFeedSub); } catch(e) {} _dashFeedSub = null; }
+  if (_dashFeedInterval) { clearInterval(_dashFeedInterval); _dashFeedInterval = null; }
   // Reset chatState
   chatState.myCode = null;
   chatState.myColor = null;
@@ -6255,15 +6488,7 @@ function showPage(id){
   });
   animateNavIndicator(activeBtn);
 
-  // ── Bottom nav: selalu tampil KECUALI saat dalam room chat ──
-  const bnav = document.getElementById('bottom-nav');
-  if(bnav && id !== 'chat'){
-    bnav.style.display = 'block';
-    bnav.classList.remove('bnav-hidden');
-  } else if(bnav && id === 'chat'){
-    bnav.style.display = 'block';
-    bnav.classList.remove('bnav-hidden');
-  }
+  // ── Bottom nav akan di-restore di blok ai-chat else di bawah ──
 
   // ── Auto-hide sync-bar saat di halaman chat ──
   const syncBar = document.getElementById('sync-bar');
@@ -6277,7 +6502,13 @@ function showPage(id){
     if(window.ChatNotif) ChatNotif.resetUnread();
   }
 
-  if(id==='dashboard'){renderDash(); fetchFearGreed();}
+  if(id==='dashboard'){
+    renderDash();
+    fetchFearGreed();
+    // Refresh chat feed setiap kali kembali ke home
+    if (chatSB) setTimeout(() => renderDashFeed(), 300);
+    else setTimeout(() => { if(chatSB) renderDashFeed(); }, 2000);
+  }
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
   if(id==='simulation'){syncSimInputs()}
@@ -6295,7 +6526,12 @@ function showPage(id){
   } else {
     // Restore bottom nav saat keluar dari AI chat
     const bnav = document.getElementById('bottom-nav');
-    if(bnav && window.innerWidth <= 640){ bnav.style.display='block'; bnav.style.opacity='1'; bnav.style.pointerEvents=''; }
+    if(bnav && window.innerWidth <= 640){
+      bnav.style.display='block';
+      bnav.style.opacity='1';
+      bnav.style.pointerEvents='';
+      bnav.classList.remove('bnav-hidden');
+    }
   }
   window.scrollTo({top:0,behavior:'smooth'});
   // Update FAB visibility
@@ -6334,10 +6570,11 @@ function toast(m, err, dur) {
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const fmtIDR=n=>{
   n=Math.round(n);
-  if(Math.abs(n)>=1e12)return'Rp '+(n/1e12).toFixed(2)+'T';
-  if(Math.abs(n)>=1e9)return'Rp '+(n/1e9).toFixed(2)+'M';
-  if(Math.abs(n)>=1e6)return'Rp '+(n/1e6).toFixed(2)+'jt';
-  return'Rp '+n.toLocaleString('id-ID');
+  const abs=Math.abs(n), sign=n<0?'-':'';
+  if(abs>=1e12)return sign+'Rp '+(abs/1e12).toFixed(2)+'T';
+  if(abs>=1e9)return sign+'Rp '+(abs/1e9).toFixed(2)+'M';
+  if(abs>=1e6)return sign+'Rp '+(abs/1e6).toFixed(2)+'jt';
+  return sign+'Rp '+abs.toLocaleString('id-ID');
 };
 const fmtUSD=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtBTC=n=>n.toFixed(8)+' BTC';
@@ -6373,13 +6610,15 @@ async function fetchBTC(){
       src: 'cg'
     }));
 
-  const bnFetch = fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {signal:AbortSignal.timeout(4000)})
+  // Bybit allow CORS (*) dari browser — Binance blokir CORS langsung
+  const bnFetch = fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', {signal:AbortSignal.timeout(4000)})
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(d => {
-      const usd = parseFloat(d.lastPrice);
-      // IDR rate dari cache sebelumnya atau default
+      const t = d.result?.list?.[0];
+      if (!t) return Promise.reject();
+      const usd = parseFloat(t.lastPrice);
       const idrRate = S.usdIdr || 16300;
-      return { usd, idr: usd * idrRate, change: parseFloat(d.priceChangePercent), usdIdr: idrRate, src: 'bn' };
+      return { usd, idr: usd * idrRate, change: parseFloat(t.price24hPcnt) * 100, usdIdr: idrRate, src: 'bn' };
     });
 
   try {
@@ -6462,7 +6701,8 @@ async function bybitKlines(symbol, interval, limit) {
 
 async function okxKlines(symbol, interval, limit) {
   const tf = OKX_TF_MAP[interval] || '1H';
-  const instId = symbol.replace('USDT','-USDT');
+  // XAUUSD → XAU-USDT, BTCUSDT → BTC-USDT, dst
+  const instId = symbol === 'XAUUSD' ? 'XAU-USDT' : symbol.replace('USDT','-USDT');
   const url = `https://www.okx.com/api/v5/market/candles?instId=${instId}&bar=${tf}&limit=${limit}`;
   const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
   if (!r.ok) throw new Error('OKX HTTP ' + r.status);
@@ -6472,31 +6712,162 @@ async function okxKlines(symbol, interval, limit) {
 }
 
 async function fetchKlines(symbol, interval, limit=150) {
-  // 1. Vercel proxy (paling andal — request dari server, tidak kena blokir ISP)
+  // 1. Vercel proxy (server-side, tidak kena CORS)
   try {
     const r = await fetch(`/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`, {signal: AbortSignal.timeout(10000)});
     const d = await r.json();
     if (d.ok && d.data && d.data.length) return d.data;
   } catch(e) { console.warn('[/api/klines]', e.message); }
-  // 2. Bybit langsung (fallback jika Vercel lambat/error)
-  try { return await bybitKlines(symbol, interval, limit); } catch(e) { console.warn('[Bybit klines]', e.message); }
-  // 3. OKX langsung
+
+  // 2. Bybit langsung — untuk XAUUSD pakai linear XAUUSDT, pair lain pakai spot
+  try {
+    if (symbol === 'XAUUSD') {
+      const tf = BYBIT_TF_MAP[interval] || '60';
+      const r = await fetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=XAUUSDT&interval=${tf}&limit=${limit}`, {signal: AbortSignal.timeout(8000)});
+      const d = await r.json();
+      if (d.retCode === 0 && d.result?.list?.length)
+        return d.result.list.reverse().map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+      console.warn('[Bybit XAUUSDT] retCode:', d.retCode, d.retMsg);
+    } else {
+      return await bybitKlines(symbol, interval, limit);
+    }
+  } catch(e) { console.warn('[Bybit klines]', e.message); }
+
+  // 3. OKX langsung — okxKlines sudah handle XAUUSD → XAU-USDT
   try { return await okxKlines(symbol, interval, limit); } catch(e) { console.warn('[OKX klines]', e.message); }
-  // 4. Binance via proxy
-  const bnUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-  for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
-    try {
-      const r = await fetch(fn(bnUrl), {signal: AbortSignal.timeout(8000)});
-      const text = await r.text();
-      if (text.trim().startsWith('<')) continue;
-      const data = JSON.parse(text);
-      return data.map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
-    } catch(e) { console.warn('[Binance proxy]', e.message); }
+
+  // 4. Binance via proxy (crypto only, XAUUSD skip)
+  if (symbol !== 'XAUUSD') {
+    const bnUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
+      try {
+        const r = await fetch(fn(bnUrl), {signal: AbortSignal.timeout(8000)});
+        const text = await r.text();
+        if (text.trim().startsWith('<')) continue;
+        const data = JSON.parse(text);
+        return data.map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+      } catch(e) { console.warn('[Binance proxy]', e.message); }
+    }
   }
+
+  // 5. Fallback khusus XAUUSD — Gate.io dan CORS proxies
+  if (symbol === 'XAUUSD') return fetchXAUKlines(interval, limit);
+
   throw new Error('Semua sumber data gagal. Coba lagi nanti.');
 }
 
+// ── XAU/USD KLINES — multiple sources dengan CORS proxy fallback ──
+async function fetchXAUKlines(interval, limit = 150) {
+  const tf_okx   = OKX_TF_MAP[interval] || '1H';
+  const tf_bybit = BYBIT_TF_MAP[interval] || '60';
+  const okxUrl   = `https://www.okx.com/api/v5/market/candles?instId=XAU-USDT&bar=${tf_okx}&limit=${limit}`;
+
+  const parseOKX = d => d.code === '0' && d.data?.length
+    ? d.data.reverse().map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])])
+    : null;
+
+  // 1. OKX langsung
+  try {
+    const r = await fetch(okxUrl, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    const result = parseOKX(d);
+    if (result) return result;
+    console.warn('[OKX XAU direct] bad response:', d.code, d.msg);
+  } catch(e) { console.warn('[OKX XAU direct]', e.message); }
+
+  // 2. Bybit linear XAUUSDT
+  try {
+    const r = await fetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=XAUUSDT&interval=${tf_bybit}&limit=${limit}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.retCode === 0 && d.result?.list?.length)
+      return d.result.list.reverse().map(k => [parseInt(k[0]),parseFloat(k[1]),parseFloat(k[2]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[5])]);
+    console.warn('[Bybit XAUUSDT] retCode:', d.retCode, d.retMsg);
+  } catch(e) { console.warn('[Bybit XAUUSDT]', e.message); }
+
+  // 3. Gate.io XAU_USDT spot
+  try {
+    const gTf  = {'1m':'1m','5m':'5m','15m':'15m','1h':'1h','4h':'4h','1d':'1d'}[interval] || '1h';
+    const sec  = {'1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1d':86400}[interval] || 3600;
+    const from = Math.floor(Date.now()/1000) - limit * sec;
+    const r = await fetch(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=XAU_USDT&interval=${gTf}&from=${from}&limit=${limit}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (Array.isArray(d) && d.length)
+      return d.map(k => [parseInt(k[0])*1000,parseFloat(k[5]),parseFloat(k[3]),parseFloat(k[4]),parseFloat(k[2]),parseFloat(k[1])]);
+    console.warn('[Gate.io XAU] empty or error:', d);
+  } catch(e) { console.warn('[Gate.io XAU]', e.message); }
+
+  // 4. OKX via allorigins proxy
+  try {
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(okxUrl)}`, {signal: AbortSignal.timeout(10000)});
+    const text = await r.text();
+    if (!text.trim().startsWith('<')) {
+      const result = parseOKX(JSON.parse(text));
+      if (result) return result;
+    }
+  } catch(e) { console.warn('[OKX via allorigins]', e.message); }
+
+  // 5. OKX via corsproxy.io
+  try {
+    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(okxUrl)}`, {signal: AbortSignal.timeout(10000)});
+    const text = await r.text();
+    if (!text.trim().startsWith('<')) {
+      const result = parseOKX(JSON.parse(text));
+      if (result) return result;
+    }
+  } catch(e) { console.warn('[OKX via corsproxy.io]', e.message); }
+
+  throw new Error('Data XAU/USD tidak tersedia dari semua sumber');
+}
+
+// ── FUNDING RATE — Bybit perpetual futures ──
+async function fetchFundingRate(symbol) {
+  // XAUUSD tidak punya funding rate perpetual, skip
+  if (symbol === 'XAUUSD') return null;
+  const perpSym = symbol; // Bybit perpSymbol = BTCUSDT, dll
+  try {
+    const r = await fetch(`https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${perpSym}&limit=3`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.retCode === 0 && d.result?.list?.length) {
+      const latest = d.result.list[0];
+      const rate = parseFloat(latest.fundingRate) * 100; // dalam persen
+      return { rate, symbol: perpSym, time: parseInt(latest.fundingRateTimestamp) };
+    }
+  } catch(e) { console.warn('[Funding rate]', e.message); }
+  // Fallback OKX funding rate (Binance fapi.* blokir CORS dari browser)
+  try {
+    const okxSym = perpSym.replace('USDT', '-USDT-SWAP');
+    const r = await fetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${okxSym}`, {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.code === '0' && d.data?.length) {
+      const rate = parseFloat(d.data[0].fundingRate) * 100;
+      return { rate, symbol: perpSym };
+    }
+  } catch(e) { console.warn('[OKX funding]', e.message); }
+  return null;
+}
+
+// ── BTC DOMINANCE — via CoinGecko global ──
+async function fetchBTCDominance() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/global', {signal: AbortSignal.timeout(8000)});
+    const d = await r.json();
+    const btcDom = d.data?.market_cap_percentage?.btc;
+    const totalMcap = d.data?.total_market_cap?.usd;
+    if (btcDom !== undefined) return { btcDom: parseFloat(btcDom.toFixed(2)), totalMcap };
+  } catch(e) { console.warn('[BTC dominance]', e.message); }
+  // Fallback: alternative.me global stats (CORS aman, allow *)
+  try {
+    const r = await fetch('https://api.alternative.me/v1/global/', {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.bitcoin_percentage_of_market_cap) return { btcDom: parseFloat(parseFloat(d.bitcoin_percentage_of_market_cap).toFixed(2)) };
+  } catch(e) {}
+  return null;
+}
+
 async function fetchTicker24h(symbol) {
+  // XAUUSD — routing khusus ke sumber harga emas
+  if (symbol === 'XAUUSD') return fetchXAUTicker();
+
   // 1. Vercel proxy /api/ticker (paling andal)
   try {
     const r = await fetch(`/api/ticker?symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
@@ -6532,6 +6903,45 @@ async function fetchTicker24h(symbol) {
     const text = await r.text();
     if (!text.trim().startsWith('<')) return JSON.parse(text);
   } catch(e) { console.warn('[Binance proxy ticker]', e.message); }
+
+  return null;
+}
+
+// ── XAU/USD TICKER — harga live emas dari beberapa sumber ──
+async function fetchXAUTicker() {
+  // 1. OKX spot XAU-USDT (paling reliable untuk emas)
+  try {
+    const r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=XAU-USDT', {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.code === '0' && d.data?.length) {
+      const t = d.data[0];
+      const open = parseFloat(t.sodUtc8);
+      const last = parseFloat(t.last);
+      const pct = open > 0 ? ((last - open) / open * 100).toFixed(2) : '0';
+      return { lastPrice: String(last), priceChangePercent: pct };
+    }
+  } catch(e) { console.warn('[OKX XAU ticker]', e.message); }
+
+  // 2. Bybit spot XAUUSDT
+  try {
+    const r = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=XAUUSDT', {signal: AbortSignal.timeout(6000)});
+    const d = await r.json();
+    if (d.retCode === 0 && d.result?.list?.length) {
+      const t = d.result.list[0];
+      return { lastPrice: t.lastPrice, priceChangePercent: (parseFloat(t.price24hPcnt) * 100).toFixed(2) };
+    }
+  } catch(e) { console.warn('[Bybit XAUUSDT ticker]', e.message); }
+
+  // 3. Binance XAUUSDT via allorigins proxy
+  try {
+    const url = 'https://api.binance.com/api/v3/ticker/24hr?symbol=XAUUSDT';
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
+    const text = await r.text();
+    if (!text.trim().startsWith('<')) {
+      const d = JSON.parse(text);
+      return { lastPrice: d.lastPrice, priceChangePercent: parseFloat(d.priceChangePercent).toFixed(2) };
+    }
+  } catch(e) { console.warn('[Binance XAUUSDT ticker]', e.message); }
 
   return null;
 }
@@ -8927,6 +9337,7 @@ function renderDash(){
   // Recent table
   const recent=[...S.dca].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const tb=document.getElementById('d-recent');
+  if(!tb)return;
   if(!recent.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Belum ada data. <a href="#" onclick="showPage(\'dca\')" style="color:var(--accent)">Tambah DCA →</a></td></tr>';return}
   tb.innerHTML=recent.map(e=>{
     const cv=e.btcAmount*p*r,pnl=cv-e.amountIDR,pp=pnl/e.amountIDR*100;
@@ -8938,9 +9349,10 @@ function renderDash(){
   const dcaVal=tb2*p*r;let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
   if(cAlloc)cAlloc.destroy();
   const ctx1=document.getElementById('c-alloc').getContext('2d');
+  const hasData=dcaVal>0||ptot>0;
   cAlloc=new Chart(ctx1,{type:'doughnut',data:{
-    labels:dcaVal>0||ptot>0?['Bitcoin DCA','Aset Lain']:['Kosong'],
-    datasets:[{data:dcaVal>0||ptot>0?[dcaVal,ptot]:[1],backgroundColor:['#F7931A','#7c3aed'],borderWidth:0,hoverOffset:4}]
+    labels:hasData?['Bitcoin DCA','Aset Lain']:['Kosong'],
+    datasets:[{data:hasData?[dcaVal,ptot]:[1],backgroundColor:hasData?['#F7931A','#7c3aed']:['rgba(100,116,139,0.3)'],borderWidth:0,hoverOffset:4}]
   },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12},usePointStyle:true,pointStyle:'rectRounded',pointStyleWidth:18,boxHeight:18}}}}}); 
 
   // PNL chart
@@ -8971,7 +9383,14 @@ function renderDCA(){
   refreshDCAStats();
   updateDCABTCDisplay();
   const p=S.btcPrice,r=S.usdIdr||16000;
-  if(!p){setTimeout(renderDCA,600);return;}
+  if(!p){
+    if(!renderDCA._retries) renderDCA._retries=0;
+    renderDCA._retries++;
+    if(renderDCA._retries<10) setTimeout(renderDCA,600);
+    else renderDCA._retries=0; // reset for next manual call
+    return;
+  }
+  renderDCA._retries=0;
   // Load DCA BTC live chart
   loadDCABTCChart(curDCATF);
   const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -9016,6 +9435,7 @@ function addDCA(){
   document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-date').value='';
   document.getElementById('m-dca-idr').value='';
   document.getElementById('m-dca-note').value='';
+  document.getElementById('m-dca-rate').value='';
   toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Transaksi ditambahkan!');renderDCA();
 }
 function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('Dihapus');renderDCA()}
@@ -9134,9 +9554,10 @@ function applyThemeVars(accent, accent2, accent3, accent4) {
 }
 
 function restoreSavedTheme() {
-  const mode = localStorage.getItem('zw_display_mode');
+  // Check both zw_display_mode (new) and wo_theme (legacy toggleTheme key)
+  const mode = localStorage.getItem('zw_display_mode') || localStorage.getItem('wo_theme');
   if (mode === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  else if (mode === 'dark') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.removeAttribute('data-theme'); // dark = no attribute
   const saved = localStorage.getItem('zw_theme');
   if (!saved || saved === 'default') return;
   if (saved === 'custom') {
@@ -9198,9 +9619,11 @@ function setDisplayMode(mode) {
   if (mode === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
     localStorage.setItem('zw_display_mode', 'light');
+    localStorage.setItem('wo_theme', 'light');
   } else {
     document.documentElement.removeAttribute('data-theme');
     localStorage.setItem('zw_display_mode', 'dark');
+    localStorage.setItem('wo_theme', 'dark');
   }
   updateModeBtns();
   toast(mode==='light' ? '&#9728; Light mode aktif' : '&#9790; Dark mode aktif');
@@ -9232,14 +9655,22 @@ function initTheme(){
   const saved=localStorage.getItem('wo_theme');
   const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
   const theme=saved||(prefersDark?'dark':'light');
-  document.documentElement.setAttribute('data-theme',theme);
+  if(theme==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
 }
 
 function toggleTheme(){
-  const current=document.documentElement.getAttribute('data-theme')||'dark';
-  const next=current==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',next);
-  localStorage.setItem('wo_theme',next);
+  const isLight=document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('wo_theme','dark');
+  } else {
+    document.documentElement.setAttribute('data-theme','light');
+    localStorage.setItem('wo_theme','light');
+  }
   const thumbs=document.querySelectorAll('.theme-toggle-thumb');
   thumbs.forEach(t=>{
     t.style.transform='scale(.85)';
@@ -9708,6 +10139,8 @@ function initApp(){
     const firstActive=document.querySelector('.bnav-item.active');
     animateNavIndicator(firstActive);
   });
+  // Restore posisi futures aktif dari localStorage (persist setelah refresh)
+  setTimeout(() => restoreActiveTrades(), 500);
 }
 
 async function boot(){
@@ -10732,6 +11165,302 @@ function downloadShareCard(){
   toast('Kartu berhasil disimpan');
 }
 
+// ── FUTURES SHARE CARD ──
+let _futuresSharePair = null;
+
+function openFuturesShareModal(pair) {
+  const trade = _sigActiveTrades[pair];
+  if (!trade) return;
+  _futuresSharePair = pair;
+  const modal = document.getElementById('modal-futures-share');
+  modal.style.display = 'flex';
+
+  // Gunakan lastPrice dari state (akurat) — bukan parse dari UI text
+  const currentPrice = trade.lastPrice || trade.tradeData.entry;
+
+  // Hitung PnL dengan leverage
+  const t = trade.tradeData;
+  const lev = t.leverage || 1;
+  const isLong = t.direction === 'LONG';
+  const rawPnl = currentPrice > 0
+    ? (isLong ? (currentPrice - t.entry) / t.entry * 100 : (t.entry - currentPrice) / t.entry * 100)
+    : 0;
+  const pnlVal = rawPnl * lev;
+  const pnlStr = (pnlVal >= 0 ? '+' : '') + pnlVal.toFixed(2) + '%';
+
+  drawFuturesCard(t, currentPrice, pnlStr);
+}
+
+function closeFuturesShareModal() {
+  const modal = document.getElementById('modal-futures-share');
+  if (modal) modal.style.display = 'none';
+}
+
+function downloadFuturesCard() {
+  const canvas = document.getElementById('futures-share-canvas');
+  const link = document.createElement('a');
+  const now = new Date();
+  link.download = 'z-wealth-FUTURES-' + (_futuresSharePair||'BTC') + '-' + now.toISOString().slice(0,10) + '.jpg';
+  link.href = canvas.toDataURL('image/jpeg', 0.96);
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  toast('Kartu futures berhasil disimpan 🚀');
+}
+
+function drawFuturesCard(t, currentPrice, pnlStr) {
+  const canvas = document.getElementById('futures-share-canvas');
+  const W = 1080, H = 1350;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const isLong = t.direction === 'LONG';
+  const lev = t.leverage || 1;
+  const rawPnl = isLong
+    ? (currentPrice - t.entry) / t.entry * 100
+    : (t.entry - currentPrice) / t.entry * 100;
+  const pnlVal = rawPnl * lev; // PnL dengan leverage
+  const isProfit = pnlVal >= 0;
+  const accentColor = isLong ? '#10b981' : '#ef4444';
+  const accentDim   = isLong ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
+  const PAD = 80;
+
+  // ── helper: rounded rect ──
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  // ── 1. BACKGROUND ──
+  ctx.fillStyle = '#060910';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = isLong ? 'rgba(16,185,129,0.04)' : 'rgba(239,68,68,0.05)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<=W;x+=54){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=54){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Radial glow
+  const grd = ctx.createRadialGradient(W*0.8, H*0.3, 0, W*0.8, H*0.3, W*0.8);
+  grd.addColorStop(0, accentDim+'0.10)');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+
+  // Second glow bottom-left
+  const grd2 = ctx.createRadialGradient(W*0.15, H*0.85, 0, W*0.15, H*0.85, W*0.5);
+  grd2.addColorStop(0, 'rgba(124,58,237,0.08)');
+  grd2.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd2; ctx.fillRect(0, 0, W, H);
+
+  // ── 2. TOP ACCENT BAR ──
+  const barGrd = ctx.createLinearGradient(0,0,W,0);
+  barGrd.addColorStop(0, accentColor);
+  barGrd.addColorStop(0.5, isLong ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)');
+  barGrd.addColorStop(1, 'transparent');
+  ctx.fillStyle = barGrd; ctx.fillRect(0, 0, W, 5);
+
+  // ── 3. LOGO + DATE ──
+  drawZWealthLogo(ctx, PAD, 108, 54, accentColor);
+  ctx.font = '400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.5)';
+  ctx.fillText('z-wealth.vercel.app', PAD, 138);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  ctx.textAlign = 'right';
+  ctx.font = '400 26px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.65)';
+  ctx.fillText(dateStr + ' ' + timeStr, W - PAD, 110);
+  ctx.textAlign = 'left';
+
+  // ── 4. PAIR + DIRECTION BADGE ──
+  const pairY = 240;
+  const pairLabel = t.pair.replace('USDT', '/USDT');
+  ctx.font = '800 78px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillText(pairLabel, PAD, pairY);
+
+  // Direction badge (LONG / SHORT)
+  const pw = ctx.measureText(pairLabel).width;
+  const bx = PAD + pw + 28, by = pairY - 66, bw = 180, bh = 56;
+  ctx.fillStyle = accentDim + '0.15)';
+  ctx.strokeStyle = accentDim + '0.55)';
+  ctx.lineWidth = 2;
+  rr(bx, by, bw, bh, 12); ctx.fill(); ctx.stroke();
+  ctx.font = '800 30px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = accentColor;
+  const dirLabel = (isLong ? '▲ LONG' : '▼ SHORT');
+  ctx.fillText(dirLabel, bx + bw/2 - ctx.measureText(dirLabel).width/2, by + 39);
+
+  // TF badge
+  const tfLabels = {'1m':'1M','5m':'5M','15m':'15M','1h':'1H','4h':'4H','1d':'1D'};
+  const tfStr = tfLabels[t.tf] || t.tf?.toUpperCase() || '1H';
+  const tx2 = bx + bw + 16, tw2 = 100;
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1.5;
+  rr(tx2, by, tw2, bh, 12); ctx.fill(); ctx.stroke();
+  ctx.font = '700 28px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(248,250,252,0.7)';
+  ctx.fillText(tfStr, tx2 + tw2/2 - ctx.measureText(tfStr).width/2, by + 39);
+
+  // Leverage badge (jika > 1x)
+  if (lev > 1) {
+    const lx = tx2 + tw2 + 16, lw = 120;
+    const levColor = lev >= 50 ? '#ef4444' : lev >= 20 ? '#f97316' : '#f59e0b';
+    const levBgAlpha = lev >= 50 ? '0.15' : '0.12';
+    ctx.fillStyle = `rgba(245,158,11,${levBgAlpha})`;
+    ctx.strokeStyle = levColor;
+    ctx.lineWidth = 2;
+    rr(lx, by, lw, bh, 12); ctx.fill(); ctx.stroke();
+    ctx.font = '800 30px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle = levColor;
+    const levStr = lev + 'x';
+    ctx.fillText(levStr, lx + lw/2 - ctx.measureText(levStr).width/2, by + 39);
+  }
+
+  // ── 5. SEPARATOR ──
+  const sepY = 290;
+  const sepGrd = ctx.createLinearGradient(PAD, sepY, W-PAD, sepY);
+  sepGrd.addColorStop(0, accentDim + '0.6)');
+  sepGrd.addColorStop(1, 'transparent');
+  ctx.strokeStyle = sepGrd; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, sepY); ctx.lineTo(W-PAD, sepY); ctx.stroke();
+
+  // ── 6. PnL LABEL ──
+  const pnlLabel = lev > 1 ? `PnL  ×${lev} Leverage` : 'PnL';
+  ctx.font = '500 36px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.8)';
+  ctx.fillText(pnlLabel, PAD, 360);
+
+  // ── 7. PnL GIANT NUMBER ──
+  const pnlDisplay = (pnlVal >= 0 ? '+' : '') + pnlVal.toFixed(2) + '%';
+  ctx.font = '900 190px "Segoe UI",Arial,sans-serif';
+  let pnlFontSize = 190;
+  while (ctx.measureText(pnlDisplay).width > W - PAD*2 - 40 && pnlFontSize > 90) {
+    pnlFontSize -= 10;
+    ctx.font = `900 ${pnlFontSize}px "Segoe UI",Arial,sans-serif`;
+  }
+  ctx.shadowColor = isProfit ? accentColor : '#ef4444';
+  ctx.shadowBlur = 70;
+  ctx.fillStyle = isProfit ? accentColor : '#ef4444';
+  ctx.fillText(pnlDisplay, PAD, 360 + pnlFontSize * 0.85);
+  ctx.shadowBlur = 0;
+  const pnlBottom = 360 + pnlFontSize * 0.85;
+
+  // ── 8. STAT CARDS 2×2 ──
+  const gridY = pnlBottom + 55;
+  const gridGap = 24;
+  const cardW2 = (W - PAD*2 - gridGap) / 2;
+  const cardH2 = 185;
+
+  function drawStatCard2(label, value, cx, cy, valueColor) {
+    ctx.save();
+    const bg = ctx.createLinearGradient(cx, cy, cx, cy+cardH2);
+    bg.addColorStop(0, 'rgba(255,255,255,0.07)');
+    bg.addColorStop(1, 'rgba(255,255,255,0.02)');
+    ctx.fillStyle = bg;
+    rr(cx, cy, cardW2, cardH2, 20); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+    ctx.lineWidth = 1.5;
+    rr(cx, cy, cardW2, cardH2, 20); ctx.stroke();
+    // Shine top
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx+20, cy+1); ctx.lineTo(cx+cardW2-20, cy+1); ctx.stroke();
+    // Accent left
+    const acLn = ctx.createLinearGradient(cx, cy, cx, cy+cardH2);
+    acLn.addColorStop(0, accentDim + '0.8)');
+    acLn.addColorStop(1, 'transparent');
+    ctx.strokeStyle = acLn; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx+1.5, cy+20); ctx.lineTo(cx+1.5, cy+cardH2-20); ctx.stroke();
+    // Label
+    ctx.font = '400 25px "Segoe UI",Arial,sans-serif';
+    ctx.fillStyle = 'rgba(148,163,184,0.7)';
+    ctx.fillText(label, cx+36, cy+56);
+    // Value (auto-shrink)
+    ctx.font = '800 50px "Segoe UI",Arial,sans-serif';
+    let fz = 50;
+    while(ctx.measureText(value).width > cardW2 - 50 && fz > 28) {
+      fz -= 4; ctx.font = `800 ${fz}px "Segoe UI",Arial,sans-serif`;
+    }
+    ctx.fillStyle = valueColor || '#f1f5f9';
+    ctx.fillText(value, cx+36, cy+135);
+    ctx.restore();
+  }
+
+  const colL = PAD, colR = PAD + cardW2 + gridGap;
+  const row1 = gridY, row2 = gridY + cardH2 + gridGap;
+
+  const entryStr = '$' + Math.round(t.entry).toLocaleString('en-US');
+  const nowStr   = currentPrice > 0 ? '$' + Math.round(currentPrice).toLocaleString('en-US') : '—';
+  const slStr    = '$' + Math.round(t.sl).toLocaleString('en-US');
+  const tpStr    = '$' + Math.round(t.tp).toLocaleString('en-US');
+
+  drawStatCard2('Harga Entry', entryStr,   colL, row1, '#f1f5f9');
+  drawStatCard2('Harga Kini',  nowStr,     colR, row1, isProfit ? accentColor : '#ef4444');
+  drawStatCard2('Stop Loss',   slStr,      colL, row2, '#ef4444');
+  drawStatCard2('Take Profit', tpStr,      colR, row2, '#10b981');
+
+  const tableBottom = row2 + cardH2;
+
+  // ── 9. PROGRESS BAR (SL → Entry → TP) ──
+  const barY2 = tableBottom + 55, barH2 = 10, barW2 = W - PAD*2;
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  rr(PAD, barY2, barW2, barH2, 5); ctx.fill();
+  // Fill sesuai PnL
+  const pctFill = Math.min(Math.max((pnlVal + t.slPct) / (t.slPct + t.tpPct), 0.01), 1);
+  const barFill = ctx.createLinearGradient(PAD, barY2, PAD + barW2 * pctFill, barY2);
+  if (isProfit) { barFill.addColorStop(0, '#065f46'); barFill.addColorStop(1, '#10b981'); }
+  else          { barFill.addColorStop(0, '#7f1d1d'); barFill.addColorStop(1, '#ef4444'); }
+  ctx.fillStyle = barFill;
+  rr(PAD, barY2, barW2 * pctFill, barH2, 5); ctx.fill();
+  ctx.font = '400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.5)';
+  ctx.fillText('SL', PAD, barY2 + 36);
+  ctx.textAlign = 'center'; ctx.fillText('Entry', PAD + barW2/2, barY2 + 36);
+  ctx.textAlign = 'right';  ctx.fillText('TP', PAD + barW2, barY2 + 36);
+  ctx.textAlign = 'left';
+
+  // ── 10. STATUS CARD ──
+  const stY = barY2 + 75, stH = 175, stW = W - PAD*2;
+  ctx.fillStyle = accentDim + '0.07)';
+  ctx.strokeStyle = accentDim + '0.22)';
+  ctx.lineWidth = 1.5;
+  rr(PAD, stY, stW, stH, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = accentColor;
+  ctx.beginPath(); ctx.arc(PAD + 42, stY + stH/2, 11, 0, Math.PI*2); ctx.fill();
+  ctx.font = '800 36px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = accentColor;
+  const statusLabel = isProfit ? (isLong ? 'POSISI PROFIT 🟢' : 'SHORT PROFIT 🟢') : (isLong ? 'POSISI RUGI 🔴' : 'SHORT RUGI 🔴');
+  ctx.fillText(statusLabel, PAD + 70, stY + stH/2 - 14);
+  ctx.font = '400 27px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.7)';
+  const durMin = t.entryTime ? Math.round((Date.now() - t.entryTime) / 60000) : 0;
+  const durStr = durMin < 60 ? durMin + ' menit' : Math.floor(durMin/60) + ' jam ' + (durMin%60) + ' menit';
+  const levInfo = lev > 1 ? ` · Leverage ${lev}x` : '';
+  ctx.fillText('Durasi: ' + durStr + levInfo + ' · Unrealized P&L', PAD + 70, stY + stH/2 + 28);
+
+  // ── 11. BOTTOM ──
+  const botY = H - 80;
+  const bln = ctx.createLinearGradient(PAD, botY, W-PAD, botY);
+  bln.addColorStop(0, 'transparent');
+  bln.addColorStop(0.3, accentDim + '0.2)');
+  bln.addColorStop(0.7, 'rgba(124,58,237,0.2)');
+  bln.addColorStop(1, 'transparent');
+  ctx.strokeStyle = bln; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, botY); ctx.lineTo(W-PAD, botY); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.font = '400 22px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = 'rgba(148,163,184,0.25)';
+  ctx.fillText('Not financial advice', W/2, botY + 42);
+  ctx.textAlign = 'left';
+}
+
 // ══════════════════════════════════════════════
 // CHAT ENGINE — Supabase Realtime
 // ══════════════════════════════════════════════
@@ -10881,65 +11610,194 @@ async function chatBoot() {
 }
 
 // ── DASHBOARD CHAT PREVIEW ──
-// loadDashChatPreview dipanggil dari chatBoot setelah sukses connect
-// Pastikan element #dash-chat-preview ada di dashboard HTML
+// loadDashChatPreview — Live feed pesan 1 jam terakhir dari semua room
+// Menampilkan General, Grup, DM terbaru, auto-hilang setelah 1 jam
+let _dashFeedSub = null;
+let _dashFeedInterval = null;
+const NULL_UUID = '00000000-0000-0000-0000-000000000000';
+
 async function loadDashChatPreview() {
   const container = document.getElementById('dash-chat-preview');
   if (!container || !chatSB) return;
 
+  // Ubah tampilan container menjadi feed style
+  container.style.cssText = `
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    margin-bottom:1.2rem;overflow:hidden;min-height:60px;display:block;
+  `;
+
+  await renderDashFeed();
+
+  // Realtime: subscribe ke semua perubahan messages
+  if (_dashFeedSub) { try { chatSB.removeChannel(_dashFeedSub); } catch(e) {} }
+  _dashFeedSub = chatSB.channel('dash-feed-global')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+      renderDashFeed();
+    })
+    .subscribe();
+
+  // Auto-refresh tiap 2 menit (untuk update waktu dan hapus pesan > 1 jam)
+  if (_dashFeedInterval) clearInterval(_dashFeedInterval);
+  _dashFeedInterval = setInterval(() => renderDashFeed(), 2 * 60 * 1000);
+}
+
+async function renderDashFeed() {
+  const container = document.getElementById('dash-chat-preview');
+  if (!container || !chatSB) return;
+
   try {
-    // Ambil room General (publik)
-    const { data: rooms } = await chatSB.from('chat_rooms')
-      .select('id,name,avatar_color')
-      .eq('type','public')
-      .order('created_at',{ascending:true})
-      .limit(1);
+    const myCode = chatState?.myCode || null;
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    if (!rooms || !rooms.length) {
-      container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Belum ada room publik</div>';
+    // Ambil 100 pesan 24 jam terakhir
+    const { data: msgs, error } = await chatSB.from('messages')
+      .select('id,content,sender_code,created_at,media_url,room_id')
+      .gte('created_at', oneDayAgo)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      container.innerHTML = `<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Gagal memuat: ${error.message}</div>`;
       return;
     }
 
-    const room = rooms[0];
+    const allMsgs = msgs || [];
 
-    // Ambil 5 pesan terbaru
-    const { data: msgs } = await chatSB.from('messages')
-      .select('content,sender_code,sender_color,created_at,media_url')
-      .eq('room_id', room.id)
-      .order('created_at',{ascending:false})
-      .limit(5);
-
-    if (!msgs || !msgs.length) {
-      container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Belum ada pesan. Jadilah yang pertama!</div>';
-      return;
+    // Ambil info rooms untuk semua room_id yang muncul
+    const roomIds = [...new Set(allMsgs.map(m => m.room_id).filter(id => id && id !== NULL_UUID))];
+    let roomMap = {};
+    if (roomIds.length > 0) {
+      try {
+        const { data: rooms } = await chatSB.from('chat_rooms')
+          .select('id,name,type,avatar_color').in('id', roomIds);
+        (rooms || []).forEach(r => { roomMap[r.id] = r; });
+      } catch(e) {}
     }
 
-    // Render preview (terbalik agar urutan kronologis)
-    const reversed = [...msgs].reverse();
-    let html = '<div style="padding:.6rem .75rem;display:flex;flex-direction:column;gap:.5rem">';
-    reversed.forEach(m => {
-      const initials = (m.sender_code||'?').slice(5,7).toUpperCase();
-      const color = m.sender_color || '#00e5ff';
-      const time = new Date(m.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-      const text = m.media_url ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Media' : escHtml((m.content||'').slice(0,60)) + ((m.content||'').length>60?'...':'');
-      html += `<div style="display:flex;align-items:flex-start;gap:.5rem">
-        <div style="width:28px;height:28px;border-radius:8px;background:${escHtml(m.sender_color||'#00e5ff')};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${escHtml(initials)}</div>
-        <div style="flex:1;min-width:0">
-          <span style="font-size:.68rem;color:var(--muted)">${escHtml(m.sender_code||'?')}</span>
-          <span style="font-size:.62rem;color:var(--muted);margin-left:.4rem">${time}</span>
-          <div style="font-size:.8rem;color:var(--text);margin-top:.1rem;word-break:break-word">${text}</div>
-        </div>
-      </div>`;
-    });
-    html += '</div>';
-    html += `<div style="border-top:1px solid var(--border);padding:.6rem 1rem;text-align:center">
-      <button onclick="showPage('chat');initChat();" style="background:none;border:none;color:var(--accent);font-size:.78rem;font-weight:700;cursor:pointer">Lihat semua & balas →</button>
-    </div>`;
-    container.innerHTML = html;
+    // 3 slot: ambil 1 pesan terbaru per kategori
+    let slotGeneral = null; // public / UUID nil
+    let slotGroup   = null; // group (terbaru dari semua grup)
+    let slotDM      = null; // dm (terbaru dari semua DM)
+
+    for (const m of allMsgs) {
+      const isNull = !m.room_id || m.room_id === NULL_UUID;
+      const room = isNull ? { id: null, name: '# General', type: 'public', avatar_color: '#00e5ff' } : roomMap[m.room_id];
+      if (!room) continue;
+
+      if (!slotGeneral && (isNull || room.type === 'public')) slotGeneral = { msg: m, room };
+      else if (!slotGroup && room.type === 'group') slotGroup = { msg: m, room };
+      else if (!slotDM && room.type === 'dm') slotDM = { msg: m, room };
+
+      if (slotGeneral && slotGroup && slotDM) break;
+    }
+
+    // Susun slot yang ada (skip yang null)
+    const grouped = [slotGeneral, slotGroup, slotDM].filter(Boolean);
+
+    renderDashFeedMessages(container, grouped, myCode);
 
   } catch(e) {
-    container.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Gagal memuat preview</div>';
+    console.warn('[dashFeed]', e.message);
+    container.innerHTML = `<div style="color:var(--muted);font-size:.8rem;padding:1.5rem;text-align:center">Gagal memuat preview</div>`;
   }
+}
+
+function renderDashFeedMessages(container, grouped, myCode) {
+  const totalNew = grouped.length;
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem 1rem .4rem;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="display:flex;align-items:center;gap:.45rem">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="font-size:.72rem;font-weight:800;color:var(--text);letter-spacing:.04em">PESAN TERBARU</span>
+        ${totalNew > 0 ? `<span style="background:var(--accent);color:#000;font-size:.55rem;font-weight:800;padding:.1rem .4rem;border-radius:99px">${totalNew}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.6rem;color:var(--muted)">24 jam terakhir</span>
+        <button onclick="renderDashFeed()" title="Refresh" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.1rem;display:flex;align-items:center;opacity:.7">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+    </div>`;
+
+  if (!grouped.length) {
+    html += `<div style="color:var(--muted);font-size:.8rem;padding:1.4rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.4rem">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Belum ada pesan. Jadilah yang pertama!</span>
+    </div>`;
+  } else {
+    html += `<div style="display:flex;flex-direction:column">`;
+    grouped.forEach(({ msg: m, room }) => {
+      const isMyMsg = myCode && m.sender_code === myCode;
+      const initials = (m.sender_code || '?').slice(5, 7).toUpperCase();
+      const colorPalette = ['#00e5ff','#10b981','#a78bfa','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#f97316','#22c55e'];
+      const colorIdx = (m.sender_code || '').split('').reduce((a,c) => a + c.charCodeAt(0), 0) % colorPalette.length;
+      const color = colorPalette[colorIdx];
+      const diffMin = Math.round((Date.now() - new Date(m.created_at).getTime()) / 60000);
+      const timeAgo = diffMin < 1 ? 'baru saja' : diffMin < 60 ? diffMin + ' mnt lalu' : diffMin < 1440 ? Math.floor(diffMin/60) + ' jam lalu' : '1 hari lalu';
+      const text = m.media_url
+        ? `<span style="color:#94a3b8;font-size:.75rem">📎 Media</span>`
+        : `<span style="font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">${escHtml((m.content || '').slice(0, 60))}${(m.content||'').length > 60 ? '...' : ''}</span>`;
+      const roomBadgeColor = room.type === 'public' ? '#10b981' : room.type === 'dm' ? '#a78bfa' : '#f59e0b';
+      const roomIcon = room.type === 'public' ? '🌐' : room.type === 'dm' ? '💬' : '👥';
+      const clickId = room.id || 'general';
+      html += `
+        <div onclick="openRoomFromFeed('${clickId}','${escHtml(room.name)}','${room.type}','${room.avatar_color||'#334155'}')"
+          style="display:flex;align-items:center;gap:.65rem;padding:.6rem 1rem;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.03)"
+          onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''">
+          <div style="width:34px;height:34px;border-radius:10px;background:${escHtml(color)};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;color:#fff">${escHtml(initials)}</div>
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:.3rem;margin-bottom:.12rem">
+              <span style="font-size:.58rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:99px;padding:.05rem .3rem;color:${roomBadgeColor};white-space:nowrap">${roomIcon} ${escHtml(room.name)}</span>
+              <span style="font-size:.58rem;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0">${timeAgo}</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:.25rem;overflow:hidden">
+              <span style="font-size:.62rem;font-weight:700;color:${escHtml(color)};white-space:nowrap;flex-shrink:0">${isMyMsg ? 'Kamu' : escHtml((m.sender_code||'?').slice(0,14))}:</span>
+              <div style="overflow:hidden;flex:1">${text}</div>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div style="border-top:1px solid rgba(255,255,255,.06);padding:.5rem 1rem;text-align:center">
+    <button onclick="showPage('chat');initChat();" style="background:none;border:none;color:var(--accent);font-size:.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Buka Chat Komunitas
+    </button>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// Buka room langsung dari dashboard feed
+function openRoomFromFeed(roomId, roomName, roomType, avatarColor) {
+  showPage('chat');
+  setTimeout(async () => {
+    // Jika roomId = 'general' atau UUID nil, cari room General dari DB
+    if (roomId === 'general' || roomId === NULL_UUID) {
+      try {
+        if (chatSB) {
+          const { data: publicRooms } = await chatSB.from('chat_rooms')
+            .select('id,name,type,avatar_color').eq('type','public').order('created_at').limit(1);
+          if (publicRooms && publicRooms.length > 0) {
+            const r = publicRooms[0];
+            if (typeof openRoom === 'function') openRoom(r.id, r.name, r.type, r.avatar_color);
+            return;
+          }
+        }
+      } catch(e) {}
+      // Fallback: buka chat page saja tanpa room spesifik
+      if (typeof initChat === 'function') initChat();
+      return;
+    }
+    if (typeof openRoom === 'function') {
+      openRoom(roomId, roomName, roomType, avatarColor);
+    } else {
+      initChat();
+    }
+  }, 200);
 }
 
 function showChatOffline() {
@@ -12274,28 +13132,36 @@ function hideComingSoon() {
 
 // ── Fitur Lainnya inline expand ──
 function toggleFiturMore() {
-  const panel = document.getElementById('fitur-more-panel');
-  const arrow = document.getElementById('fitur-more-arrow');
-  if (!panel) return;
-  const isOpen = panel.classList.contains('open');
-  // Selalu hapus inline style dulu agar CSS class yang menang
-  panel.style.display = '';
-  if (isOpen) {
-    panel.classList.remove('open');
-    if (arrow) arrow.style.transform = '';
+  const overlay = document.getElementById('fitur-modal-overlay');
+  if (!overlay) return;
+  if (overlay.classList.contains('open')) {
+    closeFiturModal();
   } else {
-    panel.classList.add('open');
-    if (arrow) arrow.style.transform = 'rotate(180deg)';
+    overlay.style.display = 'flex';
+    // Force reflow then add open class for animation
+    overlay.offsetHeight;
+    overlay.classList.add('open');
+    overlay.classList.remove('closing');
+    document.body.style.overflow = 'hidden';
   }
 }
-function closeFiturPopup() {
-  const panel = document.getElementById('fitur-more-panel');
-  const arrow = document.getElementById('fitur-more-arrow');
-  if (panel) { panel.style.display = ''; panel.classList.remove('open'); }
-  if (arrow) arrow.style.transform = '';
+function closeFiturModal(e) {
+  if (e && e.target !== document.getElementById('fitur-modal-overlay')) return;
+  const overlay = document.getElementById('fitur-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.add('closing');
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.classList.remove('closing');
+  }, 280);
 }
-function toggleFiturPopup(e) { toggleFiturMore(); } // alias
-function updateFabVisibility(pageId) { closeFiturPopup(); }
+function closeFiturPopup() {
+  closeFiturModal();
+}
+function toggleFiturPopup(e) { toggleFiturMore(); }
+function updateFabVisibility(pageId) { closeFiturModal(); }
 
 
 // ══════════════════════════════════════════════════════════
@@ -12305,10 +13171,33 @@ function updateFabVisibility(pageId) { closeFiturPopup(); }
 let _sigPair = 'BTCUSDT';
 let _sigTf   = '1h';
 let _sigCandles = [];
-let _sigCurrentSignal = null; // {direction, entry, sl, tp, pair, tf, time}
-let _sigActiveTimer   = null; // kept for backward compat (monitors all trades)
-let _sigActiveTrades  = {};   // {pair: {tradeData, intervalId}} — multi-trade support
+let _sigCurrentSignal = null;
+let _sigActiveTimer   = null;
+let _sigActiveTrades  = {};
+let _sigCurrentLeverage = 1; // default 1x (spot)
 let _sigHistory = (() => { try { return JSON.parse(localStorage.getItem('sig_history') || '[]'); } catch(e) { return []; } })();
+
+function selectLeverage(el) {
+  document.querySelectorAll('.lev-btn').forEach(b => {
+    b.style.background = 'rgba(255,255,255,.04)';
+    b.style.borderColor = 'rgba(255,255,255,.08)';
+    b.style.color = '#64748b';
+  });
+  el.style.background = 'rgba(245,158,11,.12)';
+  el.style.borderColor = 'rgba(245,158,11,.35)';
+  el.style.color = '#f59e0b';
+  _sigCurrentLeverage = parseInt(el.dataset.lev) || 1;
+  // Warning untuk leverage tinggi
+  const warn = document.getElementById('lev-warning');
+  if (warn) warn.style.display = _sigCurrentLeverage >= 20 ? 'block' : 'none';
+  // Update label tombol entry
+  const eb = document.getElementById('sig-entry-btn');
+  if (eb && _sigCurrentSignal && _sigCurrentSignal.direction !== 'WAIT') {
+    const dir = _sigCurrentSignal.direction;
+    eb.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Entry ${dir} ${_sigCurrentLeverage > 1 ? _sigCurrentLeverage+'x' : ''} — ${_sigPair}`;
+  }
+}
 
 function selectSigPair(el) {
   document.querySelectorAll('.sig-pair-btn').forEach(b => b.classList.remove('active'));
@@ -13010,6 +13899,42 @@ function detectChartPatterns(candles) {
 // CANDLE CONFIRMATION (validasi signal dengan candle berikutnya)
 // ══════════════════════════════════════════════════════════
 
+// ── HITUNG HARGA KONFIRMASI CANDLE ──
+// Jika candle saat ini belum terkonfirmasi, hitung harga minimum
+// yang harus di-close candle berikutnya agar dianggap konfirmasi.
+// Return: { price, reason, type: 'confirmation_limit' }
+function calcConfirmationEntry(candles, direction, atr) {
+  if (!candles || candles.length < 3) return null;
+  const c0 = candles[candles.length - 1]; // candle terbaru (belum tutup sempurna)
+  const c1 = candles[candles.length - 2];
+  const _atr = atr || Math.abs(c0.h - c0.l);
+
+  if (direction === 'LONG') {
+    // Konfirmasi LONG: candle berikutnya harus close DI ATAS level kunci
+    // Level kunci = high candle bearish terakhir (c0/c1) atau midpoint
+    const keyLevel = c0.c > c0.o
+      ? c0.c                          // candle sekarang sudah bullish → konfirmasi di close-nya
+      : Math.max(c0.o, c1.h);        // candle bearish → tunggu break above high prev candle
+    // Tambah sedikit buffer (0.05% ATR) agar tidak false trigger
+    const confPrice = keyLevel + _atr * 0.1;
+    const reason = c0.c > c0.o
+      ? `Break & close di atas $${Math.round(c0.c).toLocaleString()} (close candle ini)`
+      : `Break & close di atas $${Math.round(keyLevel).toLocaleString()} (high prev candle)`;
+    return { price: confPrice, reason, type: 'confirmation_limit', keyLevel };
+  } else if (direction === 'SHORT') {
+    // Konfirmasi SHORT: candle berikutnya harus close DI BAWAH level kunci
+    const keyLevel = c0.c < c0.o
+      ? c0.c
+      : Math.min(c0.o, c1.l);
+    const confPrice = keyLevel - _atr * 0.1;
+    const reason = c0.c < c0.o
+      ? `Break & close di bawah $${Math.round(c0.c).toLocaleString()} (close candle ini)`
+      : `Break & close di bawah $${Math.round(keyLevel).toLocaleString()} (low prev candle)`;
+    return { price: confPrice, reason, type: 'confirmation_limit', keyLevel };
+  }
+  return null;
+}
+
 function confirmCandleSignal(candles, direction) {
   if (!candles || candles.length < 3) return { confirmed: false, strength: 0, notes: [] };
 
@@ -13121,7 +14046,8 @@ function confirmCandleSignal(candles, direction) {
 async function fetchMarketMomentum(symbol) {
   // Mengambil data price momentum & community sentiment dari CoinGecko
   // (bukan analisis berita teks — label di UI sudah diubah menjadi "Momentum")
-  const coinMap = {BTCUSDT:'bitcoin',ETHUSDT:'ethereum',SOLUSDT:'solana',BNBUSDT:'binancecoin',XRPUSDT:'ripple'};
+  const coinMap = {BTCUSDT:'bitcoin',ETHUSDT:'ethereum',SOLUSDT:'solana',BNBUSDT:'binancecoin',XRPUSDT:'ripple',XAUUSD:'gold'};
+  // XAUUSD pakai CoinGecko 'gold'; pair tidak dikenal fallback ke bitcoin
   const coinId = coinMap[symbol] || 'bitcoin';
   try {
     const r = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=true&developer_data=false`);
@@ -13138,17 +14064,531 @@ async function fetchMarketMomentum(symbol) {
 }
 
 // ── ANALISIS UTAMA ──
+// ══════════════════════════════════════════════════════════
+// ICT / SMC ENGINE — Liquidity Sweep + FVG + ChoCh + OB
+// ══════════════════════════════════════════════════════════
+
+// 1. Deteksi Swing High / Swing Low
+function detectSwings(candles, lookback = 5) {
+  const highs = [], lows = [];
+  for (let i = lookback; i < candles.length - lookback; i++) {
+    const slice = candles.slice(i - lookback, i + lookback + 1);
+    const maxH = Math.max(...slice.map(c => c.h));
+    const minL = Math.min(...slice.map(c => c.l));
+    if (candles[i].h === maxH) highs.push({ idx: i, price: candles[i].h, candle: candles[i] });
+    if (candles[i].l === minL) lows.push({ idx: i, price: candles[i].l, candle: candles[i] });
+  }
+  return { highs, lows };
+}
+
+// 2. Deteksi Liquidity Sweep (stop hunt)
+// Sweep terjadi: harga menembus swing sebelumnya lalu langsung berbalik
+function detectLiquiditySweep(candles, swings) {
+  const result = { bullSweep: false, bearSweep: false, sweepLevel: null, sweepIdx: null };
+  if (candles.length < 10) return result;
+
+  // Cek beberapa candle terakhir (bukan hanya 1) untuk sweep yang lebih baru
+  const lookbackCandles = candles.slice(-5);
+
+  // Bull sweep: harga mencapai swing low sebelumnya, lalu close kembali di atas
+  // = stop-loss seller disweep, reversal bullish
+  if (swings.lows.length >= 2) {
+    const recentLow = swings.lows[swings.lows.length - 2]; // swing low sebelumnya
+    if (recentLow) {
+      const sweepCandle = lookbackCandles.find(c => c.l <= recentLow.price && c.c > recentLow.price);
+      if (sweepCandle) {
+        result.bullSweep = true;
+        result.sweepLevel = recentLow.price;
+        result.sweepIdx = candles.length - 1;
+        result.sweepCandle = sweepCandle;
+      }
+    }
+  }
+
+  // Bear sweep: harga mencapai swing high sebelumnya, lalu close kembali di bawah
+  if (swings.highs.length >= 2) {
+    const recentHigh = swings.highs[swings.highs.length - 2];
+    if (recentHigh) {
+      const sweepCandle = lookbackCandles.find(c => c.h >= recentHigh.price && c.c < recentHigh.price);
+      if (sweepCandle) {
+        result.bearSweep = true;
+        result.sweepLevel = recentHigh.price;
+        result.sweepIdx = candles.length - 1;
+        result.sweepCandle = sweepCandle;
+      }
+    }
+  }
+
+  return result;
+}
+
+// 3. Deteksi ChoCh / MSS (Change of Character / Market Structure Shift)
+// ChoCh: harga break struktur minor setelah sweep
+function detectChoCh(candles, direction, swings) {
+  if (candles.length < 15) return { choch: false, mss: false, breakLevel: null };
+
+  const last = candles[candles.length - 1];
+  const prev8 = candles.slice(-10, -1); // lebih lebar: 10 candle sebelum terakhir
+
+  if (direction === 'LONG') {
+    // Setelah bull sweep: cari candle yang break di atas recent swing high minor
+    const recentMiniHigh = Math.max(...prev8.map(c => c.h));
+    const choch = last.c > recentMiniHigh; // close di atas struktur terakhir
+    const mss = choch && swings.highs.length >= 1 && last.c > swings.highs[swings.highs.length - 1].price;
+    return { choch, mss, breakLevel: recentMiniHigh };
+  } else {
+    const recentMiniLow = Math.min(...prev8.map(c => c.l));
+    const choch = last.c < recentMiniLow;
+    const mss = choch && swings.lows.length >= 1 && last.c < swings.lows[swings.lows.length - 1].price;
+    return { choch, mss, breakLevel: recentMiniLow };
+  }
+}
+
+// 4. Deteksi Fair Value Gap (FVG / Imbalance)
+// FVG: gap antara candle i-2 dan candle i, candle i-1 adalah momentum candle
+function detectFVG(candles, direction) {
+  const fvgs = [];
+  for (let i = 2; i < candles.length; i++) {
+    const c0 = candles[i - 2]; // candle sebelum momentum
+    const c1 = candles[i - 1]; // momentum candle (besar)
+    const c2 = candles[i];     // candle setelah
+
+    if (direction === 'LONG') {
+      // Bullish FVG: low candle ke-3 > high candle ke-1 (gap ke atas)
+      if (c2.l > c0.h) {
+        fvgs.push({
+          top: c2.l, bottom: c0.h,
+          mid: (c2.l + c0.h) / 2,
+          idx: i, filled: false,
+          type: 'bull'
+        });
+      }
+    } else {
+      // Bearish FVG: high candle ke-3 < low candle ke-1
+      if (c2.h < c0.l) {
+        fvgs.push({
+          top: c0.l, bottom: c2.h,
+          mid: (c0.l + c2.h) / 2,
+          idx: i, filled: false,
+          type: 'bear'
+        });
+      }
+    }
+  }
+
+  // Filter: hanya FVG yang belum terisi (unmitigated)
+  // FVG terisi jika candle setelahnya masuk ke zona FVG
+  const unmitigated = fvgs.filter(fvg => {
+    const afterCandles = candles.slice(fvg.idx + 1);
+    if (afterCandles.length === 0) return true;
+    if (fvg.type === 'bull') {
+      return !afterCandles.some(c => c.l <= fvg.top); // belum diisi (harga belum kembali mengisi gap)
+    } else {
+      return !afterCandles.some(c => c.h >= fvg.bottom); // belum diisi dari bawah
+    }
+  });
+
+  // Ambil FVG terdekat dengan harga saat ini
+  const current = candles[candles.length - 1].c;
+  unmitigated.sort((a, b) => Math.abs(a.mid - current) - Math.abs(b.mid - current));
+
+  return { all: fvgs, unmitigated, nearest: unmitigated[0] || null };
+}
+
+// 5. Deteksi Order Block (OB)
+// OB: candle bearish terakhir sebelum impulse bullish (atau sebaliknya)
+function detectOrderBlock(candles, direction) {
+  const obs = [];
+  const minBodyPct = 0.3; // body minimal 30% dari range candle
+
+  for (let i = 1; i < candles.length - 3; i++) {
+    const c = candles[i];
+    const body = Math.abs(c.c - c.o);
+    const range = c.h - c.l;
+    if (range === 0) continue;
+
+    const bodyPct = body / range;
+    if (bodyPct < minBodyPct) continue;
+
+    if (direction === 'LONG') {
+      // Bearish OB sebelum bullish impulse: candle merah diikuti 2+ candle hijau naik
+      const isBearish = c.c < c.o;
+      if (isBearish) {
+        const next1 = candles[i + 1];
+        const next2 = candles[i + 2];
+        if (next1.c > c.h && next2 && next2.c > next1.c) {
+          obs.push({ top: c.h, bottom: c.l, mid: (c.h + c.l) / 2, idx: i, type: 'bull' });
+        }
+      }
+    } else {
+      // Bullish OB sebelum bearish impulse
+      const isBullish = c.c > c.o;
+      if (isBullish) {
+        const next1 = candles[i + 1];
+        const next2 = candles[i + 2];
+        if (next1.c < c.l && next2 && next2.c < next1.c) {
+          obs.push({ top: c.h, bottom: c.l, mid: (c.h + c.l) / 2, idx: i, type: 'bear' });
+        }
+      }
+    }
+  }
+
+  // Filter OB yang belum dimitigasi
+  const unmitigated = obs.filter(ob => {
+    const afterCandles = candles.slice(ob.idx + 1);
+    if (ob.type === 'bull') {
+      return !afterCandles.some(c => c.l <= ob.top); // harga belum kembali ke dalam zona OB bullish
+    } else {
+      return !afterCandles.some(c => c.h >= ob.bottom); // harga belum kembali ke dalam zona OB bearish
+    }
+  });
+
+  const current = candles[candles.length - 1].c;
+  unmitigated.sort((a, b) => Math.abs(a.mid - current) - Math.abs(b.mid - current));
+
+  return { all: obs, unmitigated, nearest: unmitigated.slice(-3) };
+}
+
+// 6. Hitung TP berbasis Fibonacci Extension
+function calcFibExtension(candles, direction, sweepLevel) {
+  if (!candles || candles.length < 20) return null;
+
+  const last20 = candles.slice(-20);
+  const swingHigh = Math.max(...last20.map(c => c.h));
+  const swingLow  = Math.min(...last20.map(c => c.l));
+  const range = swingHigh - swingLow;
+
+  if (direction === 'LONG') {
+    // Extension dari swing low (sweep) ke swing high, extended ke atas
+    const base = sweepLevel || swingLow;
+    return {
+      tp1: base + range * 0.618,  // 61.8% extension
+      tp2: base + range * 1.0,    // 100% extension
+      tp3: base + range * 1.272,  // 127.2% extension
+      range, swingHigh, swingLow
+    };
+  } else {
+    const base = sweepLevel || swingHigh;
+    return {
+      tp1: base - range * 0.618,
+      tp2: base - range * 1.0,
+      tp3: base - range * 1.272,
+      range, swingHigh, swingLow
+    };
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// UPGRADE ENGINE — MTF + ADX Filter + Session + SL Structure + RR Gate
+// ══════════════════════════════════════════════════════════
+
+// 1. HTF BIAS — Tentukan tren mayor dari timeframe lebih tinggi
+// Input: candles HTF (sudah di-fetch), returns 'LONG'|'SHORT'|'NEUTRAL'
+function calcHTFBias(htfCandles) {
+  if (!htfCandles || htfCandles.length < 50) return { bias: 'NEUTRAL', reason: 'Data HTF tidak cukup', strength: 0 };
+  const closes = htfCandles.map(c => c.c);
+  const current = closes[closes.length - 1];
+
+  // EMA 21 & 50 untuk bias tren
+  const ema21 = calcEMA(closes, 21);
+  const ema50 = calcEMA(closes, 50);
+  // EMA 200 sebagai major trend filter
+  const ema200 = calcEMA(closes, 200);
+  const adx = calcADX(htfCandles, 14);
+
+  let biasScore = 0;
+  const reasons = [];
+
+  // EMA stack: 21 > 50 > 200 = bullish, kebalikannya bearish
+  if (ema21 && ema50) {
+    if (ema21 > ema50) { biasScore += 2; }
+    else { biasScore -= 2; }
+  }
+  if (ema200) {
+    if (current > ema200) { biasScore += 2; reasons.push('Harga di atas EMA200 HTF'); }
+    else { biasScore -= 2; reasons.push('Harga di bawah EMA200 HTF'); }
+  }
+  // Higher Highs / Higher Lows check (swing structure)
+  const last10 = htfCandles.slice(-10);
+  const highs = last10.map(c => c.h);
+  const lows  = last10.map(c => c.l);
+  const hhCount = highs.filter((h, i) => i > 0 && h > highs[i-1]).length;
+  const llCount = lows.filter((l, i) => i > 0 && l < lows[i-1]).length;
+  if (hhCount >= 6) { biasScore += 1; reasons.push('Higher Highs terdeteksi'); }
+  if (llCount >= 6) { biasScore -= 1; reasons.push('Lower Lows terdeteksi'); }
+
+  // ADX trend strength
+  const trendStrong = adx && adx.adx > 20;
+  if (trendStrong) {
+    if (adx.diP > adx.diM) { biasScore += 1; }
+    else { biasScore -= 1; }
+  }
+
+  const bias = biasScore >= 2 ? 'LONG' : biasScore <= -2 ? 'SHORT' : 'NEUTRAL';
+  const strength = Math.min(100, Math.abs(biasScore) / 6 * 100);
+  const mainReason = bias === 'LONG'
+    ? `Tren HTF Bullish (EMA stack + struktur HH/HL)`
+    : bias === 'SHORT'
+    ? `Tren HTF Bearish (EMA stack + struktur LH/LL)`
+    : `Tren HTF Netral — pasar sideways`;
+
+  return { bias, strength: Math.round(strength), reason: mainReason, adxStrong: trendStrong, ema21, ema50, ema200 };
+}
+
+// 2. HTF TIMEFRAME MAP — untuk setiap LTF, HTF yang relevan
+function getHTFInterval(ltfInterval) {
+  const map = {
+    '1m':  '15m',
+    '5m':  '1h',
+    '15m': '4h',
+    '1h':  '4h',
+    '4h':  '1d',
+    '1d':  '1w'
+  };
+  return map[ltfInterval] || '4h';
+}
+
+// 3. ADX MARKET REGIME FILTER
+// Returns: { trending, ranging, adxValue, reason }
+function calcMarketRegime(candles) {
+  const adx = calcADX(candles, 14);
+  if (!adx) return { trending: false, ranging: true, adxValue: 0, reason: 'ADX tidak dapat dihitung' };
+
+  const trending = adx.adx >= 20; // turunkan threshold dari 25 ke 20 agar tidak terlalu strict
+  const strong   = adx.adx >= 30;
+  const ranging  = adx.adx < 18;
+
+  let reason = '';
+  if (strong)        reason = `Tren kuat (ADX ${adx.adx.toFixed(1)}) — kondisi ideal entry`;
+  else if (trending) reason = `Tren cukup (ADX ${adx.adx.toFixed(1)}) — entry valid dengan konfirmasi`;
+  else if (ranging)  reason = `Pasar ranging (ADX ${adx.adx.toFixed(1)}) — hindari trend-following`;
+  else               reason = `Transisi (ADX ${adx.adx.toFixed(1)}) — entry dengan hati-hati`;
+
+  return { trending, ranging, strong, adxValue: adx.adx, diP: adx.diP, diM: adx.diM, reason };
+}
+
+// 4. SESSION FILTER — Kripto paling aktif di sesi London (13:00–21:00 UTC) dan NY (14:00–22:00 UTC)
+function calcSessionFilter() {
+  const now = new Date();
+  const hourUTC = now.getUTCHours();
+  const minuteUTC = now.getUTCMinutes();
+  const timeDecimal = hourUTC + minuteUTC / 60;
+
+  // Sesi London: 07:00–16:00 UTC
+  const inLondon = timeDecimal >= 7 && timeDecimal < 16;
+  // Sesi New York: 13:00–22:00 UTC
+  const inNY = timeDecimal >= 13 && timeDecimal < 22;
+  // Overlap (paling volatile): 13:00–16:00 UTC
+  const inOverlap = timeDecimal >= 13 && timeDecimal < 16;
+  // Dead zone: 22:00–07:00 UTC (Asia late/early)
+  const inDeadZone = timeDecimal >= 22 || timeDecimal < 5;
+
+  const active = inLondon || inNY;
+  let sessionName = '';
+  if (inOverlap)       sessionName = 'London-NY Overlap 🔥';
+  else if (inLondon)   sessionName = 'London Session';
+  else if (inNY)       sessionName = 'New York Session';
+  else if (inDeadZone) sessionName = 'Dead Zone 😴';
+  else                 sessionName = 'Asia Session';
+
+  return {
+    active,
+    inOverlap,
+    inDeadZone,
+    sessionName,
+    hourUTC,
+    reason: active
+      ? `${sessionName} — volume & volatilitas tinggi`
+      : `${sessionName} — volume rendah, signal kurang reliable`
+  };
+}
+
+// 5. SL BERBASIS STRUKTUR — bukan ATR flat, tapi di bawah/atas swing terdekat
+function calcStructuralSL(candles, direction, atrVal) {
+  if (!candles || candles.length < 10) return null;
+  const swings = detectSwings(candles, 3); // lookback 3 untuk struktur minor
+  const current = candles[candles.length - 1].c;
+  const buffer  = atrVal * 0.3; // buffer kecil di luar struktur
+
+  if (direction === 'LONG') {
+    // SL di bawah swing low terdekat yang di bawah harga
+    const validLows = swings.lows
+      .filter(s => s.price < current)
+      .sort((a, b) => b.price - a.price); // sort desc, ambil yang terdekat
+    if (validLows.length > 0) {
+      return validLows[0].price - buffer;
+    }
+    // Fallback: recent lowest low dari 10 candle terakhir
+    const recentLow = Math.min(...candles.slice(-10).map(c => c.l));
+    return recentLow - buffer;
+  } else {
+    // SL di atas swing high terdekat yang di atas harga
+    const validHighs = swings.highs
+      .filter(s => s.price > current)
+      .sort((a, b) => a.price - b.price); // sort asc, ambil yang terdekat
+    if (validHighs.length > 0) {
+      return validHighs[0].price + buffer;
+    }
+    const recentHigh = Math.max(...candles.slice(-10).map(c => c.h));
+    return recentHigh + buffer;
+  }
+}
+
+// 6. R:R GATE — validasi apakah signal layak diambil
+// Returns: { valid, rr, reason }
+function calcRRGate(entry, sl, tp, minRR = 1.5) {
+  if (!entry || !sl || !tp) return { valid: false, rr: 0, reason: 'Data entry/SL/TP tidak lengkap' };
+  const risk   = Math.abs(entry - sl);
+  const reward = Math.abs(tp - entry);
+  if (risk <= 0) return { valid: false, rr: 0, reason: 'Risk = 0, SL terlalu dekat' };
+  const rr = reward / risk;
+  const valid = rr >= minRR;
+  return {
+    valid,
+    rr: parseFloat(rr.toFixed(2)),
+    reason: valid
+      ? `R:R ${rr.toFixed(2)} ≥ ${minRR} — layak diambil ✅`
+      : `R:R ${rr.toFixed(2)} < ${minRR} — terlalu rendah, skip ❌`
+  };
+}
+
+// 7. ICT Master Analyzer — gabungkan semua
+function runICTAnalysis(candles, atr) {
+  if (!candles || candles.length < 50) return null;
+
+  const swings = detectSwings(candles, 4);
+  const sweep  = detectLiquiditySweep(candles, swings);
+
+  let direction = null;
+  let confidence = 0;
+  const reasons = [];
+
+  // Tentukan arah dari sweep
+  if (sweep.bullSweep) {
+    direction = 'LONG';
+    confidence += 35;
+    reasons.push({ label: 'Liquidity Sweep', detail: `Stop hunt di $${Math.round(sweep.sweepLevel).toLocaleString()}`, type: 'bull', weight: 'HIGH' });
+  } else if (sweep.bearSweep) {
+    direction = 'SHORT';
+    confidence += 35;
+    reasons.push({ label: 'Liquidity Sweep', detail: `Stop hunt di $${Math.round(sweep.sweepLevel).toLocaleString()}`, type: 'bear', weight: 'HIGH' });
+  } else {
+    // Tidak ada sweep = WAIT, tapi tetap analisa untuk context
+    return {
+      direction: null, confidence: 0,
+      entryPrice: candles[candles.length-1].c, entryType: 'market',
+      sl: null, tp: null, tp2: null, sweepLevel: null,
+      choch: false, mss: false, fvgZone: null, rrRatio: '—',
+      reasons: [{ label: 'No Sweep', detail: 'Belum ada liquidity sweep terdeteksi', type: 'neut', weight: 'HIGH' }]
+    };
+  }
+
+  // ChoCh / MSS konfirmasi
+  const choch = detectChoCh(candles, direction, swings);
+  if (choch.mss) {
+    confidence += 25;
+    reasons.push({ label: 'MSS Confirmed', detail: `Market Structure Shift terkonfirmasi`, type: direction === 'LONG' ? 'bull' : 'bear', weight: 'HIGH' });
+  } else if (choch.choch) {
+    confidence += 15;
+    reasons.push({ label: 'ChoCh Detected', detail: `Change of Character terdeteksi`, type: direction === 'LONG' ? 'bull' : 'bear', weight: 'MED' });
+  } else {
+    confidence -= 10;
+    reasons.push({ label: 'No ChoCh', detail: 'Menunggu konfirmasi struktur', type: 'neut', weight: 'MED' });
+  }
+
+  // FVG entry zone
+  const fvg = detectFVG(candles, direction);
+  let entryPrice = null, entryType = 'market';
+
+  if (fvg.nearest) {
+    confidence += 20;
+    entryPrice = fvg.nearest.mid;
+    entryType = 'limit';
+    reasons.push({ label: 'FVG Entry Zone', detail: `Limit @ $${Math.round(fvg.nearest.mid).toLocaleString()} (${Math.round(fvg.nearest.bottom).toLocaleString()}–${Math.round(fvg.nearest.top).toLocaleString()})`, type: direction === 'LONG' ? 'bull' : 'bear', weight: 'HIGH' });
+  } else {
+    // Fallback ke Order Block
+    const ob = detectOrderBlock(candles, direction);
+    if (ob.nearest.length > 0) {
+      const nearestOB = ob.nearest[ob.nearest.length - 1];
+      confidence += 12;
+      entryPrice = nearestOB.mid;
+      entryType = 'limit';
+      reasons.push({ label: 'Order Block Entry', detail: `Limit @ $${Math.round(nearestOB.mid).toLocaleString()} (OB zone)`, type: direction === 'LONG' ? 'bull' : 'bear', weight: 'MED' });
+    } else {
+      entryType = 'market';
+      reasons.push({ label: 'No FVG/OB', detail: 'Entry market (zona tidak ideal)', type: 'neut', weight: 'LOW' });
+    }
+  }
+
+  // Stop Loss — di bawah/atas sweep candle
+  const current = candles[candles.length - 1].c;
+  const atrVal = atr || current * 0.005;
+  let sl;
+  if (direction === 'LONG') {
+    sl = (sweep.sweepLevel || candles[candles.length - 1].l) - atrVal * 0.5;
+  } else {
+    sl = (sweep.sweepLevel || candles[candles.length - 1].h) + atrVal * 0.5;
+  }
+
+  // TP berbasis Fibonacci Extension
+  const fibExt = calcFibExtension(candles, direction, sweep.sweepLevel);
+  const tp1 = fibExt ? fibExt.tp1 : (direction === 'LONG' ? current + atrVal * 3 : current - atrVal * 3);
+  const tp2 = fibExt ? fibExt.tp2 : null;
+
+  reasons.push({ label: 'Fib Extension TP', detail: `TP1: $${Math.round(tp1).toLocaleString()}${tp2 ? ' | TP2: $'+Math.round(tp2).toLocaleString() : ''}`, type: direction === 'LONG' ? 'bull' : 'bear', weight: 'MED' });
+
+  // Entry final: validasi bahwa limit order arahnya benar
+  // LONG: limit harus di BAWAH harga saat ini (menunggu retest ke bawah)
+  // SHORT: limit harus di ATAS harga saat ini
+  const entryFinal = entryPrice || current;
+  const distFromCurrent = Math.abs(entryFinal - current) / current * 100;
+  const wrongSide = entryType === 'limit' && (
+    (direction === 'LONG'  && entryFinal >= current) ||
+    (direction === 'SHORT' && entryFinal <= current)
+  );
+  if (wrongSide || (entryType === 'limit' && distFromCurrent > 5)) {
+    entryType = 'market';
+    entryPrice = current;
+    reasons.push({ label: 'Entry Adjusted', detail: wrongSide ? 'Zona tidak valid (harga sudah melewati), market entry' : `Zona terlalu jauh (${distFromCurrent.toFixed(1)}%), market entry`, type: 'neut', weight: 'LOW' });
+  }
+
+  // R:R ratio
+  const entryUsed = entryPrice || current;
+  const risk = Math.abs(entryUsed - sl);
+  const reward = Math.abs(tp1 - entryUsed);
+  const rrRatio = risk > 0 ? (reward / risk).toFixed(2) : '—';
+
+  return {
+    direction,
+    confidence: Math.min(95, Math.max(20, confidence)),
+    entryPrice: entryPrice || current,
+    entryType, // 'limit' atau 'market'
+    sl, tp: tp1, tp2,
+    sweepLevel: sweep.sweepLevel,
+    choch: choch.choch,
+    mss: choch.mss,
+    fvgZone: fvg.nearest,
+    rrRatio,
+    reasons,
+    swings
+  };
+}
+
 async function runSignalAnalysis() {
   const btn = document.getElementById('sig-analyze-btn');
   btn.disabled = true;
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Menganalisis...`;
 
   try {
-    // 1. Fetch candle data (Bybit → OKX → Binance proxy)
-    const [raw, fngRaw, newsData] = await Promise.all([
-      fetchKlines(_sigPair, _sigTf, 150),
+    // 1. Fetch LTF candles + HTF candles (untuk bias) + data eksternal
+    const htfInterval = getHTFInterval(_sigTf);
+    const [raw, htfRaw, fngRaw, newsData, fundingData, btcDomData] = await Promise.all([
+      fetchKlines(_sigPair, _sigTf, 200),
+      fetchKlines(_sigPair, htfInterval, 100).catch(() => null),
       fetchFearGreed().catch(()=>null),
-      fetchMarketMomentum(_sigPair).catch(()=>null)
+      fetchMarketMomentum(_sigPair).catch(()=>null),
+      fetchFundingRate(_sigPair).catch(()=>null),
+      fetchBTCDominance().catch(()=>null)
     ]);
     // Normalize fng data (original function returns {current:{value,classification}, history:[]})
     let fngData = null;
@@ -13158,8 +14598,14 @@ async function runSignalAnalysis() {
       fngData = fngRaw;
     }
     _sigCandles = raw.map(k=>({t:k[0],o:parseFloat(k[1]),h:parseFloat(k[2]),l:parseFloat(k[3]),c:parseFloat(k[4]),v:parseFloat(k[5])}));
+    const htfCandles = htfRaw ? htfRaw.map(k=>({t:k[0],o:parseFloat(k[1]),h:parseFloat(k[2]),l:parseFloat(k[3]),c:parseFloat(k[4]),v:parseFloat(k[5])})) : null;
     const closes  = _sigCandles.map(c=>c.c);
     const current = closes[closes.length-1];
+
+    // ── PRE-ANALYSIS FILTERS ──
+    const htfBias    = calcHTFBias(htfCandles);
+    const regime     = calcMarketRegime(_sigCandles);
+    const session    = calcSessionFilter();
 
     // 2. Hitung indikator teknikal
     const sma20  = calcSMA(closes,20), sma50=calcSMA(closes,50);
@@ -13365,6 +14811,63 @@ async function runSignalAnalysis() {
     const volLbl = vol.ratio>1.5?'TINGGI':vol.ratio<0.7?'RENDAH':'NORMAL';
     const volColor = vol.ratio>1.5?'#06b6d4':'#94a3b8';
 
+    // 6b. FUNDING RATE SCORE — contrarian indicator
+    let fundingScore = 0, fundingVal = '—', fundingLbl = '—', fundingColor = '#64748b';
+    if (fundingData && _sigPair !== 'XAUUSD') {
+      const fr = fundingData.rate;
+      fundingVal = (fr >= 0 ? '+' : '') + fr.toFixed(4) + '%';
+      // Funding rate ekstrem positif = terlalu banyak long → bearish contrarian
+      // Funding rate ekstrem negatif = terlalu banyak short → bullish contrarian
+      if (fr > 0.1)       { fundingScore = -1.5; fundingLbl = 'OVERLONG'; fundingColor = '#ef4444'; score -= 1.5; }
+      else if (fr > 0.05) { fundingScore = -0.5; fundingLbl = 'LONG BIAS'; fundingColor = '#f97316'; score -= 0.5; }
+      else if (fr < -0.05){ fundingScore = 1.5;  fundingLbl = 'OVERSHORT'; fundingColor = '#10b981'; score += 1.5; }
+      else if (fr < -0.02){ fundingScore = 0.5;  fundingLbl = 'SHORT BIAS'; fundingColor = '#34d399'; score += 0.5; }
+      else                { fundingLbl = 'NEUTRAL'; fundingColor = '#64748b'; }
+    }
+
+    // 6c. CONTEXT SCORE — BTC Dominance untuk crypto, DXY proxy untuk XAU
+    let btcDomScore = 0, btcDomVal = '—', btcDomLbl = '—', btcDomColor = '#64748b';
+    let btcDomCardLabel = 'BTC Dominance'; // label kartu di UI
+
+    if (_sigPair === 'XAUUSD') {
+      // ── EMAS: gunakan momentum DXY sebagai proxy ──
+      // Tidak ada DXY realtime gratis, tapi kita bisa pakai data momentum global:
+      // - Jika fear & greed RENDAH (< 30) + momentum negatif = safe haven demand → bullish XAU
+      // - Jika fear & greed TINGGI (> 70) + momentum positif = risk-on → bearish XAU
+      // - Juga pakai pergerakan BTC sebagai risk sentiment proxy (BTC naik = risk on = XAU netral/turun)
+      btcDomCardLabel = 'Risk Sentiment';
+      if (fngData) {
+        const fg = fngData.value;
+        if (fg < 25)       { btcDomScore = 1.5;  btcDomVal = fg+''; btcDomLbl = 'SAFE HAVEN 🥇'; btcDomColor = '#10b981'; score += 1.5; }
+        else if (fg < 40)  { btcDomScore = 0.5;  btcDomVal = fg+''; btcDomLbl = 'FEAR → XAU+';   btcDomColor = '#34d399'; score += 0.5; }
+        else if (fg > 75)  { btcDomScore = -1;   btcDomVal = fg+''; btcDomLbl = 'RISK ON → XAU-'; btcDomColor = '#ef4444'; score -= 1; }
+        else if (fg > 60)  { btcDomScore = -0.5; btcDomVal = fg+''; btcDomLbl = 'GREED → XAU-';  btcDomColor = '#f97316'; score -= 0.5; }
+        else               { btcDomVal = fg+''; btcDomLbl = 'NETRAL'; btcDomColor = '#64748b'; }
+      }
+      // Tambahan: jika momentum pasar positif kuat (crypto naik) → risk-on → XAU cenderung turun
+      if (newsData && newsData.score > 8)  { score -= 0.5; }
+      if (newsData && newsData.score < -8) { score += 0.5; }
+
+    } else {
+      // ── CRYPTO: BTC Dominance seperti sebelumnya ──
+      const isAltcoin = _sigPair !== 'BTCUSDT';
+      if (btcDomData && isAltcoin) {
+        const dom = btcDomData.btcDom;
+        btcDomVal = dom.toFixed(1) + '%';
+        if (dom > 58)       { btcDomScore = -1;   btcDomLbl = 'BTC DOMINAN'; btcDomColor = '#ef4444'; score -= 1; }
+        else if (dom > 54)  { btcDomScore = -0.5; btcDomLbl = 'BTC KUAT';    btcDomColor = '#f97316'; score -= 0.5; }
+        else if (dom < 44)  { btcDomScore = 1;    btcDomLbl = 'ALTSEASON';   btcDomColor = '#10b981'; score += 1; }
+        else if (dom < 48)  { btcDomScore = 0.5;  btcDomLbl = 'ALT FAVOR';   btcDomColor = '#34d399'; score += 0.5; }
+        else                { btcDomLbl = 'NETRAL'; btcDomColor = '#64748b'; }
+      } else if (btcDomData && _sigPair === 'BTCUSDT') {
+        const dom = btcDomData.btcDom;
+        btcDomVal = dom.toFixed(1) + '%';
+        if (dom > 54)      { btcDomScore = 0.5;  btcDomLbl = 'BTC KUAT';  btcDomColor = '#10b981'; score += 0.5; }
+        else if (dom < 44) { btcDomScore = -0.5; btcDomLbl = 'ALTSEASON'; btcDomColor = '#f97316'; score -= 0.5; }
+        else               { btcDomLbl = 'NETRAL'; btcDomColor = '#64748b'; }
+      }
+    }
+
     // 6b. PATTERN SCORES — masuk ke total score
     // Candle patterns dibatasi ±6 agar tidak terlalu dominan
     const candleScoreCapped = Math.max(-6, Math.min(6, candleResult.score));
@@ -13384,65 +14887,450 @@ async function runSignalAnalysis() {
     // 7b. KONFIRMASI CANDLE — evaluasi setelah direction ditentukan
     const candleConf = confirmCandleSignal(_sigCandles, direction);
 
-    // 8. SL/TP berbasis ATR — Wilder's ATR sekarang lebih akurat
-    // Gunakan ATR multiplier dinamis berdasarkan timeframe
-    const tfMultMap = {'1m':1.0,'5m':1.2,'15m':1.5,'1h':2.0,'4h':2.5,'1d':3.0};
-    const atrMult = tfMultMap[_sigTf] || 2.0;
-    const atrVal  = atr || (current * 0.01);
-    const entry   = current;
-    let sl, tp;
-    if (direction === 'LONG')  { sl = entry - atrVal * atrMult; tp = entry + atrVal * atrMult * 2; }
-    else if (direction === 'SHORT') { sl = entry + atrVal * atrMult; tp = entry - atrVal * atrMult * 2; }
-    else { sl = entry - atrVal * atrMult; tp = entry + atrVal * atrMult * 2; }
+    // ── ICT / SMC ANALYSIS — Layer Utama ──
+    const ict = runICTAnalysis(_sigCandles, atr);
 
-    const slPct  = ((Math.abs(entry - sl) / entry) * 100).toFixed(2);
-    const tpPct  = ((Math.abs(tp - entry) / entry) * 100).toFixed(2);
-    const rrRatio = (parseFloat(tpPct) / parseFloat(slPct)).toFixed(2);
+    // Gabungkan: ICT konfirmasi atau override hasil indikator
+    let finalDirection = direction;
+    let finalEntry, finalSL, finalTP, finalTP2, finalEntryType, rrRatio;
+    let ictConfidence = 0;
+    let limitZoneText = '';
 
-    // Win rate: indikator alignment + pattern bonus + konfirmasi candle
+    if (ict && ict.direction) {
+      if (ict.confidence >= 60) {
+        finalDirection = ict.direction;
+      } else if (ict.direction === direction) {
+        finalDirection = direction;
+      } else if (ict.confidence >= 40 && direction === 'WAIT') {
+        finalDirection = ict.direction;
+      } else {
+        finalDirection = direction !== 'WAIT' ? direction : ict.direction;
+      }
+      ictConfidence = ict.confidence;
+      finalEntry    = ict.entryPrice;
+      finalEntryType = ict.entryType;
+      finalSL       = ict.sl;
+      finalTP       = ict.tp;
+      finalTP2      = ict.tp2;
+      rrRatio       = ict.rrRatio;
+      if (ict.entryType === 'limit') {
+        limitZoneText = ict.fvgZone
+          ? `FVG $${Math.round(ict.fvgZone.bottom).toLocaleString()} – $${Math.round(ict.fvgZone.top).toLocaleString()}`
+          : `Order Block zona`;
+      }
+    } else {
+      finalDirection = direction;
+      finalEntryType = 'market';
+      finalEntry     = current;
+      const _atrMult = 2;
+      const _atrVal  = atr || current * 0.005;
+      if (finalDirection === 'LONG')  { finalSL = finalEntry - _atrVal * _atrMult; finalTP = finalEntry + _atrVal * _atrMult * 2; }
+      else if (finalDirection === 'SHORT') { finalSL = finalEntry + _atrVal * _atrMult; finalTP = finalEntry - _atrVal * _atrMult * 2; }
+      else { finalSL = finalEntry - _atrVal * _atrMult; finalTP = finalEntry + _atrVal * _atrMult * 2; }
+      const risk = Math.abs(finalEntry - finalSL);
+      const reward = Math.abs(finalTP - finalEntry);
+      rrRatio = risk > 0 ? (reward / risk).toFixed(2) : '—';
+    }
+
+    // ── FILTER 1: HTF BIAS — penalti jika berlawanan tren mayor ──
+    let htfPenalty = 0;
+    let htfOverride = false;
+    if (htfBias.bias !== 'NEUTRAL' && finalDirection !== 'WAIT') {
+      if (htfBias.bias !== finalDirection) {
+        // Melawan tren HTF — sangat berbahaya
+        if (htfBias.strength >= 60) {
+          // HTF bias kuat berlawanan → batalkan signal, tunggu
+          finalDirection = 'WAIT';
+          htfOverride = true;
+        } else {
+          // HTF bias lemah berlawanan → penalti confidence, tetap bisa entry tapi hati-hati
+          htfPenalty = -20;
+        }
+      }
+    }
+
+    // ── FILTER 2: ADX REGIME — skip jika pasar ranging ──
+    let regimePenalty = 0;
+    let regimeOverride = false;
+    if (regime.ranging && finalDirection !== 'WAIT' && finalEntryType === 'market') {
+      // Pasar ranging + market entry = bahaya → paksa ke limit atau skip
+      if (!ict || !ict.fvgZone) {
+        // Tidak ada zona ICT sebagai entry — skip market entry di pasar ranging
+        regimeOverride = true;
+        finalDirection = 'WAIT';
+      }
+      regimePenalty = -15;
+    }
+
+    // ── FILTER 3: STRUCTURAL SL — override SL dengan level struktur ──
+    if (finalDirection !== 'WAIT' && atr) {
+      const structSL = calcStructuralSL(_sigCandles, finalDirection, atr);
+      if (structSL) {
+        // Gunakan structural SL jika lebih baik (lebih jauh dari entry tapi tidak > 5%)
+        const structSLPct = Math.abs(finalEntry - structSL) / finalEntry * 100;
+        const currentSLPct = finalSL ? Math.abs(finalEntry - finalSL) / finalEntry * 100 : 999;
+        if (structSLPct <= 5 && structSLPct > currentSLPct) {
+          finalSL = structSL; // ganti ke structural SL yang lebih lebar
+        } else if (!finalSL || currentSLPct < 0.3) {
+          finalSL = structSL; // fallback jika SL sebelumnya terlalu sempit
+        }
+      }
+    }
+
+    // ── FILTER 4: R:R GATE — tolak jika R:R < 1.5 ──
+    let rrGate = { valid: true, rr: parseFloat(rrRatio) || 0, reason: '' };
+    if (finalDirection !== 'WAIT' && finalEntry && finalSL && finalTP) {
+      rrGate = calcRRGate(finalEntry, finalSL, finalTP, 1.5);
+      // Recalculate rrRatio
+      rrRatio = rrGate.rr.toFixed(2);
+      if (!rrGate.valid && finalEntryType === 'market') {
+        // R:R buruk + market entry = tolak, coba adjust TP ke Fib extension
+        const _atrVal3 = atr || current * 0.005;
+        const neededReward = Math.abs(finalEntry - finalSL) * 1.5;
+        finalTP = finalDirection === 'LONG'
+          ? finalEntry + neededReward
+          : finalEntry - neededReward;
+        rrGate = calcRRGate(finalEntry, finalSL, finalTP, 1.5);
+        rrRatio = rrGate.rr.toFixed(2);
+      }
+    }
+
+    // ── FILTER 5: SESSION ── (warning saja, tidak hard-block untuk kripto 24/7)
+    // Kripto tetap bisa trading di dead zone, tapi confidence diturunkan
+    const sessionPenalty = session.inDeadZone ? -10 : session.inOverlap ? 5 : 0;
+
+    // ── KONFIRMASI CANDLE → LIMIT ORDER ──
+    // Jika candle belum terkonfirmasi DAN kita punya arah yang jelas:
+    // Override entry type ke 'confirmation_limit' — tunggu candle berikutnya konfirmasi
+    let confEntry = null;
+    let confLimitZoneText = '';
+    if (!candleConf.confirmed && finalDirection !== 'WAIT') {
+      confEntry = calcConfirmationEntry(_sigCandles, finalDirection, atr);
+      if (confEntry) {
+        // Hanya pakai confirmation limit jika saat ini entry-nya market
+        // (jika sudah limit dari ICT/FVG, biarkan ICT yang menentukan)
+        if (finalEntryType === 'market') {
+          finalEntry     = confEntry.price;
+          finalEntryType = 'confirmation_limit'; // tipe baru — limit nunggu konfirmasi candle
+          limitZoneText  = `Konfirmasi candle @ $${Math.round(confEntry.keyLevel).toLocaleString()}`;
+          confLimitZoneText = confEntry.reason;
+          // Recalculate SL/TP dari confirmation entry price
+          const _atrVal2 = atr || current * 0.005;
+          if (finalDirection === 'LONG') {
+            if (!finalSL || finalSL >= finalEntry) finalSL = finalEntry - _atrVal2 * 2;
+            if (!finalTP || finalTP <= finalEntry) finalTP = finalEntry + _atrVal2 * 3;
+          } else {
+            if (!finalSL || finalSL <= finalEntry) finalSL = finalEntry + _atrVal2 * 2;
+            if (!finalTP || finalTP >= finalEntry) finalTP = finalEntry - _atrVal2 * 3;
+          }
+          const _risk2 = Math.abs(finalEntry - finalSL);
+          const _rew2  = Math.abs(finalTP - finalEntry);
+          rrRatio = _risk2 > 0 ? (_rew2 / _risk2).toFixed(2) : '—';
+        }
+      }
+    }
+
+    // Hitung ulang persentase setelah semua override entry final
+    const slPct  = ((Math.abs(finalEntry - finalSL) / finalEntry) * 100).toFixed(2);
+    const tpPct  = ((Math.abs(finalTP - finalEntry) / finalEntry) * 100).toFixed(2);
+    const distFromMarket = ((Math.abs(finalEntry - current) / current) * 100).toFixed(2);
     const bullC  = signals.filter(s => s.type === 'bull').length;
     const bearC  = signals.filter(s => s.type === 'bear').length;
-    const alignC = direction === 'LONG' ? bullC : direction === 'SHORT' ? bearC : Math.max(bullC, bearC);
+    const alignC = finalDirection === 'LONG' ? bullC : finalDirection === 'SHORT' ? bearC : Math.max(bullC, bearC);
     const totalC = signals.length;
     const alignPct = totalC > 0 ? (alignC / totalC) * 100 : 50;
-    // Pattern bonus: pattern yang searah dengan direction
     const patternAlignBull = candleResult.patterns.filter(p=>p.type==='bull').length + chartResult.patterns.filter(p=>p.type==='bull').length;
     const patternAlignBear = candleResult.patterns.filter(p=>p.type==='bear').length + chartResult.patterns.filter(p=>p.type==='bear').length;
-    const patternBonus = direction==='LONG' ? patternAlignBull*2 : direction==='SHORT' ? patternAlignBear*2 : 0;
+    const patternBonus = finalDirection==='LONG' ? patternAlignBull*2 : finalDirection==='SHORT' ? patternAlignBear*2 : 0;
     const confBonus = candleConf.strength > 0 ? Math.min(5, candleConf.strength) : 0;
     const sentBonus = (fngScore > 0 ? 3 : fngScore < 0 ? -3 : 0) + (newsScore > 0 ? 2 : newsScore < 0 ? -2 : 0);
-    const winRate = Math.min(82, Math.max(38, Math.round(alignPct * 0.6 + 18 + sentBonus + patternBonus + confBonus)));
+    const ictBonus = ict ? Math.round(ict.confidence * 0.15) : 0;
+    // Filter bonuses/penalties
+    const htfBonus     = htfBias.bias === finalDirection ? 8 : htfBias.bias === 'NEUTRAL' ? 0 : -10;
+    const regimeBonus  = regime.strong ? 6 : regime.trending ? 3 : regime.ranging ? -8 : 0;
+    const sessionBonus = session.inOverlap ? 4 : session.inDeadZone ? -5 : 0;
+    const rrBonus      = rrGate.valid ? (rrGate.rr >= 2.5 ? 6 : 3) : -8;
+    const winRate = Math.min(82, Math.max(30, Math.round(
+      alignPct * 0.5 + 15
+      + sentBonus + patternBonus + confBonus + ictBonus
+      + htfBonus + regimeBonus + sessionBonus + rrBonus
+      + htfPenalty + regimePenalty + sessionPenalty
+    )));
 
-    // Simpan signal aktif
-    _sigCurrentSignal = {direction, entry, sl, tp, pair:_sigPair, tf:_sigTf,
-      time:Date.now(), slPct:parseFloat(slPct), tpPct:parseFloat(tpPct)};
+    // ── Simpan signal aktif (ICT-aware) ──
+    // 'confirmation_limit' diperlakukan seperti 'limit' untuk polling
+    const isAnyLimit = finalEntryType === 'limit' || finalEntryType === 'confirmation_limit';
+    // Tentukan ICT plan tersedia atau tidak (untuk tombol entry saat WAIT)
+    const _hasICTPlan = ict && ict.direction && (ict.entryType === 'limit' || ict.fvgZone);
+    // Arah efektif: jika finalDirection WAIT tapi ICT punya plan, pakai ICT direction
+    const _effectiveDir = finalDirection !== 'WAIT' ? finalDirection : (_hasICTPlan ? ict.direction : 'WAIT');
+    _sigCurrentSignal = {
+      direction: _effectiveDir,
+      displayDirection: _effectiveDir,
+      entry: finalEntry || current,
+      entryType: isAnyLimit ? 'limit' : 'market',
+      entryTypeRaw: finalEntryType,  // simpan tipe asli untuk UI
+      limitPrice: isAnyLimit ? (finalEntry || current) : null,
+      marketPrice: current,
+      sl: finalSL, tp: finalTP, tp2: finalTP2,
+      pair: _sigPair, tf: _sigTf,
+      time: Date.now(),
+      slPct: parseFloat(slPct),
+      tpPct: parseFloat(tpPct),
+      rrRatio,
+      ictData: ict || null,
+      limitZoneText: confLimitZoneText || limitZoneText,
+      confEntryData: confEntry,
+      candleConf,
+      status: isAnyLimit ? 'waiting' : 'ready'
+    };
 
     // ── UPDATE UI ──
-    const fmt = v=>'$'+Math.round(v).toLocaleString();
+    const fmt = v => '$' + Math.round(v).toLocaleString();
     const verdBadge = document.getElementById('sig-verdict-badge');
-    verdBadge.className = `sig-verdict ${direction.toLowerCase()}`;
-    verdBadge.innerHTML = direction==='LONG'
-      ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg> LONG — Potensi Naik`
-      :direction==='SHORT'
-      ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> SHORT — Potensi Turun`
-      :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> WAIT — Signal Belum Jelas`;
+    verdBadge.className = `sig-verdict ${finalDirection.toLowerCase()}`;
+    verdBadge.innerHTML = finalDirection === 'LONG'
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg> LONG — Potensi Naik`
+      : finalDirection === 'SHORT'
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> SHORT — Potensi Turun`
+      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> WAIT — Signal Belum Jelas`;
 
-    document.getElementById('sig-conf-label').textContent = `Confidence: ${direction}`;
-    document.getElementById('sig-conf-fill').style.width  = confidence+'%';
-    document.getElementById('sig-conf-fill').style.background = direction==='LONG'
-      ?'linear-gradient(90deg,#10b981,#06b6d4)':direction==='SHORT'
-      ?'linear-gradient(90deg,#ef4444,#f97316)':'linear-gradient(90deg,#f59e0b,#fbbf24)';
-    document.getElementById('sig-conf-pct').textContent = confidence+'%';
+    // Confidence bar — gabungkan ICT confidence + indikator
+    const displayConf = ict ? Math.round((ict.confidence + confidence) / 2) : confidence;
+    document.getElementById('sig-conf-label').textContent = `Confidence: ${finalDirection}`;
+    document.getElementById('sig-conf-fill').style.width = displayConf + '%';
+    document.getElementById('sig-conf-fill').style.background = finalDirection === 'LONG'
+      ? 'linear-gradient(90deg,#10b981,#06b6d4)' : finalDirection === 'SHORT'
+      ? 'linear-gradient(90deg,#ef4444,#f97316)' : 'linear-gradient(90deg,#f59e0b,#fbbf24)';
+    document.getElementById('sig-conf-pct').textContent = displayConf + '%';
 
-    document.getElementById('sig-entry').textContent = fmt(entry);
-    document.getElementById('sig-entry-note').textContent = 'Harga saat ini';
-    document.getElementById('sig-sl').textContent    = fmt(sl);
+    // Entry card — tampilkan LIMIT, CONFIRMATION LIMIT, atau MARKET
+    const entryEl   = document.getElementById('sig-entry');
+    const entryNote = document.getElementById('sig-entry-note');
+    if (finalEntryType === 'confirmation_limit') {
+      entryEl.textContent = fmt(finalEntry);
+      entryEl.style.color = '#a78bfa';
+      entryNote.innerHTML = `<span style="background:rgba(167,139,250,.15);color:#a78bfa;padding:.05rem .35rem;border-radius:6px;font-weight:800">⏳ MENUNGGU KONFIRMASI</span> ${distFromMarket}% dari harga`;
+    } else if (finalEntryType === 'limit') {
+      entryEl.textContent = fmt(finalEntry);
+      entryEl.style.color = '#f59e0b';
+      entryNote.innerHTML = `<span style="background:rgba(245,158,11,.15);color:#f59e0b;padding:.05rem .35rem;border-radius:6px;font-weight:800">LIMIT</span> ${distFromMarket}% dari harga`;
+    } else {
+      entryEl.textContent = fmt(finalEntry);
+      entryEl.style.color = '';
+      entryNote.innerHTML = `<span style="background:rgba(16,185,129,.12);color:#10b981;padding:.05rem .35rem;border-radius:6px;font-weight:800">MARKET</span> Harga saat ini`;
+    }
+
+    document.getElementById('sig-sl').textContent     = fmt(finalSL);
     document.getElementById('sig-sl-pct').textContent = `-${slPct}%`;
-    document.getElementById('sig-tp').textContent    = fmt(tp);
+    document.getElementById('sig-tp').textContent     = fmt(finalTP);
     document.getElementById('sig-tp-pct').textContent = `+${tpPct}%`;
-    document.getElementById('sig-rr').textContent    = `1:${rrRatio}`;
+    document.getElementById('sig-rr').textContent     = `1:${rrRatio}`;
     document.getElementById('sig-winrate').textContent = `~${winRate}%`;
-    document.getElementById('sig-score').textContent  = `${alignC}/${totalC}`;
+    document.getElementById('sig-score').textContent   = `${alignC}/${totalC}`;
+
+    // ── ICT ANALYSIS PANEL ──
+    let ictPanel = document.getElementById('sig-ict-panel');
+    if (!ictPanel) {
+      ictPanel = document.createElement('div');
+      ictPanel.id = 'sig-ict-panel';
+      ictPanel.style.cssText = 'margin-bottom:.9rem';
+      const indGrid = document.getElementById('sig-ind-grid');
+      indGrid.parentNode.insertAdjacentElement('beforebegin', ictPanel);
+    }
+    if (ict) {
+      const ictReasons = (ict.reasons || []);
+      const weightColor = w => w==='HIGH'?'#ef4444':w==='MED'?'#f59e0b':'#64748b';
+      const typeIcon = t => t==='bull'
+        ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="#10b981"><path d="M12 4l8 16H4z"/></svg>`
+        : t==='bear'
+        ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="#ef4444"><path d="M12 20l8-16H4z"/></svg>`
+        : `<svg width="10" height="10" viewBox="0 0 24 24" fill="#64748b"><circle cx="12" cy="12" r="8"/></svg>`;
+
+      ictPanel.innerHTML = `
+        <div style="background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(6,182,212,.06));border:1px solid rgba(139,92,246,.2);border-radius:14px;padding:.85rem 1rem;margin-bottom:.75rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem">
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span style="font-size:.62rem;font-weight:800;letter-spacing:.08em;color:#a78bfa;text-transform:uppercase">ICT / SMC Analysis</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <span style="font-size:.58rem;color:#64748b">Confidence</span>
+              <span style="font-size:.72rem;font-weight:900;color:${ict.direction==='LONG'?'#10b981':ict.direction==='SHORT'?'#ef4444':'#f59e0b'}">${ict.confidence}%</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            ${ictReasons.map(r => `
+              <div style="display:flex;align-items:flex-start;gap:.5rem;padding:.4rem .55rem;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid ${weightColor(r.weight)}">
+                <div style="margin-top:.1rem">${typeIcon(r.type)}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:.62rem;font-weight:800;color:#e2e8f0">${r.label}
+                    <span style="font-size:.5rem;color:${weightColor(r.weight)};margin-left:.3rem">[${r.weight}]</span>
+                  </div>
+                  <div style="font-size:.57rem;color:#94a3b8;margin-top:.05rem">${r.detail}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+          ${finalEntryType === 'confirmation_limit' ? `
+          <div style="margin-top:.65rem;padding:.45rem .6rem;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.3rem">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <div style="font-size:.6rem;font-weight:800;color:#a78bfa">LIMIT KONFIRMASI CANDLE</div>
+            </div>
+            <div style="font-size:.55rem;color:#94a3b8;line-height:1.5">${confLimitZoneText || confEntry?.reason || ''}</div>
+            <div style="font-size:.52rem;color:#64748b;margin-top:.2rem">⚡ Order aktif setelah candle konfirmasi close di level ini</div>
+          </div>` : finalEntryType === 'limit' ? `
+          <div style="margin-top:.65rem;padding:.45rem .6rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;display:flex;align-items:center;gap:.45rem">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>
+              <div style="font-size:.6rem;font-weight:800;color:#f59e0b">LIMIT ORDER — Menunggu Retest</div>
+              <div style="font-size:.55rem;color:#94a3b8">Entry di ${limitZoneText || fmt(finalEntry)} · ${distFromMarket}% dari harga saat ini</div>
+            </div>
+          </div>` : ''}
+          ${ict.tp2 ? `
+          <div style="margin-top:.5rem;display:flex;gap:.4rem">
+            <div style="flex:1;padding:.35rem .5rem;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;text-align:center">
+              <div style="font-size:.5rem;color:#64748b;font-weight:700;text-transform:uppercase">TP1 (Fib 0.618)</div>
+              <div style="font-size:.68rem;font-weight:900;color:#10b981;font-family:'Space Mono',monospace">${fmt(finalTP)}</div>
+            </div>
+            <div style="flex:1;padding:.35rem .5rem;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.12);border-radius:8px;text-align:center">
+              <div style="font-size:.5rem;color:#64748b;font-weight:700;text-transform:uppercase">TP2 (Fib 1.0)</div>
+              <div style="font-size:.68rem;font-weight:900;color:#34d399;font-family:'Space Mono',monospace">${fmt(ict.tp2)}</div>
+            </div>
+          </div>` : ''}
+        </div>`;
+    } else {
+      ictPanel.innerHTML = `
+        <div style="background:rgba(100,116,139,.06);border:1px solid rgba(100,116,139,.15);border-radius:12px;padding:.75rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <div style="font-size:.62rem;font-weight:800;color:#94a3b8">ICT/SMC — Belum Ada Setup</div>
+            <div style="font-size:.57rem;color:#64748b">Belum terdeteksi Liquidity Sweep. Analisis berbasis indikator teknikal.</div>
+          </div>
+        </div>`;
+    }
+
+    // ── FILTER PANEL UI ──
+    let filterPanel = document.getElementById('sig-filter-panel');
+    if (!filterPanel) {
+      filterPanel = document.createElement('div');
+      filterPanel.id = 'sig-filter-panel';
+      filterPanel.style.cssText = 'margin-bottom:.9rem';
+      const sentRowEl = document.getElementById('sig-sentiment-row');
+      sentRowEl.parentNode.insertBefore(filterPanel, sentRowEl);
+    }
+
+    const fOk  = c => `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const fWarn= c => `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    const fX   = c => `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+    const filters = [
+      {
+        label: `HTF Bias (${getHTFInterval(_sigTf).toUpperCase()})`,
+        value: htfBias.bias,
+        detail: htfBias.reason,
+        ok: htfBias.bias === finalDirection || htfBias.bias === 'NEUTRAL',
+        warn: htfOverride,
+        col: htfBias.bias === 'LONG' ? '#10b981' : htfBias.bias === 'SHORT' ? '#ef4444' : '#64748b'
+      },
+      {
+        label: 'Market Regime (ADX)',
+        value: regime.strong ? 'TRENDING KUAT' : regime.trending ? 'TRENDING' : regime.ranging ? 'RANGING ⚠️' : 'TRANSISI',
+        detail: regime.reason,
+        ok: regime.trending || regime.strong,
+        warn: !regime.trending && !regime.strong,
+        col: regime.strong ? '#10b981' : regime.trending ? '#06b6d4' : regime.ranging ? '#ef4444' : '#f59e0b'
+      },
+      {
+        label: 'Sesi Trading',
+        value: session.sessionName,
+        detail: session.reason,
+        ok: session.active,
+        warn: session.inDeadZone,
+        col: session.inOverlap ? '#10b981' : session.active ? '#06b6d4' : '#64748b'
+      },
+      {
+        label: 'R:R Gate',
+        value: `1:${rrGate.rr}`,
+        detail: rrGate.reason,
+        ok: rrGate.valid,
+        warn: !rrGate.valid,
+        col: rrGate.valid ? '#10b981' : '#ef4444'
+      },
+      {
+        label: 'SL Berbasis Struktur',
+        value: finalSL ? `$${Math.round(finalSL).toLocaleString()}` : '—',
+        detail: finalSL && finalEntry ? `Jarak ${((Math.abs(finalEntry-finalSL)/finalEntry)*100).toFixed(2)}% dari entry` : 'Belum ada entry',
+        ok: !!finalSL,
+        warn: false,
+        col: '#a78bfa'
+      },
+      // Funding rate — hanya untuk crypto (skip XAU)
+      ...(_sigPair !== 'XAUUSD' ? [{
+        label: 'Funding Rate',
+        value: fundingVal,
+        detail: fundingData
+          ? (fundingData.rate > 0.1 ? 'Terlalu banyak long — risiko long squeeze'
+           : fundingData.rate < -0.05 ? 'Terlalu banyak short — potensi short squeeze'
+           : 'Funding rate wajar')
+          : 'Data tidak tersedia',
+        ok: fundingData ? Math.abs(fundingData.rate) < 0.08 : true,
+        warn: fundingData ? Math.abs(fundingData.rate) > 0.1 : false,
+        col: fundingColor
+      }] : []),
+      // BTC Dom untuk crypto, Risk Sentiment untuk XAU
+      {
+        label: btcDomCardLabel,
+        value: btcDomVal,
+        detail: _sigPair === 'XAUUSD'
+          ? 'Fear & Greed sebagai proxy risk sentiment — rendah = safe haven demand'
+          : btcDomData ? `BTC.D ${btcDomData.btcDom?.toFixed(1)}% — ${btcDomLbl}` : 'Data tidak tersedia',
+        ok: btcDomScore >= 0,
+        warn: btcDomScore < -0.5,
+        col: btcDomColor
+      }
+    ];
+
+    const passCount = filters.filter(f => f.ok).length;
+    const totalFilters = filters.length;
+    const filterScore  = Math.round(passCount / totalFilters * 100);
+    const filterColor  = filterScore >= 80 ? '#10b981' : filterScore >= 60 ? '#f59e0b' : '#ef4444';
+
+    filterPanel.innerHTML = `
+      <div style="background:linear-gradient(135deg,rgba(6,182,212,.07),rgba(16,185,129,.05));border:1px solid rgba(6,182,212,.2);border-radius:14px;padding:.85rem 1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span style="font-size:.62rem;font-weight:800;letter-spacing:.08em;color:#06b6d4;text-transform:uppercase">Quality Filters</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:.55rem;color:#64748b">${passCount}/${totalFilters} passed</span>
+            <span style="font-size:.72rem;font-weight:900;color:${filterColor}">${filterScore}%</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.35rem">
+          ${filters.map(f => {
+            const ic = f.warn ? fWarn('#ef4444') : f.ok ? fOk('#10b981') : fX('#94a3b8');
+            const bg = f.warn ? 'rgba(239,68,68,.04)' : f.ok ? 'rgba(16,185,129,.04)' : 'rgba(100,116,139,.04)';
+            const bd = f.warn ? 'rgba(239,68,68,.15)' : f.ok ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.12)';
+            return `<div style="display:flex;align-items:center;gap:.5rem;padding:.35rem .55rem;background:${bg};border:1px solid ${bd};border-radius:8px">
+              <span>${ic}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:.6rem;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:.35rem">
+                  ${f.label}
+                  <span style="font-size:.55rem;font-weight:800;color:${f.col};background:${f.col}18;padding:.05rem .3rem;border-radius:4px">${f.value}</span>
+                </div>
+                <div style="font-size:.54rem;color:#64748b;margin-top:.05rem">${f.detail}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        ${htfOverride || regimeOverride ? `
+        <div style="margin-top:.6rem;padding:.4rem .55rem;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;display:flex;align-items:center;gap:.4rem">
+          ${fWarn('#ef4444')}
+          <span style="font-size:.58rem;color:#ef4444;font-weight:700">${htfOverride ? 'Signal ditahan: berlawanan tren HTF yang kuat' : 'Signal ditahan: pasar ranging tanpa zona ICT'}</span>
+        </div>` : ''}
+      </div>`;
 
     // Sentiment row
     const sentRow = document.getElementById('sig-sentiment-row');
@@ -13459,6 +15347,23 @@ async function runSignalAnalysis() {
     document.getElementById('sig-vol-label').textContent = volLbl;
     document.getElementById('sig-vol-label').style.background = volColor+'28';
     document.getElementById('sig-vol-label').style.color = volColor;
+
+    // Funding rate UI
+    const fundingCard = document.getElementById('sig-funding-card');
+    if (fundingCard) fundingCard.style.display = (_sigPair === 'XAUUSD') ? 'none' : 'block';
+    document.getElementById('sig-funding-val').textContent   = fundingVal;
+    document.getElementById('sig-funding-label').textContent = fundingLbl;
+    document.getElementById('sig-funding-label').style.background = fundingColor+'22';
+    document.getElementById('sig-funding-label').style.color = fundingColor;
+
+    // BTC dominance / Risk sentiment UI
+    const btcDomCard = document.getElementById('sig-btcdom-card');
+    const btcDomTitle = btcDomCard?.querySelector('div:first-child');
+    if (btcDomTitle) btcDomTitle.textContent = btcDomCardLabel;
+    document.getElementById('sig-btcdom-val').textContent   = btcDomVal;
+    document.getElementById('sig-btcdom-label').textContent = btcDomLbl;
+    document.getElementById('sig-btcdom-label').style.background = btcDomColor+'22';
+    document.getElementById('sig-btcdom-label').style.color = btcDomColor;
 
     // Indicators grid
     document.getElementById('sig-ind-grid').innerHTML = signals.map(s=>`
@@ -13540,6 +15445,15 @@ async function runSignalAnalysis() {
           <div style="display:flex;flex-direction:column;gap:.25rem">
             ${candleConf.notes.map(n => renderNote(n)).join('')}
           </div>
+          ${!candleConf.confirmed && confEntry && finalDirection !== 'WAIT' ? `
+          <div style="margin-top:.5rem;padding:.4rem .55rem;background:rgba(167,139,250,.1);border:1px dashed rgba(167,139,250,.35);border-radius:8px">
+            <div style="font-size:.58rem;font-weight:800;color:#a78bfa;margin-bottom:.15rem">⏳ Limit Konfirmasi Otomatis</div>
+            <div style="font-size:.55rem;color:#94a3b8;line-height:1.5">${confEntry.reason}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.25rem">
+              <span style="font-size:.5rem;color:#64748b">Harga limit konfirmasi</span>
+              <span style="font-size:.65rem;font-weight:900;color:#a78bfa;font-family:'Space Mono',monospace">$${Math.round(confEntry.price).toLocaleString()}</span>
+            </div>
+          </div>` : ''}
         </div>`;
     };
 
@@ -13604,18 +15518,67 @@ async function runSignalAnalysis() {
     // Chart
     document.getElementById('sig-chart-badge').textContent = `${_sigPair} · ${_sigTf.toUpperCase()}`;
     document.getElementById('sig-chart-badge').style.color = '#10b981';
-    renderSigChart(_sigCandles, entry, sl, tp, direction);
+    renderSigChart(_sigCandles, finalEntry, finalSL, finalTP, finalDirection);
 
     // Tampilkan tombol entry jika ada signal jelas
     const entrySection = document.getElementById('sig-entry-section');
-    entrySection.style.display = direction!=='WAIT' ? 'block' : 'none';
-    if(direction!=='WAIT'){
+    const levSection = document.getElementById('sig-leverage-section');
+    // Tampilkan tombol entry:
+    // - Jika direction jelas (LONG/SHORT), selalu tampil
+    // - Jika WAIT tapi ICT punya plan entry (FVG/OB/limit zone), tetap tampil sebagai limit
+    const hasICTPlan = ict && ict.direction && (ict.entryType === 'limit' || ict.fvgZone);
+    const show = finalDirection !== 'WAIT' || hasICTPlan;
+
+    // Jika WAIT tapi ICT punya plan, gunakan ICT direction untuk tombol entry
+    let displayDirection = finalDirection;
+    if (finalDirection === 'WAIT' && hasICTPlan) {
+      displayDirection = ict.direction;
+      // Override entry data dari ICT
+      if (!finalEntry) { finalEntry = ict.entryPrice || current; }
+      if (!finalSL) { finalSL = ict.sl || (ict.direction === 'LONG' ? current * 0.97 : current * 1.03); }
+      if (!finalTP) { finalTP = ict.tp || (ict.direction === 'LONG' ? current * 1.06 : current * 0.94); }
+      finalEntryType = ict.entryType || 'limit';
+    }
+
+    entrySection.style.display = show ? 'block' : 'none';
+    if (levSection) levSection.style.display = show ? 'block' : 'none';
+    if (show) {
       const eb = document.getElementById('sig-entry-btn');
-      eb.style.background = direction==='LONG'
-        ?'linear-gradient(135deg,#10b981,#06b6d4)'
-        :'linear-gradient(135deg,#ef4444,#f97316)';
-      eb.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        Entry ${direction} — ${_sigPair}`;
+      const isLimit = finalEntryType === 'limit';
+      const isConfLimit = finalEntryType === 'confirmation_limit';
+      const isWaitWithPlan = finalDirection === 'WAIT' && hasICTPlan;
+
+      eb.style.background = isConfLimit
+        ? 'linear-gradient(135deg,#4c1d95,#7c3aed)'
+        : isLimit || isWaitWithPlan
+          ? 'linear-gradient(135deg,#92400e,#f59e0b)'
+          : displayDirection === 'LONG'
+            ? 'linear-gradient(135deg,#10b981,#06b6d4)'
+            : 'linear-gradient(135deg,#ef4444,#f97316)';
+      eb.style.boxShadow = isConfLimit
+        ? '0 4px 20px rgba(124,58,237,.4)'
+        : isLimit || isWaitWithPlan
+          ? '0 4px 20px rgba(245,158,11,.4)'
+          : displayDirection === 'LONG'
+            ? '0 4px 20px rgba(16,185,129,.4)'
+            : '0 4px 20px rgba(239,68,68,.4)';
+      const levLabel = _sigCurrentLeverage > 1 ? ` · ${_sigCurrentLeverage}x` : '';
+      if (isConfLimit) {
+        eb.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tunggu Konfirmasi ${displayDirection}${levLabel} @ $${Math.round(finalEntry).toLocaleString()}`;
+      } else if (isLimit || isWaitWithPlan) {
+        eb.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Set Limit ${displayDirection}${levLabel} @ $${Math.round(finalEntry).toLocaleString()}`;
+      } else {
+        eb.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Market ${displayDirection}${levLabel} — ${_sigPair}`;
+      }
+
+      // Simpan displayDirection ke signal untuk dipakai saat enter
+      if (_sigCurrentSignal) {
+        _sigCurrentSignal.displayDirection = displayDirection;
+        _sigCurrentSignal.direction = displayDirection !== 'WAIT' ? displayDirection : _sigCurrentSignal.direction;
+      }
     }
 
     // Update stats
@@ -13625,123 +15588,331 @@ async function runSignalAnalysis() {
     console.error('Signal error:', err);
     document.getElementById('sig-verdict-badge').className='sig-verdict wait';
     document.getElementById('sig-verdict-badge').textContent='⚠ Gagal memuat data';
+    // Tampilkan error detail di sig-chart-empty tanpa overwrite parent
+    const emptyEl = document.getElementById('sig-chart-empty');
+    if (emptyEl) emptyEl.innerHTML = `<div style="padding:.5rem 1rem;color:#ef4444;font-size:.65rem;font-family:monospace;text-align:center;word-break:break-all">ERROR: ${err.message}</div>`;
+    const badge = document.getElementById('sig-chart-badge');
+    if (badge) { badge.textContent = `${_sigPair} · ${_sigTf.toUpperCase()}`; badge.style.color = '#ef4444'; }
   }
 
   btn.disabled=false;
   btn.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> Refresh Signal`;
 }
 
-// ── ENTRY TRADE ──
-function enterTrade() {
-  if(!_sigCurrentSignal||_sigCurrentSignal.direction==='WAIT') return;
-  const sig = _sigCurrentSignal;
-  const pair = sig.pair;
+// ── PERSIST ACTIVE TRADES ──
+function saveActiveTrades() {
+  // Simpan tradeData saja (intervalId tidak bisa disimpan)
+  const toSave = {};
+  Object.entries(_sigActiveTrades).forEach(([pair, val]) => {
+    toSave[pair] = val.tradeData;
+  });
+  try { localStorage.setItem('sig_active_trades', JSON.stringify(toSave)); } catch(e) {}
+}
 
-  // Cek apakah pair ini sudah ada trade aktif
-  if(_sigActiveTrades[pair]) {
-    if(!confirm(`Sudah ada posisi aktif untuk ${pair}. Batalkan dan entry ulang?`)) return;
-    clearInterval(_sigActiveTrades[pair].intervalId);
-    delete _sigActiveTrades[pair];
-  }
+function restoreActiveTrades() {
+  try {
+    const raw = localStorage.getItem('sig_active_trades');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    Object.values(saved).forEach(tradeData => {
+      if (!tradeData || !tradeData.pair) return;
+      startTradePolling(tradeData); // restart polling
+    });
+    if (Object.keys(_sigActiveTrades).length > 0) {
+      renderActiveTrades();
+      updateEntryBtnState();
+    }
+  } catch(e) {}
+}
 
-  const tradeData = {...sig, entryTime: Date.now(), status:'active'};
+// ── CORE POLLING — dipisah agar bisa dipanggil ulang saat restore ──
+function startTradePolling(tradeData) {
+  const pair = tradeData.pair;
+  if (_sigActiveTrades[pair]?.intervalId) clearInterval(_sigActiveTrades[pair].intervalId);
   _sigActiveTrades[pair] = { tradeData };
 
-  // Re-render semua active trades
-  renderActiveTrades();
+  // Limit order expiry: 4 jam
+  const LIMIT_EXPIRY_MS = 4 * 60 * 60 * 1000;
 
-  // Polling harga setiap 5 detik untuk trade ini
   const intervalId = setInterval(async () => {
     try {
       const d = await fetchTicker24h(pair);
       const price = parseFloat(d?.lastPrice || d?.price || 0);
-
-      // Guard: skip jika harga tidak valid (0 atau NaN) — mencegah false SL/TP
       if (!price || price < 100) return;
 
-      // Update UI untuk pair ini
+      if (_sigActiveTrades[pair]) _sigActiveTrades[pair].lastPrice = price;
+      const td = _sigActiveTrades[pair]?.tradeData;
+      if (!td) return;
+
+      // ── STATUS: WAITING (limit order belum terisi) ──
+      if (td.status === 'waiting') {
+        const elapsed = Date.now() - td.entryTime;
+
+        // Cek apakah harga sudah menyentuh zona limit
+        const limitPrice = td.limitPrice || td.entry;
+        const tolerance  = Math.abs(limitPrice * 0.001); // toleransi 0.1%
+        const filled = td.direction === 'LONG'
+          ? price <= limitPrice + tolerance   // harga turun ke zona limit (retest FVG/OB dari atas)
+          : price >= limitPrice - tolerance;  // harga naik ke zona limit (retest FVG/OB dari bawah)
+
+        if (filled) {
+          // Limit terisi! Upgrade ke ACTIVE
+          td.status    = 'active';
+          td.filledAt  = Date.now();
+          td.actualEntry = price;
+          // Recalculate SL/TP dari actual fill
+          const slDist = Math.abs(td.entry - td.sl);
+          const tpDist = Math.abs(td.tp  - td.entry);
+          td.sl = td.direction === 'LONG' ? price - slDist : price + slDist;
+          td.tp = td.direction === 'LONG' ? price + tpDist : price - tpDist;
+          td.entry = price; // update entry ke actual fill price
+          saveActiveTrades();
+          renderActiveTrades();
+          toast(`✅ LIMIT TERISI! ${td.direction} ${pair} @ $${Math.round(price).toLocaleString()} — Posisi aktif`);
+          return;
+        }
+
+        // Cek expired
+        if (elapsed > LIMIT_EXPIRY_MS) {
+          clearInterval(_sigActiveTrades[pair]?.intervalId);
+          delete _sigActiveTrades[pair];
+          saveActiveTrades();
+          renderActiveTrades();
+          toast(`⏰ Limit order ${pair} EXPIRED — harga tidak mencapai zona entry`);
+
+          // Catat ke riwayat sebagai EXPIRED
+          const record = {
+            id: Date.now(), pair: td.pair, tf: td.tf,
+            direction: td.direction, entry: td.limitPrice || td.entry,
+            exit: price, sl: td.sl, tp: td.tp,
+            result: 'EXPIRED', pnlPct: '0.00',
+            duration: Math.round(elapsed / 60000), time: td.entryTime
+          };
+          _sigHistory.unshift(record);
+          if (_sigHistory.length > 50) _sigHistory.pop();
+          try { localStorage.setItem('sig_history', JSON.stringify(_sigHistory)); } catch(e) {}
+          renderSigStats();
+          return;
+        }
+
+        // Update card UI — tampilkan status waiting
+        const card = document.getElementById('sig-trade-card-' + pair);
+        if (card) {
+          const limitEl  = card.querySelector('.sig-tc-current');
+          const waitEl   = card.querySelector('.sig-tc-pnl');
+          const distPct  = (((price - (td.limitPrice || td.entry)) / (td.limitPrice || td.entry)) * 100);
+          // distSign positif berarti harga masih di atas limit (jauh dari fill), negatif berarti sudah di bawah
+          const distSign = td.direction === 'LONG' ? distPct : -distPct;
+          if (limitEl) limitEl.textContent = '$' + Math.round(price).toLocaleString();
+          if (waitEl) {
+            const absDist = Math.abs(distSign);
+            const closeOrFar = distSign > 0 ? 'jauh dari limit' : 'dekat limit ▼';
+            waitEl.textContent = `${distSign > 0 ? '+' : ''}${distSign.toFixed(2)}% (${closeOrFar})`;
+            waitEl.style.color = Math.abs(distSign) < 0.5 ? '#10b981' : '#f59e0b';
+          }
+          const barEl = card.querySelector('.sig-tc-bar');
+          // Progress bar: seberapa dekat harga ke limit zone
+          const maxDist = Math.abs((td.limitPrice || td.entry) * 0.05); // 5% = 0% proximity
+          const curDist = Math.abs(price - (td.limitPrice || td.entry));
+          const proximity = Math.max(0, Math.min(100, (1 - curDist / maxDist) * 100));
+          if (barEl) { barEl.style.width = proximity + '%'; barEl.style.background = `linear-gradient(90deg,#334155,${proximity > 80 ? '#10b981' : '#f59e0b'})`; }
+        }
+        return;
+      }
+
+      // ── STATUS: ACTIVE — polling biasa ──
+      const entryRef = td.actualEntry || td.entry;
+      const lev = td.leverage || 1;
+      const rawPnl = td.direction === 'LONG'
+        ? ((price - entryRef) / entryRef * 100)
+        : ((entryRef - price) / entryRef * 100);
+      const pnlPct = rawPnl * lev;
+
       const card = document.getElementById('sig-trade-card-' + pair);
-      if(card) {
-        const pnlPct = sig.direction==='LONG'
-          ?((price-sig.entry)/sig.entry*100)
-          :((sig.entry-price)/sig.entry*100);
-        const curEl = card.querySelector('.sig-tc-current');
-        const pnlEl = card.querySelector('.sig-tc-pnl');
-        const barEl = card.querySelector('.sig-tc-bar');
+      if (card) {
+        const curEl  = card.querySelector('.sig-tc-current');
+        const pnlEl  = card.querySelector('.sig-tc-pnl');
+        const barEl  = card.querySelector('.sig-tc-bar');
         const tpctEl = card.querySelector('.sig-tc-tpct');
-        if(curEl) curEl.textContent = '$'+Math.round(price).toLocaleString();
-        if(pnlEl) { pnlEl.textContent = (pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%'; pnlEl.style.color = pnlPct>=0?'#10b981':'#ef4444'; }
-        const slRange = sig.slPct, tpRange = sig.tpPct;
-        const totalRange = slRange + tpRange;
-        const posFromSL = pnlPct + slRange;
-        const barPct = Math.max(0, Math.min(100, (posFromSL/totalRange)*100));
-        if(barEl) barEl.style.width = barPct+'%';
-        if(tpctEl) tpctEl.textContent = pnlPct.toFixed(2)+'%';
+        if (curEl)  curEl.textContent  = '$' + Math.round(price).toLocaleString();
+        if (pnlEl)  { pnlEl.textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%' + (lev > 1 ? ` (${lev}x)` : ''); pnlEl.style.color = pnlPct >= 0 ? '#10b981' : '#ef4444'; }
+        const slRange = td.slPct * lev, tpRange = td.tpPct * lev;
+        const barPct  = Math.max(0, Math.min(100, ((pnlPct + slRange) / (slRange + tpRange)) * 100));
+        if (barEl)  { barEl.style.width = barPct + '%'; barEl.style.background = 'linear-gradient(90deg,#ef4444,#f59e0b,#10b981)'; }
+        if (tpctEl) tpctEl.textContent = pnlPct.toFixed(2) + '%';
       }
 
       // Cek SL/TP
       let result = null;
-      if(sig.direction==='LONG'){
-        if(price<=sig.sl) result='SL';
-        else if(price>=sig.tp) result='TP';
-      } else {
-        if(price>=sig.sl) result='SL';
-        else if(price<=sig.tp) result='TP';
-      }
+      if (td.direction === 'LONG')  { if (price <= td.sl) result = 'SL'; else if (price >= td.tp) result = 'TP'; }
+      else                          { if (price >= td.sl) result = 'SL'; else if (price <= td.tp) result = 'TP'; }
 
-      if(result){
+      if (result) {
         clearInterval(_sigActiveTrades[pair]?.intervalId);
         delete _sigActiveTrades[pair];
-        closeTrade(tradeData, price, result);
+        saveActiveTrades();
+        closeTrade({...td, entry: entryRef}, price, result);
         renderActiveTrades();
       }
-    } catch(e){}
+    } catch(e) {}
   }, 5000);
 
   _sigActiveTrades[pair].intervalId = intervalId;
+}
 
-  // Update button state untuk pair ini
+// ── ENTRY TRADE (ICT-aware: limit & market) ──
+function enterTrade() {
+  if (!_sigCurrentSignal) return;
+  // Tolak hanya jika benar-benar tidak ada arah (WAIT tanpa ICT plan)
+  const effectiveDir = _sigCurrentSignal.displayDirection || _sigCurrentSignal.direction;
+  if (effectiveDir === 'WAIT' || !effectiveDir) return;
+  // Pastikan direction terisi dengan nilai efektif
+  _sigCurrentSignal.direction = effectiveDir;
+  const sig = _sigCurrentSignal;
+  const pair = sig.pair;
+
+  if (_sigActiveTrades[pair]) {
+    if (!confirm(`Sudah ada posisi untuk ${pair}. Batalkan dan buat baru?`)) return;
+    clearInterval(_sigActiveTrades[pair].intervalId);
+    delete _sigActiveTrades[pair];
+  }
+
+  const isLimit = sig.entryType === 'limit'; // sudah dinormalisasi
+  const tradeData = {
+    ...sig,
+    entryTypeRaw: sig.entryTypeRaw || sig.entryType, // simpan tipe asli
+    entryTime: Date.now(),
+    status: isLimit ? 'waiting' : 'active',
+    filledAt: isLimit ? null : Date.now(),
+    actualEntry: isLimit ? null : sig.entry,
+    leverage: _sigCurrentLeverage
+  };
+
+  startTradePolling(tradeData);
+  saveActiveTrades();
+  renderActiveTrades();
   updateEntryBtnState();
 
-  toast(`✅ Entry ${sig.direction} ${sig.pair} @ $${Math.round(sig.entry).toLocaleString()} — Memantau harga...`);
+  const levLabel = _sigCurrentLeverage > 1 ? ` · ${_sigCurrentLeverage}x` : '';
+  if (isLimit) {
+    toast(`🟡 LIMIT ORDER ${sig.direction}${levLabel} ${pair} @ $${Math.round(sig.entry).toLocaleString()} — Menunggu harga retest zona...`);
+  } else {
+    toast(`✅ MARKET Entry ${sig.direction}${levLabel} ${pair} @ $${Math.round(sig.entry).toLocaleString()} — Memantau...`);
+  }
 }
 
 function renderActiveTrades() {
   const container = document.getElementById('sig-active-trade');
-  if(!container) return;
+  if (!container) return;
   const trades = Object.values(_sigActiveTrades);
-  if(trades.length === 0) {
-    container.style.display = 'none';
-    container.innerHTML = '';
-    return;
-  }
+  if (trades.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
   container.style.display = 'block';
-  container.innerHTML = trades.map(({tradeData: t}) => {
-    const col = t.direction==='LONG'?'#10b981':'#ef4444';
-    const colBg = t.direction==='LONG'?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)';
-    return `<div id="sig-trade-card-${t.pair}" style="margin-bottom:.6rem;padding:.7rem .8rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-        <div style="display:flex;align-items:center;gap:.4rem">
-          <div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;animation:fmb-blink 1s ease infinite"></div>
-          <div style="font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f59e0b">${t.pair}</div>
+
+  const waitCount   = trades.filter(t => t.tradeData?.status === 'waiting').length;
+  const activeCount = trades.filter(t => t.tradeData?.status === 'active').length;
+  const hdrLabel    = activeCount > 0 && waitCount > 0 ? `Aktif (${activeCount}) · Menunggu (${waitCount})`
+                    : activeCount > 0 ? `Posisi Aktif (${activeCount})`
+                    : `Menunggu Entry (${waitCount})`;
+  const hdrColor    = activeCount > 0 ? '#10b981' : '#f59e0b';
+
+  const cards = trades.map(({ tradeData: t }) => {
+    const isWaiting = t.status === 'waiting';
+    const col   = t.direction === 'LONG' ? '#10b981' : '#ef4444';
+    const colBg = t.direction === 'LONG' ? 'rgba(16,185,129,.18)' : 'rgba(239,68,68,.18)';
+    const lev   = t.leverage || 1;
+    const levBadge = lev > 1 ? `<span style="font-size:.58rem;font-weight:800;padding:.1rem .35rem;border-radius:6px;background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)">${lev}x</span>` : '';
+    const fmt = v => '$' + Math.round(v).toLocaleString();
+
+    const dotColor  = isWaiting ? '#f59e0b' : '#10b981';
+    const cardBorder = isWaiting ? 'rgba(245,158,11,.25)' : 'rgba(16,185,129,.2)';
+    const cardBg     = isWaiting ? 'rgba(245,158,11,.04)' : 'rgba(16,185,129,.04)';
+
+    const statusBadge = isWaiting
+      ? `<span style="font-size:.55rem;font-weight:800;padding:.1rem .4rem;border-radius:6px;background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)">⏳ MENUNGGU</span>`
+      : `<span style="font-size:.55rem;font-weight:800;padding:.1rem .4rem;border-radius:6px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)">● AKTIF</span>`;
+
+    const entryLabel = isWaiting ? 'Limit' : 'Entry';
+    const entryVal   = isWaiting ? (t.limitPrice || t.entry) : (t.actualEntry || t.entry);
+    const col3Label  = isWaiting ? 'Jarak' : `PnL${lev > 1 ? ' (' + lev + 'x)' : ''}`;
+
+    // SL/TP display
+    const slPct = t.slPct ? `-${(t.slPct).toFixed(2)}%` : '—';
+    const tpPct = t.tpPct ? `+${(t.tpPct).toFixed(2)}%` : '—';
+
+    return `
+      <div id="sig-trade-card-${t.pair}" style="margin-bottom:.7rem;padding:.75rem .85rem;background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;transition:border-color .3s">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem">
+          <div style="display:flex;align-items:center;gap:.45rem">
+            <div style="width:7px;height:7px;border-radius:50%;background:${dotColor};animation:fmb-blink 1.2s ease infinite"></div>
+            <span style="font-size:.65rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${dotColor}">${t.pair}</span>
+            <span style="font-size:.62rem;font-weight:800;padding:.1rem .38rem;border-radius:6px;background:${colBg};color:${col}">${t.direction}</span>
+            ${levBadge}
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            ${statusBadge}
+            ${!isWaiting ? `<button onclick="openFuturesShareModal('${t.pair}')" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);border-radius:6px;padding:.1rem .35rem;font-size:.56rem;color:#00e5ff;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">Share</button>` : ''}
+            <button onclick="manualCloseTrade('${t.pair}')" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:.1rem .35rem;font-size:.56rem;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">${isWaiting ? 'Batal' : 'Tutup'}</button>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:.4rem">
-          <div style="font-size:.62rem;font-weight:800;padding:.12rem .45rem;border-radius:6px;background:${colBg};color:${col}">${t.direction}</div>
-          <button onclick="manualCloseTrade('${t.pair}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:.1rem .4rem;font-size:.58rem;color:#f87171;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700">Tutup</button>
+
+        ${isWaiting ? `
+        <div style="background:rgba(${t.entryTypeRaw==='confirmation_limit'?'167,139,250':'245,158,11'},.08);border:1px solid rgba(${t.entryTypeRaw==='confirmation_limit'?'167,139,250':'245,158,11'},.15);border-radius:8px;padding:.4rem .6rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${t.entryTypeRaw==='confirmation_limit'?'#a78bfa':'#f59e0b'}" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span style="font-size:.58rem;color:${t.entryTypeRaw==='confirmation_limit'?'#a78bfa':'#f59e0b'}">
+            ${t.entryTypeRaw==='confirmation_limit'
+              ? `Menunggu konfirmasi candle close di <strong>${fmt(t.limitPrice || t.entry)}</strong>`
+              : `Menunggu harga retest <strong>${fmt(t.limitPrice || t.entry)}</strong>`}
+            ${t.limitZoneText ? ` · ${t.limitZoneText}` : ''}
+          </span>
+        </div>` : ''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;text-align:center;margin-bottom:.5rem">
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:.4rem">
+            <div style="font-size:.45rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.12rem">${entryLabel}</div>
+            <div style="font-size:.7rem;font-weight:800;font-family:'Space Mono',monospace;color:#f59e0b">${fmt(entryVal)}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:.4rem">
+            <div style="font-size:.45rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.12rem">${isWaiting ? 'Harga Kini' : 'Harga Kini'}</div>
+            <div class="sig-tc-current" style="font-size:.7rem;font-weight:800;font-family:'Space Mono',monospace;color:#f1f5f9">—</div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:.4rem">
+            <div style="font-size:.45rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.12rem">${col3Label}</div>
+            <div class="sig-tc-pnl" style="font-size:.7rem;font-weight:800;font-family:'Space Mono',monospace;color:#94a3b8">—</div>
+          </div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;text-align:center">
-        <div><div style="font-size:.48rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.15rem">Entry</div><div style="font-size:.72rem;font-weight:800;font-family:'Space Mono',monospace;color:#f59e0b">$${Math.round(t.entry).toLocaleString()}</div></div>
-        <div><div style="font-size:.48rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.15rem">Kini</div><div class="sig-tc-current" style="font-size:.72rem;font-weight:800;font-family:'Space Mono',monospace;color:#f1f5f9">—</div></div>
-        <div><div style="font-size:.48rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.15rem">PnL</div><div class="sig-tc-pnl" style="font-size:.72rem;font-weight:800;font-family:'Space Mono',monospace">—</div></div>
-      </div>
-      <div style="margin-top:.5rem"><div style="height:3px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden"><div class="sig-tc-bar" style="height:100%;width:50%;border-radius:99px;transition:width .5s ease;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:.48rem;color:#64748b;margin-top:.2rem"><span>SL</span><span class="sig-tc-tpct">0%</span><span>TP</span></div></div>
-    </div>`;
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.45rem">
+          <div style="background:rgba(239,68,68,.06);border-radius:8px;padding:.35rem .5rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.5rem;color:#ef4444;font-weight:700">SL</span>
+            <span style="font-size:.62rem;font-weight:800;font-family:'Space Mono',monospace;color:#ef4444">${fmt(t.sl)}</span>
+            <span style="font-size:.5rem;color:#64748b">${slPct}</span>
+          </div>
+          <div style="background:rgba(16,185,129,.06);border-radius:8px;padding:.35rem .5rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.5rem;color:#10b981;font-weight:700">TP</span>
+            <span style="font-size:.62rem;font-weight:800;font-family:'Space Mono',monospace;color:#10b981">${fmt(t.tp)}</span>
+            <span style="font-size:.5rem;color:#64748b">${tpPct}</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="height:4px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden">
+            <div class="sig-tc-bar" style="height:100%;width:${isWaiting ? '5' : '50'}%;border-radius:99px;transition:width .5s ease;background:${isWaiting ? 'linear-gradient(90deg,#334155,#f59e0b)' : 'linear-gradient(90deg,#ef4444,#f59e0b,#10b981)'}"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.46rem;color:#64748b;margin-top:.2rem">
+            <span>SL</span>
+            <span class="sig-tc-tpct">${isWaiting ? 'Menunggu fill...' : '0%'}</span>
+            <span>TP</span>
+          </div>
+        </div>
+      </div>`;
   }).join('');
-  // Header
-  const hdr = `<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.6rem"><div style="width:7px;height:7px;border-radius:50%;background:#f59e0b;animation:fmb-blink 1s ease infinite"></div><div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f59e0b">Posisi Aktif (${trades.length})</div></div>`;
-  container.innerHTML = hdr + container.innerHTML;
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.65rem">
+      <div style="width:7px;height:7px;border-radius:50%;background:${hdrColor};animation:fmb-blink 1s ease infinite"></div>
+      <div style="font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${hdrColor}">${hdrLabel}</div>
+    </div>
+    ${cards}`;
 }
 
 function manualCloseTrade(pair) {
@@ -13749,6 +15920,7 @@ function manualCloseTrade(pair) {
   clearInterval(_sigActiveTrades[pair].intervalId);
   const t = _sigActiveTrades[pair].tradeData;
   delete _sigActiveTrades[pair];
+  saveActiveTrades(); // update localStorage setelah manual close
   // Fetch current price and close
   fetchTicker24h(pair)
     .then(d=>{
@@ -13777,11 +15949,14 @@ function updateEntryBtnState() {
 }
 
 function closeTrade(tradeData, closePrice, result) {
-  const pnlPct = tradeData.direction==='LONG'
+  const lev = tradeData.leverage || 1;
+  const rawPnl = tradeData.direction==='LONG'
     ?((closePrice-tradeData.entry)/tradeData.entry*100)
     :((tradeData.entry-closePrice)/tradeData.entry*100);
+  const pnlPct = rawPnl * lev;
 
   // Simpan ke riwayat
+  const tradeStartTime = tradeData.filledAt || tradeData.entryTime;
   const record = {
     id: Date.now(),
     pair: tradeData.pair,
@@ -13793,8 +15968,9 @@ function closeTrade(tradeData, closePrice, result) {
     tp: tradeData.tp,
     result: result,
     pnlPct: pnlPct.toFixed(2),
-    duration: Math.round((Date.now()-tradeData.entryTime)/60000),
-    time: tradeData.entryTime
+    duration: Math.round((Date.now()-tradeStartTime)/60000),
+    time: tradeData.entryTime,
+    entryType: tradeData.entryType || 'market'
   };
   _sigHistory.unshift(record);
   if(_sigHistory.length > 50) _sigHistory.pop(); // max 50 riwayat
@@ -13831,17 +16007,19 @@ function renderSigStats() {
   const total = h.length;
   const tpHit = h.filter(x=>x.result==='TP').length;
   const slHit = h.filter(x=>x.result==='SL').length;
-  const wr = total>0?(tpHit/total*100):0;
+  const expired = h.filter(x=>x.result==='EXPIRED').length;
+  const closed = tpHit + slHit; // hanya trade yang ditutup (exclude EXPIRED & MANUAL) untuk win rate
+  const wr = closed>0?(tpHit/closed*100):0;
 
   document.getElementById('sig-stat-total').textContent = total;
   document.getElementById('sig-stat-tp').textContent    = tpHit;
   document.getElementById('sig-stat-sl').textContent    = slHit;
-  document.getElementById('sig-stat-wr').textContent    = total>0?wr.toFixed(1)+'%':'—%';
+  document.getElementById('sig-stat-wr').textContent    = closed>0?wr.toFixed(1)+'%':'—%';
   document.getElementById('sig-wr-bar').style.width     = wr+'%';
   document.getElementById('sig-stats-total').textContent= total+' trade';
   document.getElementById('sig-wr-label').textContent   = total===0
     ?'Belum ada data riwayat'
-    :`${tpHit} TP hit · ${slHit} SL hit · Win Rate ${wr.toFixed(1)}%`;
+    :`${tpHit} TP · ${slHit} SL${expired>0?' · '+expired+' Expired':''} · Win Rate ${closed>0?wr.toFixed(1)+'%':'—'}`;
   document.getElementById('sig-wr-bar').style.background =
     wr>=60?'linear-gradient(90deg,#10b981,#34d399)':
     wr>=45?'linear-gradient(90deg,#f59e0b,#10b981)':
@@ -13850,39 +16028,40 @@ function renderSigStats() {
 
 function renderSigHistory() {
   const list = document.getElementById('sig-history-list');
-  if(_sigHistory.length===0){
-    list.innerHTML='<div style="text-align:center;padding:1.2rem;color:#64748b;font-size:.75rem">Belum ada riwayat. Tekan Entry Posisi untuk mulai tracking.</div>';
+  if (_sigHistory.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:1.2rem;color:#64748b;font-size:.75rem">Belum ada riwayat. Tekan Entry untuk mulai tracking.</div>';
     return;
   }
-  list.innerHTML = _sigHistory.slice(0,20).map(r => {
-    const isTP = r.result==='TP';
+  list.innerHTML = _sigHistory.slice(0, 20).map(r => {
+    const isTP      = r.result === 'TP';
+    const isExpired = r.result === 'EXPIRED';
+    const isManual  = r.result === 'MANUAL';
     const pnl = parseFloat(r.pnlPct);
     const d = new Date(r.time);
     const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    const icon    = isTP ? '🎯' : isExpired ? '⏰' : isManual ? '✋' : '🛑';
+    const bgColor = isTP ? 'rgba(16,185,129,.06)' : isExpired ? 'rgba(100,116,139,.06)' : isManual ? 'rgba(139,92,246,.06)' : 'rgba(239,68,68,.06)';
+    const bdColor = isTP ? 'rgba(16,185,129,.15)' : isExpired ? 'rgba(100,116,139,.15)' : isManual ? 'rgba(139,92,246,.15)' : 'rgba(239,68,68,.12)';
+    const resColor = isTP ? '#10b981' : isExpired ? '#64748b' : isManual ? '#a78bfa' : '#ef4444';
+    const entryTypeLabel = r.entryType === 'limit' ? ' · LIMIT' : '';
     return `<div style="display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;
-      background:${isTP?'rgba(16,185,129,.06)':'rgba(239,68,68,.06)'};
-      border:1px solid ${isTP?'rgba(16,185,129,.15)':'rgba(239,68,68,.12)'};
-      border-radius:12px;margin-bottom:.4rem">
-      <div style="width:28px;height:28px;border-radius:8px;flex-shrink:0;
-        background:${isTP?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'};
-        display:flex;align-items:center;justify-content:center;font-size:.9rem">
-        ${isTP?'🎯':'🛑'}
-      </div>
+      background:${bgColor};border:1px solid ${bdColor};border-radius:12px;margin-bottom:.4rem">
+      <div style="width:30px;height:30px;border-radius:8px;flex-shrink:0;background:${bgColor};
+        display:flex;align-items:center;justify-content:center;font-size:.9rem">${icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.15rem">
+        <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.15rem;flex-wrap:wrap">
           <span style="font-size:.7rem;font-weight:800;color:#f1f5f9">${r.pair.replace('USDT','')}</span>
-          <span style="font-size:.55rem;font-weight:700;padding:.05rem .35rem;border-radius:4px;
+          <span style="font-size:.52rem;font-weight:700;padding:.04rem .3rem;border-radius:4px;
             background:${r.direction==='LONG'?'rgba(16,185,129,.2)':'rgba(239,68,68,.2)'};
             color:${r.direction==='LONG'?'#10b981':'#ef4444'}">${r.direction}</span>
-          <span style="font-size:.55rem;color:#475569">${r.tf?.toUpperCase()||'—'}</span>
+          <span style="font-size:.52rem;color:#475569">${r.tf?.toUpperCase()||'—'}${entryTypeLabel}</span>
         </div>
-        <div style="font-size:.6rem;color:#64748b">${dateStr} · ${r.duration||0}m</div>
+        <div style="font-size:.58rem;color:#64748b">${dateStr} · ${r.duration || 0}m</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-size:.78rem;font-weight:800;font-family:'Space Mono',monospace;
-          color:${pnl>=0?'#10b981':'#ef4444'}">${pnl>=0?'+':''}${r.pnlPct}%</div>
-        <div style="font-size:.58rem;font-weight:700;
-          color:${isTP?'#10b981':'#ef4444'}">${r.result}</div>
+          color:${isExpired?'#64748b':pnl>=0?'#10b981':'#ef4444'}">${isExpired?'—':((pnl>=0?'+':'')+r.pnlPct+'%')}</div>
+        <div style="font-size:.58rem;font-weight:700;color:${resColor}">${r.result}</div>
       </div>
     </div>`;
   }).join('');
@@ -13893,75 +16072,112 @@ function renderSigChart(candles, entry, sl, tp, direction) {
   const empty = document.getElementById('sig-chart-empty');
   if(empty) empty.style.display='none';
   const canvas = document.getElementById('sig-canvas');
-  const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio||1;
   const W = canvas.offsetWidth; const H = 240;
-  canvas.width=W*dpr; canvas.height=H*dpr; ctx.scale(dpr,dpr);
+  canvas.width=W*dpr; canvas.height=H*dpr;
 
   const display = candles.slice(-60);
   const prices  = display.flatMap(c=>[c.h,c.l]);
-  prices.push(sl,tp,entry);
-  const minP=Math.min(...prices)*.9998, maxP=Math.max(...prices)*1.0002;
-  const range=maxP-minP;
+  if(entry) prices.push(entry);
+  if(sl) prices.push(sl);
+  if(tp) prices.push(tp);
+  const minP=Math.min(...prices.filter(p=>p&&!isNaN(p)))*.9998;
+  const maxP=Math.max(...prices.filter(p=>p&&!isNaN(p)))*1.0002;
+  const range=maxP-minP||1;
   const pad={t:20,b:28,l:4,r:62};
   const cW=(W-pad.l-pad.r)/display.length, cPad=cW*.15;
   const toY=p=>pad.t+((maxP-p)/range)*(H-pad.t-pad.b);
 
-  ctx.clearRect(0,0,W,H);
+  // Clone canvas to remove old event listeners
+  const nc = canvas.cloneNode(false);
+  nc.id='sig-canvas'; nc.style.cssText=canvas.style.cssText;
+  nc.width=W*dpr; nc.height=H*dpr;
+  canvas.parentNode.replaceChild(nc, canvas);
+  const c2 = nc.getContext('2d');
+  c2.scale(dpr,dpr);
 
-  // Grid
-  for(let i=0;i<=5;i++){
-    const y=pad.t+(i/5)*(H-pad.t-pad.b);
-    const p=maxP-(i/5)*range;
-    ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
-    ctx.fillStyle='rgba(100,116,139,.55)'; ctx.font='8px Inter'; ctx.textAlign='left';
-    ctx.fillText('$'+Math.round(p).toLocaleString(), W-pad.r+3, y+3);
+  function draw2(crossIdx) {
+    c2.clearRect(0,0,W,H);
+    // Grid
+    for(let i=0;i<=5;i++){
+      const y=pad.t+(i/5)*(H-pad.t-pad.b), p=maxP-(i/5)*range;
+      c2.strokeStyle='rgba(255,255,255,0.04)'; c2.lineWidth=1;
+      c2.beginPath(); c2.moveTo(pad.l,y); c2.lineTo(W-pad.r,y); c2.stroke();
+      c2.fillStyle='rgba(100,116,139,.55)'; c2.font='8px Inter'; c2.textAlign='left';
+      c2.fillText('$'+Math.round(p).toLocaleString(),W-pad.r+3,y+3);
+    }
+    // Zone shading & lines
+    if(entry&&sl&&tp){
+      const tpY=toY(tp),slY=toY(sl),entryY=toY(entry);
+      const zTop=direction==='LONG'?tpY:entryY, zBot=direction==='LONG'?entryY:slY;
+      const grad=c2.createLinearGradient(0,zTop,0,zBot);
+      if(direction==='LONG'){grad.addColorStop(0,'rgba(16,185,129,.14)');grad.addColorStop(1,'rgba(16,185,129,.02)');}
+      else{grad.addColorStop(0,'rgba(239,68,68,.02)');grad.addColorStop(1,'rgba(239,68,68,.14)');}
+      c2.fillStyle=grad; c2.fillRect(pad.l,zTop,W-pad.l-pad.r,zBot-zTop);
+      const dL=(y,col,dash,lbl)=>{c2.strokeStyle=col;c2.lineWidth=1.5;c2.setLineDash(dash);c2.beginPath();c2.moveTo(pad.l,y);c2.lineTo(W-pad.r,y);c2.stroke();c2.fillStyle=col;c2.font='bold 8px Inter';c2.textAlign='left';c2.fillText(lbl,W-pad.r+3,y+3);c2.setLineDash([]);};
+      dL(toY(sl),'rgba(239,68,68,.8)',[4,3],'SL');
+      dL(toY(tp),'rgba(16,185,129,.8)',[4,3],'TP');
+      dL(toY(entry),'rgba(245,158,11,.95)',[6,2],'ENTRY');
+    }
+    // Candles
+    display.forEach((c,i)=>{
+      const x=pad.l+i*cW+cPad/2, bW=cW-cPad;
+      const oY=toY(c.o), cY=toY(c.c), hY=toY(c.h), lY=toY(c.l), bull=c.c>=c.o;
+      if(i===crossIdx){c2.fillStyle='rgba(255,255,255,.06)';c2.fillRect(x-cPad/2,pad.t,bW+cPad,H-pad.t-pad.b);}
+      c2.strokeStyle=bull?'#10b981':'#ef4444'; c2.fillStyle=bull?'rgba(16,185,129,.82)':'rgba(239,68,68,.82)'; c2.lineWidth=1;
+      c2.beginPath(); c2.moveTo(x+bW/2,hY); c2.lineTo(x+bW/2,lY); c2.stroke();
+      const bt=Math.min(oY,cY), bh=Math.max(1,Math.abs(cY-oY));
+      c2.fillRect(x,bt,bW,bh); c2.strokeRect(x,bt,bW,bh);
+    });
+    // Time labels
+    c2.fillStyle='rgba(100,116,139,.45)'; c2.font='7px Inter'; c2.textAlign='center';
+    [0,Math.floor(display.length*.25),Math.floor(display.length*.5),Math.floor(display.length*.75),display.length-1].forEach(i=>{
+      if(display[i]){const d=new Date(display[i].t);c2.fillText(`${d.getDate()}/${d.getMonth()+1}`,pad.l+i*cW+cW/2,H-6);}
+    });
+    // Crosshair
+    if(crossIdx>=0 && display[crossIdx]){
+      const cv=display[crossIdx], cx=pad.l+crossIdx*cW+cW/2, cy=toY(cv.c), bull=cv.c>=cv.o;
+      c2.strokeStyle='rgba(255,255,255,.22)'; c2.lineWidth=1; c2.setLineDash([3,3]);
+      c2.beginPath(); c2.moveTo(cx,pad.t); c2.lineTo(cx,H-pad.b); c2.stroke();
+      c2.beginPath(); c2.moveTo(pad.l,cy); c2.lineTo(W-pad.r,cy); c2.stroke();
+      c2.setLineDash([]);
+      // Price badge
+      const lblY=Math.max(pad.t+8,Math.min(H-pad.b-4,cy));
+      c2.fillStyle=bull?'#059669':'#dc2626';
+      c2.beginPath();
+      if(c2.roundRect){c2.roundRect(W-pad.r+1,lblY-8,pad.r-2,14,3);}else{c2.rect(W-pad.r+1,lblY-8,pad.r-2,14);}
+      c2.fill();
+      c2.fillStyle='#fff'; c2.font='bold 7.5px Inter'; c2.textAlign='left';
+      c2.fillText('$'+Math.round(cv.c).toLocaleString(),W-pad.r+3,lblY+3);
+      // OHLC tooltip
+      const d=new Date(cv.t);
+      const ds=`${d.getDate()}/${d.getMonth()+1} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const pct=((cv.c-cv.o)/cv.o*100);
+      const lines=[ds,`O  $${Math.round(cv.o).toLocaleString()}`,`H  $${Math.round(cv.h).toLocaleString()}`,`L  $${Math.round(cv.l).toLocaleString()}`,`C  $${Math.round(cv.c).toLocaleString()}`,`${pct>=0?'+':''}${pct.toFixed(2)}%`];
+      const bxW=92, lnH=12, bxH=lines.length*lnH+10;
+      let bxX=cx+10; if(bxX+bxW>W-pad.r-2) bxX=cx-bxW-10;
+      const bxY=Math.max(pad.t,Math.min(H-pad.b-bxH,cy-bxH/2));
+      c2.fillStyle='rgba(10,18,35,.93)'; c2.strokeStyle=bull?'rgba(16,185,129,.45)':'rgba(239,68,68,.45)'; c2.lineWidth=1;
+      c2.beginPath();
+      if(c2.roundRect){c2.roundRect(bxX,bxY,bxW,bxH,6);}else{c2.rect(bxX,bxY,bxW,bxH);}
+      c2.fill(); c2.stroke();
+      lines.forEach((ln,i)=>{
+        c2.fillStyle=i===0?'#64748b':i===5?(pct>=0?'#10b981':'#ef4444'):i===1?'#94a3b8':'#e2e8f0';
+        c2.font=(i===0?'7':'bold 8')+'px Inter'; c2.textAlign='left';
+        c2.fillText(ln,bxX+6,bxY+8+i*lnH+7);
+      });
+    }
   }
 
-  // Zone shading
-  const tpY=toY(tp), slY=toY(sl), entryY=toY(entry);
-  const zoneTop=direction==='LONG'?tpY:entryY;
-  const zoneBot=direction==='LONG'?entryY:slY;
-  const grad=ctx.createLinearGradient(0,zoneTop,0,zoneBot);
-  if(direction==='LONG'){grad.addColorStop(0,'rgba(16,185,129,.14)');grad.addColorStop(1,'rgba(16,185,129,.02)');}
-  else{grad.addColorStop(0,'rgba(239,68,68,.02)');grad.addColorStop(1,'rgba(239,68,68,.14)');}
-  ctx.fillStyle=grad;
-  ctx.fillRect(pad.l,zoneTop,W-pad.l-pad.r,zoneBot-zoneTop);
+  draw2(-1);
 
-  // Lines
-  const drawLine=(y,color,dash,label)=>{
-    ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.setLineDash(dash);
-    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
-    ctx.fillStyle=color; ctx.font='bold 8px Inter'; ctx.textAlign='left';
-    ctx.fillText(label, W-pad.r+3, y+3);
-    ctx.setLineDash([]);
-  };
-  drawLine(slY,'rgba(239,68,68,.8)',[4,3],'SL');
-  drawLine(tpY,'rgba(16,185,129,.8)',[4,3],'TP');
-  drawLine(entryY,'rgba(245,158,11,.95)',[6,2],'ENTRY');
-
-  // Candles
-  display.forEach((c,i)=>{
-    const x=pad.l+i*cW+cPad/2, bW=cW-cPad;
-    const oY=toY(c.o), cY=toY(c.c), hY=toY(c.h), lY=toY(c.l);
-    const bull=c.c>=c.o;
-    ctx.strokeStyle=bull?'#10b981':'#ef4444';
-    ctx.fillStyle=bull?'rgba(16,185,129,.82)':'rgba(239,68,68,.82)';
-    ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(x+bW/2,hY); ctx.lineTo(x+bW/2,lY); ctx.stroke();
-    const bt=Math.min(oY,cY), bh=Math.max(1,Math.abs(cY-oY));
-    ctx.fillRect(x,bt,bW,bh); ctx.strokeRect(x,bt,bW,bh);
-  });
-
-  // Time labels
-  ctx.fillStyle='rgba(100,116,139,.45)'; ctx.font='7px Inter'; ctx.textAlign='center';
-  [0,Math.floor(display.length*.25),Math.floor(display.length*.5),Math.floor(display.length*.75),display.length-1].forEach(i=>{
-    if(display[i]){
-      const d=new Date(display[i].t);
-      ctx.fillText(`${d.getDate()}/${d.getMonth()+1}`, pad.l+i*cW+cW/2, H-6);
-    }
-  });
+  function getIdx(xPx){return Math.max(0,Math.min(display.length-1,Math.floor((xPx-pad.l)/cW)));}
+  function onMove(xPx){xPx<pad.l||xPx>W-pad.r ? draw2(-1) : draw2(getIdx(xPx));}
+  nc.addEventListener('mousemove',e=>{const r=nc.getBoundingClientRect();onMove((e.clientX-r.left)*(W/r.width));});
+  nc.addEventListener('mouseleave',()=>draw2(-1));
+  nc.addEventListener('touchstart',e=>{e.preventDefault();const r=nc.getBoundingClientRect();onMove((e.touches[0].clientX-r.left)*(W/r.width));},{passive:false});
+  nc.addEventListener('touchmove',e=>{e.preventDefault();const r=nc.getBoundingClientRect();onMove((e.touches[0].clientX-r.left)*(W/r.width));},{passive:false});
+  nc.addEventListener('touchend',()=>draw2(-1));
 }
 
 // Init: load history on page show
@@ -14779,6 +16995,33 @@ function triggerPWAInstall() {
     </button>
 
     <div style="text-align:center;margin-top:.75rem;font-size:.65rem;color:rgba(100,116,139,.45);letter-spacing:.05em;position:relative;z-index:1">1080 × 1350 px · JPEG · Siap diposting</div>
+  </div>
+</div>
+<!-- FUTURES SIGNAL SHARE MODAL -->
+<div id="modal-futures-share" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);align-items:center;justify-content:center;padding:1rem">
+  <div id="modal-futures-share-inner" style="background:linear-gradient(145deg,rgba(15,20,35,.97),rgba(8,12,25,.99));border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:1.5rem 1.3rem 1.2rem;width:100%;max-width:360px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08)">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <div>
+        <div style="font-size:.95rem;font-weight:800;color:#f1f5f9;letter-spacing:.05em">POSISI FUTURES</div>
+        <div style="font-size:.68rem;color:rgba(148,163,184,.5);margin-top:3px;letter-spacing:.05em">z-wealth.vercel.app</div>
+      </div>
+      <button onclick="closeFuturesShareModal()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(148,163,184,.8);cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Canvas preview -->
+    <div style="border-radius:14px;overflow:hidden;margin-bottom:1rem;box-shadow:0 8px 32px rgba(0,0,0,.6)">
+      <canvas id="futures-share-canvas" style="display:block;width:100%;height:auto"></canvas>
+    </div>
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.2),rgba(124,58,237,.15),transparent);margin-bottom:1rem"></div>
+    <!-- Download button -->
+    <button onclick="downloadFuturesCard()" style="width:100%;padding:.85rem;border-radius:14px;border:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-size:.82rem;font-weight:800;font-family:'Inter',sans-serif;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      SIMPAN SEBAGAI JPG
+    </button>
+    <div style="text-align:center;margin-top:.6rem;font-size:.62rem;color:rgba(100,116,139,.4);letter-spacing:.05em">1080 × 1350 px · JPEG · Siap diposting</div>
   </div>
 </div>
 <!-- MEDIA LIGHTBOX -->
