@@ -24,6 +24,10 @@
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
 
+<!-- Firebase SDK untuk Push Notification -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
 <!-- Icons -->
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -2741,8 +2745,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
       Install App
     </button>
     <div class="acct-badge" onclick="showAcct()" title="Info Akun">
-      <div class="acct-dot"></div>
-      <span id="nav-acct" style="font-family:'Space Mono',monospace;font-size:.72rem;overflow:hidden;text-overflow:ellipsis">—</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span id="nav-acct" style="font-size:.72rem;overflow:hidden;text-overflow:ellipsis">Akun</span>
     </div>
     <div class="btc-badge">
       <div class="live-dot"></div>
@@ -3427,6 +3431,40 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 
 
+
+  <!-- ══ DONATION CARD ══ -->
+  <a href="https://saweria.co/zwealth" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block;margin-bottom:1.2rem">
+    <button class="feat-btn" style="
+      background:linear-gradient(145deg,rgba(139,40,140,.65) 0%,rgba(168,85,247,.45) 55%,rgba(236,72,153,.35) 100%);
+      box-shadow:0 10px 40px rgba(168,85,247,.35),inset 0 1px 0 rgba(255,255,255,.2);
+      display:flex;align-items:center;gap:.85rem;
+      padding:.85rem 1rem;border-radius:18px;
+      text-align:left;width:100%;
+    " onclick="window.open('https://saweria.co/zwealth','_blank')">
+      <div class="fb-blob" style="background:#a855f7"></div>
+      <!-- icon -->
+      <div style="flex-shrink:0;position:relative;z-index:3;width:38px;height:38px;border-radius:12px;
+        background:linear-gradient(135deg,rgba(236,72,153,.7),rgba(168,85,247,.7));
+        border:1px solid rgba(255,255,255,.25);
+        display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <!-- teks -->
+      <div style="flex:1;min-width:0;position:relative;z-index:3">
+        <div class="fb-label" style="font-size:.85rem" data-i18n="feat.donate">Dukung Developer untuk Pengembangan App ini</div>
+        <div style="font-size:.65rem;color:rgba(255,255,255,.65);margin-top:.18rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" data-i18n="feat.donate_sub">
+          Dukung lewat Saweria · saweria.co/zwealth
+        </div>
+      </div>
+      <!-- arrow -->
+      <div style="position:relative;z-index:3;display:flex;align-items:center;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </button>
+  </a>
+  <!-- ══ /DONATION CARD ══ -->
 
   <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
     <div id="coming-soon-box" onclick="event.stopPropagation()" style="background:rgba(15,20,35,.92);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:2rem 1.8rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1);position:relative;overflow:hidden">
@@ -7347,7 +7385,7 @@ async function enterApp(seed,data){
   }catch(e){}
   const btcAddrsSave = walletState.btcAddresses.map(x=>({address:x.address}));
   localStorage.setItem('wo_cache',JSON.stringify({seed,data:{dca:S.dca,port:S.port,cf:S.cf,btcAddrs:btcAddrsSave}}));
-  document.getElementById('nav-acct').textContent=seed.join(' · ');
+  // nav-acct shows "Akun" label (not seed phrase for privacy)
   const mob=document.getElementById('nav-acct-mob');if(mob)mob.textContent=seed.join(' · ');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -7721,56 +7759,148 @@ function getRawVal(id){
 }
 
 /* ══════════ LIVE BTC ══════════ */
-async function fetchBTC(){
-  // Race CoinGecko vs Binance ticker — ambil yang paling cepat
-  const cgFetch = fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr&include_24hr_change=true', {signal:AbortSignal.timeout(5000)})
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => ({
-      usd: d.bitcoin.usd, idr: d.bitcoin.idr,
-      change: d.bitcoin.usd_24h_change,
-      usdIdr: Math.round(d.bitcoin.idr / d.bitcoin.usd),
-      src: 'cg'
-    }));
+// ══════════════════════════════════════════════════
+// REALTIME BTC PRICE ENGINE — WebSocket + REST fallback
+// Priority: Binance WS → Bybit WS → REST polling
+// ══════════════════════════════════════════════════
+let _btcWS = null;
+let _btcWSBybit = null;
+let _btcWSRetries = 0;
+let _btcLastWSMsg = 0;
+let _btcWatchdog = null;
+let _btcRestFallbackInterval = null;
 
-  // Bybit allow CORS (*) dari browser — Binance blokir CORS langsung
-  const bnFetch = fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', {signal:AbortSignal.timeout(4000)})
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => {
-      const t = d.result?.list?.[0];
-      if (!t) return Promise.reject();
-      const usd = parseFloat(t.lastPrice);
-      const idrRate = S.usdIdr || 16300;
-      return { usd, idr: usd * idrRate, change: parseFloat(t.price24hPcnt) * 100, usdIdr: idrRate, src: 'bn' };
-    });
-
-  try {
-    const result = await Promise.any([cgFetch, bnFetch]);
-    S.btcPrice = result.usd;
-    S.btcPriceIDR = result.idr;
-    S.btcChange = result.change;
-    // Hanya update usdIdr dari CoinGecko (lebih akurat)
-    if (result.src === 'cg') S.usdIdr = result.usdIdr;
-    updateBTCDisplay();
-    updateChartsInPlace();
-  } catch(e) {
-    if(!S.btcPrice){ S.btcPrice=95000; S.btcPriceIDR=95000*16300; S.btcChange=0; S.usdIdr=16300; }
-    updateBTCDisplay();
-  }
+function _applyBTCPrice(usd, change, usdIdr) {
+  if (!usd || usd <= 0) return;
+  S.btcPrice = usd;
+  S.btcPriceIDR = usd * (usdIdr || S.usdIdr || 16300);
+  if (change !== undefined && change !== null) S.btcChange = change;
+  if (usdIdr && usdIdr > 10000 && usdIdr < 25000) S.usdIdr = usdIdr;
+  _btcLastWSMsg = Date.now();
+  updateBTCDisplay();
+  updateChartsInPlace();
   updateBTCLiveDisplay();
   updateDCABTCDisplay();
+  refreshDashStats();
 }
+
+async function _fetchUSDIDRRate() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,idr&include_24hr_change=true', {signal: AbortSignal.timeout(8000)});
+    if (!r.ok) return;
+    const d = await r.json();
+    const usd = d.bitcoin.usd;
+    const idr = d.bitcoin.idr;
+    const change = d.bitcoin.usd_24h_change;
+    const rate = Math.round(idr / usd);
+    if (rate > 10000 && rate < 25000) S.usdIdr = rate;
+    if (change !== undefined) S.btcChange = change;
+    const wsAlive = (_btcWS && _btcWS.readyState === WebSocket.OPEN) ||
+                    (_btcWSBybit && _btcWSBybit.readyState === WebSocket.OPEN);
+    if (!wsAlive) _applyBTCPrice(usd, change, rate);
+    else { updateBTCDisplay(); refreshDashStats(); }
+  } catch(e) {}
+}
+
+function _startBinanceWS() {
+  try {
+    if (_btcWS) { try { _btcWS.close(); } catch(e){} }
+    _btcWS = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@miniTicker');
+    _btcWS.onopen = () => {
+      _btcWSRetries = 0;
+      if (_btcRestFallbackInterval) { clearInterval(_btcRestFallbackInterval); _btcRestFallbackInterval = null; }
+    };
+    _btcWS.onmessage = (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        const usd = parseFloat(d.c);
+        const open24h = parseFloat(d.o);
+        const change24h = open24h > 0 ? ((usd - open24h) / open24h * 100) : (S.btcChange || 0);
+        _applyBTCPrice(usd, change24h, null);
+      } catch(e) {}
+    };
+    _btcWS.onerror = () => {};
+    _btcWS.onclose = () => {
+      _btcWS = null;
+      const delay = Math.min(2000 * Math.pow(1.5, _btcWSRetries), 30000);
+      _btcWSRetries++;
+      setTimeout(() => {
+        if (_btcWSRetries <= 2) _startBinanceWS();
+        else _startBybitWS();
+      }, delay);
+    };
+  } catch(e) { _startBybitWS(); }
+}
+
+function _startBybitWS() {
+  try {
+    if (_btcWSBybit) { try { _btcWSBybit.close(); } catch(e){} }
+    _btcWSBybit = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+    _btcWSBybit.onopen = () => {
+      _btcWSBybit.send(JSON.stringify({ op: 'subscribe', args: ['tickers.BTCUSDT'] }));
+      _btcWSRetries = 0;
+      if (_btcRestFallbackInterval) { clearInterval(_btcRestFallbackInterval); _btcRestFallbackInterval = null; }
+    };
+    _btcWSBybit.onmessage = (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        if (d.topic === 'tickers.BTCUSDT' && d.data) {
+          const usd = parseFloat(d.data.lastPrice);
+          const change24h = parseFloat(d.data.price24hPcnt) * 100;
+          if (usd > 0) _applyBTCPrice(usd, isNaN(change24h) ? S.btcChange : change24h, null);
+        }
+      } catch(e) {}
+    };
+    _btcWSBybit.onerror = () => {};
+    _btcWSBybit.onclose = () => { _btcWSBybit = null; _startRESTFallback(); };
+  } catch(e) { _startRESTFallback(); }
+}
+
+function _startRESTFallback() {
+  if (_btcRestFallbackInterval) return;
+  async function _poll() {
+    try {
+      const r = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', {signal: AbortSignal.timeout(4000)});
+      if (!r.ok) return;
+      const d = await r.json();
+      const t = d.result?.list?.[0];
+      if (!t) return;
+      _applyBTCPrice(parseFloat(t.lastPrice), parseFloat(t.price24hPcnt)*100, null);
+    } catch(e) {}
+  }
+  _poll();
+  _btcRestFallbackInterval = setInterval(_poll, 5000);
+}
+
+function _startWSWatchdog() {
+  if (_btcWatchdog) clearInterval(_btcWatchdog);
+  _btcWatchdog = setInterval(() => {
+    const stale = Date.now() - _btcLastWSMsg > 12000;
+    const wsAlive = (_btcWS && _btcWS.readyState === WebSocket.OPEN) ||
+                    (_btcWSBybit && _btcWSBybit.readyState === WebSocket.OPEN);
+    if (stale && !wsAlive) { _btcWSRetries = 0; _startBinanceWS(); }
+  }, 10000);
+}
+
+async function fetchBTC() {
+  _startBinanceWS();
+  _startWSWatchdog();
+  await _fetchUSDIDRRate();
+}
+
 function updateBTCDisplay(){
   const p=S.btcPrice,ch=S.btcChange||0;
+  if(!p) return;
   const cs=(ch>=0?'+':'')+ch.toFixed(2)+'%';
   const cc=ch>=0?'var(--accent3)':'var(--danger)';
   const safe=(id,fn)=>{const el=document.getElementById(id);if(el)fn(el)};
-  safe('nav-btc',e=>e.textContent='$'+p.toLocaleString());
+  safe('nav-btc',e=>e.textContent='$'+p.toLocaleString('en-US',{maximumFractionDigits:1}));
   safe('nav-chg',e=>{e.textContent=cs;e.style.color=cc});
-  safe('nav-btc-mob',e=>e.textContent=' $'+p.toLocaleString());
+  safe('nav-btc-mob',e=>e.textContent=' $'+p.toLocaleString('en-US',{maximumFractionDigits:1}));
   safe('nav-chg-mob',e=>{e.textContent=' '+cs;e.style.color=cc});
-  safe('d-btc',e=>e.textContent='$'+p.toLocaleString());
+  safe('d-btc',e=>e.textContent='$'+p.toLocaleString('en-US',{maximumFractionDigits:1}));
   safe('d-btc-chg',e=>{e.textContent=cs;e.style.color=cc});
-  safe('s-live',e=>e.textContent='$'+p.toLocaleString());
+  safe('s-live',e=>e.textContent='$'+p.toLocaleString('en-US',{maximumFractionDigits:1}));
 }
 
 /* ══════════ CHART DATA — Kraken OHLC (CORS terbuka penuh) ══════════ */
@@ -10638,7 +10768,7 @@ async function confirmChangeSeed(){
     // 7. Update tampilan di nav topstrip
     const navAcct = document.getElementById('nav-acct');
     const navAcctMob = document.getElementById('nav-acct-mob');
-    if(navAcct) navAcct.textContent = curSeed.join(' · ');
+    // nav-acct stays as "Akun" label (seed not shown in desktop header for privacy)
     if(navAcctMob) navAcctMob.textContent = curSeed.join(' · ');
     // 8. Update modal akun
     const seedRow = document.getElementById('acct-seed-row');
@@ -11248,7 +11378,8 @@ function initApp(){
   // Clear existing intervals before setting new ones (prevents leak on re-login)
   if(_fetchBTCInterval) clearInterval(_fetchBTCInterval);
   if(_chartRefreshInterval) clearInterval(_chartRefreshInterval);
-  _fetchBTCInterval=setInterval(fetchBTC,60000);
+  // WS sudah handle realtime — refresh rate IDR + 24h change setiap 5 menit
+  _fetchBTCInterval=setInterval(_fetchUSDIDRRate, 5*60*1000);
   _chartRefreshInterval=setInterval(()=>{
     // Invalidate cache before auto-refresh so kita dapat data fresh
     delete _btcChartCache[curTF];
@@ -11261,6 +11392,13 @@ function initApp(){
     const firstActive=document.querySelector('.bnav-item.active');
     animateNavIndicator(firstActive);
   });
+  // Init FCM jika notif sudah diizinkan sebelumnya
+  if (Notification.permission === 'granted') {
+    ZW_FCM.init().then(() => {
+      const savedToken = localStorage.getItem('zw_fcm_token');
+      if (!savedToken) ZW_FCM.getToken().catch(()=>{});
+    });
+  }
   // Restore posisi futures aktif dari localStorage (persist setelah refresh)
   setTimeout(() => restoreActiveTrades(), 500);
 }
@@ -14237,7 +14375,7 @@ function checkPriceAlerts(currentPrice) {
       a.triggered = true; changed = true;
       const msg = `BTC ${a.type==='above'?'naik di atas':'turun di bawah'} $${a.price.toLocaleString()}! Harga sekarang: $${currentPrice.toLocaleString()}`;
       toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> ' + msg, 3);
-      sendBrowserNotif('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Price Alert BTC!', msg);
+      sendBrowserNotif('⚡ Price Alert BTC!', msg, 'price-alert', '/');
     }
   });
   if (changed) { saveAlerts(alerts); renderAlertsList(); }
@@ -14372,7 +14510,7 @@ function scheduleReminderNotif(r) {
     const target = new Date(r.specificDatetime);
     const msUntil = target - now;
     if (msUntil > 0 && msUntil < 7*24*60*60*1000) {
-      setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg), msUntil);
+      setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg, 'reminder-dca', '/'), msUntil);
     }
     return;
   }
@@ -14384,14 +14522,110 @@ function scheduleReminderNotif(r) {
   if (next <= now) next.setDate(next.getDate() + 1);
   const msUntil = next - now;
   if (msUntil < 24*60*60*1000) {
-    setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg), msUntil);
+    setTimeout(() => sendBrowserNotif('⏰ Waktunya DCA!', msg, 'reminder-dca', '/'), msUntil);
   }
 }
 
-function sendBrowserNotif(title, body) {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') {
-    try { new Notification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png' }); } catch(e) {}
+// ══════════════════════════════════════════════════════
+// FCM PUSH NOTIFICATION ENGINE — z-wealth
+// ══════════════════════════════════════════════════════
+const ZW_FCM = (() => {
+  const VAPID_KEY = 'BMlqViC-ebjJhQuTXIzM3HU2YYK1W4WOrAkuIQTcT3IJh2IAJW8QWXBCdQiE68QUPmYxFJnQMreNZnaUnpl01Dg';
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBUQINFDWLkr2M1eDnAJdXXw5RiQYvP-QA",
+    authDomain: "z-wealth.firebaseapp.com",
+    projectId: "z-wealth",
+    storageBucket: "z-wealth.firebasestorage.app",
+    messagingSenderId: "638430159788",
+    appId: "1:638430159788:web:e787c228dfadf3ca995009"
+  };
+
+  let _messaging = null;
+  let _fcmToken = null;
+  let _initialized = false;
+
+  async function init() {
+    if (_initialized) return;
+    if (typeof firebase === 'undefined') return;
+    try {
+      // Cek apakah sudah ada Firebase app
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      _messaging = firebase.messaging();
+      _initialized = true;
+
+      // Handle notif saat app TERBUKA (foreground)
+      _messaging.onMessage(payload => {
+        const { title, body, tag } = payload.notification || {};
+        // Tampilkan via SW agar muncul di status bar
+        sendSWNotif(title || 'z-wealth', body || '', tag || 'zw-fg');
+        // Juga tampilkan toast di dalam app
+        toast(`🔔 ${title || 'z-wealth'}: ${body || ''}`);
+      });
+    } catch(e) {
+      console.warn('[FCM] Init error:', e);
+    }
+  }
+
+  async function getToken() {
+    if (!_messaging) await init();
+    if (!_messaging) return null;
+    try {
+      // Daftarkan SW firebase-messaging-sw.js
+      const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+      const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
+      _fcmToken = token;
+      // Simpan token ke localStorage agar bisa dipakai kirim notif
+      if (token) localStorage.setItem('zw_fcm_token', token);
+      return token;
+    } catch(e) {
+      console.warn('[FCM] getToken error:', e);
+      return null;
+    }
+  }
+
+  // Kirim notif via Vercel API (agar muncul meski app ditutup)
+  async function sendPush(title, body, tag, url) {
+    const token = _fcmToken || localStorage.getItem('zw_fcm_token');
+    if (!token) return;
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, title, body, tag: tag || 'zwealth', url: url || '/' })
+      });
+    } catch(e) {
+      // Fallback ke SW langsung jika API tidak tersedia
+      sendSWNotif(title, body, tag);
+    }
+  }
+
+  // Kirim notif via Service Worker (muncul meski app background, tapi bukan push server)
+  function sendSWNotif(title, body, tag) {
+    const msg = { type: 'SHOW_NOTIF', title, body, icon: '/icon-192.png', tag: tag || 'zw-' + Date.now() };
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage(msg);
+    } else if (window._swReg?.active) {
+      window._swReg.active.postMessage(msg);
+    } else if (Notification.permission === 'granted') {
+      // Last resort: browser Notification API
+      try { new Notification(title, { body, icon: '/icon-192.png' }); } catch(e) {}
+    }
+  }
+
+  return { init, getToken, sendPush, sendSWNotif };
+})();
+
+// Kirim notif — otomatis pakai FCM push jika token ada, fallback SW
+function sendBrowserNotif(title, body, tag, url) {
+  // Strip SVG dari title jika ada
+  const cleanTitle = title.replace(/<[^>]+>/g, '').trim();
+  const token = localStorage.getItem('zw_fcm_token');
+  if (token) {
+    // Pakai FCM push — muncul meski app ditutup
+    ZW_FCM.sendPush(cleanTitle, body, tag, url);
+  } else {
+    // Fallback SW notif
+    ZW_FCM.sendSWNotif(cleanTitle, body, tag);
   }
 }
 
@@ -14421,9 +14655,22 @@ async function requestNotifPermission() {
   }
   const perm = await Notification.requestPermission();
   if (perm === 'granted') {
-    toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Notifikasi diaktifkan!');
-    document.getElementById('notif-perm-card').style.display = 'none';
-    sendBrowserNotif('\u2705 Notifikasi Aktif!', 'Kamu akan mendapat alert harga dan pengingat DCA dari z-wealth');
+    const card = document.getElementById('notif-perm-card');
+    if (card) card.style.display = 'none';
+    // Daftarkan FCM token agar bisa dapat push meski app ditutup
+    toast('⏳ Mendaftarkan push notification...');
+    try {
+      const token = await ZW_FCM.getToken();
+      if (token) {
+        toast('✅ Push notification aktif! Kamu akan dapat notif meski app ditutup.');
+        ZW_FCM.sendSWNotif('✅ z-wealth Siap!', 'Push notification aktif. Harga alert, chat, dan berita akan masuk ke HP kamu.');
+      } else {
+        toast('✅ Notifikasi diaktifkan (mode terbatas - buka app)');
+        ZW_FCM.sendSWNotif('✅ Notifikasi Aktif!', 'Kamu akan mendapat alert saat app terbuka.');
+      }
+    } catch(e) {
+      toast('✅ Notifikasi diaktifkan!');
+    }
   } else {
     toast('<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Notifikasi tidak diizinkan', 2);
   }
@@ -15573,24 +15820,26 @@ function calcFibExtension(candles, direction, sweepLevel) {
   const swingHigh = Math.max(...last20.map(c => c.h));
   const swingLow  = Math.min(...last20.map(c => c.l));
   const range = swingHigh - swingLow;
+  if (range <= 0) return null;
+
+  const current = candles[candles.length - 1].c;
 
   if (direction === 'LONG') {
-    // Extension dari swing low (sweep) ke swing high, extended ke atas
-    const base = sweepLevel || swingLow;
-    return {
-      tp1: base + range * 0.618,  // 61.8% extension
-      tp2: base + range * 1.0,    // 100% extension
-      tp3: base + range * 1.272,  // 127.2% extension
-      range, swingHigh, swingLow
-    };
+    const base = Math.min(sweepLevel || swingLow, current);
+    const tp1raw = base + range * 0.618;
+    const tp2raw = base + range * 1.0;
+    const tp3raw = base + range * 1.272;
+    const finalTp1 = tp1raw > current ? tp1raw : current + range * 0.382;
+    const finalTp2 = tp2raw > finalTp1 ? tp2raw : finalTp1 + range * 0.2;
+    return { tp1: finalTp1, tp2: finalTp2, tp3: tp3raw, range, swingHigh, swingLow };
   } else {
-    const base = sweepLevel || swingHigh;
-    return {
-      tp1: base - range * 0.618,
-      tp2: base - range * 1.0,
-      tp3: base - range * 1.272,
-      range, swingHigh, swingLow
-    };
+    const base = Math.max(sweepLevel || swingHigh, current);
+    const tp1raw = base - range * 0.618;
+    const tp2raw = base - range * 1.0;
+    const tp3raw = base - range * 1.272;
+    const finalTp1 = tp1raw < current ? tp1raw : current - range * 0.382;
+    const finalTp2 = tp2raw < finalTp1 ? tp2raw : finalTp1 - range * 0.2;
+    return { tp1: finalTp1, tp2: finalTp2, tp3: tp3raw, range, swingHigh, swingLow };
   }
 }
 
@@ -15866,6 +16115,16 @@ function runICTAnalysis(candles, atr) {
     entryType = 'market';
     entryPrice = current;
     reasons.push({ label: 'Entry Adjusted', detail: wrongSide ? 'Zona tidak valid (harga sudah melewati), market entry' : `Zona terlalu jauh (${distFromCurrent.toFixed(1)}%), market entry`, type: 'neut', weight: 'LOW' });
+  }
+
+  // Sanity check ICT: pastikan SL & TP di sisi yang benar sebelum return
+  const _epFinal = entryPrice || current;
+  if (direction === 'LONG') {
+    if (!sl || sl >= _epFinal) sl = _epFinal - atrVal * 2;
+    if (!tp1 || tp1 <= _epFinal) tp1 = _epFinal + atrVal * 3;
+  } else if (direction === 'SHORT') {
+    if (!sl || sl <= _epFinal) sl = _epFinal + atrVal * 2;
+    if (!tp1 || tp1 >= _epFinal) tp1 = _epFinal - atrVal * 3;
   }
 
   // R:R ratio
@@ -16308,6 +16567,18 @@ async function runSignalAnalysis() {
           : finalEntry - neededReward;
         rrGate = calcRRGate(finalEntry, finalSL, finalTP, 1.5);
         rrRatio = rrGate.rr.toFixed(2);
+      }
+    }
+
+    // ── SANITY CHECK FINAL: pastikan SL & TP di sisi yang benar dari entry ──
+    if (finalDirection !== 'WAIT' && finalEntry) {
+      const _atrFix = atr || current * 0.005;
+      if (finalDirection === 'LONG') {
+        if (!finalSL || finalSL >= finalEntry) finalSL = finalEntry - _atrFix * 2;
+        if (!finalTP || finalTP <= finalEntry) finalTP = finalEntry + _atrFix * 3;
+      } else if (finalDirection === 'SHORT') {
+        if (!finalSL || finalSL <= finalEntry) finalSL = finalEntry + _atrFix * 2;
+        if (!finalTP || finalTP >= finalEntry) finalTP = finalEntry - _atrFix * 3;
       }
     }
 
@@ -18711,11 +18982,9 @@ const ChatNotif = (() => {
       if (chatPage && chatPage.classList.contains('active')) return;
     }
     try {
-      // Gunakan SW notification (lebih reliable di Android)
-      if (window.showSWNotification) {
-        window.showSWNotification(title, body, 'chat-' + roomId);
-        return;
-      }
+      // Pakai FCM push (muncul meski app ditutup)
+      sendBrowserNotif(title, body, 'chat-' + roomId, '/');
+      return;
       // Fallback: new Notification() langsung
       const n = new Notification(title, {
         body,
@@ -24116,6 +24385,8 @@ var T = {
   'feat.in_dev':   { id: 'Dalam pengembangan',             en: 'Under development' },
   'feat.btc_edu':  { id: 'Apa itu Bitcoin? & Tesis Investasi', en: 'What is Bitcoin? & Investment Thesis' },
   'feat.btc_edu_sub': { id: 'Panduan lengkap · Proyeksi 2045 · Whitepaper Satoshi', en: 'Complete guide · 2045 Projection · Satoshi Whitepaper' },
+  'feat.donate':     { id: 'Dukung Developer untuk Pengembangan App ini', en: 'Support Developer for App Development' },
+  'feat.donate_sub': { id: 'Dukung lewat Saweria · saweria.co/zwealth', en: 'Support via Saweria · saweria.co/zwealth' },
   'dash.fitur_tambahan': { id: 'Fitur Tambahan & Segera Hadir', en: 'Extra Features & Coming Soon' },
 
   'dash.title':         { id: 'Command Center',    en: 'Command Center' },
@@ -26084,6 +26355,30 @@ input[type=range] {
 .bnav-item.anim-ai .ap-b .dot-pop:nth-child(3) { animation: dot-pop .3s .52s cubic-bezier(.34,1.8,.64,1) forwards !important; }
 .bnav-item.anim-ai .ap-b .dot-pop:nth-child(4) { animation: dot-pop .3s .62s cubic-bezier(.34,1.8,.64,1) forwards !important; }
 
+/* ══ DEACTIVATION ANIMATIONS — animasi keluar saat icon aktif ditinggalkan ══ */
+@keyframes deact-out {
+  0%   { opacity:1; transform: scale(1) rotate(0deg); }
+  30%  { opacity:1; transform: scale(1.08) rotate(-4deg); }
+  65%  { opacity:0.3; transform: scale(0.72) rotate(6deg); filter:blur(1px); }
+  100% { opacity:0; transform: scale(0.45) rotate(-8deg); filter:blur(3px); }
+}
+@keyframes deact-in-ghost {
+  0%   { opacity:0; transform: scale(0.45) rotate(8deg); }
+  60%  { opacity:0.85; transform: scale(1.06) rotate(-2deg); }
+  100% { opacity:1; transform: scale(1) rotate(0deg); }
+}
+.bnav-item.deact-home .hp-b  { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-home .hp-a  { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
+.bnav-item.deact-dca .dp-b   { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-dca .dp-a   { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
+.bnav-item.deact-porto .pp-b { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-porto .pp-a { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
+.bnav-item.deact-sim .sim-line-b { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-sim .sim-line-a { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
+.bnav-item.deact-kas .kp-b   { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-kas .kp-a   { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
+.bnav-item.deact-ai .ap-b    { animation: deact-out .28s cubic-bezier(.4,0,1,1) forwards !important; }
+.bnav-item.deact-ai .ap-a    { opacity:0; animation: deact-in-ghost .3s .22s cubic-bezier(.34,1.3,.64,1) forwards !important; }
 /* Glow pulse untuk ikon aktif */
 .bnav-item.active.glow-pulse .bnav-icon {
   animation: glowPulse 1.5s ease infinite !important;
@@ -26163,6 +26458,14 @@ input[type=range] {
     'cashflow':   'anim-kas',
     'ai-chat':    'anim-ai'
   };
+  var DEACT = {
+    'dashboard':  'deact-home',
+    'dca':        'deact-dca',
+    'portfolio':  'deact-porto',
+    'simulation': 'deact-sim',
+    'cashflow':   'deact-kas',
+    'ai-chat':    'deact-ai'
+  };
   var DURATION = {
     'dashboard':  880,
     'dca':        820,
@@ -26181,7 +26484,8 @@ input[type=range] {
     'ai-chat':    ['.ap-a',       '.ap-b']
   };
 
-  var ALL_ANIM = Object.values(ANIM);
+  var ALL_ANIM  = Object.values(ANIM);
+  var ALL_DEACT = Object.values(DEACT);
 
   function resetPhantom(btn, page) {
     var pair = PAIRS[page];
@@ -26199,16 +26503,13 @@ input[type=range] {
       elB.style.opacity = '0';
       elB.style.transform = '';
       elB.style.filter = '';
-      // Reset stroke-dashoffset langsung di elB (untuk sim-line-b dan elemen lain)
       var daB = elB.getAttribute('stroke-dasharray') || elB.style.strokeDasharray;
       if (daB) elB.style.strokeDashoffset = daB;
-      // Reset semua draw-me children: stroke-dashoffset kembali ke nilai asli
       elB.querySelectorAll('.draw-me').forEach(function(el) {
         el.style.animation = 'none';
         var da = el.getAttribute('stroke-dasharray') || el.style.strokeDasharray;
         if (da) el.style.strokeDashoffset = da;
       });
-      // Reset dot-pop
       elB.querySelectorAll('.dot-pop').forEach(function(el) {
         el.style.animation = 'none';
         el.style.transform = 'scale(0)';
@@ -26226,7 +26527,7 @@ input[type=range] {
     if (elB) {
       elB.style.opacity = '1';
       elB.style.transform = 'scale(1) rotate(0deg)';
-      elB.style.strokeDashoffset = '0'; // reset sim-line-b
+      elB.style.strokeDashoffset = '0';
       elB.querySelectorAll('.draw-me').forEach(function(el) {
         el.style.strokeDashoffset = '0';
       });
@@ -26237,9 +26538,27 @@ input[type=range] {
     }
   }
 
+  // Animasikan icon yang sedang aktif keluar sebelum di-reset
+  function deactivateWithAnim(btn, page) {
+    var deactClass = DEACT[page];
+    if (!deactClass) { resetPhantom(btn, page); return; }
+
+    // Hapus glow-pulse dulu
+    btn.classList.remove('glow-pulse');
+    // Trigger deactivation animation
+    btn.classList.add(deactClass);
+
+    // Setelah animasi selesai (~520ms), reset ke bentuk semula
+    setTimeout(function() {
+      btn.classList.remove(deactClass);
+      resetPhantom(btn, page);
+    }, 520);
+  }
+
   function clearAllAnims() {
     document.querySelectorAll('.bnav-item').forEach(function(b){
       ALL_ANIM.forEach(function(c){ b.classList.remove(c); });
+      ALL_DEACT.forEach(function(c){ b.classList.remove(c); });
       b.classList.remove('glow-pulse');
     });
   }
@@ -26261,10 +26580,27 @@ input[type=range] {
         if (!animClass) return;
         var self = this;
 
-        clearAllAnims();
+        // Hapus semua anim class
+        ALL_ANIM.forEach(function(c){ 
+          document.querySelectorAll('.bnav-item').forEach(function(b){ b.classList.remove(c); });
+        });
 
+        // Animasikan icon lama (yang sebelumnya active) keluar dengan smooth
         document.querySelectorAll('.bnav-item').forEach(function(b){
-          if (b !== self) resetPhantom(b, b.dataset.page);
+          if (b !== self) {
+            var bPage = b.dataset.page;
+            // Cek apakah ini button yang sebelumnya setDone (punya hp-b visible)
+            var pair = PAIRS[bPage];
+            if (pair) {
+              var elB = b.querySelector(pair[1]);
+              // Jika elB opacity=1, artinya ini yang sebelumnya active → deactivate dengan animasi
+              if (elB && (elB.style.opacity === '1' || b.classList.contains('active'))) {
+                deactivateWithAnim(b, bPage);
+              } else {
+                resetPhantom(b, bPage);
+              }
+            }
+          }
         });
 
         resetPhantom(self, page);
