@@ -1,8 +1,7 @@
-// ═══════════════════════════════════════════════════════
+// ================================================================
 // firebase-messaging-sw.js — z-wealth Push Notification SW
-// File ini HARUS ada di root project (sama level dengan index.html)
-// ═══════════════════════════════════════════════════════
-
+// WAJIB di root project (sama level dengan index.html)
+// ================================================================
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
@@ -17,59 +16,47 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// ── Handle notif saat app di BACKGROUND / DITUTUP ──
+// Handle push saat app DITUTUP / BACKGROUND
 messaging.onBackgroundMessage(payload => {
-  const { title, body, icon, tag, data } = payload.notification || {};
-  const notifOptions = {
-    body: body || 'Ada update dari z-wealth',
-    icon: icon || '/icon-192.png',
+  const n = payload.notification || {};
+  const data = payload.data || {};
+  self.registration.showNotification(n.title || 'z-wealth', {
+    body: n.body || '',
+    icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: tag || data?.tag || 'zwealth-' + Date.now(),
+    tag: data.tag || ('zw-' + Date.now()),
     renotify: true,
-    vibrate: [200, 100, 200, 100, 200],
-    data: data || {},
-    actions: [
-      { action: 'open', title: '🔍 Lihat' },
-      { action: 'dismiss', title: 'Tutup' }
-    ]
-  };
-  self.registration.showNotification(title || 'z-wealth', notifOptions);
+    vibrate: [200, 100, 200],
+    data: { url: data.url || '/' }
+  });
 });
 
-// ── Handle klik notif ──
+// Handle SHOW_NOTIF dari halaman (in-app trigger via postMessage)
+self.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'SHOW_NOTIF') return;
+  const d = e.data;
+  self.registration.showNotification(d.title || 'z-wealth', {
+    body: d.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: d.tag || ('zw-' + Date.now()),
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: d.url || '/' }
+  });
+});
+
+// Klik notif -> buka app
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  if (e.action === 'dismiss') return;
-
-  const urlToOpen = e.notification.data?.url || '/';
+  const url = e.notification.data?.url || '/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      // Cek apakah ada tab z-wealth yang sudah terbuka
       const existing = list.find(c => c.url.includes(self.location.origin));
-      if (existing) {
-        existing.focus();
-        existing.postMessage({ type: 'NOTIF_CLICK', tag: e.notification.tag, url: urlToOpen });
-      } else {
-        clients.openWindow(urlToOpen);
-      }
+      if (existing) { existing.focus(); return; }
+      clients.openWindow(url);
     })
   );
-});
-
-// ── Handle SHOW_NOTIF dari halaman (in-app trigger) ──
-self.addEventListener('message', e => {
-  if (e.data?.type === 'SHOW_NOTIF') {
-    const d = e.data;
-    self.registration.showNotification(d.title || 'z-wealth', {
-      body: d.body || '',
-      icon: d.icon || '/icon-192.png',
-      badge: '/icon-192.png',
-      tag: d.tag || 'zw-' + Date.now(),
-      renotify: true,
-      vibrate: [200, 100, 200],
-      data: { url: d.url || '/' }
-    });
-  }
 });
 
 self.addEventListener('install', () => self.skipWaiting());

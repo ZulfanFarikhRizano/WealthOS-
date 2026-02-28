@@ -6424,6 +6424,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
       <div class="acct-mdev-dot"></div>
       <div><div class="acct-mdev-t">Login multi-device aktif</div><div class="acct-mdev-s">Cukup masukkan 3 kata seed phrase di device manapun</div></div>
     </div>
+    <!-- Notifikasi status card di modal Akun -->
+    <div id="acct-notif-card" style="margin-bottom:.75rem;padding:.75rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+      <div style="display:flex;align-items:center;gap:.55rem;min-width:0">
+        <div id="acct-notif-icon" style="width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </div>
+        <div style="min-width:0">
+          <div id="acct-notif-label" style="font-size:.75rem;font-weight:700;color:#ef4444">Notifikasi Nonaktif</div>
+          <div id="acct-notif-sub" style="font-size:.65rem;color:var(--muted);margin-top:.1rem">Tap untuk aktifkan push notif</div>
+        </div>
+      </div>
+      <button id="acct-notif-btn" onclick="acctToggleNotif()" style="flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s">
+        Aktifkan
+      </button>
+    </div>
     <div class="acct-btns">
       <button class="btn btn-ghost" onclick="closeModal('modal-acct')">Tutup</button>
       <button class="btn acct-btn-seed" onclick="showChangeSeed()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Ganti Seed</button>
@@ -7488,6 +7503,8 @@ function showAcct(){
   const st=document.getElementById('acct-sync-cloud-status');
   if(st){st.style.display='none';st.textContent='';}
   openModal('modal-acct');
+  // Update status notif di modal
+  setTimeout(updateAcctNotifUI, 50);
 }
 
 async function doLogout(){
@@ -7782,6 +7799,8 @@ function _applyBTCPrice(usd, change, usdIdr) {
   updateBTCLiveDisplay();
   updateDCABTCDisplay();
   refreshDashStats();
+  // Cek price alert setiap kali harga update (realtime WS)
+  if (typeof checkPriceAlerts === 'function') checkPriceAlerts(usd);
 }
 
 async function _fetchUSDIDRRate() {
@@ -14615,17 +14634,63 @@ const ZW_FCM = (() => {
   return { init, getToken, sendPush, sendSWNotif };
 })();
 
-// Kirim notif — otomatis pakai FCM push jika token ada, fallback SW
+// Kirim notif — SW Notification (muncul di lock screen jika PWA + izin granted)
 function sendBrowserNotif(title, body, tag, url) {
-  // Strip SVG dari title jika ada
-  const cleanTitle = title.replace(/<[^>]+>/g, '').trim();
-  const token = localStorage.getItem('zw_fcm_token');
-  if (token) {
-    // Pakai FCM push — muncul meski app ditutup
-    ZW_FCM.sendPush(cleanTitle, body, tag, url);
+  // Strip SVG/HTML dari title
+  const cleanTitle = (title || '').replace(/<[^>]+>/g, '').trim() || 'z-wealth';
+  const cleanBody = (body || '').replace(/<[^>]+>/g, '').trim();
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  // Coba SW showNotification dulu (paling reliable, muncul di status bar)
+  const swNotif = () => {
+    const opts = {
+      body: cleanBody,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: tag || ('zw-' + Date.now()),
+      renotify: true,
+      vibrate: [200, 100, 200],
+      data: { url: url || '/' }
+    };
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIF', title: cleanTitle, ...opts });
+    } else if (window._swReg?.active) {
+      window._swReg.active.postMessage({ type: 'SHOW_NOTIF', title: cleanTitle, ...opts });
+    } else if (window._swReg) {
+      // SW terdaftar tapi belum active — pakai showNotification langsung
+      window._swReg.showNotification(cleanTitle, opts).catch(() => {
+        new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' });
+      });
+    } else {
+      // Last resort: browser Notification API
+      try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png', tag: tag }); } catch(e) {}
+    }
+  };
+
+  // Jika SW belum ready, tunggu sebentar lalu coba lagi
+  if (!navigator.serviceWorker?.controller && !window._swReg) {
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.ready.then(reg => {
+        window._swReg = reg;
+        reg.showNotification(cleanTitle, {
+          body: cleanBody, icon: '/icon-192.png', badge: '/icon-192.png',
+          tag: tag || 'zw-' + Date.now(), renotify: true, vibrate: [200, 100, 200]
+        }).catch(() => {
+          try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' }); } catch(e) {}
+        });
+      }).catch(() => {
+        try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' }); } catch(e) {}
+      });
+    }
   } else {
-    // Fallback SW notif
-    ZW_FCM.sendSWNotif(cleanTitle, body, tag);
+    swNotif();
+  }
+
+  // Background: juga coba FCM push jika token ada (untuk saat app benar-benar ditutup)
+  const token = localStorage.getItem('zw_fcm_token');
+  if (token && typeof ZW_FCM !== 'undefined') {
+    ZW_FCM.sendPush(cleanTitle, cleanBody, tag, url).catch(() => {});
   }
 }
 
@@ -14637,6 +14702,70 @@ function checkNotifPermission() {
   } else {
     card.style.display = 'none';
   }
+  if (typeof updateAcctNotifUI === 'function') updateAcctNotifUI();
+}
+
+function updateAcctNotifUI() {
+  const icon = document.getElementById('acct-notif-icon');
+  const label = document.getElementById('acct-notif-label');
+  const sub = document.getElementById('acct-notif-sub');
+  const btn = document.getElementById('acct-notif-btn');
+  if (!label || !btn) return;
+  const perm = ('Notification' in window) ? Notification.permission : 'not-supported';
+  const hasFCM = !!localStorage.getItem('zw_fcm_token');
+
+  if (perm === 'granted' && hasFCM) {
+    if (icon) {
+      icon.style.cssText = 'width:32px;height:32px;border-radius:50%;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+      icon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+    }
+    label.style.color = '#10b981';
+    label.textContent = 'Push Notifikasi Aktif';
+    if (sub) sub.textContent = 'Notif muncul meski app ditutup';
+    btn.textContent = 'Nonaktifkan';
+    btn.style.cssText = 'flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:#10b981;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s';
+  } else if (perm === 'granted') {
+    if (icon) {
+      icon.style.cssText = 'width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+      icon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+    }
+    label.style.color = '#f59e0b';
+    label.textContent = 'Notifikasi Aktif (terbatas)';
+    if (sub) sub.textContent = 'Tap Upgrade Push untuk notif saat app tutup';
+    btn.textContent = 'Upgrade Push';
+    btn.style.cssText = 'flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:#f59e0b;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s';
+  } else if (perm === 'denied') {
+    if (icon) {
+      icon.style.cssText = 'width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+    }
+    label.style.color = '#ef4444';
+    label.textContent = 'Notifikasi Diblokir';
+    if (sub) sub.textContent = 'Buka pengaturan browser, izinkan notif';
+    btn.textContent = 'Panduan';
+    btn.style.cssText = 'flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s';
+  } else {
+    label.style.color = '#ef4444';
+    label.textContent = 'Notifikasi Nonaktif';
+    if (sub) sub.textContent = 'Tap untuk aktifkan push notif';
+    btn.textContent = 'Aktifkan';
+    btn.style.cssText = 'flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s';
+  }
+}
+
+async function acctToggleNotif() {
+  const perm = ('Notification' in window) ? Notification.permission : 'not-supported';
+  if (perm === 'denied') {
+    toast('Notif diblokir. Buka Pengaturan browser > Site Settings > Notifications > Allow', 4);
+    return;
+  }
+  if (perm === 'granted' && localStorage.getItem('zw_fcm_token')) {
+    localStorage.removeItem('zw_fcm_token');
+    toast('Push notification dinonaktifkan');
+    updateAcctNotifUI();
+    return;
+  }
+  await requestNotifPermission();
+  updateAcctNotifUI();
 }
 
 async function requestNotifPermission() {
@@ -18574,6 +18703,13 @@ window.addEventListener('popstate', () => {
   navigator.serviceWorker.register(blobUrl, { scope: '/' })
     .then(reg => {
       window._swReg = reg;
+      // Expose showNotification ke global
+      window.showSWNotification = function(title, body, tag) {
+        reg.showNotification(title, {
+          body, icon: '/icon-192.png', badge: '/icon-192.png',
+          tag: tag || 'zw-' + Date.now(), renotify: true, vibrate: [200, 100, 200]
+        }).catch(()=>{});
+      };
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
         w?.addEventListener('statechange', () => {
