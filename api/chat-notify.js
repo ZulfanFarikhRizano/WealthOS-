@@ -23,17 +23,32 @@ export default async function handler(req, res) {
 
     // ── 2. Ambil data pesan dari webhook payload ──
     const payload = req.body;
+    
+    // Supabase webhook format: { type, table, schema, record, old_record }
+    // type = INSERT / UPDATE / DELETE
     const record = payload?.record || payload?.new || payload;
+    const eventType = payload?.type || 'INSERT';
+    
+    // Hanya proses INSERT
+    if (eventType !== 'INSERT') {
+      return res.status(200).json({ skipped: true, reason: 'Not INSERT event' });
+    }
 
     const { room_id, sender_code, content, media_url, media_type } = record || {};
 
     if (!room_id || !sender_code) {
-      return res.status(400).json({ error: 'Missing room_id or sender_code' });
+      console.log('[chat-notify] Missing fields, payload:', JSON.stringify(payload).slice(0, 200));
+      return res.status(400).json({ error: 'Missing room_id or sender_code', payload_keys: Object.keys(payload || {}) });
     }
 
     // ── 3. Query Supabase untuk ambil data room dan FCM tokens ──
     const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://kpikyqafapclyirpqflp.supabase.co';
-    const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY; // Service Role Key (bukan anon)
+    const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+    
+    if (!SUPABASE_KEY) {
+      console.error('[chat-notify] SUPABASE_SERVICE_KEY not set!');
+      return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY env not configured' });
+    }
     const headers = {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
