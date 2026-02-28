@@ -11411,12 +11411,25 @@ function initApp(){
     const firstActive=document.querySelector('.bnav-item.active');
     animateNavIndicator(firstActive);
   });
-  // Init FCM jika notif sudah diizinkan sebelumnya
-  if (Notification.permission === 'granted') {
-    ZW_FCM.init().then(() => {
-      const savedToken = localStorage.getItem('zw_fcm_token');
-      if (!savedToken) ZW_FCM.getToken().catch(()=>{});
-    });
+  // Register firebase-messaging-sw.js lebih awal agar SW.ready benar
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+      .then(reg => {
+        window._swReg = reg;
+        // Init FCM jika notif sudah diizinkan
+        if (Notification.permission === 'granted') {
+          ZW_FCM.init().then(() => {
+            const savedToken = localStorage.getItem('zw_fcm_token');
+            if (!savedToken) ZW_FCM.getToken().catch(()=>{});
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback: init FCM tanpa pre-register SW
+        if (Notification.permission === 'granted') {
+          ZW_FCM.init().catch(()=>{});
+        }
+      });
   }
   // Restore posisi futures aktif dari localStorage (persist setelah refresh)
   setTimeout(() => restoreActiveTrades(), 500);
@@ -14572,12 +14585,19 @@ const ZW_FCM = (() => {
       _messaging = firebase.messaging();
       _initialized = true;
 
+      // Handle token refresh otomatis
+      _messaging.onTokenRefresh(() => {
+        getToken().catch(() => {});
+      });
+
       // Handle notif saat app TERBUKA (foreground)
+      // FCM tidak otomatis tampilkan notif di foreground — kita handle manual
+      // Tapi karena sendBrowserNotif sudah pakai ZW_FCM.sendPush yang trigger ini,
+      // kita HANYA tampilkan toast, tidak sendSWNotif (agar tidak double dengan reg.showNotification)
       _messaging.onMessage(payload => {
-        const { title, body, tag } = payload.notification || {};
-        // Tampilkan via SW agar muncul di status bar
-        sendSWNotif(title || 'z-wealth', body || '', tag || 'zw-fg');
-        // Juga tampilkan toast di dalam app
+        const { title, body } = payload.notification || {};
+        // Hanya toast — notif sistem sudah dihandle oleh SW saat background/closed
+        // Saat foreground, toast sudah cukup sebagai feedback visual
         toast(`🔔 ${title || 'z-wealth'}: ${body || ''}`);
       });
     } catch(e) {
@@ -14591,6 +14611,7 @@ const ZW_FCM = (() => {
     try {
       // Daftarkan SW firebase-messaging-sw.js
       const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+      window._swReg = swReg; // Set sebagai SW utama agar sendBrowserNotif pakai ini
       const token = await _messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
       _fcmToken = token;
       // Simpan token ke localStorage agar bisa dipakai kirim notif
@@ -14607,13 +14628,25 @@ const ZW_FCM = (() => {
     const token = _fcmToken || localStorage.getItem('zw_fcm_token');
     if (!token) return;
     try {
-      await fetch('/api/notify', {
+      const resp = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, title, body, tag: tag || 'zwealth', url: url || '/' })
       });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        const errCode = err?.detail?.error?.details?.[0]?.errorCode || '';
+        // Jika token invalid/expired, hapus dan minta token baru
+        if (resp.status === 500 && (errCode === 'UNREGISTERED' || errCode === 'INVALID_ARGUMENT')) {
+          console.warn('[FCM] Token invalid, clearing...');
+          localStorage.removeItem('zw_fcm_token');
+          _fcmToken = null;
+          // Coba dapat token baru di background
+          getToken().catch(() => {});
+        }
+      }
     } catch(e) {
-      // Fallback ke SW langsung jika API tidak tersedia
+      // Network error — fallback ke SW lokal
       sendSWNotif(title, body, tag);
     }
   }
@@ -14634,63 +14667,52 @@ const ZW_FCM = (() => {
   return { init, getToken, sendPush, sendSWNotif };
 })();
 
-// Kirim notif — SW Notification (muncul di lock screen jika PWA + izin granted)
+// Kirim notif — strategi cerdas: FCM push jika ada token, SW lokal jika tidak
+// Tidak keduanya sekaligus untuk menghindari double notif
 function sendBrowserNotif(title, body, tag, url) {
-  // Strip SVG/HTML dari title
   const cleanTitle = (title || '').replace(/<[^>]+>/g, '').trim() || 'z-wealth';
-  const cleanBody = (body || '').replace(/<[^>]+>/g, '').trim();
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
+  const cleanBody  = (body  || '').replace(/<[^>]+>/g, '').trim();
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  // Coba SW showNotification dulu (paling reliable, muncul di status bar)
-  const swNotif = () => {
-    const opts = {
-      body: cleanBody,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      tag: tag || ('zw-' + Date.now()),
-      renotify: true,
-      vibrate: [200, 100, 200],
-      data: { url: url || '/' }
-    };
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIF', title: cleanTitle, ...opts });
-    } else if (window._swReg?.active) {
-      window._swReg.active.postMessage({ type: 'SHOW_NOTIF', title: cleanTitle, ...opts });
-    } else if (window._swReg) {
-      // SW terdaftar tapi belum active — pakai showNotification langsung
-      window._swReg.showNotification(cleanTitle, opts).catch(() => {
-        new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' });
-      });
-    } else {
-      // Last resort: browser Notification API
-      try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png', tag: tag }); } catch(e) {}
-    }
+  const notifTag = tag || ('zw-' + Date.now());
+  const notifOpts = {
+    body: cleanBody,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: notifTag,
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: url || '/' }
   };
 
-  // Jika SW belum ready, tunggu sebentar lalu coba lagi
-  if (!navigator.serviceWorker?.controller && !window._swReg) {
-    if (navigator.serviceWorker) {
-      navigator.serviceWorker.ready.then(reg => {
-        window._swReg = reg;
-        reg.showNotification(cleanTitle, {
-          body: cleanBody, icon: '/icon-192.png', badge: '/icon-192.png',
-          tag: tag || 'zw-' + Date.now(), renotify: true, vibrate: [200, 100, 200]
-        }).catch(() => {
-          try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' }); } catch(e) {}
-        });
-      }).catch(() => {
-        try { new Notification(cleanTitle, { body: cleanBody, icon: '/icon-192.png' }); } catch(e) {}
-      });
-    }
-  } else {
-    swNotif();
-  }
+  const fcmToken = localStorage.getItem('zw_fcm_token');
 
-  // Background: juga coba FCM push jika token ada (untuk saat app benar-benar ditutup)
-  const token = localStorage.getItem('zw_fcm_token');
-  if (token && typeof ZW_FCM !== 'undefined') {
-    ZW_FCM.sendPush(cleanTitle, cleanBody, tag, url).catch(() => {});
+  if (fcmToken && typeof ZW_FCM !== 'undefined') {
+    // ── Punya FCM token: kirim via server push ──
+    // FCM push akan trigger firebase-messaging-sw.js untuk showNotification
+    // Muncul meski app ditutup. TIDAK pakai SW lokal agar tidak double.
+    ZW_FCM.sendPush(cleanTitle, cleanBody, notifTag, url).catch(() => {
+      // FCM gagal → fallback ke SW lokal
+      _showLocalNotif(cleanTitle, notifOpts);
+    });
+  } else {
+    // ── Tidak ada FCM token: pakai SW lokal ──
+    // Hanya muncul saat app terbuka atau di background (bukan closed)
+    _showLocalNotif(cleanTitle, notifOpts);
+  }
+}
+
+// Helper: tampilkan notif via SW lokal (serviceWorker.ready)
+function _showLocalNotif(title, opts) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => {
+      window._swReg = reg;
+      return reg.showNotification(title, opts);
+    }).catch(() => {
+      try { new Notification(title, { body: opts.body, icon: '/icon-192.png', tag: opts.tag }); } catch(e) {}
+    });
+  } else {
+    try { new Notification(title, { body: opts.body, icon: '/icon-192.png', tag: opts.tag }); } catch(e) {}
   }
 }
 
@@ -14759,11 +14781,31 @@ async function acctToggleNotif() {
     return;
   }
   if (perm === 'granted' && localStorage.getItem('zw_fcm_token')) {
+    // Sudah aktif → nonaktifkan
     localStorage.removeItem('zw_fcm_token');
-    toast('Push notification dinonaktifkan');
+    toast('🔕 Push notification dinonaktifkan');
     updateAcctNotifUI();
     return;
   }
+  if (perm === 'granted' && !localStorage.getItem('zw_fcm_token')) {
+    // Permission ada tapi belum ada token → langsung getToken tanpa minta permission lagi
+    toast('⏳ Mendaftarkan push notification...');
+    try {
+      await ZW_FCM.init();
+      const token = await ZW_FCM.getToken();
+      if (token) {
+        toast('✅ Push notification aktif! Notif muncul meski app ditutup.');
+        ZW_FCM.sendSWNotif('✅ z-wealth', 'Push notification berhasil diaktifkan!');
+      } else {
+        toast('⚠️ Gagal dapat token. Coba lagi atau restart browser.');
+      }
+    } catch(e) {
+      toast('⚠️ Error: ' + e.message);
+    }
+    updateAcctNotifUI();
+    return;
+  }
+  // perm === 'default' → minta izin dulu
   await requestNotifPermission();
   updateAcctNotifUI();
 }
@@ -14778,8 +14820,26 @@ async function requestNotifPermission() {
     return 'denied';
   }
   if (Notification.permission === 'granted') {
-    toast('\u2705 Notifikasi sudah aktif!');
-    document.getElementById('notif-perm-card').style.display = 'none';
+    const card = document.getElementById('notif-perm-card');
+    if (card) card.style.display = 'none';
+    // Pastikan FCM token sudah ada — user mungkin sudah grant tapi belum punya token
+    const existingToken = localStorage.getItem('zw_fcm_token');
+    if (!existingToken) {
+      toast('⏳ Mendaftarkan push notification...');
+      try {
+        await ZW_FCM.init();
+        const token = await ZW_FCM.getToken();
+        if (token) {
+          toast('✅ Push notification aktif!');
+        } else {
+          toast('✅ Notifikasi aktif (mode terbatas)');
+        }
+      } catch(e) {
+        toast('✅ Notifikasi sudah aktif!');
+      }
+    } else {
+      toast('✅ Notifikasi sudah aktif!');
+    }
     return 'granted';
   }
   const perm = await Notification.requestPermission();
@@ -18702,14 +18762,7 @@ window.addEventListener('popstate', () => {
 
   navigator.serviceWorker.register(blobUrl, { scope: '/' })
     .then(reg => {
-      window._swReg = reg;
-      // Expose showNotification ke global
-      window.showSWNotification = function(title, body, tag) {
-        reg.showNotification(title, {
-          body, icon: '/icon-192.png', badge: '/icon-192.png',
-          tag: tag || 'zw-' + Date.now(), renotify: true, vibrate: [200, 100, 200]
-        }).catch(()=>{});
-      };
+      // Blob SW hanya untuk update notification (bukan untuk kirim notif)
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
         w?.addEventListener('statechange', () => {
@@ -19112,36 +19165,22 @@ const ChatNotif = (() => {
   function sendPushNotif(title, body, roomId, roomData) {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
-    // Jangan kirim jika sedang di dalam room yang sama
-    if (!document.hidden) {
-      const chatPage = document.getElementById('page-chat');
-      if (chatPage && chatPage.classList.contains('active')) return;
-    }
+    // Hanya skip jika user sedang aktif di dalam room YANG SAMA
+    const isActiveInRoom = (
+      !document.hidden &&
+      document.getElementById('page-chat')?.classList.contains('active') &&
+      document.getElementById('chat-room-screen')?.classList.contains('active') &&
+      window.chatState?.currentRoomId === roomId
+    );
+    if (isActiveInRoom) return;
+
+    // Kirim notif via sendBrowserNotif (SW + FCM fallback)
     try {
-      // Pakai FCM push (muncul meski app ditutup)
       sendBrowserNotif(title, body, 'chat-' + roomId, '/');
-      return;
-      // Fallback: new Notification() langsung
-      const n = new Notification(title, {
-        body,
-        icon: 'icon-192.png',
-        badge: 'icon-192.png',
-        tag: 'chat-' + roomId,
-        renotify: true,
-        silent: false,
-      });
-      n.onclick = () => {
-        window.focus();
-        n.close();
-        if (roomData) {
-          showPage('chat');
-          setTimeout(() => {
-            openRoom(roomData.id, roomData.name, roomData.type, roomData.color);
-          }, 200);
-        }
-      };
-      setTimeout(() => n.close(), 6000);
-    } catch(e) {}
+    } catch(e) {
+      // Last resort
+      try { new Notification(title, { body, icon: '/icon-192.png', tag: 'chat-' + roomId, renotify: true }); } catch(e2) {}
+    }
   }
 
   // ── Unread badge di feat-btn chat ──
