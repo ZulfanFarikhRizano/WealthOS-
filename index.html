@@ -13076,7 +13076,12 @@ async function chatBoot() {
   hideChatLoading();
 
   // ── Push Notification ──
-  setTimeout(() => initPushNotification(), 2000);
+  setTimeout(async () => {
+    await initPushNotification();
+    // Sync token lama ke DB jika sudah ada
+    const existingToken = localStorage.getItem('zw_fcm_token');
+    if (existingToken) _saveFCMTokenToDB(existingToken);
+  }, 2000);
 
   // ── Deep link handler ──
   _handleChatDeepLink();
@@ -14617,6 +14622,8 @@ const ZW_FCM = (() => {
       _fcmToken = token;
       // Simpan token ke localStorage agar bisa dipakai kirim notif
       if (token) localStorage.setItem('zw_fcm_token', token);
+          _saveFCMTokenToDB(token);
+        
       return token;
     } catch(e) {
       console.warn('[FCM] getToken error:', e);
@@ -14667,6 +14674,20 @@ const ZW_FCM = (() => {
 
   return { init, getToken, sendPush, sendSWNotif };
 })();
+
+// Simpan FCM token ke Supabase DB agar server (webhook) bisa kirim push
+async function _saveFCMTokenToDB(token) {
+  try {
+    if (!chatSB || !chatState?.myCode || !token) return;
+    await chatSB.from('push_subscriptions').upsert({
+      user_code:  chatState.myCode,
+      endpoint:   'fcm:' + token.slice(-40), // unique key untuk FCM
+      fcm_token:  token,
+      user_agent: navigator.userAgent.slice(0, 200),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'endpoint' });
+  } catch(e) { console.warn('[FCM] Token DB save error:', e.message); }
+}
 
 // Kirim notif — strategi cerdas: FCM push jika ada token, SW lokal jika tidak
 // Tidak keduanya sekaligus untuk menghindari double notif
@@ -20332,7 +20353,7 @@ async function savePushSubscription(sub) {
   } catch(e) { console.error('[Push] savePushSubscription error:', e); }
 }
 
-async async function unsubscribePush() {
+async function unsubscribePush() {
   try {
     if (!('serviceWorker' in navigator)) return;
     // Hapus FCM token dari localStorage
@@ -20348,7 +20369,7 @@ async async function unsubscribePush() {
   } catch(e) { console.error('[Push] Unsubscribe error:', e); }
 }
 
-async async function initPushNotification() {
+async function initPushNotification() {
   // Sistem push lama (Web Push API) diganti FCM — fungsi ini hanya wrapper
   // Pastikan firebase-messaging-sw.js aktif jika notif sudah diizinkan
   if (Notification.permission === 'granted') {
