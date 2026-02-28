@@ -13075,13 +13075,21 @@ async function chatBoot() {
   await loadRooms();
   hideChatLoading();
 
-  // ── Push Notification ──
+  // ── Push Notification + Sync FCM Token ke DB ──
   setTimeout(async () => {
     await initPushNotification();
-    // Sync token lama ke DB jika sudah ada
+    // Sync token ke DB — chatSB & myCode sudah siap di sini
     const existingToken = localStorage.getItem('zw_fcm_token');
-    if (existingToken) _saveFCMTokenToDB(existingToken);
-  }, 2000);
+    if (existingToken) {
+      await _saveFCMTokenToDB(existingToken);
+    } else if (Notification.permission === 'granted') {
+      // Belum ada token sama sekali — minta token baru
+      try {
+        const newToken = await ZW_FCM.getToken();
+        if (newToken) await _saveFCMTokenToDB(newToken);
+      } catch(e) {}
+    }
+  }, 2500);
 
   // ── Deep link handler ──
   _handleChatDeepLink();
@@ -14677,15 +14685,27 @@ const ZW_FCM = (() => {
 
 // Simpan FCM token ke Supabase DB agar server (webhook) bisa kirim push
 async function _saveFCMTokenToDB(token) {
+  if (!token) return;
+  // Tunggu chatSB dan myCode siap (max 10 detik)
+  let tries = 0;
+  while ((!chatSB || !chatState?.myCode) && tries < 20) {
+    await new Promise(r => setTimeout(r, 500));
+    tries++;
+  }
+  if (!chatSB || !chatState?.myCode) {
+    console.warn('[FCM] _saveFCMTokenToDB: chatSB not ready after wait');
+    return;
+  }
   try {
-    if (!chatSB || !chatState?.myCode || !token) return;
-    await chatSB.from('push_subscriptions').upsert({
+    const { error } = await chatSB.from('push_subscriptions').upsert({
       user_code:  chatState.myCode,
-      endpoint:   'fcm:' + token.slice(-40), // unique key untuk FCM
+      endpoint:   'fcm:' + token.slice(-40),
       fcm_token:  token,
       user_agent: navigator.userAgent.slice(0, 200),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'endpoint' });
+    if (error) console.warn('[FCM] Token DB save error:', error.message);
+    else console.log('[FCM] Token saved to DB for', chatState.myCode);
   } catch(e) { console.warn('[FCM] Token DB save error:', e.message); }
 }
 
@@ -20311,7 +20331,7 @@ async function useScannedCode() {
 <script>
 const PUSH_VAPID_PUBLIC = 'BCjuhvgFLrxeEY_lI3K2ssgr2MdZSKRSoqSXE5VaRwW_efsoQkw0Ph4QEn_F8iJPE_9rNAVGSUzA-gL6z32FnmI';
 
-async async function registerSW() {
+async function registerSW() {
   // Redirect ke firebase-messaging-sw.js (sistem baru)
   if (!('serviceWorker' in navigator)) return null;
   try {
