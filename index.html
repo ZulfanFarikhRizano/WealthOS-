@@ -7685,6 +7685,7 @@ function showPage(id){
     else setTimeout(() => { if(chatSB) renderDashFeed(); }, 2000);
     // Load berita untuk widget sorotan di dashboard
     setTimeout(() => loadCryptoNews(), 500);
+    startNewsAutoRefresh(); // Auto-refresh berita setiap 30 menit + trigger notif
   }
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
@@ -18760,7 +18761,7 @@ window.addEventListener('popstate', () => {
   const blob = new Blob([swCode], { type: 'application/javascript' });
   const blobUrl = URL.createObjectURL(blob);
 
-  navigator.serviceWorker.register(blobUrl, { scope: '/' })
+  navigator.serviceWorker.register(blobUrl)
     .then(reg => {
       // Blob SW hanya untuk update notification (bukan untuk kirim notif)
       reg.addEventListener('updatefound', () => {
@@ -18778,7 +18779,7 @@ window.addEventListener('popstate', () => {
       const notPreview = !location.hostname.includes('claudeusercontent.com') &&
                          !location.hostname.includes('claude.ai');
       if (notPreview) {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
           .then(r => { window._swReg = r; })
           .catch(() => {});
       }
@@ -20289,10 +20290,12 @@ async function useScannedCode() {
 <script>
 const PUSH_VAPID_PUBLIC = 'BCjuhvgFLrxeEY_lI3K2ssgr2MdZSKRSoqSXE5VaRwW_efsoQkw0Ph4QEn_F8iJPE_9rNAVGSUzA-gL6z32FnmI';
 
-async function registerSW() {
+async async function registerSW() {
+  // Redirect ke firebase-messaging-sw.js (sistem baru)
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    window._swReg = reg;
     return reg;
   } catch(e) { console.error('[Push] SW failed:', e); return null; }
 }
@@ -20329,10 +20332,12 @@ async function savePushSubscription(sub) {
   } catch(e) { console.error('[Push] savePushSubscription error:', e); }
 }
 
-async function unsubscribePush() {
+async async function unsubscribePush() {
   try {
     if (!('serviceWorker' in navigator)) return;
-    const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+    // Hapus FCM token dari localStorage
+    localStorage.removeItem('zw_fcm_token');
+    const reg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
     if (!reg) return;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return;
@@ -20343,16 +20348,17 @@ async function unsubscribePush() {
   } catch(e) { console.error('[Push] Unsubscribe error:', e); }
 }
 
-async function initPushNotification() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  const reg = await registerSW();
-  if (!reg) return;
-  const perm = Notification.permission;
-  if (perm === 'granted') {
-    const sub = await subscribePush(reg);
-    if (sub) await savePushSubscription(sub);
-  } else if (perm === 'default') {
-    showPushPermissionBanner(reg);
+async async function initPushNotification() {
+  // Sistem push lama (Web Push API) diganti FCM — fungsi ini hanya wrapper
+  // Pastikan firebase-messaging-sw.js aktif jika notif sudah diizinkan
+  if (Notification.permission === 'granted') {
+    try {
+      await ZW_FCM.init();
+      const savedToken = localStorage.getItem('zw_fcm_token');
+      if (!savedToken) {
+        await ZW_FCM.getToken();
+      }
+    } catch(e) { console.warn('[Push] ZW_FCM init error:', e); }
   }
 }
 
@@ -22704,6 +22710,79 @@ function updateDashNewsHighlight(articles) {
   }
 }
 
+// ── NEWS NOTIFICATION SYSTEM ──
+let _newsNotifLastSent = 0;           // timestamp terakhir kirim notif
+let _newsNotifSentTitles = new Set(); // judul yang sudah pernah dinotif (hindari repeat)
+const NEWS_NOTIF_COOLDOWN = 30 * 60 * 1000; // 30 menit — jangan spam
+
+function checkAndSendNewsNotif(articles) {
+  // Tidak kirim jika notif belum diizinkan
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  // Cooldown: minimal 30 menit antar notif berita
+  const now = Date.now();
+  if (now - _newsNotifLastSent < NEWS_NOTIF_COOLDOWN) return;
+
+  const allPos = articles.filter(a => a.sentimen === 'POSITIF');
+  const allNeg = articles.filter(a => a.sentimen === 'NEGATIF');
+
+  // Ambil berita terbullish dan terbearish yang BELUM pernah dinotif
+  const topBullish = allPos.find(a => !_newsNotifSentTitles.has(a.judulID));
+  const topBearish = allNeg.find(a => !_newsNotifSentTitles.has(a.judulID));
+
+  // Tidak ada berita baru → skip
+  if (!topBullish && !topBearish) return;
+
+  _newsNotifLastSent = now;
+
+  // Kirim notif bullish
+  if (topBullish) {
+    _newsNotifSentTitles.add(topBullish.judulID);
+    // Batas 200 judul agar tidak meluber
+    if (_newsNotifSentTitles.size > 200) {
+      const first = _newsNotifSentTitles.values().next().value;
+      _newsNotifSentTitles.delete(first);
+    }
+    setTimeout(() => {
+      sendBrowserNotif(
+        '⚡ Berita Bullish — ' + (topBullish.source || 'Crypto News'),
+        topBullish.judulID,
+        'news-bullish',
+        '/'
+      );
+    }, 500);
+  }
+
+  // Kirim notif bearish dengan jeda 3 detik agar tidak tumpuk
+  if (topBearish) {
+    _newsNotifSentTitles.add(topBearish.judulID);
+    if (_newsNotifSentTitles.size > 200) {
+      const first = _newsNotifSentTitles.values().next().value;
+      _newsNotifSentTitles.delete(first);
+    }
+    setTimeout(() => {
+      sendBrowserNotif(
+        '⚠️ Berita Bearish — ' + (topBearish.source || 'Crypto News'),
+        topBearish.judulID,
+        'news-bearish',
+        '/'
+      );
+    }, 3500);
+  }
+}
+
+// Auto-refresh berita setiap 30 menit + cek notif
+let _newsAutoRefreshInterval = null;
+function startNewsAutoRefresh() {
+  if (_newsAutoRefreshInterval) return; // sudah jalan
+  _newsAutoRefreshInterval = setInterval(async () => {
+    // Force refresh berita
+    const prevCache = _newsCache;
+    _newsCache = null;
+    await loadCryptoNews();
+    // checkAndSendNewsNotif dipanggil dari dalam renderNewsList
+  }, 30 * 60 * 1000); // setiap 30 menit
+}
+
 function renderNewsList(articles) {
   const pos = articles.filter(a => a.sentimen === 'POSITIF').length;
   const neg = articles.filter(a => a.sentimen === 'NEGATIF').length;
@@ -22722,6 +22801,8 @@ function renderNewsList(articles) {
 
   // ── Update dashboard highlight widget (SELALU, sebelum filter/early-return) ──
   updateDashNewsHighlight(articles);
+  // ── Cek dan kirim notif berita terbullish/terbearish ──
+  checkAndSendNewsNotif(articles);
 
   let filtered = articles;
   if (_newsFilter === 'positif') filtered = articles.filter(a => a.sentimen === 'POSITIF');
