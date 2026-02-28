@@ -14630,7 +14630,7 @@ const ZW_FCM = (() => {
       _fcmToken = token;
       // Simpan token ke localStorage agar bisa dipakai kirim notif
       if (token) localStorage.setItem('zw_fcm_token', token);
-          _saveFCMTokenToDB(token);
+          setTimeout(() => _saveFCMTokenToDB(token), 3000);
         
       return token;
     } catch(e) {
@@ -14836,6 +14836,7 @@ async function acctToggleNotif() {
       await ZW_FCM.init();
       const token = await ZW_FCM.getToken();
       if (token) {
+        _saveFCMTokenToDB(token); // Simpan ke DB — chatSB sudah siap saat user klik
         toast('✅ Push notification aktif! Notif muncul meski app ditutup.');
         ZW_FCM.sendSWNotif('✅ z-wealth', 'Push notification berhasil diaktifkan!');
       } else {
@@ -14872,6 +14873,7 @@ async function requestNotifPermission() {
         await ZW_FCM.init();
         const token = await ZW_FCM.getToken();
         if (token) {
+          _saveFCMTokenToDB(token); // Simpan ke DB
           toast('✅ Push notification aktif!');
         } else {
           toast('✅ Notifikasi aktif (mode terbatas)');
@@ -14893,6 +14895,7 @@ async function requestNotifPermission() {
     try {
       const token = await ZW_FCM.getToken();
       if (token) {
+        _saveFCMTokenToDB(token); // Simpan ke DB — chatSB sudah siap saat ini
         toast('✅ Push notification aktif! Kamu akan dapat notif meski app ditutup.');
         ZW_FCM.sendSWNotif('✅ z-wealth Siap!', 'Push notification aktif. Harga alert, chat, dan berita akan masuk ke HP kamu.');
       } else {
