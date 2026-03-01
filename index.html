@@ -13079,6 +13079,8 @@ async function chatBoot() {
   setTimeout(async () => {
     await initPushNotification();
     // Sync token ke DB — chatSB & myCode sudah siap di sini
+    // Juga sync alert & reminder ke DB supaya cron job bisa baca
+    _syncUserPushData();
     const existingToken = localStorage.getItem('zw_fcm_token');
     if (existingToken) {
       await _saveFCMTokenToDB(existingToken);
@@ -14363,7 +14365,10 @@ async function fetchAlertBtcPrice() {
 function getAlerts() {
   try { return JSON.parse(localStorage.getItem('zw_price_alerts') || '[]'); } catch(e) { return []; }
 }
-function saveAlerts(arr) { localStorage.setItem('zw_price_alerts', JSON.stringify(arr)); }
+function saveAlerts(arr) {
+  localStorage.setItem('zw_price_alerts', JSON.stringify(arr));
+  _syncUserPushData();
+}
 
 function openAlertModal() { openModal('modal-alert'); }
 
@@ -14431,7 +14436,10 @@ function checkPriceAlerts(currentPrice) {
 function getReminders() {
   try { return JSON.parse(localStorage.getItem('zw_dca_reminders') || '[]'); } catch(e) { return []; }
 }
-function saveReminders(arr) { localStorage.setItem('zw_dca_reminders', JSON.stringify(arr)); }
+function saveReminders(arr) {
+  localStorage.setItem('zw_dca_reminders', JSON.stringify(arr));
+  _syncUserPushData();
+}
 
 function updateReminderPreview() {
   const freq = document.getElementById('reminder-frequency')?.value;
@@ -14683,6 +14691,59 @@ const ZW_FCM = (() => {
 })();
 
 // Simpan FCM token ke Supabase DB agar server (webhook) bisa kirim push
+
+// Sync price alerts & DCA reminders ke Supabase DB
+// Dipanggil setiap kali ada perubahan alert/reminder
+async function _syncUserPushData() {
+  try {
+    const userCode = chatState?.myCode || localStorage.getItem('chat_code');
+    if (!userCode) return;
+    const alerts    = getAlerts();
+    const reminders = getReminders();
+    await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/user_push_data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        user_code:     userCode,
+        price_alerts:  alerts,
+        dca_reminders: reminders,
+        active:        true,
+        updated_at:    new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn('[Sync] user_push_data error:', e.message); }
+}
+
+// Simpan top bullish & bearish ke DB untuk cron job
+async function _syncNewsToDb(articles) {
+  try {
+    if (!articles?.length) return;
+    const topBullish = articles.filter(a => a.sentimen === 'POSITIF').slice(0, 3);
+    const topBearish = articles.filter(a => a.sentimen === 'NEGATIF').slice(0, 3);
+    const payload = {
+      id: 'latest',
+      bullish: topBullish.map(a => ({ title: a.judulID, summary: a.ringkasan, source: a.source })),
+      bearish: topBearish.map(a => ({ title: a.judulID, summary: a.ringkasan, source: a.source })),
+      updated_at: new Date().toISOString(),
+    };
+    await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/news_cache', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Prefer': 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.warn('[News] sync to DB error:', e.message); }
+}
+
 async function _saveFCMTokenToDB(token) {
   if (!token) return;
   // Ambil user_code dari localStorage atau chatState
@@ -19385,11 +19446,8 @@ const ChatNotif = (() => {
     // In-app toast
     showToast(msg, roomData);
 
-    // Browser push notif (saat tab tidak aktif)
-    const pushTitle = roomData?.name || 'Chat';
-    const msgPreview = msg.content?.slice(0, 60) || (msg.media_url ? '📎 Media' : '...');
-    const pushBody = `${msg.sender_code}: ${msgPreview}`;
-    sendPushNotif(pushTitle, pushBody, msg.room_id, roomData);
+    // Push notif ditangani oleh server webhook (chat-notify.js)
+    // Client hanya update UI — tidak kirim push agar tidak double
   }
 
   // ── Reset unread saat user membuka halaman chat ──
@@ -22693,6 +22751,8 @@ async function loadCryptoNews(forceRefresh = false) {
 
     _newsCache = articles;
     renderNewsList(articles);
+    // Simpan berita ke DB agar cron job bisa kirim notif saat app tutup
+    _syncNewsToDb(articles);
 
   } catch(e) {
     console.error('[News]', e);
@@ -22798,9 +22858,12 @@ function checkAndSendNewsNotif(articles) {
       _newsNotifSentTitles.delete(first);
     }
     setTimeout(() => {
+      const bullishBody = topBullish.ringkasan 
+        ? topBullish.ringkasan.slice(0, 120)
+        : topBullish.judulID;
       sendBrowserNotif(
-        '⚡ Berita Bullish — ' + (topBullish.source || 'Crypto News'),
         topBullish.judulID,
+        bullishBody,
         'news-bullish',
         '/'
       );
@@ -22815,9 +22878,12 @@ function checkAndSendNewsNotif(articles) {
       _newsNotifSentTitles.delete(first);
     }
     setTimeout(() => {
+      const bearishBody = topBearish.ringkasan
+        ? topBearish.ringkasan.slice(0, 120)
+        : topBearish.judulID;
       sendBrowserNotif(
-        '⚠️ Berita Bearish — ' + (topBearish.source || 'Crypto News'),
         topBearish.judulID,
+        bearishBody,
         'news-bearish',
         '/'
       );
