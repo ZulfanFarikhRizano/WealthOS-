@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+  <!-- v1772377485 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>z-wealth · Bitcoin DCA Tracker</title>
 
@@ -3433,37 +3434,32 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 
   <!-- ══ DONATION CARD ══ -->
-  <a href="https://saweria.co/zwealth" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block;margin-bottom:1.2rem">
-    <button class="feat-btn" style="
-      background:linear-gradient(145deg,rgba(139,40,140,.65) 0%,rgba(168,85,247,.45) 55%,rgba(236,72,153,.35) 100%);
-      box-shadow:0 10px 40px rgba(168,85,247,.35),inset 0 1px 0 rgba(255,255,255,.2);
-      display:flex;align-items:center;gap:.85rem;
-      padding:.85rem 1rem;border-radius:18px;
-      text-align:left;width:100%;
-    " onclick="window.open('https://saweria.co/zwealth','_blank')">
-      <div class="fb-blob" style="background:#a855f7"></div>
-      <!-- icon -->
-      <div style="flex-shrink:0;position:relative;z-index:3;width:38px;height:38px;border-radius:12px;
-        background:linear-gradient(135deg,rgba(236,72,153,.7),rgba(168,85,247,.7));
-        border:1px solid rgba(255,255,255,.25);
-        display:flex;align-items:center;justify-content:center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
+  <button class="feat-btn" style="
+    background:linear-gradient(145deg,rgba(139,40,140,.65) 0%,rgba(168,85,247,.45) 55%,rgba(236,72,153,.35) 100%);
+    box-shadow:0 10px 40px rgba(168,85,247,.35),inset 0 1px 0 rgba(255,255,255,.2);
+    display:flex;align-items:center;gap:.85rem;
+    padding:.85rem 1rem;border-radius:18px;
+    text-align:left;width:100%;margin-bottom:1.2rem;
+  " onclick="openDonateModal()">
+    <div class="fb-blob" style="background:#a855f7"></div>
+    <div style="flex-shrink:0;position:relative;z-index:3;width:38px;height:38px;border-radius:12px;
+      background:linear-gradient(135deg,rgba(236,72,153,.7),rgba(168,85,247,.7));
+      border:1px solid rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0;position:relative;z-index:3">
+      <div class="fb-label" style="font-size:.85rem">Dukung Developer untuk Pengembangan App ini</div>
+      <div style="font-size:.65rem;color:rgba(255,255,255,.65);margin-top:.18rem;font-weight:500">
+        Saweria (QRIS/OVO/Dana) · Kripto USDT
       </div>
-      <!-- teks -->
-      <div style="flex:1;min-width:0;position:relative;z-index:3">
-        <div class="fb-label" style="font-size:.85rem" data-i18n="feat.donate">Dukung Developer untuk Pengembangan App ini</div>
-        <div style="font-size:.65rem;color:rgba(255,255,255,.65);margin-top:.18rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" data-i18n="feat.donate_sub">
-          Dukung lewat Saweria · saweria.co/zwealth
-        </div>
-      </div>
-      <!-- arrow -->
-      <div style="position:relative;z-index:3;display:flex;align-items:center;flex-shrink:0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-    </button>
-  </a>
+    </div>
+    <div style="position:relative;z-index:3;display:flex;align-items:center;flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </button>
   <!-- ══ /DONATION CARD ══ -->
 
   <div id="coming-soon-overlay" onclick="hideComingSoon()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:2rem">
@@ -4533,6 +4529,91 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 </div>
 
 <!-- Modal: Tambah Alert -->
+<!-- ══ MODAL DONASI ══ -->
+<div class="overlay" id="modal-donate" style="z-index:400">
+  <div class="modal" style="max-width:420px;padding:0;overflow:hidden">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,rgba(139,40,140,.8),rgba(168,85,247,.6));padding:1.4rem 1.2rem 1rem;text-align:center;position:relative">
+      <button onclick="closeModal('modal-donate')" style="position:absolute;top:.8rem;right:.8rem;background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
+      <div style="font-size:1.8rem;margin-bottom:.4rem">💜</div>
+      <div style="font-weight:800;font-size:1rem;color:#fff">Dukung Pengembangan App</div>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.7);margin-top:.3rem">Dukunganmu sangat berarti untuk terus berkembang!</div>
+    </div>
+
+    <!-- Pilihan -->
+    <div style="padding:1.2rem;display:flex;flex-direction:column;gap:.9rem">
+
+      <!-- Opsi 1: Saweria -->
+      <button onclick="window.open('https://saweria.co/zwealth','_blank')" style="
+        background:linear-gradient(135deg,rgba(255,140,0,.15),rgba(255,180,0,.1));
+        border:1px solid rgba(255,165,0,.4);border-radius:16px;
+        padding:1rem 1.1rem;text-align:left;cursor:pointer;
+        display:flex;align-items:center;gap:.9rem;width:100%">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ff8c00,#ffd700);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem">💳</div>
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:.9rem;color:var(--text)">Saweria</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">QRIS · OVO · GoPay · Dana · ShopeePay · Transfer Bank</div>
+          <div style="font-size:.68rem;color:#ffd700;margin-top:.15rem;font-weight:600">saweria.co/zwealth</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Opsi 2: Kripto -->
+      <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);border-radius:16px;padding:1rem 1.1rem">
+        <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.9rem">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#00b4dc,#00e5ff);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem">₮</div>
+          <div>
+            <div style="font-weight:800;font-size:.9rem;color:var(--text)">Kripto USDT</div>
+            <div style="font-size:.72rem;color:var(--muted)">Pilih jaringan di bawah, kirim USDT</div>
+          </div>
+        </div>
+
+        <!-- BEP20 / BSC -->
+        <div style="margin-bottom:.7rem">
+          <div style="font-size:.68rem;font-weight:700;color:var(--accent);margin-bottom:.3rem;display:flex;align-items:center;gap:.3rem">
+            <span style="background:rgba(240,185,11,.2);color:#f0b90b;padding:.1rem .4rem;border-radius:4px;font-size:.62rem">BNB Smart Chain · BEP20</span>
+            <span style="color:var(--muted);font-weight:400">& Arbitrum</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .6rem;font-family:'Space Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.8);word-break:break-all">0x448211afbdcd84451902d53f43fddac5b78757d2</div>
+            <button onclick="copyDonate('0x448211afbdcd84451902d53f43fddac5b78757d2','bep20')" style="flex-shrink:0;background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.3);border-radius:8px;color:var(--accent);padding:.4rem .6rem;cursor:pointer;font-size:.7rem" id="copy-bep20">Copy</button>
+          </div>
+        </div>
+
+        <!-- TRC20 -->
+        <div style="margin-bottom:.7rem">
+          <div style="font-size:.68rem;font-weight:700;margin-bottom:.3rem">
+            <span style="background:rgba(255,0,0,.15);color:#ff4444;padding:.1rem .4rem;border-radius:4px;font-size:.62rem">TRON · TRC20</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .6rem;font-family:'Space Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.8);word-break:break-all">TSvYLepAnviSeG6iHen8FiYGvvkeNWe5Bq</div>
+            <button onclick="copyDonate('TSvYLepAnviSeG6iHen8FiYGvvkeNWe5Bq','trc20')" style="flex-shrink:0;background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.3);border-radius:8px;color:var(--accent);padding:.4rem .6rem;cursor:pointer;font-size:.7rem" id="copy-trc20">Copy</button>
+          </div>
+        </div>
+
+        <!-- Aptos -->
+        <div>
+          <div style="font-size:.68rem;font-weight:700;margin-bottom:.3rem">
+            <span style="background:rgba(99,102,241,.2);color:#818cf8;padding:.1rem .4rem;border-radius:4px;font-size:.62rem">APTOS</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .6rem;font-family:'Space Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.8);word-break:break-all">0xcd4cce99429ee3b011b4e7baa196794a338c30841675a06d644c018fb01e71fd</div>
+            <button onclick="copyDonate('0xcd4cce99429ee3b011b4e7baa196794a338c30841675a06d644c018fb01e71fd','aptos')" style="flex-shrink:0;background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.3);border-radius:8px;color:var(--accent);padding:.4rem .6rem;cursor:pointer;font-size:.7rem" id="copy-aptos">Copy</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:.8rem 1.2rem 1.2rem;color:var(--muted);font-size:.7rem">
+      Terima kasih sudah mendukung! 🙏
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-alert" style="z-index:350">
   <div class="modal" style="max-width:400px">
     <div class="modal-title" style="display:flex;align-items:center;gap:.4rem"><svg style="display:inline-block;vertical-align:middle;margin-right:.4rem;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Buat Price Alert BTC</div>
@@ -4753,21 +4834,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Reply bubble */
 .msg-reply-ref {
-  background:rgba(0,229,255,.08);
-  border-left:3px solid var(--accent);
-  border-radius:10px;
-  padding:.4rem .7rem;
-  margin-bottom:.25rem;
-  font-size:.75rem;
-  color:rgba(255,255,255,.8);
+  background:rgba(0,229,255,.08) !important;
+  border-left:3px solid var(--accent) !important;
+  border-radius:10px !important;
+  padding:.4rem .7rem !important;
+  margin-bottom:.25rem !important;
+  font-size:.75rem !important;
+  color:rgba(255,255,255,.8) !important;
   cursor:pointer;
-  transition:background .15s;
   user-select:none;
-  display:block;
-  white-space:normal;
-  word-break:break-word;
-  max-height:4rem;
-  overflow:hidden;
+  display:block !important;
+  white-space:normal !important;
+  word-break:break-word !important;
+  overflow:visible !important;
+  max-height:none !important;
 }
 .msg-reply-ref:hover,.msg-reply-ref:active {
   background:rgba(0,229,255,.15);
@@ -14387,6 +14467,36 @@ function saveAlerts(arr) {
 }
 
 function openAlertModal() { openModal('modal-alert'); }
+function openDonateModal() { openModal('modal-donate'); }
+
+function copyDonate(addr, id) {
+  navigator.clipboard.writeText(addr).then(() => {
+    const btn = document.getElementById('copy-' + id);
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Done';
+      btn.style.background = 'rgba(16,185,129,.3)';
+      btn.style.borderColor = 'rgba(16,185,129,.5)';
+      btn.style.color = '#10b981';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 2000);
+    }
+  }).catch(() => {
+    // Fallback
+    const el = document.createElement('textarea');
+    el.value = addr;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    toast('✅ Address disalin!');
+  });
+}
+
 
 function saveAlert() {
   const type = document.getElementById('alert-type')?.value;
