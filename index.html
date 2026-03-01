@@ -14696,11 +14696,23 @@ const ZW_FCM = (() => {
 // Dipanggil setiap kali ada perubahan alert/reminder
 async function _syncUserPushData() {
   try {
-    const userCode = chatState?.myCode || localStorage.getItem('chat_code');
-    if (!userCode) return;
+    // Tunggu userCode siap (max 5 detik)
+    let userCode = chatState?.myCode || localStorage.getItem('chat_code');
+    if (!userCode) {
+      let tries = 0;
+      while (!userCode && tries < 10) {
+        await new Promise(r => setTimeout(r, 500));
+        userCode = chatState?.myCode || localStorage.getItem('chat_code');
+        tries++;
+      }
+    }
+    if (!userCode) { console.warn('[Sync] No userCode, skip'); return; }
+    
     const alerts    = getAlerts();
     const reminders = getReminders();
-    await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/user_push_data', {
+    console.log('[Sync] Syncing', userCode, 'alerts:', alerts.length, 'reminders:', reminders.length);
+    
+    const res = await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/user_push_data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -14716,6 +14728,12 @@ async function _syncUserPushData() {
         updated_at:    new Date().toISOString(),
       })
     });
+    if (res.ok || res.status === 201) {
+      console.log('[Sync] ✅ user_push_data synced for', userCode);
+    } else {
+      const err = await res.text();
+      console.warn('[Sync] ❌ Failed:', res.status, err);
+    }
   } catch(e) { console.warn('[Sync] user_push_data error:', e.message); }
 }
 
