@@ -10,6 +10,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  console.log('[chat-notify] 🔔 Webhook received:', req.method, new Date().toISOString());
+  console.log('[chat-notify] Body keys:', Object.keys(req.body || {}));
+  console.log('[chat-notify] ENV check - SERVICE_KEY:', !!process.env.SUPABASE_SERVICE_KEY, '| WEBHOOK_SECRET:', !!process.env.SUPABASE_WEBHOOK_SECRET);
+  
   try {
     // ── 1. Verifikasi webhook secret (keamanan) ──
     const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
@@ -88,6 +92,7 @@ export default async function handler(req, res) {
     );
     const tokenRows = await tokenRes.json();
 
+    console.log('[chat-notify] FCM tokens found:', tokenRows?.length || 0);
     if (!tokenRows?.length) {
       return res.status(200).json({ sent: 0, message: 'No FCM tokens found' });
     }
@@ -172,6 +177,7 @@ export default async function handler(req, res) {
       }
     }
 
+    console.log('[chat-notify] ✅ Result:', { sent, failed, removed: invalidTokens.length, room: roomName });
     return res.status(200).json({
       sent,
       failed,
