@@ -4726,14 +4726,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   font-size:.65rem;font-weight:800;color:#fff;
   border:1px solid rgba(255,255,255,.15);
 }
-.msg-bubble-wrap { display:flex;flex-direction:column;gap:.2rem;min-width:0;overflow:hidden;max-width:100%; }
+.msg-bubble-wrap { display:flex;flex-direction:column;gap:.2rem;min-width:0;overflow:visible;max-width:100%; }
 .msg-sender-name { font-size:.6rem;color:var(--muted);padding:0 .5rem;font-weight:600; }
 .msg-row.mine .msg-sender-name { text-align:right;color:rgba(0,229,255,.7); }
 
 .msg-bubble {
   padding:.6rem .9rem;border-radius:18px;font-size:.85rem;line-height:1.5;
   position:relative;word-break:break-word;overflow-wrap:break-word;
-  overflow:hidden;min-width:0;max-width:100%;
+  overflow:visible;min-width:0;max-width:100%;
 }
 .msg-row.mine .msg-bubble {
   background:linear-gradient(135deg,rgba(0,180,220,.55),rgba(0,229,255,.4));
@@ -4760,7 +4760,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   cursor:pointer;transition:background .15s;
   user-select:none;
   display:block;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  white-space:normal;
+  word-break:break-word;
+  max-height:3.5rem;
+  overflow:hidden;
 }
 .msg-reply-ref:hover,.msg-reply-ref:active {
   background:rgba(0,229,255,.15);
@@ -12965,6 +12968,7 @@ let chatState = {
   currentRoomType: '',
   replyTo: null,
   replyText: '',
+  replySender: '',
   pendingMedia: null,
   rooms: [],
   msgSubscription: null,
@@ -13586,7 +13590,8 @@ function buildMsgBubble(msg) {
   let replyHtml = '';
   if (msg.reply_to && msg.reply_text) {
     replyHtml = `<div class="msg-reply-ref" data-reply-id="${escHtml(String(msg.reply_to))}" onclick="scrollToReplyMsg('${escHtml(String(msg.reply_to))}')" title="Tap untuk lihat pesan asli">
-      <span style="color:var(--accent);font-weight:800;font-size:.65rem;margin-right:.25rem">↩</span><span style="font-weight:600;font-size:.7rem;opacity:.6;margin-right:.3rem">${escHtml(String(msg.reply_text).slice(0,100))}${(msg.reply_text?.length||0)>100?'…':''}</span>
+      <div style="color:var(--accent);font-weight:700;font-size:.65rem;margin-bottom:.15rem">↩ ${escHtml(msg.reply_sender || 'Pesan')}</div>
+      <div style="font-size:.73rem;opacity:.75;line-height:1.4;word-break:break-word">${escHtml(String(msg.reply_text).slice(0,120))}${(msg.reply_text?.length||0)>120?'…':''}</div>
     </div>`;
   }
 
@@ -13620,7 +13625,7 @@ function buildMsgBubble(msg) {
       ${!isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
       <div class="msg-bubble-wrap">
         ${!isMine ? `<div class="msg-sender-name">${escHtml(msg.sender_code||'anon')}</div>` : ''}
-        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'📎 Media')}">
+        <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'📎 Media')}" data-msg-sender="${escHtml(msg.sender_code||'')}">
           ${replyHtml}${contentHtml}
         </div>
         <div class="msg-time">${t}</div>
@@ -13718,7 +13723,11 @@ async function sendMessage() {
       content: content || null,
     };
     if (media_url) { msg.media_url = media_url; msg.media_type = media_type; }
-    if (chatState.replyTo) { msg.reply_to = chatState.replyTo; msg.reply_text = chatState.replyText; }
+    if (chatState.replyTo) {
+      msg.reply_to   = chatState.replyTo;
+      msg.reply_text = chatState.replyText;
+      msg.reply_sender = chatState.replySender || '';
+    }
 
     inp.value = '';
     inp.style.height = '';
@@ -13767,11 +13776,12 @@ function bindReplyGesture(bubble) {
   bubble._replyBound = true;
 
   const triggerReply = () => {
-    const id = bubble.dataset.msgId;
-    const txt = bubble.dataset.msgText;
+    const id     = bubble.dataset.msgId;
+    const txt    = bubble.dataset.msgText;
+    const sender = bubble.dataset.msgSender || '';
     if (id && txt) {
       if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
-      setReply(id, txt);
+      setReply(id, txt, sender);
     }
   };
 
@@ -13836,9 +13846,10 @@ function bindReplyGesture(bubble) {
 }
 
 // ── REPLY ──
-function setReply(msgId, text) {
+function setReply(msgId, text, sender) {
   chatState.replyTo = msgId;
   chatState.replyText = text;
+  chatState.replySender = sender || '';
   const bar = document.getElementById('reply-preview');
   if (bar) { bar.classList.add('show'); }
   const pt = document.getElementById('reply-preview-text');
@@ -14745,8 +14756,16 @@ async function _syncNewsToDb(articles) {
     const topBearish = articles.filter(a => a.sentimen === 'NEGATIF').slice(0, 3);
     const payload = {
       id: 'latest',
-      bullish: topBullish.map(a => ({ title: a.judulID, summary: a.ringkasan, source: a.source })),
-      bearish: topBearish.map(a => ({ title: a.judulID, summary: a.ringkasan, source: a.source })),
+      bullish: topBullish.map(a => ({
+        title:   a.judulID,
+        summary: a.ringkasan || a.judulEN || '',
+        source:  a.source || 'Crypto News'
+      })),
+      bearish: topBearish.map(a => ({
+        title:   a.judulID,
+        summary: a.ringkasan || a.judulEN || '',
+        source:  a.source || 'Crypto News'
+      })),
       updated_at: new Date().toISOString(),
     };
     await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/news_cache', {
@@ -22876,9 +22895,9 @@ function checkAndSendNewsNotif(articles) {
       _newsNotifSentTitles.delete(first);
     }
     setTimeout(() => {
-      const bullishBody = topBullish.ringkasan 
-        ? topBullish.ringkasan.slice(0, 120)
-        : topBullish.judulID;
+      const bullishBody = topBullish.ringkasan
+        ? `${topBullish.ringkasan.slice(0, 100)} — ${topBullish.source || 'Crypto News'}`
+        : `${topBullish.judulEN?.slice(0, 100) || ''} — ${topBullish.source || 'Crypto News'}`;
       sendBrowserNotif(
         topBullish.judulID,
         bullishBody,
@@ -22897,8 +22916,8 @@ function checkAndSendNewsNotif(articles) {
     }
     setTimeout(() => {
       const bearishBody = topBearish.ringkasan
-        ? topBearish.ringkasan.slice(0, 120)
-        : topBearish.judulID;
+        ? `${topBearish.ringkasan.slice(0, 100)} — ${topBearish.source || 'Crypto News'}`
+        : `${topBearish.judulEN?.slice(0, 100) || ''} — ${topBearish.source || 'Crypto News'}`;
       sendBrowserNotif(
         topBearish.judulID,
         bearishBody,
