@@ -181,8 +181,11 @@ export default async function handler(req, res) {
             }).catch(() => {});
           }
 
-          if (newsData && ageMin > 120) {
-            console.log(`[price-check] News too old (${Math.round(ageMin)} min), skip`);
+            if (ageMin > 120) {
+            console.log(`[price-check] News too old (${Math.round(ageMin)} min ago), skip`);
+          }
+          if (!topBull && !topBear) {
+            console.log('[price-check] No bullish/bearish news in DB, skip. Run app to sync news.');
           }
         }
       } catch(e) {
