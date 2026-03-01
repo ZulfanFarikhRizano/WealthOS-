@@ -87,7 +87,7 @@ export default async function handler(req, res) {
 
     // ── 4. Ambil semua FCM token kecuali pengirim ──
     const tokenRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/push_subscriptions?select=fcm_token,user_code&fcm_token=not.is.null`,
+      `${SUPABASE_URL}/rest/v1/push_subscriptions?select=fcm_token,user_code&fcm_token=not.is.null&order=updated_at.desc`,
       { headers }
     );
     const tokenRows = await tokenRes.json();
@@ -97,10 +97,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ sent: 0, message: 'No FCM tokens found' });
     }
 
+    // Deduplicate: 1 token terbaru per user (hindari double notif)
+    const userTokenMap = new Map();
+    for (const r of tokenRows) {
+      if (r.user_code && r.fcm_token && !userTokenMap.has(r.user_code)) {
+        userTokenMap.set(r.user_code, r.fcm_token);
+      }
+    }
     // Filter: jangan kirim ke pengirim sendiri
-    const tokens = tokenRows
-      .filter(r => r.user_code !== sender_code && r.fcm_token)
-      .map(r => r.fcm_token)
+    const tokens = [...userTokenMap.entries()]
+      .filter(([userCode]) => userCode !== sender_code)
+      .map(([, token]) => token)
       .filter(Boolean);
 
     if (!tokens.length) {
@@ -128,10 +135,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               message: {
                 token,
-                notification: {
-                  title: notifTitle,
-                  body:  notifBody,
-                },
+                // Data-only message — SW yang handle tampilan (hindari double notif)
                 webpush: {
                   notification: {
                     title: notifTitle,
@@ -148,6 +152,8 @@ export default async function handler(req, res) {
                   room_id: String(room_id),
                   sender:  sender_code,
                   type:    'chat',
+                  title:   notifTitle,
+                  body:    notifBody,
                 },
               }
             })
