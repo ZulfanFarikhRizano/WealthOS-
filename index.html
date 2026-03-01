@@ -14600,9 +14600,8 @@ const ZW_FCM = (() => {
       _initialized = true;
 
       // Handle token refresh otomatis
-      _messaging.onTokenRefresh(() => {
-        getToken().catch(() => {});
-      });
+      // onTokenRefresh dihapus di Firebase v10+
+      // Token refresh ditangani otomatis oleh Firebase SDK
 
       // Handle notif saat app TERBUKA (foreground)
       // FCM tidak otomatis tampilkan notif di foreground — kita handle manual
@@ -14686,26 +14685,38 @@ const ZW_FCM = (() => {
 // Simpan FCM token ke Supabase DB agar server (webhook) bisa kirim push
 async function _saveFCMTokenToDB(token) {
   if (!token) return;
-  // Tunggu chatSB dan myCode siap (max 10 detik)
-  let tries = 0;
-  while ((!chatSB || !chatState?.myCode) && tries < 20) {
-    await new Promise(r => setTimeout(r, 500));
-    tries++;
-  }
-  if (!chatSB || !chatState?.myCode) {
-    console.warn('[FCM] _saveFCMTokenToDB: chatSB not ready after wait');
+  // Ambil user_code dari localStorage atau chatState
+  const userCode = chatState?.myCode || localStorage.getItem('chat_code');
+  if (!userCode) {
+    console.warn('[FCM] _saveFCMTokenToDB: no user_code');
     return;
   }
   try {
-    const { error } = await chatSB.from('push_subscriptions').upsert({
-      user_code:  chatState.myCode,
-      endpoint:   'fcm:' + token.slice(-40),
-      fcm_token:  token,
-      user_agent: navigator.userAgent.slice(0, 200),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'endpoint' });
-    if (error) console.warn('[FCM] Token DB save error:', error.message);
-    else console.log('[FCM] Token saved to DB for', chatState.myCode);
+    // Pakai fetch langsung ke Supabase REST API — tidak butuh chatSB
+    const res = await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/push_subscriptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        user_code:  userCode,
+        endpoint:   'fcm:' + token.slice(-40),
+        fcm_token:  token,
+        p256dh:     '',
+        auth:       '',
+        user_agent: navigator.userAgent.slice(0, 200),
+        updated_at: new Date().toISOString(),
+      })
+    });
+    if (res.ok || res.status === 201) {
+      console.log('[FCM] ✅ Token saved to DB for', userCode);
+    } else {
+      const err = await res.text();
+      console.warn('[FCM] Token DB save failed:', res.status, err);
+    }
   } catch(e) { console.warn('[FCM] Token DB save error:', e.message); }
 }
 
