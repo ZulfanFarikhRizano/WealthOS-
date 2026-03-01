@@ -120,65 +120,73 @@ export default async function handler(req, res) {
 
 
     // ── 4. Cek Berita Kripto (setiap 30 menit) ──
-    const THIRTY_MIN = 30 * 60 * 1000;
-    const lastNewsCheck = global._lastNewsCheck || 0;
-    const shouldCheckNews = (Date.now() - lastNewsCheck) >= THIRTY_MIN;
     let newsSent = 0;
 
-    if (shouldCheckNews && userTokenMap.size > 0) {
-      global._lastNewsCheck = Date.now();
+    if (userTokenMap.size > 0) {
       try {
-        // Baca berita dari DB (sudah diproses AI + sentimen oleh client)
+        // Baca berita dari DB — cek news_cache
         const newsRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/news_cache?id=eq.latest&select=bullish,bearish,updated_at`,
+          `${SUPABASE_URL}/rest/v1/news_cache?id=eq.latest&select=bullish,bearish,updated_at,last_bull_sent,last_bear_sent`,
           { headers: sbHeaders }
         );
         const newsRows = await newsRes.json();
         const newsData = newsRows?.[0];
 
         if (newsData) {
-          // Cek apakah berita masih fresh (max 2 jam)
-          const updatedAt = new Date(newsData.updated_at);
-          const ageMin    = (Date.now() - updatedAt) / 60000;
+          const updatedAt   = new Date(newsData.updated_at);
+          const ageMin      = (Date.now() - updatedAt) / 60000;
+          const allTokens   = [...userTokenMap.values()];
 
-          if (ageMin <= 120) {
-            if (!global._sentNewsTitles) global._sentNewsTitles = new Set();
-            const allTokens = [...userTokenMap.values()];
+          // Cek bullish — kirim jika judul berbeda dari yang terakhir dikirim
+          const topBull = (newsData.bullish || [])[0];
+          const lastBullSent = newsData.last_bull_sent || '';
+          if (topBull && ageMin <= 120 && topBull.title !== lastBullSent) {
+            // Format: judul langsung sebagai title, ringkasan sebagai body
+            const title = topBull.title.slice(0, 80);
+            const body  = topBull.summary
+              ? `${topBull.summary.slice(0, 100)} — ${topBull.source || 'Crypto News'}`
+              : (topBull.source || 'Berita kripto terbaru');
+            await Promise.allSettled(allTokens.map(t =>
+              sendFCM(t, title, body, 'news-bullish', accessToken)
+            ));
+            newsSent++;
+            console.log('[price-check] ✅ Bullish sent:', title);
+            // Simpan judul terakhir yang dikirim ke DB
+            fetch(`${SUPABASE_URL}/rest/v1/news_cache?id=eq.latest`, {
+              method: 'PATCH',
+              headers: { ...sbHeaders, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ last_bull_sent: topBull.title }),
+            }).catch(() => {});
+          }
 
-            const topBull = (newsData.bullish || [])[0];
-            const topBear = (newsData.bearish || [])[0];
+          // Cek bearish
+          const topBear = (newsData.bearish || [])[0];
+          const lastBearSent = newsData.last_bear_sent || '';
+          if (topBear && ageMin <= 120 && topBear.title !== lastBearSent) {
+            const title = topBear.title.slice(0, 80);
+            const body  = topBear.summary
+              ? `${topBear.summary.slice(0, 100)} — ${topBear.source || 'Crypto News'}`
+              : (topBear.source || 'Berita kripto terbaru');
+            // Delay 5 detik agar tidak tumpuk
+            await new Promise(r => setTimeout(r, 5000));
+            await Promise.allSettled(allTokens.map(t =>
+              sendFCM(t, title, body, 'news-bearish', accessToken)
+            ));
+            newsSent++;
+            console.log('[price-check] ✅ Bearish sent:', title);
+            fetch(`${SUPABASE_URL}/rest/v1/news_cache?id=eq.latest`, {
+              method: 'PATCH',
+              headers: { ...sbHeaders, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ last_bear_sent: topBear.title }),
+            }).catch(() => {});
+          }
 
-            if (topBull && !global._sentNewsTitles.has(topBull.title)) {
-              global._sentNewsTitles.add(topBull.title);
-              const body = topBull.summary
-                ? topBull.summary.slice(0, 100)
-                : `📈 ${topBull.source || 'Crypto News'}`;
-              await Promise.allSettled(allTokens.map(t =>
-                sendFCM(t, topBull.title.slice(0, 80), body, 'news-bullish', accessToken)
-              ));
-              newsSent++;
-              console.log('[price-check] Bullish news sent:', topBull.title);
-            }
-
-            if (topBear && !global._sentNewsTitles.has(topBear.title)) {
-              global._sentNewsTitles.add(topBear.title);
-              const body = topBear.summary
-                ? topBear.summary.slice(0, 100)
-                : `📉 ${topBear.source || 'Crypto News'}`;
-              await Promise.allSettled(allTokens.map(t =>
-                sendFCM(t, topBear.title.slice(0, 80), body, 'news-bearish', accessToken)
-              ));
-              newsSent++;
-              console.log('[price-check] Bearish news sent:', topBear.title);
-            }
-
-            if (global._sentNewsTitles.size > 200) global._sentNewsTitles.clear();
-          } else {
-            console.log(`[price-check] News too old (${Math.round(ageMin)} min), skipping`);
+          if (newsData && ageMin > 120) {
+            console.log(`[price-check] News too old (${Math.round(ageMin)} min), skip`);
           }
         }
       } catch(e) {
-        console.warn('[price-check] News check error:', e.message);
+        console.warn('[price-check] News error:', e.message);
       }
     }
 
