@@ -4733,7 +4733,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .msg-bubble {
   padding:.6rem .9rem;border-radius:18px;font-size:.85rem;line-height:1.5;
   position:relative;word-break:break-word;overflow-wrap:break-word;
-  overflow:visible;min-width:0;max-width:100%;
+  overflow:hidden;min-width:0;max-width:100%;
 }
 .msg-row.mine .msg-bubble {
   background:linear-gradient(135deg,rgba(0,180,220,.55),rgba(0,229,255,.4));
@@ -4753,16 +4753,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Reply bubble */
 .msg-reply-ref {
-  background:rgba(0,0,0,.25);
+  background:rgba(0,229,255,.08);
   border-left:3px solid var(--accent);
-  border-radius:8px;padding:.4rem .7rem;margin-bottom:.4rem;
-  font-size:.75rem;color:rgba(255,255,255,.75);
-  cursor:pointer;transition:background .15s;
+  border-radius:10px;
+  padding:.4rem .7rem;
+  margin-bottom:.25rem;
+  font-size:.75rem;
+  color:rgba(255,255,255,.8);
+  cursor:pointer;
+  transition:background .15s;
   user-select:none;
   display:block;
   white-space:normal;
   word-break:break-word;
-  max-height:3.5rem;
+  max-height:4rem;
   overflow:hidden;
 }
 .msg-reply-ref:hover,.msg-reply-ref:active {
@@ -13625,8 +13629,9 @@ function buildMsgBubble(msg) {
       ${!isMine ? `<div class="msg-avatar" style="background:${color}">${initial}</div>` : ''}
       <div class="msg-bubble-wrap">
         ${!isMine ? `<div class="msg-sender-name">${escHtml(msg.sender_code||'anon')}</div>` : ''}
+        ${replyHtml}
         <div class="msg-bubble" data-msg-id="${msg.id}" data-msg-text="${escHtml(msg.content||'📎 Media')}" data-msg-sender="${escHtml(msg.sender_code||'')}">
-          ${replyHtml}${contentHtml}
+          ${contentHtml}
         </div>
         <div class="msg-time">${t}</div>
       </div>
