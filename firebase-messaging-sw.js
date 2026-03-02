@@ -4,7 +4,7 @@
 // ================================================================
 
 // ⚠️ CACHE VERSION — Ganti angka ini setiap kali deploy agar cache lama dihapus
-const CACHE_VERSION = 'v3'; // <-- UBAH INI setiap deploy (v1, v2, v3, dst)
+const CACHE_VERSION = 'v4'; // <-- UBAH INI setiap deploy (v1, v2, v3, dst)
 const CACHE_NAME = 'z-wealth-' + CACHE_VERSION;
 
 // File yang di-cache untuk offline
