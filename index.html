@@ -15,7 +15,7 @@
 <meta name="application-name" content="z-wealth">
 <meta name="msapplication-TileColor" content="#050810">
 <meta name="msapplication-tap-highlight" content="no">
-<!--punya zulfan-->
+
 <!-- SEO & Open Graph -->
 <meta name="description" content="Catat dan pantau investasi Bitcoin DCA kamu secara real-time">
 <meta property="og:title" content="z-wealth · Bitcoin DCA Tracker">
@@ -3007,11 +3007,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 <div id="page-dashboard" class="page active">
   <div class="ph"><h1 data-i18n="page.dashboard.title">Command Center</h1><p id="dash-date"></p></div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalasset">Total Aset</div><div class="sval acc" id="d-total">Rp 0</div><div class="ssub" id="d-total2">—</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalinvest">Total Investasi</div><div class="sval" id="d-invest">Rp 0</div><div class="ssub">Modal diinvestasikan</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalpnl">Total P&amp;L</div><div class="sval pos" id="d-pnl">Rp 0</div><div class="ssub pos" id="d-pnl-pct">+0.00%</div></div>
+    <div class="stat-card"><div class="slabel" style="display:flex;align-items:center;justify-content:space-between;"><span data-i18n="stat.totalasset">Total Aset</span><button id="btn-hide-vals" onclick="toggleHideValues()" title="Sembunyikan nominal" style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--muted);font-size:1rem;line-height:1;transition:color .2s;display:flex;align-items:center;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'"><svg id="eye-icon-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg id="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div><div class="sval acc sensitive-val" id="d-total">Rp 0</div><div class="ssub sensitive-val" id="d-total2">—</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalinvest">Total Investasi</div><div class="sval sensitive-val" id="d-invest">Rp 0</div><div class="ssub">Modal diinvestasikan</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalpnl">Total P&amp;L</div><div class="sval pos sensitive-val" id="d-pnl">Rp 0</div><div class="ssub pos sensitive-val" id="d-pnl-pct">+0.00%</div></div>
     <div class="stat-card"><div class="slabel">Bitcoin Price</div><div class="sval gld" id="d-btc">—</div><div class="ssub" id="d-btc-chg">—</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalbtc">Total BTC</div><div class="sval" id="d-btcamt">0 BTC</div><div class="ssub" id="d-btcidr">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalbtc">Total BTC</div><div class="sval sensitive-val" id="d-btcamt">0 BTC</div><div class="ssub sensitive-val" id="d-btcidr">Rp 0</div></div>
     <div class="stat-card"><div class="slabel" data-i18n="stat.dcaentries">DCA Entries</div><div class="sval acc" id="d-entries">0</div><div class="ssub" id="d-avg">Avg: $0</div></div>
   </div>
 
@@ -3828,11 +3828,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalinvest">Total Investasi</div><div class="sval" id="dca-invest">Rp 0</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.valuenow">Nilai Sekarang</div><div class="sval acc" id="dca-val">Rp 0</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalpnl">Total P&amp;L</div><div class="sval pos" id="dca-pnl">Rp 0</div><div class="ssub pos" id="dca-pnl-pct">+0%</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.avgbuy">Average Buy Price</div><div class="sval gld" id="dca-avg">$0</div></div>
-    <div class="stat-card"><div class="slabel" data-i18n="stat.totalbtc">Total BTC</div><div class="sval" id="dca-btc">0 BTC</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalinvest">Total Investasi</div><div class="sval sensitive-val" id="dca-invest">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.valuenow">Nilai Sekarang</div><div class="sval acc sensitive-val" id="dca-val">Rp 0</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalpnl">Total P&amp;L</div><div class="sval pos sensitive-val" id="dca-pnl">Rp 0</div><div class="ssub pos sensitive-val" id="dca-pnl-pct">+0%</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.avgbuy">Average Buy Price</div><div class="sval gld sensitive-val" id="dca-avg">$0</div></div>
+    <div class="stat-card"><div class="slabel" data-i18n="stat.totalbtc">Total BTC</div><div class="sval sensitive-val" id="dca-btc">0 BTC</div></div>
   </div>
   <div class="chart-wrap"><div class="sec-title">Performa Per Pembelian</div><div class="chart-container"><canvas id="c-dca"></canvas></div></div>
 
@@ -10680,8 +10680,8 @@ function refreshDashStats(){
   const q=id=>document.getElementById(id);
   q('d-total').textContent=fmtIDR(cv+ptot);
   q('d-invest').textContent=fmtIDR(ti);
-  q('d-pnl').textContent=fmtIDR(Math.abs(pnl));q('d-pnl').className='sval '+(pnl>=0?'pos':'neg');
-  q('d-pnl-pct').textContent=fmtPct(pp);q('d-pnl-pct').className='ssub '+(pnl>=0?'pos':'neg');
+  q('d-pnl').textContent=fmtIDR(Math.abs(pnl));q('d-pnl').className='sval sensitive-val '+(pnl>=0?'pos':'neg');
+  q('d-pnl-pct').textContent=fmtPct(pp);q('d-pnl-pct').className='ssub sensitive-val '+(pnl>=0?'pos':'neg');
   q('d-btcamt').textContent=fmtBTC(tb);
   q('d-btcidr').textContent=fmtIDR(cv);
   q('d-entries').textContent=S.dca.length;
@@ -10733,8 +10733,8 @@ function refreshDCAStats(){
   const q=id=>document.getElementById(id);
   q('dca-invest').textContent=fmtIDR(ti);
   q('dca-val').textContent=fmtIDR(cv);
-  q('dca-pnl').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));q('dca-pnl').className='sval '+(pnl>=0?'pos':'neg');
-  q('dca-pnl-pct').textContent=fmtPct(pp);q('dca-pnl-pct').className='ssub '+(pnl>=0?'pos':'neg');
+  q('dca-pnl').textContent=(pnl>=0?'+':'')+fmtIDR(Math.abs(pnl));q('dca-pnl').className='sval sensitive-val '+(pnl>=0?'pos':'neg');
+  q('dca-pnl-pct').textContent=fmtPct(pp);q('dca-pnl-pct').className='ssub sensitive-val '+(pnl>=0?'pos':'neg');
   q('dca-avg').textContent='$'+Math.round(avg).toLocaleString();
   q('dca-btc').textContent=fmtBTC(tb);
 }
@@ -26970,6 +26970,23 @@ input[type=range] {
 .theme-toggle:hover, .theme-toggle:active, .theme-toggle:focus {
   transform: none !important;
 }
+
+/* ── HIDE VALUES FEATURE ── */
+.sensitive-val {
+  transition: filter .3s ease;
+}
+/* Body-class approach: lebih robust terhadap dynamic re-render */
+body.vals-hidden .sensitive-val {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+}
+/* Fallback class juga tetap ada */
+.sensitive-val.hidden-val {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+}
 </style>
 
 <script>
@@ -27155,5 +27172,61 @@ input[type=range] {
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', init)
     : setTimeout(init, 50);
+})();
+
+/* ── HIDE SENSITIVE VALUES ── */
+(function() {
+  var HIDDEN_KEY = 'zw_vals_hidden';
+  var hidden = localStorage.getItem(HIDDEN_KEY) === '1';
+  var applying = false;
+
+  function applyHiddenState() {
+    if (applying) return;
+    applying = true;
+    // Toggle class on body — CSS handles the blur (no per-element classList churn)
+    if (hidden) {
+      document.body.classList.add('vals-hidden');
+    } else {
+      document.body.classList.remove('vals-hidden');
+    }
+    // Update eye icons
+    var eyeOpen   = document.getElementById('eye-icon-open');
+    var eyeClosed = document.getElementById('eye-icon-closed');
+    if (eyeOpen)   eyeOpen.style.display   = hidden ? 'none' : '';
+    if (eyeClosed) eyeClosed.style.display = hidden ? ''     : 'none';
+    applying = false;
+  }
+
+  window.toggleHideValues = function() {
+    hidden = !hidden;
+    localStorage.setItem(HIDDEN_KEY, hidden ? '1' : '0');
+    applyHiddenState();
+  };
+
+  // Apply immediately and also on DOMContentLoaded in case called before DOM ready
+  applyHiddenState();
+  document.addEventListener('DOMContentLoaded', applyHiddenState);
+
+  // MutationObserver: re-apply whenever DOM changes (dynamic data updates)
+  // Using body-level CSS class means we only need to re-apply icons if they get re-rendered
+  var observer = new MutationObserver(function(mutations) {
+    if (applying) return;
+    // Only re-apply if something changed inside stats-grid
+    var relevant = mutations.some(function(m) {
+      return m.target && (
+        m.target.closest ? m.target.closest('.stats-grid') : true
+      );
+    });
+    if (relevant) applyHiddenState();
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var grid = document.querySelector('.stats-grid');
+    if (grid) {
+      observer.observe(grid, { childList: true, subtree: true, characterData: true });
+    }
+    // Also observe body for page switches that might re-render the dashboard
+    observer.observe(document.body, { childList: true, subtree: false });
+  });
 })();
 </script>
