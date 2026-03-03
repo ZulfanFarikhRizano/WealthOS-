@@ -1,6 +1,6 @@
 /* z-wealth · merged scripts · auto-split */
 
-/* ── LAZY LOAD PATCHES ── */
+/* ── LAZY LOAD zullatter ── */
 
 /* ── LAZY LOAD Firebase & WalletConnect ── */
 (function(){
