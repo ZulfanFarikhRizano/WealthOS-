@@ -1346,7 +1346,7 @@ async function okxKlines(symbol, interval, limit) {
 async function fetchKlines(symbol, interval, limit=150) {
   // 1. Vercel proxy (server-side, tidak kena CORS)
   try {
-    const r = await fetch(`/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`, {signal: AbortSignal.timeout(10000)});
+    const r = await fetch(`/api/market?action=klines&symbol=${symbol}&interval=${interval}&limit=${limit}`, {signal: AbortSignal.timeout(10000)});
     const d = await r.json();
     if (d.ok && d.data && d.data.length) return d.data;
   } catch(e) { console.warn('[/api/klines]', e.message); }
@@ -1502,7 +1502,7 @@ async function fetchTicker24h(symbol) {
 
   // 1. Vercel proxy /api/ticker (paling andal)
   try {
-    const r = await fetch(`/api/ticker?symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
+    const r = await fetch(`/api/market?action=ticker&symbol=${symbol}`, {signal: AbortSignal.timeout(6000)});
     const d = await r.json();
     if (d.ok && d.data) return d.data;
   } catch(e) { console.warn('[/api/ticker]', e.message); }
@@ -8215,7 +8215,7 @@ const ZW_FCM = (() => {
     const token = _fcmToken || localStorage.getItem('zw_fcm_token');
     if (!token) return;
     try {
-      const resp = await fetch('/api/notify', {
+      const resp = await fetch('/api/notifications?action=notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, title, body, tag: tag || 'zwealth', url: url || '/' })
@@ -12801,7 +12801,7 @@ const ChatNotif = (() => {
     // In-app toast
     showToast(msg, roomData);
 
-    // Push notif ditangani oleh server webhook (chat-notify.js)
+    // Push notif ditangani oleh server webhook → /api/notifications?action=chat-notify
     // Client hanya update UI — tidak kirim push agar tidak double
   }
 
@@ -15850,7 +15850,7 @@ async function loadCryptoNews(forceRefresh = false) {
     // ── Step 1: RSS Feed ──
     let rawPosts = [];
     try {
-      const rssRes = await fetch('/api/rss');
+      const rssRes = await fetch('/api/news?action=rss');
       if (rssRes.ok) {
         const rssData = await rssRes.json();
         rawPosts = (rssData.articles || []).map(a => ({
@@ -18042,7 +18042,7 @@ async function fetchPLHistory() {
 
   // ── Source 0: Vercel proxy (server-side CoinGecko — no user rate limit, full history) ──
   try {
-    const r = await fetchWithTimeout('/api/btchistory', 15000);
+    const r = await fetchWithTimeout('/api/market?action=btchistory', 15000);
     if (r.ok) {
       const d = await r.json();
       if (d && d.prices && d.prices.length > 200) {
@@ -18468,7 +18468,7 @@ async function fetchCMCEvents(dateFrom, dateTo) {
 // ── Fetch Finnhub via Vercel proxy /api/finnhub ──
 async function fetchFinnhubCalendar(dateFrom, dateTo) {
   try {
-    const url = `/api/finnhub?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+    const url = `/api/market?action=finnhub&dateFrom=${dateFrom}&dateTo=${dateTo}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error('Finnhub proxy ' + res.status);
     const data = await res.json();
