@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
   <!-- v1772377485 -->
-  <!-- punya zulfan-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>z-wealth · Bitcoin DCA Tracker</title>
 
@@ -570,11 +569,12 @@
 <div id="chat-notif-toast" style="
   position:fixed;
   top:1rem;
-  left:50%;
-  transform:translateX(-50%) translateY(-120px);
+  left:1rem;
+  right:1rem;
+  transform:translateY(-120px);
   z-index:9990;
-  width:calc(100% - 2rem);
   max-width:400px;
+  margin:0 auto;
   transition:transform .4s cubic-bezier(.34,1.3,.64,1), opacity .4s ease;
   opacity:0;
   pointer-events:none;
@@ -674,13 +674,30 @@
           <div class="fpp-label" data-i18n="feat.signal_ai">Signal AI<br>Futures BTC</div>
         </button>
 
-        <button class="fpp-btn" onclick="showComingSoon('Fitur Baru')" style="
-          background:linear-gradient(145deg,rgba(51,65,85,.7) 0%,rgba(71,85,105,.55) 100%);
-          box-shadow:0 4px 16px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);opacity:.72;
+        <!-- Bitcoin Power Law -->
+        <button class="fpp-btn" onclick="toggleFiturMore();showPage('btc-powerlaw')" style="
+          background:linear-gradient(145deg,rgba(124,58,237,.65) 0%,rgba(79,70,229,.55) 50%,rgba(139,92,246,.45) 100%);
+          box-shadow:0 8px 24px rgba(124,58,237,.4),inset 0 1px 0 rgba(255,255,255,.2);
         ">
-          <div class="fb-blob" style="background:#475569"></div>
-          <div class="fpp-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-          <div class="fpp-label" data-i18n="feat.soon">Segera<br>Hadir</div><div class="fpp-soon" data-i18n="feat.in_dev">Dalam pengembangan</div>
+          <div class="fb-blob" style="background:#7c3aed"></div>
+          <div class="fpp-new" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)">NEW</div>
+          <div class="fpp-icon" style="margin-top:.2rem">
+            <svg viewBox="0 0 24 24"><polyline points="2 20 6 14 10 17 14 8 18 11 22 3"/><path d="M22 3h-5M22 3v5"/></svg>
+          </div>
+          <div class="fpp-label">Bitcoin<br>Power Law</div>
+        </button>
+
+        <!-- Crypto Calendar -->
+        <button class="fpp-btn" onclick="toggleFiturMore();showPage('crypto-calendar')" style="
+          background:linear-gradient(145deg,rgba(6,182,212,.6) 0%,rgba(14,165,233,.5) 50%,rgba(59,130,246,.45) 100%);
+          box-shadow:0 8px 24px rgba(6,182,212,.4),inset 0 1px 0 rgba(255,255,255,.2);
+        ">
+          <div class="fb-blob" style="background:#06b6d4"></div>
+          <div class="fpp-new" style="background:linear-gradient(90deg,#06b6d4,#3b82f6)">NEW</div>
+          <div class="fpp-icon" style="margin-top:.2rem">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="fpp-label">Crypto<br>Calendar</div>
         </button>
 
         <button class="fpp-btn" onclick="showComingSoon('Fitur Baru')" style="
@@ -701,17 +718,8 @@
           <div class="fpp-label" data-i18n="feat.soon">Segera<br>Hadir</div><div class="fpp-soon" data-i18n="feat.in_dev">Dalam pengembangan</div>
         </button>
 
-        <button class="fpp-btn" onclick="showComingSoon('Fitur Baru')" style="
-          background:linear-gradient(145deg,rgba(51,65,85,.7) 0%,rgba(71,85,105,.55) 100%);
-          box-shadow:0 4px 16px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);opacity:.72;
-        ">
-          <div class="fb-blob" style="background:#475569"></div>
-          <div class="fpp-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-          <div class="fpp-label" data-i18n="feat.soon">Segera<br>Hadir</div><div class="fpp-soon" data-i18n="feat.in_dev">Dalam pengembangan</div>
-        </button>
-
-      </div>
-    </div>
+      </div><!-- /fitur-popup-grid -->
+    </div><!-- /fitur-more-panel -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
 
       <!-- 1. Ganti Tema Warna -->
@@ -1654,17 +1662,28 @@
     </div>
   </div>
 
-  <!-- Whitepaper Button -->
-  <button onclick="window.open('https://bitcoin.org/files/bitcoin-paper/bitcoin_id.pdf','_blank')"
-    style="width:100%;padding:.9rem;border-radius:14px;border:none;cursor:pointer;
-      background:linear-gradient(135deg,#f7931a,#e67d00);
-      color:#fff;font-size:.85rem;font-weight:900;font-family:'Inter',sans-serif;
-      letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:.55rem;
-      box-shadow:0 4px 24px rgba(247,147,26,.45);margin-bottom:1.5rem">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    Baca Bitcoin Whitepaper (Bahasa Indonesia)
-  </button>
+  <!-- Whitepaper Buttons -->
+  <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.5rem">
+    <button onclick="window.open('https://bitcoin.org/files/bitcoin-paper/bitcoin_id.pdf','_blank')"
+      style="width:100%;padding:.85rem 1rem;border-radius:14px;border:none;cursor:pointer;
+        background:linear-gradient(135deg,#f7931a,#e67d00);
+        color:#fff;font-size:.82rem;font-weight:900;font-family:'Inter',sans-serif;
+        letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:.5rem;
+        white-space:nowrap;box-shadow:0 4px 24px rgba(247,147,26,.45)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Bitcoin Whitepaper (Bahasa Indonesia)
+    </button>
+    <button onclick="window.open('https://bitcoin.org/bitcoin.pdf','_blank')"
+      style="width:100%;padding:.85rem 1rem;border-radius:14px;cursor:pointer;
+        background:transparent;
+        border:1.5px solid rgba(247,147,26,.55);
+        color:#f7931a;font-size:.82rem;font-weight:900;font-family:'Inter',sans-serif;
+        letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:.5rem;
+        white-space:nowrap;box-shadow:0 2px 12px rgba(247,147,26,.15)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Bitcoin Whitepaper (English)
+    </button>
+  </div>
 
 </div>
 
@@ -2744,8 +2763,172 @@
 </div>
 </div><!-- end page-news -->
 
-<!-- ══════════ THEME PAGE ══════════ -->
+<!-- PAGE: BTC POWER LAW -->
+<div id="page-btc-powerlaw" class="page">
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.1rem">
+    <button onclick="showPage('dashboard')"
+      style="display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
+    </button>
+    <div style="font-size:.78rem;color:var(--muted)">Home</div>
+  </div>
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(139,92,246,.08));border:1px solid rgba(124,58,237,.3);border-radius:18px;padding:1.1rem 1.2rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem">
+      <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 20 6 14 10 17 14 8 18 11 22 3"/><path d="M22 3h-5M22 3v5"/></svg>
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:900;color:#f1f5f9">Bitcoin Power Law</div>
+        <div style="font-size:.7rem;color:rgba(167,139,250,.8);margin-top:.1rem">Model harga jangka panjang berbasis matematika</div>
+      </div>
+    </div>
+    <div style="font-size:.74rem;color:rgba(203,213,225,.8);line-height:1.6">
+      Power Law adalah model yang menunjukkan bahwa harga Bitcoin mengikuti <strong style="color:#a78bfa">pertumbuhan pangkat</strong> terhadap waktu — bukan linear. Model Giovanni Santostasi menunjukkan Bitcoin bergerak dalam koridor antara <strong style="color:#10b981">support bawah</strong> dan <strong style="color:#ef4444">resistance atas</strong> secara konsisten sejak 2010.
+    </div>
+  </div>
+
+  <!-- Chart area -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem">
+    <div style="padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:.78rem;font-weight:700;color:var(--text)">Grafik Power Law (Log Scale)</div>
+      <div id="pl-price-badge" style="font-size:.72rem;font-weight:800;color:#f7931a;background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.25);border-radius:8px;padding:.25rem .6rem">Loading...</div>
+    </div>
+    <div style="position:relative;padding:.75rem;height:258px">
+      <canvas id="pl-chart" style="width:100%;height:240px;display:block"></canvas>
+      <div id="pl-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:12px">
+        <div style="text-align:center;color:var(--muted);font-size:.78rem">
+          <div style="margin-bottom:.5rem;font-size:1.3rem">⚡</div>
+          Memuat data historis...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
+    <div style="background:var(--surface);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:.65rem .75rem;text-align:center">
+      <div style="width:20px;height:3px;background:#ef4444;border-radius:2px;margin:0 auto .4rem"></div>
+      <div style="font-size:.62rem;color:var(--muted)">Resistance</div>
+      <div id="pl-top-val" style="font-size:.75rem;font-weight:800;color:#ef4444;margin-top:.2rem">—</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(247,147,26,.3);border-radius:12px;padding:.65rem .75rem;text-align:center">
+      <div style="width:20px;height:3px;background:#f7931a;border-radius:2px;margin:0 auto .4rem"></div>
+      <div style="font-size:.62rem;color:var(--muted)">Harga Saat Ini</div>
+      <div id="pl-cur-val" style="font-size:.75rem;font-weight:800;color:#f7931a;margin-top:.2rem">—</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:.65rem .75rem;text-align:center">
+      <div style="width:20px;height:3px;background:#10b981;border-radius:2px;margin:0 auto .4rem"></div>
+      <div style="font-size:.62rem;color:var(--muted)">Support</div>
+      <div id="pl-bot-val" style="font-size:.75rem;font-weight:800;color:#10b981;margin-top:.2rem">—</div>
+    </div>
+  </div>
+
+  <!-- Position indicator -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:1rem">
+    <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem">Posisi Harga dalam Koridor</div>
+    <div style="background:rgba(255,255,255,.05);border-radius:8px;height:10px;overflow:hidden;margin-bottom:.5rem">
+      <div id="pl-position-bar" style="height:100%;border-radius:8px;background:linear-gradient(90deg,#10b981,#f7931a,#ef4444);width:50%;transition:width .8s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted)">
+      <span>🟢 Undervalued</span>
+      <span id="pl-position-pct" style="color:var(--text);font-weight:700">—%</span>
+      <span>🔴 Overvalued</span>
+    </div>
+  </div>
+
+  <!-- Proyeksi Harga -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:1rem">
+    <div style="font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:.75rem">📊 Proyeksi Power Law</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem" id="pl-projections">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:.75rem 1rem;margin-bottom:1.5rem">
+    <div style="font-size:.7rem;color:rgba(245,158,11,.85);line-height:1.55">
+      ⚠️ <strong>Bukan saran investasi.</strong> Power Law adalah model matematis historis — tidak menjamin harga masa depan. Gunakan sebagai referensi, bukan panduan trading.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: CRYPTO CALENDAR ══════════ -->
+<div id="page-crypto-calendar" class="page">
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.1rem">
+    <button onclick="showPage('dashboard')"
+      style="display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.5rem .9rem;color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
+    </button>
+    <div style="font-size:.78rem;color:var(--muted)">Home</div>
+  </div>
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,rgba(6,182,212,.15),rgba(59,130,246,.08));border:1px solid rgba(6,182,212,.3);border-radius:18px;padding:1.1rem 1.2rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#3b82f6);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+          <div style="font-size:1rem;font-weight:900;color:#f1f5f9">Crypto Calendar</div>
+          <div id="cal-week-label" style="font-size:.7rem;color:rgba(103,232,249,.8);margin-top:.1rem">Minggu ini</div>
+        </div>
+      </div>
+      <button onclick="loadCryptoCalendar()" style="width:32px;height:32px;border-radius:9px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:#67e8f9;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+    <!-- Status bar -->
+    <div id="cal-status" style="font-size:.62rem;color:rgba(103,232,249,.6);margin-top:.5rem;min-height:.8rem"></div>
+  </div><!-- /header -->
+
+  <!-- Week navigation -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem">
+    <button onclick="calPrevWeek()" class="cal-week-btn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Prev
+    </button>
+    <div id="cal-range-label" style="font-size:.78rem;font-weight:700;color:var(--text)">—</div>
+    <button onclick="calNextWeek()" class="cal-week-btn">
+      Next
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- Calendar grid -->
+  <div id="cal-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- Event detail panel -->
+  <div id="cal-detail" style="display:none;background:var(--surface);border:1px solid rgba(6,182,212,.3);border-radius:14px;padding:1rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+      <div style="font-size:.75rem;font-weight:700;color:#67e8f9">Detail Event</div>
+      <button onclick="document.getElementById('cal-detail').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1">×</button>
+    </div>
+    <div id="cal-detail-content"></div>
+  </div>
+
+  <!-- Legend -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.75rem 1rem;margin-bottom:1.5rem">
+    <div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em">Keterangan</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem .9rem">
+      <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#f7931a;flex-shrink:0"></div> BTC/Crypto Event</div>
+      <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#3b82f6;flex-shrink:0"></div> Ekonomi Makro</div>
+      <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#10b981;flex-shrink:0"></div> Token Unlock</div>
+      <div style="display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#8b5cf6;flex-shrink:0"></div> Listing/Launch</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end #app -->
+
+<!-- ══════════ THEME PAGE ══════════ -->
+
 
 <!-- ══════════ MODALS ══════════ -->
 <div class="overlay" id="modal-dca">
@@ -2893,55 +3076,117 @@
 
 <div class="overlay" id="modal-acct">
   <div class="modal modal-acct-glass">
+
+    <!-- Header -->
     <div class="acct-hdr">
       <div class="acct-title">
-        <div class="acct-title-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="acct-title-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
         Info Akun
       </div>
-      <button class="acct-x" onclick="closeModal('modal-acct')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="acct-x" onclick="closeModal('modal-acct')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
+
+    <!-- Seed Phrase -->
     <div class="acct-seed-box">
       <div class="acct-seed-lbl">SEED PHRASE</div>
       <div class="seed-row" id="acct-seed-row" style="margin:0"></div>
-      <div class="acct-seed-warn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Jangan bagikan ke siapapun. Gunakan untuk login dari device lain.</div>
+      <div class="acct-seed-warn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Jangan bagikan ke siapapun. Gunakan untuk login dari device lain.
+      </div>
     </div>
+
+    <!-- Stats -->
     <div class="acct-stats">
-      <div class="acct-stat"><div class="acct-stat-l">DCA</div><div class="acct-stat-v" id="acct-dca">0</div></div>
+      <div class="acct-stat">
+        <div class="acct-stat-l">DCA</div>
+        <div class="acct-stat-v" id="acct-dca">0</div>
+      </div>
       <div class="acct-stat-sep"></div>
-      <div class="acct-stat"><div class="acct-stat-l">Aset</div><div class="acct-stat-v" id="acct-port">0</div></div>
+      <div class="acct-stat">
+        <div class="acct-stat-l">Aset</div>
+        <div class="acct-stat-v" id="acct-port">0</div>
+      </div>
       <div class="acct-stat-sep"></div>
-      <div class="acct-stat"><div class="acct-stat-l">Transaksi</div><div class="acct-stat-v" id="acct-cf">0</div></div>
+      <div class="acct-stat">
+        <div class="acct-stat-l">Transaksi</div>
+        <div class="acct-stat-v" id="acct-cf">0</div>
+      </div>
     </div>
+
+    <!-- Sync + Cloud status -->
     <div id="acct-sync" class="acct-sync">—</div>
     <div id="acct-sync-cloud-status" style="display:none;font-size:.72rem;color:var(--muted);text-align:center;margin-top:.3rem"></div>
+
+    <!-- Multi-device badge -->
     <div class="acct-mdev">
       <div class="acct-mdev-dot"></div>
-      <div><div class="acct-mdev-t">Login multi-device aktif</div><div class="acct-mdev-s">Cukup masukkan 3 kata seed phrase di device manapun</div></div>
+      <div>
+        <div class="acct-mdev-t">Login multi-device aktif</div>
+        <div class="acct-mdev-s">Cukup masukkan 3 kata seed phrase di device manapun</div>
+      </div>
     </div>
-    <!-- Notifikasi status card di modal Akun -->
-    <div id="acct-notif-card" style="margin-bottom:.75rem;padding:.75rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:space-between;gap:.75rem">
-      <div style="display:flex;align-items:center;gap:.55rem;min-width:0">
-        <div id="acct-notif-icon" style="width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+
+    <!-- Settings cards: Notifikasi + Fingerprint -->
+    <div class="acct-settings-group">
+
+      <!-- Notifikasi -->
+      <div id="acct-notif-card" class="acct-setting-row">
+        <div class="acct-setting-left">
+          <div id="acct-notif-icon" class="acct-setting-icon" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.22)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </div>
+          <div class="acct-setting-text">
+            <div id="acct-notif-label" class="acct-setting-title" style="color:#ef4444">Notifikasi Nonaktif</div>
+            <div id="acct-notif-sub" class="acct-setting-sub">Tap untuk aktifkan push notif</div>
+          </div>
         </div>
-        <div style="min-width:0">
-          <div id="acct-notif-label" style="font-size:.75rem;font-weight:700;color:#ef4444">Notifikasi Nonaktif</div>
-          <div id="acct-notif-sub" style="font-size:.65rem;color:var(--muted);margin-top:.1rem">Tap untuk aktifkan push notif</div>
+        <button id="acct-notif-btn" onclick="acctToggleNotif()" class="acct-notif-toggle-btn">
+          Aktifkan
+        </button>
+      </div>
+
+      <!-- Fingerprint -->
+      <div id="acct-fp-card" class="acct-setting-row" style="border-top:1px solid rgba(255,255,255,.05);border-radius:0 0 14px 14px">
+        <div class="acct-setting-left">
+          <div id="acct-fp-icon" class="acct-setting-icon" style="background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.22)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2z"/><path d="M12 4C8.1 4 5 7.1 5 11c0 2.1.9 4 2.3 5.4"/><path d="M12 4c3.9 0 7 3.1 7 7 0 2.1-.9 4-2.3 5.4"/><path d="M12 7c-2.2 0-4 1.8-4 4 0 1.2.5 2.2 1.3 3"/><path d="M12 7c2.2 0 4 1.8 4 4 0 1.2-.5 2.2-1.3 3"/></svg>
+          </div>
+          <div class="acct-setting-text">
+            <div id="acct-fp-label" class="acct-setting-title">Kunci Fingerprint</div>
+            <div id="acct-fp-sub" class="acct-setting-sub">Kunci app dengan biometrik saat idle</div>
+          </div>
+        </div>
+        <div onclick="toggleFingerprintLock()" id="fp-toggle-wrap" class="acct-fp-toggle">
+          <div id="fp-toggle-knob" class="acct-fp-knob"></div>
         </div>
       </div>
-      <button id="acct-notif-btn" onclick="acctToggleNotif()" style="flex-shrink:0;padding:.4rem .85rem;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s">
-        Aktifkan
-      </button>
+
     </div>
+
+    <!-- Action Buttons -->
     <div class="acct-btns">
       <button class="btn btn-ghost" onclick="closeModal('modal-acct')">Tutup</button>
-      <button class="btn acct-btn-seed" onclick="showChangeSeed()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Ganti Seed</button>
-      <button class="btn acct-btn-out" onclick="doLogout()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
+      <button class="btn acct-btn-seed" onclick="showChangeSeed()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Ganti Seed
+      </button>
+      <button class="btn acct-btn-out" onclick="doLogout()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
     </div>
+
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div id="toast-wrapper" style="position:fixed;bottom:5.5rem;left:0;right:0;z-index:9999;pointer-events:none;display:flex;justify-content:center;padding:0 1rem;box-sizing:border-box">
+  <div class="toast" id="toast" style="max-width:420px;width:100%;box-sizing:border-box"></div>
+</div>
 <div class="sync-bar" id="sync-bar"><div class="sdot" id="sdot"></div><span id="stext">Tersimpan</span></div>
 
 <!-- SHARE CARD MODAL DCA — LIQUID GLASS (upgraded) -->
@@ -3388,7 +3633,25 @@
           <div class="fmo-badge" style="background:linear-gradient(90deg,#10b981,#06b6d4)">HOT</div>
           <div class="fmo-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
           <div class="fmo-label">Signal AI<br>Futures BTC</div>
-          <div class="fmo-sub">Entry & exit otomatis</div>
+          <div class="fmo-sub">Entry &amp; exit otomatis</div>
+        </button>
+
+        <!-- Bitcoin Power Law -->
+        <button class="fmo-btn" onclick="closeFiturModal();showPage('btc-powerlaw')" style="background:linear-gradient(145deg,rgba(124,58,237,.65),rgba(79,70,229,.55) 50%,rgba(139,92,246,.45));box-shadow:0 8px 32px rgba(124,58,237,.35)">
+          <div class="fmo-blob" style="background:#7c3aed"></div>
+          <div class="fmo-badge" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)">NEW</div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><polyline points="2 20 6 14 10 17 14 8 18 11 22 3"/><path d="M22 3h-5M22 3v5"/></svg></div>
+          <div class="fmo-label">Bitcoin<br>Power Law</div>
+          <div class="fmo-sub">Model harga jangka panjang</div>
+        </button>
+
+        <!-- Crypto Calendar -->
+        <button class="fmo-btn" onclick="closeFiturModal();showPage('crypto-calendar')" style="background:linear-gradient(145deg,rgba(6,182,212,.6),rgba(14,165,233,.5) 50%,rgba(59,130,246,.45));box-shadow:0 8px 32px rgba(6,182,212,.35)">
+          <div class="fmo-blob" style="background:#06b6d4"></div>
+          <div class="fmo-badge" style="background:linear-gradient(90deg,#06b6d4,#3b82f6)">NEW</div>
+          <div class="fmo-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="fmo-label">Crypto<br>Calendar</div>
+          <div class="fmo-sub">Event &amp; ekonomi makro</div>
         </button>
       </div>
 
@@ -3411,25 +3674,15 @@
           <div class="fmo-label">Segera<br>Hadir</div>
           <div class="fmo-sub">Dalam pengembangan</div>
         </button>
-        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
-          <div class="fmo-blob" style="background:#475569"></div>
-          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-          <div class="fmo-label">Segera<br>Hadir</div>
-          <div class="fmo-sub">Dalam pengembangan</div>
-        </button>
-        <button class="fmo-btn fmo-soon" style="background:linear-gradient(145deg,rgba(51,65,85,.7),rgba(71,85,105,.55));box-shadow:0 4px 16px rgba(0,0,0,.3)">
-          <div class="fmo-blob" style="background:#475569"></div>
-          <div class="fmo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-          <div class="fmo-label">Segera<br>Hadir</div>
-          <div class="fmo-sub">Dalam pengembangan</div>
-        </button>
       </div>
     </div>
   </div>
 
+<div id="lang-toast-wrap">
 <div id="lang-toast">
   <span id="lang-toast-flag">🇬🇧</span>
   <span id="lang-toast-msg">Switched to English</span>
+</div>
 </div>
 
 
@@ -3437,6 +3690,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- App scripts -->
 <script src="app.js"></script>
+<!-- ══════════ PAGE: BITCOIN POWER LAW ══════════ -->
+
+<!-- Fingerprint Lock Screen -->
+<div id="fp-lock-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:#0a0f1a;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem">
+  <div style="width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(0,229,255,.05));border:1.5px solid rgba(0,229,255,.3);display:flex;align-items:center;justify-content:center">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#00e5ff)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  </div>
+  <div style="text-align:center">
+    <div style="font-size:1.25rem;font-weight:800;color:#f1f5f9;margin-bottom:.3rem">z-wealth Terkunci</div>
+    <div style="font-size:.8rem;color:rgba(148,163,184,.7)">Gunakan fingerprint untuk membuka</div>
+  </div>
+  <button onclick="unlockWithFingerprint()" style="padding:.85rem 2.2rem;border-radius:100px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent,#00e5ff),rgba(0,229,255,.7));color:#0a0f1a;font-size:.9rem;font-weight:800;font-family:'Inter',sans-serif;letter-spacing:.02em;box-shadow:0 4px 24px rgba(0,229,255,.35);display:flex;align-items:center;gap:.55rem">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2z"/><path d="M12 4C8.1 4 5 7.1 5 11c0 2.1.9 4 2.3 5.4"/><path d="M12 4c3.9 0 7 3.1 7 7 0 2.1-.9 4-2.3 5.4"/><path d="M12 7c-2.2 0-4 1.8-4 4 0 1.2.5 2.2 1.3 3"/><path d="M12 7c2.2 0 4 1.8 4 4 0 1.2-.5 2.2-1.3 3"/></svg>
+    Buka kunci
+  </button>
+  <div id="fp-lock-err" style="font-size:.75rem;color:#ef4444;display:none">Autentikasi gagal. Coba lagi.</div>
+</div><!-- /fp-lock-screen -->
 </body></html>
 <!-- ══════════════════════════════════════════════════════
      Z-WEALTH · FINAL POLISH LAYER v5.0

@@ -1,6 +1,6 @@
 /* z-wealth · merged scripts · auto-split */
 
-/* ── LAZY LOAD zullatter ── */
+/* ── LAZY LOAD PATCHES ── */
 
 /* ── LAZY LOAD Firebase & WalletConnect ── */
 (function(){
@@ -1013,6 +1013,14 @@ function showPage(id){
     // Load berita untuk widget sorotan di dashboard
     setTimeout(() => loadCryptoNews(), 500);
     startNewsAutoRefresh(); // Auto-refresh berita setiap 30 menit + trigger notif
+
+  // ── Bitcoin Power Law ──
+  } else if(id === 'btc-powerlaw'){
+    setTimeout(loadPowerLaw, 150);
+
+  // ── Crypto Calendar ──
+  } else if(id === 'crypto-calendar'){
+    setTimeout(loadCryptoCalendar, 150);
   }
   if(id==='dca')renderDCA();
   if(id==='portfolio')renderPort();
@@ -1064,11 +1072,36 @@ document.addEventListener('click',e=>{
 /* ══════════ TOAST ══════════ */
 function toast(m, err, dur) {
   const t = document.getElementById('toast');
-  // Wrap content in a flex container for icon+text alignment
-  t.innerHTML = `<span style="display:inline-flex;align-items:center;gap:.45rem;padding:.58rem 1.1rem .58rem .85rem;border-radius:100px;font-size:.79rem;font-weight:600;letter-spacing:.01em;background:rgba(10,16,30,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid ${err ? 'rgba(239,68,68,.35)' : 'rgba(255,255,255,.1)'};color:${err ? '#f87171' : 'var(--accent3)'};box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)">${m}</span>`;
+  if (!t) return;
+  // Truncate — keep toast short and readable
+  const plain = m.replace(/<[^>]*>/g, '').trim();
+  const display = plain.length > 90 ? plain.slice(0, 87) + '…' : plain;
+  const isErr = !!err;
+  const borderColor = isErr ? 'rgba(239,68,68,.45)' : 'rgba(255,255,255,.12)';
+  const textColor   = isErr ? '#f87171' : 'var(--accent3)';
+  const radius      = display.length > 40 ? '16px' : '99px';
+
+  t.innerHTML = '';  // clear first
+  const inner = document.createElement('div');
+  inner.style.cssText = [
+    'display:flex', 'align-items:flex-start', 'gap:.45rem',
+    'padding:.7rem 1rem', `border-radius:${radius}`,
+    'font-size:.8rem', 'font-weight:600', 'line-height:1.55',
+    'letter-spacing:.01em', `color:${textColor}`,
+    'background:rgba(10,16,30,.96)',
+    'backdrop-filter:blur(20px)',
+    '-webkit-backdrop-filter:blur(20px)',
+    `border:1.5px solid ${borderColor}`,
+    'box-shadow:0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07)',
+    'word-break:break-word', 'overflow-wrap:break-word',
+    'white-space:normal', 'width:100%', 'box-sizing:border-box'
+  ].join(';');
+  inner.textContent = display;
+  t.appendChild(inner);
+
   t.classList.add('show');
   clearTimeout(t._tmr);
-  t._tmr = setTimeout(() => t.classList.remove('show'), dur || 3000);
+  t._tmr = setTimeout(() => t.classList.remove('show'), dur || 3500);
 }
 
 /* ══════════ FORMAT ══════════ */
@@ -8148,7 +8181,9 @@ const ZW_FCM = (() => {
         const { title, body } = payload.notification || {};
         // Hanya toast — notif sistem sudah dihandle oleh SW saat background/closed
         // Saat foreground, toast sudah cukup sebagai feedback visual
-        toast(`🔔 ${title || 'z-wealth'}: ${body || ''}`);
+        // Truncate for toast display — full content in browser notification
+        const toastTitle = (title || 'z-wealth').slice(0, 80) + ((title || '').length > 80 ? '…' : '');
+        toast(`🔔 ${toastTitle}`, false, 5000);
       });
     } catch(e) {
       console.warn('[FCM] Init error:', e);
@@ -11880,10 +11915,12 @@ function openLiqHeatmap() {
     const style = document.createElement('style');
     style.textContent = `
       .liq-tf-btn {
-        padding:.28rem .75rem;border-radius:100px;border:1px solid rgba(255,255,255,.12);
+        padding:.38rem .7rem;border-radius:100px;border:1px solid rgba(255,255,255,.12);
         background:rgba(255,255,255,.05);color:rgba(148,163,184,.7);
-        font-size:.7rem;font-weight:700;cursor:pointer;transition:all .18s;
+        font-size:.72rem;font-weight:700;cursor:pointer;transition:all .18s;
         white-space:nowrap;font-family:'Inter',sans-serif;
+        min-width:52px;text-align:center;flex-shrink:0;
+        line-height:1.2;letter-spacing:.01em;
       }
       .liq-tf-btn:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
       .liq-tf-active{background:linear-gradient(135deg,rgba(239,68,68,.45),rgba(249,115,22,.4))!important;border-color:rgba(239,68,68,.55)!important;color:#fff!important;}
@@ -11919,7 +11956,7 @@ function openLiqHeatmap() {
       </div>
 
       <!-- Timeframe -->
-      <div style="display:flex;gap:.35rem;padding:.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;overflow-x:auto;scrollbar-width:none">
+      <div style="display:flex;gap:.4rem;padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center">
         <button class="liq-tf-btn liq-tf-active" onclick="setLiqTF(this,'1h')">1 Jam</button>
         <button class="liq-tf-btn" onclick="setLiqTF(this,'4h')">4 Jam</button>
         <button class="liq-tf-btn" onclick="setLiqTF(this,'12h')">12 Jam</button>
@@ -12721,7 +12758,7 @@ const ChatNotif = (() => {
     const toast = document.getElementById('chat-notif-toast');
     if (!toast) return;
     toast.classList.remove('show');
-    toast.style.transform = 'translateX(-50%) translateY(-120px)';
+    toast.style.transform = 'translateY(-120px)';
     toast.style.opacity = '0';
     setTimeout(() => {
       toast.style.transform = '';
@@ -12790,9 +12827,9 @@ function showNotifPermissionPrompt() {
   const banner = document.createElement('div');
   banner.id = 'notif-permission-banner';
   banner.style.cssText = `
-    position:fixed;bottom:calc(5rem + env(safe-area-inset-bottom,0px));left:50%;
-    transform:translateX(-50%) translateY(80px);
-    z-index:8000;width:calc(100% - 2rem);max-width:400px;
+    position:fixed;bottom:calc(5rem + env(safe-area-inset-bottom,0px));left:1rem;right:1rem;
+    transform:translateY(80px);
+    z-index:8000;max-width:400px;margin:0 auto;width:auto;
     background:rgba(10,16,30,0.95);backdrop-filter:blur(24px);
     border:1px solid rgba(0,229,255,0.3);border-radius:16px;
     padding:.9rem 1.1rem;display:flex;align-items:center;gap:.8rem;
@@ -12816,13 +12853,13 @@ function showNotifPermissionPrompt() {
   // Slide up
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      banner.style.transform = 'translateX(-50%) translateY(0)';
+      banner.style.transform = 'translateY(0)';
     });
   });
   // Auto dismiss setelah 12 detik
   setTimeout(() => {
     if (banner.parentNode) {
-      banner.style.transform = 'translateX(-50%) translateY(80px)';
+      banner.style.transform = 'translateY(80px)';
       setTimeout(() => banner.remove(), 400);
     }
   }, 12000);
@@ -15093,7 +15130,7 @@ function appendAIMessage(role, text, ts, skipHistory) {
       <div class="msg-bubble-wrap">
         <div class="msg-sender-name">z-AI</div>
         <div class="msg-bubble">
-          <div class="ai-bubble-content" id="${id}-content">${aiMarkdown(text)}</div>
+          <div class="ai-bubble-content" id="${id}-content">${/^\s*<[a-zA-Z]/.test(text) ? text : aiMarkdown(text)}</div>
         </div>
         <div class="msg-time">${time}</div>
       </div>`;
@@ -15433,21 +15470,44 @@ function _showAIAllFailed() {
 
 // ── Mini toast khusus AI (tidak ganggu toast utama) ──
 let _aiToastTimer = null;
-function _toastAI(html, type = 'ok', duration = 3500) {
+function _toastAI(msg, type = 'ok', duration = 3500) {
+  // Ensure wrapper exists — full width, flex centered
+  let wrap = document.getElementById('ai-toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'ai-toast-wrap';
+    wrap.style.cssText = 'position:fixed;bottom:82px;left:1rem;right:1rem;z-index:9999;display:flex;justify-content:center;pointer-events:none';
+    document.body.appendChild(wrap);
+  }
+
   let el = document.getElementById('ai-provider-toast');
   if (!el) {
     el = document.createElement('div');
     el.id = 'ai-provider-toast';
-    el.style.cssText = `
-      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);
-      z-index:9999;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);
-      background:var(--surface);border:1px solid var(--border);
-      border-radius:12px;padding:.55rem 1rem;font-size:.75rem;font-weight:600;
-      color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.35);
-      display:flex;align-items:center;gap:.5rem;pointer-events:none;
-      max-width:320px;text-align:center;white-space:nowrap;
-    `;
-    document.body.appendChild(el);
+    el.style.cssText = [
+      'opacity:0',
+      'transform:translateY(10px)',
+      'transition:opacity .3s ease, transform .3s cubic-bezier(.34,1.4,.64,1)',
+      'background:var(--surface)',
+      'border:1.5px solid var(--border)',
+      'border-radius:14px',
+      'padding:.55rem 1rem',
+      'font-size:.78rem',
+      'font-weight:600',
+      'color:var(--text)',
+      'box-shadow:0 8px 32px rgba(0,0,0,.45)',
+      'display:flex',
+      'align-items:flex-start',
+      'gap:.5rem',
+      'pointer-events:none',
+      'max-width:420px',
+      'width:100%',
+      'box-sizing:border-box',
+      'word-break:break-word',
+      'white-space:normal',
+      'line-height:1.5'
+    ].join(';');
+    wrap.appendChild(el);
   }
 
   const colors = {
@@ -15457,18 +15517,26 @@ function _toastAI(html, type = 'ok', duration = 3500) {
   };
   const c = colors[type] || colors.ok;
   el.style.borderColor = c.border;
-  el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block"></span><span>${html}</span>`;
 
-  // Animate in
+  // Strip HTML from msg for safe text display
+  const plain = msg.replace(/<[^>]+>/g, '').trim();
+  const dot = document.createElement('span');
+  dot.style.cssText = `width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block;margin-top:4px`;
+  const txt = document.createElement('span');
+  txt.textContent = plain;
+  el.innerHTML = '';
+  el.appendChild(dot);
+  el.appendChild(txt);
+
   requestAnimationFrame(() => {
     el.style.opacity = '1';
-    el.style.transform = 'translateX(-50%) translateY(0)';
+    el.style.transform = 'translateY(0)';
   });
 
   clearTimeout(_aiToastTimer);
   _aiToastTimer = setTimeout(() => {
     el.style.opacity = '0';
-    el.style.transform = 'translateX(-50%) translateY(12px)';
+    el.style.transform = 'translateY(10px)';
   }, duration);
 }
 
@@ -15527,17 +15595,7 @@ async function sendAIMessage(overrideText) {
     console.error('[z-AI]', e);
     removeAITyping();
     appendAIMessage('model',
-      `<div style="display:flex;flex-direction:column;gap:.5rem">
-        <div style="display:flex;align-items:center;gap:.5rem;color:#f59e0b">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <strong>Semua AI tidak tersedia saat ini</strong>
-        </div>
-        <div style="font-size:.78rem;color:var(--muted);line-height:1.5">
-          Groq, OpenRouter, dan Pollinations sedang tidak bisa dihubungi.<br>
-          Kemungkinan semua sedang rate-limit atau ada masalah koneksi.<br>
-          <span style="color:var(--accent4)">⏱ Coba lagi dalam ~5 menit ya.</span>
-        </div>
-      </div>`,
+      '⚠️ **Semua AI tidak tersedia saat ini**\n\nGroq, OpenRouter, dan Pollinations sedang tidak bisa dihubungi. Kemungkinan sedang *rate-limit* atau ada masalah koneksi.\n\n⏱ Coba lagi dalam ~5 menit ya.',
       Date.now()
     );
     if (status) status.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:.3rem"></span>Semua AI tidak tersedia · Coba lagi nanti';
@@ -15963,6 +16021,15 @@ function checkAndSendNewsNotif(articles) {
 
   _newsNotifLastSent = now;
 
+  // Helper: ambil teks hingga titik pertama (maks 200 karakter)
+  function getUpToFirstPeriod(text, fallback) {
+    if (!text) return fallback || '';
+    // Cari titik, tanda tanya, atau tanda seru pertama
+    const match = text.match(/^(.+?[.!?])\s/);
+    if (match) return match[1].length <= 200 ? match[1] : text.slice(0, 200) + '…';
+    return text.slice(0, 200) + (text.length > 200 ? '…' : '');
+  }
+
   // Kirim notif bullish
   if (topBullish) {
     _newsNotifSentTitles.add(topBullish.judulID);
@@ -15972,11 +16039,12 @@ function checkAndSendNewsNotif(articles) {
       _newsNotifSentTitles.delete(first);
     }
     setTimeout(() => {
-      const bullishBody = topBullish.ringkasan
-        ? `${topBullish.ringkasan.slice(0, 100)} — ${topBullish.source || 'Crypto News'}`
-        : `${topBullish.judulEN?.slice(0, 100) || ''} — ${topBullish.source || 'Crypto News'}`;
+      const src = topBullish.source || 'Crypto News';
+      const coins = (topBullish.coins || []).slice(0,3).join(', ');
+      const bodyText = getUpToFirstPeriod(topBullish.ringkasan || topBullish.judulEN || topBullish.judulID, '');
+      const bullishBody = `${coins ? '📌 ' + coins + '\n' : ''}${bodyText}${bodyText ? '\n' : ''}📰 ${src}`;
       sendBrowserNotif(
-        topBullish.judulID,
+        '🟢 ' + topBullish.judulID,
         bullishBody,
         'news-bullish',
         '/'
@@ -15992,11 +16060,12 @@ function checkAndSendNewsNotif(articles) {
       _newsNotifSentTitles.delete(first);
     }
     setTimeout(() => {
-      const bearishBody = topBearish.ringkasan
-        ? `${topBearish.ringkasan.slice(0, 100)} — ${topBearish.source || 'Crypto News'}`
-        : `${topBearish.judulEN?.slice(0, 100) || ''} — ${topBearish.source || 'Crypto News'}`;
+      const src = topBearish.source || 'Crypto News';
+      const coins = (topBearish.coins || []).slice(0,3).join(', ');
+      const bodyText = getUpToFirstPeriod(topBearish.ringkasan || topBearish.judulEN || topBearish.judulID, '');
+      const bearishBody = `${coins ? '📌 ' + coins + '\n' : ''}${bodyText}${bodyText ? '\n' : ''}📰 ${src}`;
       sendBrowserNotif(
-        topBearish.judulID,
+        '🔴 ' + topBearish.judulID,
         bearishBody,
         'news-bearish',
         '/'
@@ -17756,4 +17825,797 @@ if (origShowPage) {
   }
 
 })();
+
+
+// ═══════════════════════════════════════════════════════════════
+// FINGERPRINT LOCK SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const FP_LOCK_KEY      = 'zw_fp_lock_enabled';
+const FP_LAST_ACTIVE   = 'zw_fp_last_active';   // timestamp terakhir user aktif
+const FP_TIMEOUT_MS    = 5 * 60 * 1000;          // 5 menit jeda sebelum dikunci
+
+function isFingerprintAvailable() {
+  return !!(window.PublicKeyCredential && navigator.credentials);
+}
+
+function isFingerprintEnabled() {
+  return localStorage.getItem(FP_LOCK_KEY) === '1';
+}
+
+// Catat waktu terakhir aktif
+function fpRecordActivity() {
+  if (isFingerprintEnabled()) {
+    localStorage.setItem(FP_LAST_ACTIVE, Date.now().toString());
+  }
+}
+
+// Apakah sudah lewat 5 menit sejak terakhir aktif?
+function fpIsTimedOut() {
+  const last = parseInt(localStorage.getItem(FP_LAST_ACTIVE) || '0', 10);
+  if (!last) return true; // belum pernah tercatat → anggap timeout
+  return (Date.now() - last) >= FP_TIMEOUT_MS;
+}
+
+function updateFpToggleUI(enabled) {
+  const wrap  = document.getElementById('fp-toggle-wrap');
+  const knob  = document.getElementById('fp-toggle-knob');
+  const label = document.getElementById('acct-fp-label');
+  const sub   = document.getElementById('acct-fp-sub');
+  const icon  = document.getElementById('acct-fp-icon');
+  if (!wrap || !knob) return;
+  if (enabled) {
+    wrap.style.background  = 'rgba(99,102,241,.45)';
+    wrap.style.borderColor = 'rgba(99,102,241,.6)';
+    knob.style.left        = '24px';
+    knob.style.background  = '#fff';
+    if (label) { label.textContent = 'Kunci Fingerprint'; label.style.color = '#818cf8'; }
+    if (sub)   sub.textContent = 'Dikunci saat buka app & idle 5 menit';
+    if (icon)  { icon.style.background = 'rgba(99,102,241,.18)'; icon.style.borderColor = 'rgba(99,102,241,.35)'; }
+  } else {
+    wrap.style.background  = 'rgba(255,255,255,.1)';
+    wrap.style.borderColor = 'rgba(255,255,255,.12)';
+    knob.style.left        = '3px';
+    knob.style.background  = '#64748b';
+    if (label) { label.textContent = 'Kunci Fingerprint'; label.style.color = 'var(--text)'; }
+    if (sub)   sub.textContent = 'Kunci app dengan biometrik saat idle';
+    if (icon)  { icon.style.background = 'rgba(99,102,241,.1)'; icon.style.borderColor = 'rgba(99,102,241,.22)'; }
+  }
+}
+
+async function toggleFingerprintLock() {
+  if (!isFingerprintAvailable()) {
+    toast('⚠️ Perangkat tidak mendukung biometrik');
+    return;
+  }
+  const wasEnabled = isFingerprintEnabled();
+  if (!wasEnabled) {
+    // Verifikasi fingerprint dulu sebelum aktifkan
+    const ok = await doBiometricAuth();
+    if (!ok) { toast('❌ Verifikasi fingerprint gagal'); return; }
+    localStorage.setItem(FP_LOCK_KEY, '1');
+    fpRecordActivity(); // anggap baru saja aktif
+    updateFpToggleUI(true);
+    toast('✅ Kunci fingerprint diaktifkan!');
+  } else {
+    localStorage.removeItem(FP_LOCK_KEY);
+    localStorage.removeItem(FP_LAST_ACTIVE);
+    updateFpToggleUI(false);
+    toast('🔓 Kunci fingerprint dinonaktifkan');
+  }
+}
+
+async function doBiometricAuth() {
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) return false;
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const cred = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        timeout: 60000,
+        userVerification: 'required',
+        rpId: location.hostname || 'localhost',
+        allowCredentials: []
+      }
+    });
+    return !!cred;
+  } catch(e) {
+    console.warn('Biometric auth error:', e);
+    return false;
+  }
+}
+
+async function unlockWithFingerprint() {
+  const errEl = document.getElementById('fp-lock-err');
+  if (errEl) errEl.style.display = 'none';
+  const ok = await doBiometricAuth();
+  if (ok) {
+    fpRecordActivity(); // reset timer setelah berhasil unlock
+    hideLockScreen();
+  } else {
+    if (errEl) errEl.style.display = 'block';
+  }
+}
+
+function showLockScreen() {
+  const el = document.getElementById('fp-lock-screen');
+  if (!el) return;
+  el.style.display = 'flex';
+  const errEl = document.getElementById('fp-lock-err');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function hideLockScreen() {
+  const el = document.getElementById('fp-lock-screen');
+  if (el) el.style.display = 'none';
+}
+
+// ── Cek lock saat app pertama kali dibuka ──
+function fpCheckOnLoad() {
+  if (!isFingerprintEnabled()) return;
+  // Selalu kunci saat fresh open (tab/app baru dibuka)
+  // atau kalau sudah lebih dari 5 menit idle
+  if (fpIsTimedOut()) {
+    showLockScreen();
+  }
+}
+
+// Jalankan cek saat DOM siap
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', fpCheckOnLoad);
+} else {
+  // DOM sudah siap (script dimuat di akhir)
+  setTimeout(fpCheckOnLoad, 200);
+}
+
+// ── Activity tracking — reset timer setiap user interaksi ──
+['touchstart','mousedown','keydown','scroll','click'].forEach(ev => {
+  document.addEventListener(ev, fpRecordActivity, { passive: true });
+});
+
+// ── Visibility change: saat kembali dari background ──
+document.addEventListener('visibilitychange', () => {
+  if (!isFingerprintEnabled()) return;
+
+  if (document.hidden) {
+    // App masuk background — simpan timestamp saat itu
+    localStorage.setItem(FP_LAST_ACTIVE, Date.now().toString());
+  } else {
+    // App kembali ke foreground — cek apakah sudah > 5 menit
+    if (fpIsTimedOut()) {
+      showLockScreen();
+    }
+  }
+});
+
+// ── Inisialisasi toggle UI saat modal akun dibuka ──
+const _origOpenModal = window.openModal;
+window.openModal = function(id) {
+  _origOpenModal && _origOpenModal(id);
+  if (id === 'modal-acct') {
+    updateFpToggleUI(isFingerprintEnabled());
+    if (!isFingerprintAvailable()) {
+      const sub  = document.getElementById('acct-fp-sub');
+      const wrap = document.getElementById('fp-toggle-wrap');
+      if (sub)  sub.textContent = 'Perangkat tidak mendukung biometrik';
+      if (wrap) wrap.style.opacity = '.35';
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// BITCOIN POWER LAW
+// ═══════════════════════════════════════════════════════════════
+
+// Power Law model by Giovanni Santostasi
+// Price = 10^(a * log10(days_since_genesis) + b)
+// Top band:    a=5.8, b=-17.3
+// Median:      a=5.8, b=-17.7  (approx fair value)
+// Bottom band: a=5.8, b=-18.1
+
+const PL_A     = 5.8;
+// Calibrated from Giovanni Santostasi model (BitBO reference Feb 2026)
+// Resistance=$537K, Fair=$150K, Support=$53K at ~6264 days since genesis
+const PL_TOP   = -16.292;
+const PL_MID   = -16.844;
+const PL_BOT   = -17.294;
+const GENESIS  = new Date('2009-01-03').getTime();
+
+function plDays(ts) {
+  return (ts - GENESIS) / 86400000;
+}
+function plPrice(days, b) {
+  return Math.pow(10, PL_A * Math.log10(days) + b);
+}
+
+let _plChart = null;
+let _plHistCache = null;  // cache full BTC price history for Power Law
+
+// ── Fetch full BTC history for Power Law — multi-source with fallback ──
+async function fetchPLHistory() {
+  if (_plHistCache && _plHistCache.length > 0) return _plHistCache;
+
+  const since2013sec = Math.floor(new Date('2013-01-01').getTime() / 1000);
+  const errors = [];
+
+  // ── Source 0: Vercel proxy (server-side CoinGecko — no user rate limit, full history) ──
+  try {
+    const r = await fetchWithTimeout('/api/btchistory', 15000);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.prices && d.prices.length > 200) {
+        const data = d.prices.map(([ts, p]) => ({ x: ts, y: p })).filter(p => p.y > 0);
+        _plHistCache = data;
+        return data;
+      }
+    }
+    errors.push('Vercel-proxy');
+  } catch(e) { errors.push('Vercel:' + e.message); }
+
+  // ── Source 1: Kraken weekly from 2013 (~687 candles, fits 720 limit) ──
+  try {
+    const url = `https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=10080&since=${since2013sec}`;
+    const r = await fetchWithTimeout(url, 12000);
+    if (r.ok) {
+      const d = await r.json();
+      const pair = d.result && (d.result['XXBTZUSD'] || d.result['XBTUSD']);
+      if (pair && pair.length > 100) {
+        const data = pair.map(k => ({ x: parseInt(k[0]) * 1000, y: parseFloat(k[4]) })).filter(p => p.y > 0);
+        _plHistCache = data;
+        return data;
+      }
+    }
+    errors.push('Kraken');
+  } catch(e) { errors.push('Kraken:' + e.message); }
+
+  // ── Source 2: Binance 1w klines 500 bars (~9.6 years) ──
+  try {
+    const r = await fetchWithTimeout('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=500', 10000);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.length > 50) {
+        const data = d.map(k => ({ x: parseInt(k[0]), y: parseFloat(k[4]) })).filter(p => p.y > 0);
+        _plHistCache = data;
+        return data;
+      }
+    }
+    errors.push('Binance');
+  } catch(e) { errors.push('Binance:' + e.message); }
+
+  // ── Source 3: CoinGecko max (direct, might work if not rate-limited) ──
+  try {
+    const r = await fetchWithTimeout(
+      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=weekly', 15000);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.prices && d.prices.length > 100) {
+        const data = d.prices.map(([ts, p]) => ({ x: ts, y: p })).filter(p => p.y > 0);
+        _plHistCache = data;
+        return data;
+      }
+    }
+    errors.push('CG-max');
+  } catch(e) { errors.push('CG-max:' + e.message); }
+
+  // ── Source 4: CoinGecko 3650 days (less likely to hit rate limits) ──
+  try {
+    const r = await fetchWithTimeout(
+      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=3650', 12000);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.prices && d.prices.length > 50) {
+        const data = d.prices.map(([ts, p]) => ({ x: ts, y: p })).filter(p => p.y > 0);
+        _plHistCache = data;
+        return data;
+      }
+    }
+    errors.push('CG-3650');
+  } catch(e) { errors.push('CG-3650:' + e.message); }
+
+  console.warn('[PL] All history sources failed:', errors);
+  return [];
+}
+
+async function loadPowerLaw() {
+  const canvas  = document.getElementById('pl-chart');
+  const loading = document.getElementById('pl-loading');
+  if (!canvas) return;
+
+  try {
+    // Fetch current price + full history in parallel
+    const [histData, priceRes] = await Promise.all([
+      fetchPLHistory(),
+      fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', 8000)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    ]);
+
+    // Also try Binance ticker as price fallback
+    let btcNow = priceRes?.bitcoin?.usd || 0;
+    if (!btcNow) {
+      try {
+        const br = await fetchWithTimeout('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', 5000);
+        if (br.ok) { const bd = await br.json(); btcNow = parseFloat(bd.price) || 0; }
+      } catch(e) {}
+    }
+    // Last resort: read from live BTC price already displayed in the app
+    if (!btcNow) {
+      const priceEl = document.getElementById('d-btc') || document.getElementById('btc-price');
+      if (priceEl) btcNow = parseFloat(priceEl.textContent.replace(/[^0-9.]/g,'')) || 0;
+    }
+
+    if (loading) loading.style.display = 'none';
+
+    const nowTs   = Date.now();
+    const nowDays = plDays(nowTs);
+
+    // ── Band curves: 2010 → 2030 (weekly) ──
+    const topBand = [], midBand = [], botBand = [];
+    const step  = 7 * 86400000;
+    const tStart = new Date('2012-01-01').getTime();  // sync with BTC data start
+    const tEnd   = new Date('2030-12-31').getTime();
+    for (let ts = tStart; ts <= tEnd; ts += step) {
+      const d = plDays(ts);
+      topBand.push({ x: ts, y: plPrice(d, PL_TOP) });
+      midBand.push({ x: ts, y: plPrice(d, PL_MID) });
+      botBand.push({ x: ts, y: plPrice(d, PL_BOT) });
+    }
+
+    // ── Actual BTC price (from multi-source history) ──
+    const actualData = histData.length > 0 ? histData : [];
+
+    // ── Current position in corridor ──
+    const curTop = plPrice(nowDays, PL_TOP);
+    const curBot = plPrice(nowDays, PL_BOT);
+    const curMid = plPrice(nowDays, PL_MID);
+
+    const positionPct = btcNow > 0
+      ? Math.min(100, Math.max(0, Math.round(
+          (Math.log10(btcNow) - Math.log10(curBot)) /
+          (Math.log10(curTop) - Math.log10(curBot)) * 100
+        )))
+      : 50;
+
+    // ── Update stat boxes ──
+    const fmt     = v => v >= 1e6 ? '$' + (v/1e6).toFixed(2) + 'M'
+                       : v >= 1e3 ? '$' + Math.round(v/1e3) + 'K'
+                       : '$' + Math.round(v);
+    const fmtFull = v => '$' + Math.round(v).toLocaleString('en-US');
+    const el = id => document.getElementById(id);
+
+    if (el('pl-top-val'))      el('pl-top-val').textContent      = fmt(curTop);
+    if (el('pl-bot-val'))      el('pl-bot-val').textContent      = fmt(curBot);
+    if (el('pl-cur-val'))      el('pl-cur-val').textContent      = btcNow > 0 ? fmtFull(btcNow) : '—';
+    if (el('pl-price-badge'))  el('pl-price-badge').textContent  = btcNow > 0 ? fmtFull(btcNow) : 'Live';
+    if (el('pl-position-bar')) el('pl-position-bar').style.width = positionPct + '%';
+    if (el('pl-position-pct')) el('pl-position-pct').textContent = positionPct + '%';
+
+    // ── Projections table ──
+    const projEl = el('pl-projections');
+    if (projEl) {
+      const years = [2025, 2026, 2027, 2028, 2029, 2030];
+      projEl.innerHTML = years.map(yr => {
+        const d   = plDays(new Date(yr + '-06-01').getTime());
+        const mid = plPrice(d, PL_MID);
+        const top = plPrice(d, PL_TOP);
+        const bot = plPrice(d, PL_BOT);
+        return `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.6rem .75rem">
+          <div style="font-size:.62rem;color:var(--muted);margin-bottom:.25rem">${yr}</div>
+          <div style="font-size:.8rem;font-weight:800;color:#a78bfa">${fmt(mid)}</div>
+          <div style="font-size:.58rem;color:rgba(239,68,68,.7);margin-top:.1rem">ATH zona: ${fmt(top)}</div>
+          <div style="font-size:.58rem;color:rgba(16,185,129,.7)">Support: ${fmt(bot)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Draw Chart.js ──
+    if (_plChart) { _plChart.destroy(); _plChart = null; }
+
+    const ctx = canvas.getContext('2d');
+    const datasets = [
+      {
+        label: 'Resistance',
+        data: topBand,
+        borderColor: '#ef4444',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.1,
+        order: 4
+      },
+      {
+        label: 'Fair Value',
+        data: midBand,
+        borderColor: 'rgba(167,139,250,.8)',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0.1,
+        order: 3
+      },
+      {
+        label: 'Support',
+        data: botBand,
+        borderColor: '#10b981',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.1,
+        order: 4
+      }
+    ];
+
+    // Add BTC price line only if we have data
+    if (actualData.length > 0) {
+      datasets.unshift({
+        label: 'BTC Price',
+        data: actualData,
+        borderColor: '#f7931a',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.1,
+        order: 1
+      });
+    }
+
+    _plChart = new Chart(ctx, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'x', intersect: false },  // 'x' aligns by timestamp not array index
+        scales: {
+          x: {
+            type: 'linear',
+            min: new Date('2012-01-01').getTime(),
+            max: new Date('2030-12-31').getTime(),
+            ticks: {
+              color: 'rgba(148,163,184,.5)',
+              font: { size: 9 },
+              maxTicksLimit: 10,
+              callback: v => {
+                const d = new Date(v);
+                return d.getMonth() < 2 ? String(d.getFullYear()) : '';
+              }
+            },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          },
+          y: {
+            type: 'logarithmic',
+            min: 0.01,
+            ticks: {
+              color: 'rgba(148,163,184,.5)',
+              font: { size: 9 },
+              callback: v => {
+                const powers = [0.01, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000];
+                if (!powers.includes(v)) return '';
+                return v >= 1e6 ? '$' + v/1e6 + 'M'
+                     : v >= 1e3 ? '$' + v/1e3 + 'K'
+                     : '$' + v;
+              },
+              maxTicksLimit: 10
+            },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'rgba(148,163,184,.8)',
+              font: { size: 10 },
+              boxWidth: 14,
+              padding: 10,
+              usePointStyle: true,
+              pointStyleWidth: 16
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(10,16,30,.95)',
+            titleColor: '#f1f5f9',
+            bodyColor: 'rgba(148,163,184,.85)',
+            borderColor: 'rgba(255,255,255,.1)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              title: items => new Date(items[0].raw.x).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
+              label: item => {
+                const v = item.raw.y;
+                const fmtV = v >= 1e6 ? '$' + (v/1e6).toFixed(2) + 'M'
+                           : v >= 1000 ? '$' + Math.round(v/1000) + 'K'
+                           : '$' + v.toFixed(2);
+                return item.dataset.label + ': ' + fmtV;
+              }
+            }
+          }
+        }
+      }
+    });
+
+  } catch(e) {
+    console.warn('Power Law load error:', e);
+    if (loading) {
+      loading.innerHTML = `<div style="text-align:center">
+        <div style="color:#ef4444;font-size:.75rem;margin-bottom:.5rem">⚠️ Gagal memuat data</div>
+        <button onclick="loadPowerLaw()" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:.3rem .8rem;color:#f87171;cursor:pointer;font-size:.7rem;font-family:'Inter',sans-serif">↺ Coba Lagi</button>
+      </div>`;
+      loading.style.display = 'flex';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CRYPTO CALENDAR — Real API (CoinMarketCal via Vercel proxy + Finnhub)
+// ═══════════════════════════════════════════════════════════════
+// API keys disimpan di Vercel Environment Variables:
+//   CMC_API_KEY     → CoinMarketCal (via /api/calendar proxy)
+//   FINNHUB_API_KEY → Finnhub (via /api/finnhub proxy)
+
+let _calWeekOffset = 0;
+let _calCache      = {};
+
+function calGetWeekDates(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  mon.setHours(0, 0, 0, 0);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function calFmtDate(d) {
+  // yyyy-mm-dd
+  return d.toISOString().slice(0, 10);
+}
+
+function calPrevWeek() { _calWeekOffset--; loadCryptoCalendar(); }
+function calNextWeek() { _calWeekOffset++; loadCryptoCalendar(); }
+
+function calEventColor(category) {
+  const c = (category || '').toLowerCase();
+  if (c.includes('unlock') || c.includes('token release')) return '#10b981';
+  if (c.includes('listing') || c.includes('launch') || c.includes('mainnet') || c.includes('release')) return '#8b5cf6';
+  if (c.includes('macro') || c.includes('economic') || c.includes('fomc') || c.includes('cpi') || c.includes('nonfarm') || c.includes('gdp') || c.includes('employment') || c.includes('fed') || c.includes('interest')) return '#3b82f6';
+  if (c.includes('conference') || c.includes('summit') || c.includes('event') || c.includes('meetup')) return '#f59e0b';
+  if (c.includes('partnership') || c.includes('exchange') || c.includes('integration')) return '#ec4899';
+  return '#f7931a';
+}
+
+function calImpactLabel(impact) {
+  const i = String(impact || '').toLowerCase();
+  if (i === 'high' || i === '3' || i === 'high impact') return { label: '🔴 High Impact', color: '#ef4444' };
+  if (i === 'medium' || i === '2' || i === 'moderate') return { label: '🟡 Medium', color: '#f59e0b' };
+  return { label: '⚪ Low', color: '#64748b' };
+}
+
+function calShowDetail(evJson) {
+  let ev;
+  try {
+    if (typeof evJson === 'string') {
+      // Decode HTML entities injected by onclick attribute escaping
+      const decoded = evJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+      ev = JSON.parse(decoded);
+    } else {
+      ev = evJson;
+    }
+  } catch(e) { console.warn('calShowDetail parse error:', e); return; }
+  const panel   = document.getElementById('cal-detail');
+  const content = document.getElementById('cal-detail-content');
+  if (!panel || !content) return;
+  const col    = calEventColor(ev.category);
+  const impact = calImpactLabel(ev.importance);
+  const timeStr = ev.time ? `<div style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem">🕐 ${ev.time} WIB</div>` : '';
+  const prevStr = ev.previous != null ? `<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:var(--muted)">Prev: ${ev.previous}</span>` : '';
+  const foreStr = ev.forecast != null ? `<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:var(--muted)">Forecast: ${ev.forecast}</span>` : '';
+  const srcStr  = ev.source ? `<div style="font-size:.62rem;color:rgba(148,163,184,.4);margin-top:.4rem">Sumber: ${ev.source}</div>` : '';
+
+  content.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.45rem">
+      <div style="width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0;margin-top:3px"></div>
+      <div style="font-size:.82rem;font-weight:800;color:var(--text);line-height:1.35">${ev.title}</div>
+    </div>
+    ${timeStr}
+    ${ev.description ? `<div style="font-size:.72rem;color:rgba(203,213,225,.75);line-height:1.6;margin-bottom:.55rem">${ev.description}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.3rem">
+      ${ev.category ? `<span style="background:${col}20;border:1px solid ${col}40;border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:${col};font-weight:600">${ev.category}</span>` : ''}
+      <span style="background:${impact.color}18;border:1px solid ${impact.color}35;border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:${impact.color}">${impact.label}</span>
+      ${prevStr}${foreStr}
+    </div>
+    ${srcStr}
+  `;
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Fetch CoinMarketCal via Vercel proxy /api/calendar ──
+async function fetchCMCEvents(dateFrom, dateTo) {
+  try {
+    const url = `/api/calendar?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('Proxy ' + res.status);
+    const data = await res.json();
+    const items = data.body || data || [];
+    return items.map(ev => {
+      const dateStr = (ev.date_event || ev.created_date || '').slice(0, 10);
+      return {
+        date: new Date(dateStr + 'T00:00:00'),
+        title: ev.title?.en || ev.title || 'Crypto Event',
+        description: ev.description?.en || ev.description || '',
+        category: ev.categories?.[0]?.name || 'crypto',
+        importance: ev.vote_count > 500 ? 'high' : ev.vote_count > 100 ? 'medium' : 'low',
+        coins: (ev.coins || []).map(c => c.symbol).slice(0, 3),
+        source: 'CoinMarketCal',
+        proof: ev.proof || ''
+      };
+    });
+  } catch(e) {
+    console.warn('CMC fetch error:', e);
+    return [];
+  }
+}
+
+// ── Fetch Finnhub via Vercel proxy /api/finnhub ──
+async function fetchFinnhubCalendar(dateFrom, dateTo) {
+  try {
+    const url = `/api/finnhub?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('Finnhub proxy ' + res.status);
+    const data = await res.json();
+    const items = data.economicCalendar || [];
+    return items
+      .filter(ev => ['High','Medium'].includes(ev.impact))
+      .map(ev => {
+        const dateStr = ev.time ? ev.time.slice(0, 10) : '';
+        if (!dateStr) return null;
+        let timeWIB = '';
+        if (ev.time && ev.time.includes('T')) {
+          const utc = new Date(ev.time);
+          const wib = new Date(utc.getTime() + 7 * 3600000);
+          timeWIB = wib.toTimeString().slice(0, 5);
+        }
+        return {
+          date: new Date(dateStr + 'T00:00:00'),
+          title: ev.event || 'Economic Event',
+          description: `Indikator ekonomi makro. Berdampak langsung pada sentimen pasar crypto global.`,
+          category: 'macro',
+          importance: ev.impact === 'High' ? 'high' : 'medium',
+          time: timeWIB || null,
+          previous: ev.prev != null ? String(ev.prev) + (ev.unit || '') : null,
+          forecast: ev.estimate != null ? String(ev.estimate) + (ev.unit || '') : null,
+          source: 'Finnhub',
+          country: ev.country || 'US'
+        };
+      }).filter(Boolean);
+  } catch(e) {
+    console.warn('Finnhub fetch error:', e);
+    return [];
+  }
+}
+
+// ── Render calendar grid ──
+function calRenderGrid(days, allEvents) {
+  const grid    = document.getElementById('cal-grid');
+  if (!grid) return;
+  const dayNames   = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const today      = new Date(); today.setHours(0, 0, 0, 0);
+
+  grid.innerHTML = days.map(date => {
+    const isToday   = date.toDateString() === today.toDateString();
+    const isPast    = date < today;
+    const dayEvents = allEvents
+      .filter(e => e.date && e.date.toDateString() === date.toDateString())
+      .sort((a, b) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return (order[a.importance] ?? 2) - (order[b.importance] ?? 2);
+      });
+
+    const evBubbles = dayEvents.slice(0, 4).map(ev => {
+      const col      = calEventColor(ev.category);
+      const impDot   = ev.importance === 'high'
+        ? `<span class="cal-impact-dot" style="background:${col}"></span>`
+        : '';
+      const safeJson = JSON.stringify(ev).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+      return `<div
+        class="cal-event-bubble"
+        onclick="event.stopPropagation();calShowDetail('${safeJson}')"
+        style="background:${col}15;border-color:${col}30;color:${col}">
+        ${impDot}${ev.title}
+      </div>`;
+    }).join('');
+
+    const moreCount = dayEvents.length > 4
+      ? `<div style="font-size:.56rem;color:var(--muted);margin-top:.15rem;padding-left:.2rem">+${dayEvents.length - 4} event lagi</div>`
+      : '';
+
+    const cardClass = ['cal-day-card', isToday ? 'today' : '', isPast && !isToday ? 'past' : ''].filter(Boolean).join(' ');
+
+    return `<div class="${cardClass}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <div style="font-size:.6rem;font-weight:700;color:${isToday ? '#67e8f9' : 'var(--muted)'}">
+          ${dayNames[date.getDay()]}
+        </div>
+        <div style="font-size:.75rem;font-weight:800;
+          color:${isToday ? '#67e8f9' : 'var(--text)'};
+          ${isToday ? 'background:rgba(6,182,212,.18);border-radius:6px;padding:.05rem .38rem' : ''}">
+          ${date.getDate()}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.18rem">
+        ${dayEvents.length === 0
+          ? `<div style="font-size:.6rem;color:rgba(148,163,184,.25);font-style:italic;padding:.1rem 0">No Event</div>`
+          : evBubbles + moreCount}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadCryptoCalendar() {
+  const grid    = document.getElementById('cal-grid');
+  const rangeEl = document.getElementById('cal-range-label');
+  const weekLbl = document.getElementById('cal-week-label');
+  const statusEl = document.getElementById('cal-status');
+  if (!grid) return;
+
+  const days       = calGetWeekDates(_calWeekOffset);
+  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const first = days[0], last = days[6];
+  const dateFrom = calFmtDate(first);
+  const dateTo   = calFmtDate(last);
+  const cacheKey = `${dateFrom}_${dateTo}`;
+
+  rangeEl && (rangeEl.textContent = `${first.getDate()} ${monthNames[first.getMonth()]} – ${last.getDate()} ${monthNames[last.getMonth()]} ${last.getFullYear()}`);
+  weekLbl && (weekLbl.textContent = _calWeekOffset === 0 ? 'Minggu ini' : _calWeekOffset > 0 ? `+${_calWeekOffset} minggu ke depan` : `${Math.abs(_calWeekOffset)} minggu lalu`);
+
+  // Show skeleton loading
+  grid.innerHTML = Array(7).fill(0).map(() => `
+    <div class="cal-day-card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:.5rem">
+        <div class="cal-skeleton" style="width:22px;height:8px"></div>
+        <div class="cal-skeleton" style="width:16px;height:8px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.22rem">
+        <div class="cal-skeleton" style="height:18px;width:100%"></div>
+        <div class="cal-skeleton" style="height:18px;width:80%"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Use cache if available
+  if (_calCache[cacheKey]) {
+    calRenderGrid(days, _calCache[cacheKey]);
+    if (statusEl) statusEl.textContent = '✓ Data dari cache';
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = '⏳ Mengambil data real-time...';
+
+  // Fetch both APIs in parallel
+  const [cmcEvents, finnhubEvents] = await Promise.all([
+    fetchCMCEvents(dateFrom, dateTo),
+    fetchFinnhubCalendar(dateFrom, dateTo)
+  ]);
+
+  const allEvents = [...cmcEvents, ...finnhubEvents];
+  _calCache[cacheKey] = allEvents;
+
+  calRenderGrid(days, allEvents);
+
+  if (statusEl) {
+    const src = [];
+    if (cmcEvents.length)     src.push(`${cmcEvents.length} crypto (CMC)`);
+    if (finnhubEvents.length) src.push(`${finnhubEvents.length} makro (Finnhub)`);
+    statusEl.textContent = src.length ? `✓ ${src.join(' · ')}` : '⚠️ Tidak ada event minggu ini';
+  }
+}
 
