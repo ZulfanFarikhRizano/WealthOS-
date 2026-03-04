@@ -18441,7 +18441,7 @@ function calShowDetail(evJson) {
 // ── Fetch CoinMarketCal via Vercel proxy /api/calendar ──
 async function fetchCMCEvents(dateFrom, dateTo) {
   try {
-    const url = `/api/calendar?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+    const url = `/api/market?action=calendar&dateFrom=${dateFrom}&dateTo=${dateTo}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error('Proxy ' + res.status);
     const data = await res.json();
@@ -18474,7 +18474,7 @@ async function fetchFinnhubCalendar(dateFrom, dateTo) {
     const data = await res.json();
     const items = data.economicCalendar || [];
     return items
-      .filter(ev => ['High','Medium'].includes(ev.impact))
+      .filter(ev => ev.event && ev.event.length > 2) // semua event, bukan hanya High/Medium
       .map(ev => {
         const dateStr = ev.time ? ev.time.slice(0, 10) : '';
         if (!dateStr) return null;
@@ -18560,6 +18560,100 @@ function calRenderGrid(days, allEvents) {
   }).join('');
 }
 
+// ── Fetch CoinGecko Events (gratis, no key) ──
+async function fetchCoinGeckoEvents(dateFrom, dateTo) {
+  try {
+    // CoinGecko upcoming events - gratis
+    const url = `https://api.coingecko.com/api/v3/events?upcoming_events_only=false&page=1`;
+    const res = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error('CoinGecko events ' + res.status);
+    const data = await res.json();
+    const from = new Date(dateFrom + 'T00:00:00');
+    const to   = new Date(dateTo   + 'T23:59:59');
+
+    return (data || [])
+      .filter(ev => {
+        if (!ev.start_date) return false;
+        const d = new Date(ev.start_date);
+        return d >= from && d <= to;
+      })
+      .map(ev => ({
+        date: new Date(ev.start_date.slice(0,10) + 'T00:00:00'),
+        title: ev.title || 'Crypto Event',
+        description: ev.description || '',
+        category: (ev.type || 'crypto').toLowerCase(),
+        importance: 'medium',
+        coins: ev.organizer_url ? [] : [],
+        source: 'CoinGecko',
+      }));
+  } catch(e) {
+    console.warn('CoinGecko events error:', e);
+    return [];
+  }
+}
+
+// ── Fetch Hardcoded macro events (FOMC, CPI, dll) ──
+function fetchHardcodedMacro(dateFrom, dateTo) {
+  // FOMC 2026 meeting dates (confirmed)
+  const FOMC_2026 = [
+    '2026-01-28','2026-01-29',
+    '2026-03-17','2026-03-18',
+    '2026-04-28','2026-04-29',
+    '2026-06-09','2026-06-10',
+    '2026-07-28','2026-07-29',
+    '2026-09-15','2026-09-16',
+    '2026-10-27','2026-10-28',
+    '2026-12-15','2026-12-16',
+  ];
+  const from = new Date(dateFrom + 'T00:00:00');
+  const to   = new Date(dateTo   + 'T23:59:59');
+
+  const events = [];
+  for (const d of FOMC_2026) {
+    const date = new Date(d + 'T00:00:00');
+    if (date >= from && date <= to) {
+      events.push({
+        date,
+        title: 'FOMC Meeting — Federal Reserve',
+        description: 'Rapat Federal Open Market Committee. Keputusan suku bunga AS. Berdampak besar pada pasar crypto & aset berisiko global.',
+        category: 'macro',
+        importance: 'high',
+        source: 'Federal Reserve',
+        time: '01:00', // ~2AM WIB
+      });
+    }
+  }
+
+  // Bitcoin halving berikutnya (estimasi 2028)
+  // BTC halving terakhir April 2024
+
+  // Tambah event mingguan berulang yang penting
+  const from2 = new Date(dateFrom + 'T00:00:00');
+  const days  = Math.ceil((to - from) / 86400000);
+  for (let i = 0; i <= days; i++) {
+    const d    = new Date(from2.getTime() + i * 86400000);
+    const dow  = d.getDay(); // 0=Min,5=Jum
+
+    // US Jobless Claims - setiap Kamis
+    if (dow === 4) {
+      events.push({
+        date: d,
+        title: 'US Jobless Claims (Mingguan)',
+        description: 'Data klaim pengangguran AS mingguan. Indikator kesehatan pasar tenaga kerja AS.',
+        category: 'macro',
+        importance: 'medium',
+        source: 'US Dept of Labor',
+        time: '20:30',
+      });
+    }
+  }
+
+  return events;
+}
+
 async function loadCryptoCalendar() {
   const grid    = document.getElementById('cal-grid');
   const rangeEl = document.getElementById('cal-range-label');
@@ -18600,22 +18694,35 @@ async function loadCryptoCalendar() {
 
   if (statusEl) statusEl.textContent = '⏳ Mengambil data real-time...';
 
-  // Fetch both APIs in parallel
-  const [cmcEvents, finnhubEvents] = await Promise.all([
+  // Fetch semua sumber paralel
+  const hardcodedEvents = fetchHardcodedMacro(dateFrom, dateTo);
+  const [cmcEvents, finnhubEvents, cgEvents] = await Promise.all([
     fetchCMCEvents(dateFrom, dateTo),
-    fetchFinnhubCalendar(dateFrom, dateTo)
+    fetchFinnhubCalendar(dateFrom, dateTo),
+    fetchCoinGeckoEvents(dateFrom, dateTo),
   ]);
 
-  const allEvents = [...cmcEvents, ...finnhubEvents];
+  // Deduplicate by title+date
+  const seen = new Set();
+  const allEvents = [...hardcodedEvents, ...cmcEvents, ...finnhubEvents, ...cgEvents].filter(ev => {
+    if (!ev?.date) return false;
+    const key = (ev.title||'') + ev.date.toDateString();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   _calCache[cacheKey] = allEvents;
 
   calRenderGrid(days, allEvents);
 
   if (statusEl) {
     const src = [];
-    if (cmcEvents.length)     src.push(`${cmcEvents.length} crypto (CMC)`);
-    if (finnhubEvents.length) src.push(`${finnhubEvents.length} makro (Finnhub)`);
-    statusEl.textContent = src.length ? `✓ ${src.join(' · ')}` : '⚠️ Tidak ada event minggu ini';
+    if (hardcodedEvents.length) src.push(`${hardcodedEvents.length} macro`);
+    if (cmcEvents.length)       src.push(`${cmcEvents.length} crypto`);
+    if (finnhubEvents.length)   src.push(`${finnhubEvents.length} Finnhub`);
+    if (cgEvents.length)        src.push(`${cgEvents.length} CoinGecko`);
+    const total = allEvents.length;
+    statusEl.textContent = total > 0 ? `✓ ${total} event · ${src.join(' · ')}` : '⚠️ Tidak ada event minggu ini';
   }
 }
 
