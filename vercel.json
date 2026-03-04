@@ -8,7 +8,7 @@
   "crons": [
     {
       "path": "/api/market?action=price-check",
-      "schedule": "* * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
