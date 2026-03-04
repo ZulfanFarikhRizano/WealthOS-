@@ -17890,53 +17890,147 @@ async function toggleFingerprintLock() {
   }
   const wasEnabled = isFingerprintEnabled();
   if (!wasEnabled) {
-    // Verifikasi fingerprint dulu sebelum aktifkan
-    const ok = await doBiometricAuth();
-    if (!ok) { toast('❌ Verifikasi fingerprint gagal'); return; }
+    // Step 1: Register credential baru (ini yang meminta fingerprint pertama kali)
+    toast('👆 Tempelkan jari ke sensor...');
+    const reg = await fpRegisterCredential();
+    if (!reg) {
+      toast('❌ Gagal mendaftarkan fingerprint. Pastikan fingerprint aktif di pengaturan HP.');
+      return;
+    }
+    // Step 2: Langsung aktifkan (sudah verified saat register)
     localStorage.setItem(FP_LOCK_KEY, '1');
-    fpRecordActivity(); // anggap baru saja aktif
+    fpRecordActivity();
     updateFpToggleUI(true);
     toast('✅ Kunci fingerprint diaktifkan!');
   } else {
+    // Nonaktifkan — hapus credential & setting
     localStorage.removeItem(FP_LOCK_KEY);
     localStorage.removeItem(FP_LAST_ACTIVE);
+    localStorage.removeItem('zw_fp_cred_id');
     updateFpToggleUI(false);
     toast('🔓 Kunci fingerprint dinonaktifkan');
   }
 }
 
+// ── Register credential (saat pertama aktifkan fingerprint) ──
+async function fpRegisterCredential() {
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) return null;
+
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const userId = new Uint8Array(16);
+    crypto.getRandomValues(userId);
+
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'z-wealth', id: location.hostname },
+        user: {
+          id: userId,
+          name: 'zwealth-user',
+          displayName: 'Z-Wealth User',
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7  },  // ES256
+          { type: 'public-key', alg: -257 }, // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',  // hanya sensor di device (fingerprint/faceID)
+          userVerification: 'required',
+          requireResidentKey: false,
+        },
+        timeout: 60000,
+        attestation: 'none',
+      }
+    });
+    if (!cred) return null;
+
+    // Simpan credential ID ke localStorage agar bisa dipakai saat verify
+    const credIdB64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    localStorage.setItem('zw_fp_cred_id', credIdB64);
+    return cred;
+  } catch(e) {
+    console.warn('[FP] Register error:', e.name, e.message);
+    return null;
+  }
+}
+
+// ── Verify dengan credential yang sudah terdaftar ──
 async function doBiometricAuth() {
   try {
     const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     if (!available) return false;
+
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
-    const cred = await navigator.credentials.get({
+
+    // Cek apakah sudah ada credential terdaftar
+    const credIdB64 = localStorage.getItem('zw_fp_cred_id');
+
+    const getOptions = {
       publicKey: {
         challenge,
         timeout: 60000,
         userVerification: 'required',
         rpId: location.hostname || 'localhost',
-        allowCredentials: []
+        allowCredentials: credIdB64
+          ? [{
+              type: 'public-key',
+              id: Uint8Array.from(atob(credIdB64), c => c.charCodeAt(0)).buffer,
+              transports: ['internal'],
+            }]
+          : [], // fallback kosong (mungkin gagal di beberapa device)
       }
-    });
+    };
+
+    const cred = await navigator.credentials.get(getOptions);
     return !!cred;
   } catch(e) {
-    console.warn('Biometric auth error:', e);
+    console.warn('[FP] Auth error:', e.name, e.message);
     return false;
   }
 }
 
 async function unlockWithFingerprint() {
   const errEl = document.getElementById('fp-lock-err');
+  const btn   = document.getElementById('fp-unlock-btn');
   if (errEl) errEl.style.display = 'none';
+  if (btn) btn.disabled = true;
+
+  // Kalau credential ID hilang (misal clear cache) — reset & minta user aktifkan ulang
+  const credId = localStorage.getItem('zw_fp_cred_id');
+  if (!credId) {
+    // Credential hilang — coba register ulang otomatis
+    const reg = await fpRegisterCredential();
+    if (reg) {
+      localStorage.setItem(FP_LOCK_KEY, '1');
+      fpRecordActivity();
+      hideLockScreen();
+      if (btn) btn.disabled = false;
+      return;
+    }
+    // Gagal register ulang — disable fp lock dan minta user aktifkan manual
+    localStorage.removeItem(FP_LOCK_KEY);
+    localStorage.removeItem(FP_LAST_ACTIVE);
+    hideLockScreen();
+    toast('⚠️ Data fingerprint hilang (cache dibersihkan?). Aktifkan ulang dari Info Akun.');
+    if (btn) btn.disabled = false;
+    return;
+  }
+
   const ok = await doBiometricAuth();
   if (ok) {
-    fpRecordActivity(); // reset timer setelah berhasil unlock
+    fpRecordActivity();
     hideLockScreen();
   } else {
-    if (errEl) errEl.style.display = 'block';
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.textContent = '❌ Fingerprint tidak dikenali, coba lagi';
+    }
   }
+  if (btn) btn.disabled = false;
 }
 
 function showLockScreen() {
