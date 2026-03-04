@@ -15025,7 +15025,7 @@ let aiInitialized = false;
 const _BUILT_IN_GEMINI_KEY = ''; // DEPRECATED - key tidak disimpan di client
 // Groq API - gratis & cepat (Llama 3.3 70B)
 const _GROQ_KEY = ''; // Key disimpan aman di server Vercel, tidak di sini
-const _GROQ_URL = '/api/groq'; // Proxy aman via Vercel serverless function
+const _GROQ_URL = '/api/ai?action=groq'; // Proxy aman via Vercel serverless function
 const _GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 function getGeminiKey() {
@@ -15252,7 +15252,7 @@ async function _callGroq(systemPrompt, messages, maxTokens) {
 
 // ── Provider 2: OpenRouter (free tier, CORS enabled, 100+ models) ──
 // Model: mistralai/mistral-7b-instruct (gratis, kuat, cepat)
-const _OR_URL   = '/api/openrouter'; // Proxy aman via Vercel serverless function
+const _OR_URL   = '/api/ai?action=openrouter'; // Proxy aman via Vercel serverless function
 const _OR_MODEL = 'mistralai/mistral-7b-instruct:free';
 // Key disimpan aman di Vercel env (OPENROUTER_API_KEY), tidak di client
 const _OR_KEY = '';
