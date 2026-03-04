@@ -6613,7 +6613,7 @@ tr:active td { background: rgba(0,229,255,.06) !important; transition: backgroun
   border: 1.5px solid rgba(255,255,255,.08);
   border-radius: 13px;
   padding: .6rem .65rem;
-  min-height: 95px;
+  min-height: 100px;
   transition: border-color .2s, transform .15s;
   cursor: default;
 }
@@ -6631,19 +6631,20 @@ tr:active td { background: rgba(0,229,255,.06) !important; transition: backgroun
 /* Event bubble */
 .cal-event-bubble {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 3px;
-  padding: .2rem .38rem;
+  padding: .22rem .4rem;
   border-radius: 5px;
   font-size: .58rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition: filter .15s, opacity .15s;
   border: 1px solid transparent;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 .cal-event-bubble:hover {
   filter: brightness(1.2);

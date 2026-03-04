@@ -18384,12 +18384,13 @@ function calNextWeek() { _calWeekOffset++; loadCryptoCalendar(); }
 
 function calEventColor(category) {
   const c = (category || '').toLowerCase();
-  if (c.includes('unlock') || c.includes('token release')) return '#10b981';
-  if (c.includes('listing') || c.includes('launch') || c.includes('mainnet') || c.includes('release')) return '#8b5cf6';
-  if (c.includes('macro') || c.includes('economic') || c.includes('fomc') || c.includes('cpi') || c.includes('nonfarm') || c.includes('gdp') || c.includes('employment') || c.includes('fed') || c.includes('interest')) return '#3b82f6';
-  if (c.includes('conference') || c.includes('summit') || c.includes('event') || c.includes('meetup')) return '#f59e0b';
-  if (c.includes('partnership') || c.includes('exchange') || c.includes('integration')) return '#ec4899';
-  return '#f7931a';
+  if (c.includes('token unlock') || c.includes('unlock') || c.includes('token release') || c.includes('vesting')) return '#10b981'; // hijau
+  if (c.includes('listing') || c.includes('launch') || c.includes('mainnet') || c.includes('release')) return '#8b5cf6'; // ungu
+  if (c.includes('macro') || c.includes('economic') || c.includes('fomc') || c.includes('cpi') || c.includes('nonfarm') || c.includes('gdp') || c.includes('employment') || c.includes('fed') || c.includes('interest') || c.includes('pmi') || c.includes('adp') || c.includes('ecb') || c.includes('pce') || c.includes('ppi')) return '#3b82f6'; // biru
+  if (c.includes('conference') || c.includes('summit') || c.includes('event') || c.includes('meetup')) return '#f59e0b'; // kuning
+  if (c.includes('partnership') || c.includes('exchange') || c.includes('integration')) return '#ec4899'; // pink
+  if (c.includes('crypto') || c.includes('bitcoin') || c.includes('halving')) return '#f7931a'; // orange BTC
+  return '#64748b'; // abu default
 }
 
 function calImpactLabel(impact) {
@@ -18595,11 +18596,175 @@ async function fetchCoinGeckoEvents(dateFrom, dateTo) {
   }
 }
 
-// ── Fetch Hardcoded macro events (FOMC, CPI, dll) ──
+// ── Fetch Token Unlocks dari TokenUnlocks.app (gratis, no key) ──
+async function fetchTokenUnlocks(dateFrom, dateTo) {
+  const results = [];
+
+  // 1. Coba TokenUnlocks.app API (gratis)
+  try {
+    const r = await fetch(
+      `https://token.unlocks.app/api/upcoming?from=${dateFrom}&to=${dateTo}&limit=50`,
+      { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(6000) }
+    );
+    if (r.ok) {
+      const data = await r.json();
+      const items = data?.data || data || [];
+      for (const item of items) {
+        const dateStr = (item.date || item.unlock_date || '').slice(0, 10);
+        if (!dateStr) continue;
+        const d = new Date(dateStr + 'T00:00:00');
+        const from = new Date(dateFrom + 'T00:00:00');
+        const to   = new Date(dateTo   + 'T23:59:59');
+        if (d < from || d > to) continue;
+        const pct   = item.percent_supply ? `(${parseFloat(item.percent_supply).toFixed(2)}% supply)` : '';
+        const usd   = item.usd_value ? ` ~$${(item.usd_value/1e6).toFixed(1)}M` : '';
+        results.push({
+          date: d,
+          title: `🔓 ${item.symbol || item.name || 'Token'} Unlock ${pct}`,
+          description: `Token unlock${usd}. ${pct} dari total supply masuk ke pasar. Potensi tekanan jual (sell pressure) jangka pendek.`,
+          category: 'token unlock',
+          importance: parseFloat(item.percent_supply||0) > 2 ? 'high' : 'medium',
+          source: 'TokenUnlocks.app',
+        });
+      }
+      if (results.length > 0) return results;
+    }
+  } catch(e) {
+    console.warn('[TokenUnlocks API]', e.message);
+  }
+
+  // 2. Fallback: hardcoded major token unlocks 2025-2026
+  // Data dari vesting schedule publik masing-masing project
+  const UNLOCKS = [
+    // ARB — Arbitrum (cliff unlock besar)
+    { date: '2024-03-16', symbol: 'ARB',  pct: '11.62', desc: 'Arbitrum Foundation & Team cliff unlock. Salah satu unlock terbesar dalam sejarah L2.' },
+    { date: '2025-03-16', symbol: 'ARB',  pct: '3.50',  desc: 'Arbitrum vesting lanjutan — investor & team.' },
+    { date: '2026-03-16', symbol: 'ARB',  pct: '3.50',  desc: 'Arbitrum vesting lanjutan.' },
+
+    // OP — Optimism
+    { date: '2024-05-31', symbol: 'OP',   pct: '2.88',  desc: 'Optimism investor & core contributor vesting.' },
+    { date: '2025-05-31', symbol: 'OP',   pct: '2.88',  desc: 'Optimism vesting lanjutan.' },
+    { date: '2026-05-31', symbol: 'OP',   pct: '2.88',  desc: 'Optimism vesting lanjutan.' },
+
+    // SUI — Sui Network
+    { date: '2025-05-03', symbol: 'SUI',  pct: '2.50',  desc: 'Sui Network investor vesting — 2 tahun pasca launch.' },
+    { date: '2025-11-03', symbol: 'SUI',  pct: '2.50',  desc: 'Sui Network vesting lanjutan.' },
+    { date: '2026-05-03', symbol: 'SUI',  pct: '2.50',  desc: 'Sui Network vesting lanjutan.' },
+
+    // APT — Aptos
+    { date: '2025-10-12', symbol: 'APT',  pct: '3.00',  desc: 'Aptos investor & core contributor vesting.' },
+    { date: '2026-04-12', symbol: 'APT',  pct: '3.00',  desc: 'Aptos vesting lanjutan.' },
+    { date: '2026-10-12', symbol: 'APT',  pct: '3.00',  desc: 'Aptos vesting lanjutan.' },
+
+    // SEI
+    { date: '2025-08-15', symbol: 'SEI',  pct: '5.20',  desc: 'SEI investor unlock — 2 tahun pasca mainnet.' },
+    { date: '2026-02-15', symbol: 'SEI',  pct: '5.20',  desc: 'SEI vesting lanjutan.' },
+
+    // TIA — Celestia
+    { date: '2025-10-31', symbol: 'TIA',  pct: '17.00', desc: 'Celestia early backer & team cliff unlock besar. Potensi sell pressure signifikan.' },
+    { date: '2026-10-31', symbol: 'TIA',  pct: '8.00',  desc: 'Celestia vesting lanjutan.' },
+
+    // STRK — Starknet
+    { date: '2025-04-15', symbol: 'STRK', pct: '4.00',  desc: 'StarkNet investor vesting.' },
+    { date: '2025-10-15', symbol: 'STRK', pct: '4.00',  desc: 'StarkNet vesting lanjutan.' },
+    { date: '2026-04-15', symbol: 'STRK', pct: '4.00',  desc: 'StarkNet vesting lanjutan.' },
+
+    // JUP — Jupiter (Solana)
+    { date: '2025-01-31', symbol: 'JUP',  pct: '10.00', desc: 'Jupiter team & investor cliff unlock.' },
+    { date: '2026-01-31', symbol: 'JUP',  pct: '10.00', desc: 'Jupiter vesting lanjutan.' },
+
+    // PYTH — Pyth Network
+    { date: '2025-05-20', symbol: 'PYTH', pct: '5.00',  desc: 'Pyth Network investor vesting.' },
+    { date: '2025-11-20', symbol: 'PYTH', pct: '5.00',  desc: 'Pyth vesting lanjutan.' },
+
+    // ZK — zkSync
+    { date: '2025-06-17', symbol: 'ZK',   pct: '8.50',  desc: 'zkSync early investor & contributor cliff unlock.' },
+    { date: '2025-12-17', symbol: 'ZK',   pct: '4.00',  desc: 'zkSync vesting lanjutan.' },
+    { date: '2026-06-17', symbol: 'ZK',   pct: '4.00',  desc: 'zkSync vesting lanjutan.' },
+
+    // ENA — Ethena
+    { date: '2025-04-02', symbol: 'ENA',  pct: '2.24',  desc: 'Ethena Foundation & investor vesting.' },
+    { date: '2025-10-02', symbol: 'ENA',  pct: '2.24',  desc: 'Ethena vesting lanjutan.' },
+    { date: '2026-04-02', symbol: 'ENA',  pct: '2.24',  desc: 'Ethena vesting lanjutan.' },
+
+    // WIF — dogwifhat
+    { date: '2025-09-01', symbol: 'WIF',  pct: '3.50',  desc: 'WIF early contributor unlock.' },
+
+    // EIGEN — EigenLayer
+    { date: '2025-09-29', symbol: 'EIGEN', pct: '5.00', desc: 'EigenLayer investor vesting — 1 tahun pasca TGE.' },
+    { date: '2026-03-29', symbol: 'EIGEN', pct: '5.00', desc: 'EigenLayer vesting lanjutan.' },
+
+    // AEVO
+    { date: '2025-03-13', symbol: 'AEVO', pct: '5.00',  desc: 'AEVO team & investor vesting.' },
+
+    // W — Wormhole
+    { date: '2025-04-03', symbol: 'W',    pct: '3.33',  desc: 'Wormhole investor vesting.' },
+    { date: '2025-10-03', symbol: 'W',    pct: '3.33',  desc: 'Wormhole vesting lanjutan.' },
+    { date: '2026-04-03', symbol: 'W',    pct: '3.33',  desc: 'Wormhole vesting lanjutan.' },
+
+    // HYPE — Hyperliquid
+    { date: '2025-11-29', symbol: 'HYPE', pct: '2.72',  desc: 'Hyperliquid team vesting — airdrop & team allocation.' },
+    { date: '2026-05-29', symbol: 'HYPE', pct: '2.72',  desc: 'HYPE vesting lanjutan.' },
+
+    // NOT — Notcoin
+    { date: '2025-05-16', symbol: 'NOT',  pct: '4.00',  desc: 'Notcoin team & investor vesting.' },
+  ];
+
+  const from = new Date(dateFrom + 'T00:00:00');
+  const to   = new Date(dateTo   + 'T23:59:59');
+
+  for (const u of UNLOCKS) {
+    const d = new Date(u.date + 'T00:00:00');
+    if (d < from || d > to) continue;
+    results.push({
+      date: d,
+      title: `🔓 ${u.symbol} Token Unlock (${u.pct}% supply)`,
+      description: u.desc + ` Token masuk ke pasar — potensi sell pressure. Cek tokenomics untuk detail.`,
+      category: 'token unlock',
+      importance: parseFloat(u.pct) >= 5 ? 'high' : 'medium',
+      source: 'Vesting Schedule',
+    });
+  }
+
+  return results;
+}
+
+// ── Fetch Hardcoded macro events lengkap (FOMC, CPI, NFP, PCE, PPI, GDP, dll) ──
 function fetchHardcodedMacro(dateFrom, dateTo) {
-  // FOMC 2026 meeting dates (confirmed)
-  const FOMC_2026 = [
-    '2026-01-28','2026-01-29',
+  const from = new Date(dateFrom + 'T00:00:00');
+  const to   = new Date(dateTo   + 'T23:59:59');
+  const events = [];
+
+  // Helper: push jika dalam range
+  function push(dateStr, ev) {
+    const d = new Date(dateStr + 'T00:00:00');
+    if (d >= from && d <= to) events.push({ date: d, category: 'macro', source: 'US Gov / Fed', ...ev });
+  }
+
+  // ══════════════════════════════════════════════
+  // FOMC MEETINGS — Federal Reserve (2024-2027)
+  // ══════════════════════════════════════════════
+  const FOMC = [
+    // 2024
+    '2024-01-30','2024-01-31',
+    '2024-03-19','2024-03-20',
+    '2024-04-30','2024-05-01',
+    '2024-06-11','2024-06-12',
+    '2024-07-30','2024-07-31',
+    '2024-09-17','2024-09-18',
+    '2024-11-06','2024-11-07',
+    '2024-12-17','2024-12-18',
+    // 2025
+    '2025-01-28','2025-01-29',
+    '2025-03-18','2025-03-19',
+    '2025-04-29','2025-04-30',
+    '2025-06-17','2025-06-18',
+    '2025-07-29','2025-07-30',
+    '2025-09-16','2025-09-17',
+    '2025-10-28','2025-10-29',
+    '2025-12-09','2025-12-10',
+    // 2026
+    '2026-01-27','2026-01-28',
     '2026-03-17','2026-03-18',
     '2026-04-28','2026-04-29',
     '2026-06-09','2026-06-10',
@@ -18607,48 +18772,344 @@ function fetchHardcodedMacro(dateFrom, dateTo) {
     '2026-09-15','2026-09-16',
     '2026-10-27','2026-10-28',
     '2026-12-15','2026-12-16',
+    // 2027
+    '2027-01-26','2027-01-27',
+    '2027-03-16','2027-03-17',
+    '2027-04-27','2027-04-28',
+    '2027-06-15','2027-06-16',
   ];
-  const from = new Date(dateFrom + 'T00:00:00');
-  const to   = new Date(dateTo   + 'T23:59:59');
-
-  const events = [];
-  for (const d of FOMC_2026) {
-    const date = new Date(d + 'T00:00:00');
-    if (date >= from && date <= to) {
-      events.push({
-        date,
-        title: 'FOMC Meeting — Federal Reserve',
-        description: 'Rapat Federal Open Market Committee. Keputusan suku bunga AS. Berdampak besar pada pasar crypto & aset berisiko global.',
-        category: 'macro',
-        importance: 'high',
-        source: 'Federal Reserve',
-        time: '01:00', // ~2AM WIB
-      });
-    }
+  for (const d of FOMC) {
+    push(d, {
+      title: 'FOMC Meeting — Federal Reserve',
+      description: 'Rapat Federal Open Market Committee. Keputusan suku bunga AS berdampak langsung pada harga Bitcoin & seluruh aset berisiko global.',
+      importance: 'high',
+      time: '01:00',
+    });
   }
 
-  // Bitcoin halving berikutnya (estimasi 2028)
-  // BTC halving terakhir April 2024
+  // ══════════════════════════════════════════════
+  // CPI — US Inflation (bulanan, ~Rabu ke-2)
+  // ══════════════════════════════════════════════
+  const CPI = [
+    // 2024
+    '2024-01-11','2024-02-13','2024-03-12','2024-04-10',
+    '2024-05-15','2024-06-12','2024-07-11','2024-08-14',
+    '2024-09-11','2024-10-10','2024-11-13','2024-12-11',
+    // 2025
+    '2025-01-15','2025-02-12','2025-03-12','2025-04-10',
+    '2025-05-13','2025-06-11','2025-07-15','2025-08-12',
+    '2025-09-10','2025-10-15','2025-11-12','2025-12-10',
+    // 2026
+    '2026-01-14','2026-02-11','2026-03-11','2026-04-09',
+    '2026-05-13','2026-06-10','2026-07-14','2026-08-12',
+    '2026-09-09','2026-10-14','2026-11-11','2026-12-09',
+  ];
+  for (const d of CPI) {
+    push(d, {
+      title: 'US CPI Inflation Report',
+      description: 'Consumer Price Index AS. Laporan inflasi bulanan paling berpengaruh di pasar global. CPI tinggi → Fed hawkish → tekanan turun pada crypto & saham.',
+      importance: 'high',
+      time: '20:30',
+    });
+  }
 
-  // Tambah event mingguan berulang yang penting
-  const from2 = new Date(dateFrom + 'T00:00:00');
-  const days  = Math.ceil((to - from) / 86400000);
+  // ══════════════════════════════════════════════
+  // NFP — Non-Farm Payrolls (Jumat pertama tiap bulan)
+  // ══════════════════════════════════════════════
+  const NFP = [
+    // 2024
+    '2024-01-05','2024-02-02','2024-03-08','2024-04-05',
+    '2024-05-03','2024-06-07','2024-07-05','2024-08-02',
+    '2024-09-06','2024-10-04','2024-11-01','2024-12-06',
+    // 2025
+    '2025-01-10','2025-02-07','2025-03-07','2025-04-04',
+    '2025-05-02','2025-06-06','2025-07-03','2025-08-01',
+    '2025-09-05','2025-10-03','2025-11-07','2025-12-05',
+    // 2026
+    '2026-01-09','2026-02-06','2026-03-06','2026-04-03',
+    '2026-05-01','2026-06-05','2026-07-02','2026-08-07',
+    '2026-09-04','2026-10-02','2026-11-06','2026-12-04',
+  ];
+  for (const d of NFP) {
+    push(d, {
+      title: 'US NFP — Non-Farm Payrolls',
+      description: 'Data tenaga kerja non-pertanian AS. Salah satu rilis ekonomi paling market-moving. NFP kuat → dolar menguat → tekanan pada Bitcoin & altcoin.',
+      importance: 'high',
+      time: '20:30',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // PCE — Fed's Preferred Inflation Gauge (bulanan)
+  // ══════════════════════════════════════════════
+  const PCE = [
+    // 2024
+    '2024-01-26','2024-02-29','2024-03-29','2024-04-26',
+    '2024-05-31','2024-06-28','2024-07-26','2024-08-30',
+    '2024-09-27','2024-10-31','2024-11-27','2024-12-20',
+    // 2025
+    '2025-01-31','2025-02-28','2025-03-28','2025-04-30',
+    '2025-05-30','2025-06-27','2025-07-31','2025-08-29',
+    '2025-09-26','2025-10-31','2025-11-26','2025-12-19',
+    // 2026
+    '2026-01-30','2026-02-27','2026-03-27','2026-04-30',
+    '2026-05-29','2026-06-26','2026-07-31','2026-08-28',
+    '2026-09-25','2026-10-30','2026-11-25','2026-12-18',
+  ];
+  for (const d of PCE) {
+    push(d, {
+      title: 'US PCE Price Index',
+      description: 'Personal Consumption Expenditures — indikator inflasi favorit Federal Reserve. Digunakan langsung dalam keputusan suku bunga. Sangat berpengaruh pada crypto.',
+      importance: 'high',
+      time: '21:30',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // PPI — Producer Price Index (bulanan)
+  // ══════════════════════════════════════════════
+  const PPI = [
+    // 2024
+    '2024-01-12','2024-02-16','2024-03-14','2024-04-11',
+    '2024-05-14','2024-06-13','2024-07-12','2024-08-13',
+    '2024-09-12','2024-10-11','2024-11-14','2024-12-12',
+    // 2025
+    '2025-01-14','2025-02-13','2025-03-13','2025-04-11',
+    '2025-05-15','2025-06-12','2025-07-15','2025-08-14',
+    '2025-09-11','2025-10-14','2025-11-13','2025-12-11',
+    // 2026
+    '2026-01-15','2026-02-12','2026-03-12','2026-04-10',
+    '2026-05-14','2026-06-11','2026-07-15','2026-08-13',
+    '2026-09-10','2026-10-15','2026-11-12','2026-12-10',
+  ];
+  for (const d of PPI) {
+    push(d, {
+      title: 'US PPI — Producer Price Index',
+      description: 'Indeks harga produsen AS. Leading indicator inflasi — naik sebelum CPI naik. Berpengaruh pada ekspektasi kebijakan Fed.',
+      importance: 'medium',
+      time: '20:30',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // GDP — US Quarterly (setiap kuartal)
+  // ══════════════════════════════════════════════
+  const GDP = [
+    // 2024
+    '2024-01-25','2024-02-28','2024-03-28',
+    '2024-04-25','2024-05-30','2024-06-27',
+    '2024-07-25','2024-08-29','2024-09-26',
+    '2024-10-30','2024-11-27','2024-12-19',
+    // 2025
+    '2025-01-30','2025-02-27','2025-03-27',
+    '2025-04-30','2025-05-29','2025-06-26',
+    '2025-07-30','2025-08-28','2025-09-25',
+    '2025-10-29','2025-11-26','2025-12-18',
+    // 2026
+    '2026-01-29','2026-02-26','2026-03-26',
+    '2026-04-29','2026-05-28','2026-06-25',
+    '2026-07-29','2026-08-27','2026-09-24',
+    '2026-10-29','2026-11-25','2026-12-17',
+  ];
+  for (const d of GDP) {
+    push(d, {
+      title: 'US GDP Report',
+      description: 'Laporan Produk Domestik Bruto AS. Indikator utama kesehatan ekonomi. GDP di bawah ekspektasi → potensi stimulus/rate cut → bullish crypto.',
+      importance: 'medium',
+      time: '21:30',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // US Jobless Claims — setiap Kamis (mingguan)
+  // ══════════════════════════════════════════════
+  const days = Math.ceil((to - from) / 86400000);
   for (let i = 0; i <= days; i++) {
-    const d    = new Date(from2.getTime() + i * 86400000);
-    const dow  = d.getDay(); // 0=Min,5=Jum
-
-    // US Jobless Claims - setiap Kamis
-    if (dow === 4) {
+    const d = new Date(from.getTime() + i * 86400000);
+    if (d.getDay() === 4) { // Kamis
       events.push({
         date: d,
-        title: 'US Jobless Claims (Mingguan)',
-        description: 'Data klaim pengangguran AS mingguan. Indikator kesehatan pasar tenaga kerja AS.',
+        title: 'US Jobless Claims',
+        description: 'Klaim pengangguran mingguan AS. Indikator real-time kondisi pasar tenaga kerja. Meningkat signifikan → potensi dovish Fed → bullish risk assets.',
         category: 'macro',
         importance: 'medium',
         source: 'US Dept of Labor',
         time: '20:30',
       });
     }
+  }
+
+  // ══════════════════════════════════════════════
+  // Bitcoin Halving
+  // ══════════════════════════════════════════════
+  push('2024-04-20', {
+    title: '₿ Bitcoin Halving #4',
+    description: 'Halving keempat Bitcoin — block reward turun dari 6.25 menjadi 3.125 BTC. Event 4 tahunan yang secara historis menjadi katalis bull run besar.',
+    importance: 'high',
+    category: 'crypto',
+    source: 'Bitcoin Protocol',
+    time: null,
+  });
+  // Halving berikutnya estimasi ~April 2028
+  push('2028-04-17', {
+    title: '₿ Bitcoin Halving #5 (Estimasi)',
+    description: 'Estimasi halving kelima Bitcoin. Block reward turun dari 3.125 menjadi 1.5625 BTC. Tanggal pasti tergantung hashrate jaringan.',
+    importance: 'high',
+    category: 'crypto',
+    source: 'Bitcoin Protocol',
+    time: null,
+  });
+
+  // ══════════════════════════════════════════════
+  // ISM Manufacturing PMI (Senin pertama tiap bulan)
+  // ══════════════════════════════════════════════
+  const ISM_MFG = [
+    // 2024
+    '2024-01-02','2024-02-01','2024-03-01','2024-04-01',
+    '2024-05-01','2024-06-03','2024-07-01','2024-08-01',
+    '2024-09-03','2024-10-01','2024-11-01','2024-12-02',
+    // 2025
+    '2025-01-02','2025-02-03','2025-03-03','2025-04-01',
+    '2025-05-01','2025-06-02','2025-07-01','2025-08-01',
+    '2025-09-02','2025-10-01','2025-11-03','2025-12-01',
+    // 2026
+    '2026-01-02','2026-02-02','2026-03-02','2026-04-01',
+    '2026-05-01','2026-06-01','2026-07-01','2026-08-03',
+    '2026-09-01','2026-10-01','2026-11-02','2026-12-01',
+  ];
+  for (const d of ISM_MFG) {
+    push(d, {
+      title: 'ISM Manufacturing PMI',
+      description: 'Indeks aktivitas manufaktur AS. Di atas 50 = ekspansi, di bawah 50 = kontraksi. Leading indicator ekonomi — rilis pertama di awal bulan sebelum data lain.',
+      importance: 'medium',
+      time: '22:00',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // ISM Services PMI (Rabu pertama tiap bulan)
+  // ══════════════════════════════════════════════
+  const ISM_SVC = [
+    // 2024
+    '2024-01-05','2024-02-05','2024-03-05','2024-04-03',
+    '2024-05-03','2024-06-05','2024-07-03','2024-08-05',
+    '2024-09-04','2024-10-03','2024-11-06','2024-12-04',
+    // 2025
+    '2025-01-07','2025-02-05','2025-03-05','2025-04-03',
+    '2025-05-05','2025-06-04','2025-07-07','2025-08-06',
+    '2025-09-03','2025-10-03','2025-11-05','2025-12-03',
+    // 2026
+    '2026-01-07','2026-02-04','2026-03-04','2026-04-01',
+    '2026-05-06','2026-06-03','2026-07-01','2026-08-05',
+    '2026-09-02','2026-10-07','2026-11-04','2026-12-02',
+  ];
+  for (const d of ISM_SVC) {
+    push(d, {
+      title: 'ISM Services PMI',
+      description: 'Indeks aktivitas sektor jasa AS (70% ekonomi AS). Lebih berpengaruh dari ISM Manufacturing. Di atas 50 = ekspansi ekonomi → Fed tidak perlu potong rate.',
+      importance: 'medium',
+      time: '22:00',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // ADP Non-Farm Employment (Rabu sebelum NFP)
+  // ══════════════════════════════════════════════
+  const ADP = [
+    // 2024
+    '2024-01-03','2024-02-07','2024-03-06','2024-04-03',
+    '2024-05-01','2024-06-05','2024-07-03','2024-07-31',
+    '2024-09-04','2024-10-02','2024-10-30','2024-12-04',
+    // 2025
+    '2025-01-08','2025-02-05','2025-03-05','2025-04-02',
+    '2025-04-30','2025-06-04','2025-07-02','2025-07-30',
+    '2025-09-03','2025-10-01','2025-10-29','2025-12-03',
+    // 2026
+    '2026-01-07','2026-02-04','2026-03-04','2026-04-01',
+    '2026-04-29','2026-06-03','2026-07-01','2026-07-29',
+    '2026-09-02','2026-09-30','2026-10-28','2026-12-02',
+  ];
+  for (const d of ADP) {
+    push(d, {
+      title: 'ADP Non-Farm Employment',
+      description: 'Data tenaga kerja swasta AS dari ADP — preview 2 hari sebelum NFP resmi. Sering dipakai sebagai prediksi arah NFP. Kejutan besar di ADP biasanya menggerakkan pasar.',
+      importance: 'medium',
+      time: '20:15',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // Unemployment Rate (bareng NFP, Jumat pertama)
+  // ══════════════════════════════════════════════
+  const UNEMP = [
+    // 2024
+    '2024-01-05','2024-02-02','2024-03-08','2024-04-05',
+    '2024-05-03','2024-06-07','2024-07-05','2024-08-02',
+    '2024-09-06','2024-10-04','2024-11-01','2024-12-06',
+    // 2025
+    '2025-01-10','2025-02-07','2025-03-07','2025-04-04',
+    '2025-05-02','2025-06-06','2025-07-03','2025-08-01',
+    '2025-09-05','2025-10-03','2025-11-07','2025-12-05',
+    // 2026
+    '2026-01-09','2026-02-06','2026-03-06','2026-04-03',
+    '2026-05-01','2026-06-05','2026-07-02','2026-08-07',
+    '2026-09-04','2026-10-02','2026-11-06','2026-12-04',
+  ];
+  for (const d of UNEMP) {
+    push(d, {
+      title: 'US Unemployment Rate',
+      description: 'Tingkat pengangguran AS — dirilis bersamaan NFP. Naik = pasar kerja melemah → potensi Fed dovish → bullish crypto jangka menengah.',
+      importance: 'medium',
+      time: '20:30',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // Fed Chair Speech / FOMC Minutes (2 minggu pasca rapat)
+  // ══════════════════════════════════════════════
+  const FOMC_MINUTES = [
+    // 2024
+    '2024-02-21','2024-04-10','2024-05-22','2024-07-03',
+    '2024-08-21','2024-10-09','2024-11-26','2025-01-08',
+    // 2025
+    '2025-02-19','2025-04-09','2025-05-28','2025-07-09',
+    '2025-08-20','2025-10-08','2025-11-19','2025-12-24',
+    // 2026
+    '2026-02-18','2026-04-08','2026-05-27','2026-07-08',
+    '2026-08-19','2026-10-07','2026-11-18','2026-12-30',
+  ];
+  for (const d of FOMC_MINUTES) {
+    push(d, {
+      title: 'FOMC Minutes Rilis',
+      description: 'Notulen rapat FOMC — detail diskusi internal Fed tentang suku bunga & ekonomi. Sering mengungkap sinyal kebijakan ke depan yang tidak ada di statement resmi.',
+      importance: 'medium',
+      time: '02:00',
+      source: 'Federal Reserve',
+    });
+  }
+
+  // ══════════════════════════════════════════════
+  // ECB Rate Decision (Euro Central Bank, ~6 minggu sekali)
+  // ══════════════════════════════════════════════
+  const ECB = [
+    // 2024
+    '2024-01-25','2024-03-07','2024-04-11','2024-06-06',
+    '2024-07-18','2024-09-12','2024-10-17','2024-12-12',
+    // 2025
+    '2025-01-30','2025-03-06','2025-04-17','2025-06-05',
+    '2025-07-24','2025-09-11','2025-10-30','2025-12-18',
+    // 2026
+    '2026-01-29','2026-03-05','2026-04-16','2026-06-04',
+    '2026-07-23','2026-09-10','2026-10-29','2026-12-17',
+  ];
+  for (const d of ECB) {
+    push(d, {
+      title: 'ECB Rate Decision',
+      description: 'Keputusan suku bunga Bank Sentral Eropa. Euro adalah mata uang terbesar kedua di dunia — keputusan ECB mempengaruhi likuiditas global & sentimen pasar crypto.',
+      importance: 'medium',
+      time: '20:15',
+      source: 'European Central Bank',
+    });
   }
 
   return events;
@@ -18696,17 +19157,18 @@ async function loadCryptoCalendar() {
 
   // Fetch semua sumber paralel
   const hardcodedEvents = fetchHardcodedMacro(dateFrom, dateTo);
-  const [cmcEvents, finnhubEvents, cgEvents] = await Promise.all([
+  const [cmcEvents, finnhubEvents, cgEvents, tokenUnlockEvents] = await Promise.all([
     fetchCMCEvents(dateFrom, dateTo),
     fetchFinnhubCalendar(dateFrom, dateTo),
     fetchCoinGeckoEvents(dateFrom, dateTo),
+    fetchTokenUnlocks(dateFrom, dateTo),
   ]);
 
   // Deduplicate by title+date
   const seen = new Set();
-  const allEvents = [...hardcodedEvents, ...cmcEvents, ...finnhubEvents, ...cgEvents].filter(ev => {
+  const allEvents = [...hardcodedEvents, ...cmcEvents, ...finnhubEvents, ...cgEvents, ...tokenUnlockEvents].filter(ev => {
     if (!ev?.date) return false;
-    const key = (ev.title||'') + ev.date.toDateString();
+    const key = (ev.title||'').slice(0,40) + ev.date.toDateString();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -18717,10 +19179,11 @@ async function loadCryptoCalendar() {
 
   if (statusEl) {
     const src = [];
-    if (hardcodedEvents.length) src.push(`${hardcodedEvents.length} macro`);
-    if (cmcEvents.length)       src.push(`${cmcEvents.length} crypto`);
-    if (finnhubEvents.length)   src.push(`${finnhubEvents.length} Finnhub`);
-    if (cgEvents.length)        src.push(`${cgEvents.length} CoinGecko`);
+    if (hardcodedEvents.length)    src.push(`${hardcodedEvents.length} macro`);
+    if (tokenUnlockEvents.length)  src.push(`${tokenUnlockEvents.length} unlock`);
+    if (cmcEvents.length)          src.push(`${cmcEvents.length} CMC`);
+    if (finnhubEvents.length)      src.push(`${finnhubEvents.length} Finnhub`);
+    if (cgEvents.length)           src.push(`${cgEvents.length} CoinGecko`);
     const total = allEvents.length;
     statusEl.textContent = total > 0 ? `✓ ${total} event · ${src.join(' · ')}` : '⚠️ Tidak ada event minggu ini';
   }
