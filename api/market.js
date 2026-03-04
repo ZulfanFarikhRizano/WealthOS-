@@ -236,7 +236,34 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Unknown action', available: ['btchistory','finnhub','klines','ticker','price-check'] });
+  // ── calendar (CoinMarketCal proxy) ─────────────────────
+  if (action === 'calendar') {
+    const { dateFrom, dateTo } = req.query;
+    if (!dateFrom || !dateTo) return res.status(400).json({ error: 'dateFrom and dateTo required' });
+
+    const apiKey = process.env.CMC_API_KEY;
+    // Jika tidak ada API key, return empty array (graceful fallback)
+    if (!apiKey) {
+      res.setHeader('Cache-Control', 's-maxage=3600');
+      return res.status(200).json([]);
+    }
+
+    try {
+      const r = await fetch(
+        `https://api.coinmarketcal.com/v1/events?access_token=${apiKey}&dateRangeStart=${dateFrom}&dateRangeEnd=${dateTo}&page=1&max=150&showOnly=hot_events`,
+        { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(10000) }
+      );
+      if (!r.ok) throw new Error(`CMC ${r.status}`);
+      const data = await r.json();
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
+      return res.status(200).json(data);
+    } catch(e) {
+      // Return empty array on error — frontend handles gracefully
+      return res.status(200).json([]);
+    }
+  }
+
+  return res.status(400).json({ error: 'Unknown action', available: ['btchistory','finnhub','klines','ticker','price-check','calendar'] });
 }
 
 // ── Shared helpers ────────────────────────────────────────
