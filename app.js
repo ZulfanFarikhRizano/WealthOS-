@@ -17833,7 +17833,7 @@ if (origShowPage) {
 
 const FP_LOCK_KEY      = 'zw_fp_lock_enabled';
 const FP_LAST_ACTIVE   = 'zw_fp_last_active';   // timestamp terakhir user aktif
-const FP_TIMEOUT_MS    = 5 * 60 * 1000;          // 5 menit jeda sebelum dikunci
+const FP_TIMEOUT_MS    = 1 * 60 * 1000;          // 1 menit jeda sebelum dikunci
 
 function isFingerprintAvailable() {
   return !!(window.PublicKeyCredential && navigator.credentials);
