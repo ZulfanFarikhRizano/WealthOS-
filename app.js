@@ -4206,9 +4206,109 @@ function restoreSavedTheme() {
   if (preset) applyThemeVars(preset.accent, preset.accent2, preset.accent3, preset.accent4);
 }
 
+/* ══════════ APP STYLE SYSTEM ══════════
+   Cyberpunk (default) / Zen Paper / Tactile Maximalism / Liquid Glass
+   Fungsi ini mengontrol data-style attribute di <html>
+   dan menyimpan pilihan ke localStorage
+══════════════════════════════════════ */
+const _VIVID_FONTS = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap';
+const _ZEN_FONTS   = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap';
+const _GLASS_FONTS = 'https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&family=Fira+Code:wght@400;500&display=swap';
+
+function _loadFont(id, url) {
+  if (!document.getElementById(id)) {
+    const l = document.createElement('link');
+    l.id = id; l.rel = 'stylesheet'; l.href = url;
+    document.head.appendChild(l);
+  }
+}
+
+function setAppStyle(style) {
+  const root = document.documentElement;
+  if (style === 'zen') {
+    root.setAttribute('data-style', 'zen');
+    localStorage.setItem('zw_app_style', 'zen');
+    _loadFont('_zen-fonts', _ZEN_FONTS);
+    _updateStyleBtns('zen');
+    toast('🍵 Zen Paper aktif — tampilan berubah total!');
+  } else if (style === 'vivid') {
+    root.setAttribute('data-style', 'vivid');
+    localStorage.setItem('zw_app_style', 'vivid');
+    _loadFont('_vivid-fonts', _VIVID_FONTS);
+    _updateStyleBtns('vivid');
+    toast('🧸 Tactile Maximalism aktif — squishy & vibrant!');
+  } else if (style === 'glass') {
+    root.setAttribute('data-style', 'glass');
+    localStorage.setItem('zw_app_style', 'glass');
+    _loadFont('_glass-fonts', _GLASS_FONTS);
+    _updateStyleBtns('glass');
+    toast('🪟 Liquid Glass aktif — Apple iOS 26 vibes!');
+  } else {
+    root.removeAttribute('data-style');
+    localStorage.setItem('zw_app_style', 'cyberpunk');
+    _updateStyleBtns('cyberpunk');
+    toast('⚡ Cyberpunk mode aktif!');
+  }
+}
+
+function _updateStyleBtns(style) {
+  const els = {
+    zenBadge:   document.getElementById('zen-active-badge'),
+    vividBadge: document.getElementById('vivid-active-badge'),
+    glassBadge: document.getElementById('glass-active-badge'),
+    cpBadge:    document.getElementById('cyberpunk-active-badge'),
+    zenBtn:     document.getElementById('zen-style-btn2'),
+    vividBtn:   document.getElementById('vivid-style-btn2'),
+    glassBtn:   document.getElementById('glass-style-btn2'),
+    cpBtn:      document.getElementById('cyberpunk-style-btn2'),
+  };
+  // Reset semua ke state non-aktif
+  if (els.zenBadge)   els.zenBadge.textContent   = 'BARU';
+  if (els.vividBadge) els.vividBadge.textContent = 'BARU';
+  if (els.glassBadge) els.glassBadge.textContent = 'iOS 26';
+  if (els.cpBadge)    els.cpBadge.textContent    = '';
+  [els.zenBtn, els.vividBtn, els.glassBtn, els.cpBtn].forEach(b => b?.classList.remove('sactive'));
+
+  // Aktifkan yang dipilih
+  if (style === 'zen') {
+    if (els.zenBadge) els.zenBadge.textContent = 'AKTIF';
+    els.zenBtn?.classList.add('sactive');
+  } else if (style === 'vivid') {
+    if (els.vividBadge) els.vividBadge.textContent = 'AKTIF';
+    els.vividBtn?.classList.add('sactive');
+  } else if (style === 'glass') {
+    if (els.glassBadge) els.glassBadge.textContent = 'AKTIF';
+    els.glassBtn?.classList.add('sactive');
+  } else {
+    // cyberpunk
+    if (els.cpBadge) els.cpBadge.textContent = 'AKTIF';
+    els.cpBtn?.classList.add('sactive');
+  }
+}
+
+function restoreAppStyle() {
+  const saved = localStorage.getItem('zw_app_style');
+  if (saved === 'zen') {
+    _loadFont('_zen-fonts', _ZEN_FONTS);
+    document.documentElement.setAttribute('data-style', 'zen');
+  } else if (saved === 'vivid') {
+    _loadFont('_vivid-fonts', _VIVID_FONTS);
+    document.documentElement.setAttribute('data-style', 'vivid');
+  } else if (saved === 'glass') {
+    _loadFont('_glass-fonts', _GLASS_FONTS);
+    document.documentElement.setAttribute('data-style', 'glass');
+  }
+}
+
+// Jalankan langsung saat load — restore tema yang tersimpan
+restoreAppStyle();
+
 function initThemePage() {
   renderThemePresets();
   updateModeBtns();
+  // Sync tombol style sesuai kondisi saat ini
+  const currentStyle = localStorage.getItem('zw_app_style') || 'cyberpunk';
+  _updateStyleBtns(currentStyle);
 }
 
 function renderThemePresets() {
@@ -4250,17 +4350,107 @@ function applyCustomTheme() {
   toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Warna custom diterapkan!');
 }
 
-function setDisplayMode(mode) {
-  if (mode === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-    localStorage.setItem('zw_display_mode', 'light');
-    localStorage.setItem('wo_theme', 'light');
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('zw_display_mode', 'dark');
-    localStorage.setItem('wo_theme', 'dark');
+/* ══════════════════════════════════════════════════════════
+   CIRCULAR RIPPLE REVEAL — CSS clip-path technique
+   
+   Cara kerja:
+   1. Jalankan onSwitch() → DOM berubah ke tema baru di balik overlay
+   2. Overlay (warna tema baru) di-reveal via clip-path circle expand
+      dari titik origin (posisi tombol) → smooth GPU-accelerated
+   3. Overlay fade-out setelah expand selesai → tema baru terlihat
+   
+   Menggunakan CSS clip-path + Web Animations API untuk performa
+   terbaik di mobile. GPU-composited, tidak ada jank.
+════════════════════════════════════════════════════════════ */
+function _themeRippleReveal(targetMode, originEl, onSwitch) {
+  if (window._zwRippleBusy) return;
+  window._zwRippleBusy = true;
+
+  const DURATION = 600;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+
+  try {
+    // Hitung origin point dari posisi elemen tombol
+    const rect = originEl && originEl.getBoundingClientRect ? originEl.getBoundingClientRect() : null;
+    const ox = rect ? Math.round(rect.left + rect.width  / 2) : window.innerWidth  - 44;
+    const oy = rect ? Math.round(rect.top  + rect.height / 2) : 44;
+    const W  = window.innerWidth;
+    const H  = window.innerHeight;
+
+    // Radius maksimum — jarak dari origin ke sudut terjauh layar
+    const maxR = Math.ceil(Math.hypot(Math.max(ox, W - ox), Math.max(oy, H - oy))) + 10;
+
+    // Warna overlay sesuai tema tujuan
+    const isDarkTarget = targetMode === 'dark';
+    const styleAttr = document.documentElement.getAttribute('data-style') || '';
+    let bgColor;
+    if (styleAttr === 'vivid')       bgColor = isDarkTarget ? '#0d1b2a' : '#e8f4fd';
+    else if (styleAttr === 'glass')  bgColor = isDarkTarget ? '#050810' : '#f8fbff';
+    else                             bgColor = isDarkTarget ? '#080c18' : '#f0f6ff';
+
+    // Buat overlay div — lebih ringan dari canvas, GPU composited
+    const overlay = document.createElement('div');
+    overlay.style.cssText = [
+      'position:fixed',
+      'top:0',
+      'left:0',
+      'width:100vw',
+      'height:100vh',
+      'z-index:0',
+      'pointer-events:none',
+      `background:${bgColor}`,
+      `clip-path:circle(0px at ${ox}px ${oy}px)`,
+    ].join(';');
+    document.body.style.position = 'relative';
+    document.body.appendChild(overlay);
+
+    let rafId;
+    const t0 = performance.now();
+
+    function done() {
+      cancelAnimationFrame(rafId);
+      try { onSwitch(); } catch(e) {}
+      requestAnimationFrame(() => {
+        overlay.remove();
+        document.body.style.position = '';
+        window._zwRippleBusy = false;
+      });
+    }
+
+    const safety = setTimeout(done, DURATION + 500);
+
+    function tick(now) {
+      const t = Math.min((now - t0) / DURATION, 1);
+      const r = ease(t) * maxR;
+      overlay.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + ox + 'px ' + oy + 'px)';
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        clearTimeout(safety);
+        done();
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+
+  } catch(err) {
+    try { onSwitch(); } catch(e) {}
+    window._zwRippleBusy = false;
   }
-  updateModeBtns();
+}
+
+function setDisplayMode(mode, originEl) {
+  _themeRippleReveal(mode, originEl, () => {
+    if (mode === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('zw_display_mode', 'light');
+      localStorage.setItem('wo_theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('zw_display_mode', 'dark');
+      localStorage.setItem('wo_theme', 'dark');
+    }
+    updateModeBtns();
+  });
   toast(mode==='light' ? '&#9728; Light mode aktif' : '&#9790; Dark mode aktif');
 }
 
@@ -4268,8 +4458,15 @@ function updateModeBtns() {
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
   const darkBtn = document.getElementById('mode-dark-btn');
   const lightBtn = document.getElementById('mode-light-btn');
-  if (darkBtn) { darkBtn.style.borderColor = isDark ? 'var(--accent)' : 'var(--border)'; darkBtn.style.background = isDark ? 'rgba(0,229,255,.08)' : 'transparent'; }
-  if (lightBtn) { lightBtn.style.borderColor = !isDark ? 'var(--accent)' : 'var(--border)'; lightBtn.style.background = !isDark ? 'rgba(0,229,255,.08)' : 'transparent'; }
+  const activeBg = 'rgba(128,128,128,.1)';
+  if (darkBtn) {
+    darkBtn.style.borderColor = isDark ? 'var(--accent)' : 'var(--border)';
+    darkBtn.style.background = isDark ? activeBg : 'transparent';
+  }
+  if (lightBtn) {
+    lightBtn.style.borderColor = !isDark ? 'var(--accent)' : 'var(--border)';
+    lightBtn.style.background = !isDark ? activeBg : 'transparent';
+  }
 }
 
 function resetTheme() {
@@ -4297,19 +4494,23 @@ function initTheme(){
   }
 }
 
-function toggleTheme(){
+function toggleTheme(originEl){
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
-  if(isLight){
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('wo_theme','dark');
-  } else {
-    document.documentElement.setAttribute('data-theme','light');
-    localStorage.setItem('wo_theme','light');
-  }
+  const targetMode = isLight ? 'dark' : 'light';
+  _themeRippleReveal(targetMode, originEl, () => {
+    if(isLight){
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('wo_theme','dark');
+    } else {
+      document.documentElement.setAttribute('data-theme','light');
+      localStorage.setItem('wo_theme','light');
+    }
+    updateModeBtns();
+  });
   const thumbs=document.querySelectorAll('.theme-toggle-thumb');
   thumbs.forEach(t=>{
-    t.style.transform='scale(.85)';
-    setTimeout(()=>t.style.transform='',150);
+    t.classList.add('thumb-press');
+    setTimeout(()=>t.classList.remove('thumb-press'),200);
   });
 }
 
@@ -5427,7 +5628,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;backgroun
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>z-wealth — Laporan ${dateStr}</title>
-
+<style>${css}</style>
 </head><body>
 <div class="topbar">
   <div class="topbar-left">
@@ -5755,25 +5956,57 @@ function drawShareCard(){
   }
 
   // ── 1. BACKGROUND ──
-  const bgG=ctx.createLinearGradient(0,0,0,H);
-  if(isProfit){bgG.addColorStop(0,'#060d10');bgG.addColorStop(1,'#040810');}
-  else        {bgG.addColorStop(0,'#0d0608');bgG.addColorStop(1,'#080410');}
-  ctx.fillStyle=bgG;ctx.fillRect(0,0,W,H);
-
-  // Grid
-  ctx.strokeStyle=ac(0.03);ctx.lineWidth=1;
-  for(let x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-
-  // ── 2. GLOW BLOBS ──
-  if(isProfit){
-    [[W*.9,H*.08,W*.6,'rgba(0,245,160,0.13)'],[W*.05,H*.85,W*.55,'rgba(168,85,247,0.1)'],[W*.5,0,W*.45,'rgba(0,212,255,0.07)']].forEach(function(g){
+  const isGlass = document.documentElement.getAttribute('data-style') === 'glass';
+  if (isGlass) {
+    // Liquid Glass card — light, translucent, ambient gradient
+    const bgG=ctx.createLinearGradient(0,0,W,H);
+    bgG.addColorStop(0,'#dde8f8');bgG.addColorStop(.5,'#e8eef8');bgG.addColorStop(1,'#e2ddf5');
+    ctx.fillStyle=bgG;ctx.fillRect(0,0,W,H);
+    // Ambient color blobs
+    const glassBlobs = isProfit
+      ? [[W*.15,H*.08,W*.7,'rgba(0,122,255,.14)'],[W*.85,H*.3,W*.6,'rgba(52,199,89,.12)'],[W*.5,H*.85,W*.65,'rgba(175,82,222,.1)']]
+      : [[W*.15,H*.08,W*.7,'rgba(255,59,48,.13)'],[W*.85,H*.3,W*.6,'rgba(255,149,0,.1)'],[W*.5,H*.85,W*.55,'rgba(175,82,222,.1)']];
+    glassBlobs.forEach(function(g){
       var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
     });
+    // Glass card overlay — frosted panel
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    rr(40,40,W-80,H-80,48);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2;
+    rr(40,40,W-80,H-80,48);ctx.stroke();
+    // Specular highlight at top
+    const specG=ctx.createLinearGradient(40,40,40,200);
+    specG.addColorStop(0,'rgba(255,255,255,.6)');specG.addColorStop(1,'rgba(255,255,255,.0)');
+    ctx.fillStyle=specG;rr(40,40,W-80,160,48);ctx.fill();
+    // Light refraction top bar
+    const rfG=ctx.createLinearGradient(80,40,W-80,40);
+    rfG.addColorStop(0,'transparent');rfG.addColorStop(.3,'rgba(0,200,255,.5)');rfG.addColorStop(.5,'rgba(255,255,255,.9)');rfG.addColorStop(.7,'rgba(180,100,255,.5)');rfG.addColorStop(1,'transparent');
+    ctx.fillStyle=rfG;ctx.fillRect(80,40,W-160,2);
   } else {
-    [[W*.85,H*.12,W*.6,'rgba(255,77,109,0.14)'],[W*.05,H*.88,W*.5,'rgba(120,20,50,0.1)']].forEach(function(g){
-      var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
-    });
+    const bgG=ctx.createLinearGradient(0,0,0,H);
+    if(isProfit){bgG.addColorStop(0,'#060d10');bgG.addColorStop(1,'#040810');}
+    else        {bgG.addColorStop(0,'#0d0608');bgG.addColorStop(1,'#080410');}
+    ctx.fillStyle=bgG;ctx.fillRect(0,0,W,H);
+  }
+
+  // Grid (cyberpunk only)
+  if (!isGlass) {
+    ctx.strokeStyle=ac(0.03);ctx.lineWidth=1;
+    for(let x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  }
+
+  // ── 2. GLOW BLOBS (cyberpunk only) ──
+  if (!isGlass) {
+    if(isProfit){
+      [[W*.9,H*.08,W*.6,'rgba(0,245,160,0.13)'],[W*.05,H*.85,W*.55,'rgba(168,85,247,0.1)'],[W*.5,0,W*.45,'rgba(0,212,255,0.07)']].forEach(function(g){
+        var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+      });
+    } else {
+      [[W*.85,H*.12,W*.6,'rgba(255,77,109,0.14)'],[W*.05,H*.88,W*.5,'rgba(120,20,50,0.1)']].forEach(function(g){
+        var gr=ctx.createRadialGradient(g[0],g[1],0,g[0],g[1],g[2]);gr.addColorStop(0,g[3]);gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+      });
+    }
   }
 
   // ── 3. TOP RAINBOW BAR ──
@@ -5832,10 +6065,13 @@ function drawShareCard(){
   ctx.restore();
 
   // ── 6. LOGO ──
-  drawZWealthLogo(ctx,PAD,110,50,accentColor);
-  ctx.font='400 20px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.4)';
+  const glassAccent = isProfit ? '#007aff' : '#ff3b30';
+  drawZWealthLogo(ctx,PAD,110,50, isGlass ? glassAccent : accentColor);
+  ctx.font='400 20px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = isGlass ? 'rgba(28,28,30,.35)' : 'rgba(148,163,184,.4)';
   ctx.fillText('z-wealth.vercel.app',PAD,142);
-  ctx.textAlign='right';ctx.font='400 24px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.5)';
+  ctx.textAlign='right';ctx.font='400 24px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = isGlass ? 'rgba(28,28,30,.4)' : 'rgba(148,163,184,.5)';
   ctx.fillText(dtStr,W-PAD,110);ctx.textAlign='left';
 
   // Sep line
@@ -5845,7 +6081,8 @@ function drawShareCard(){
   ctx.strokeStyle=sl1;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,165);ctx.lineTo(W-PAD,165);ctx.stroke();
 
   // ── 7. PAIR HEADER ──
-  ctx.font='900 80px "Segoe UI Black",Arial,sans-serif';ctx.fillStyle='#ffffff';
+  ctx.font='900 80px "Segoe UI Black",Arial,sans-serif';
+  ctx.fillStyle = isGlass ? '#1c1c1e' : '#ffffff';
   ctx.fillText('BTC / IDR',PAD,268);
   var pw=ctx.measureText('BTC / IDR').width;
   // DCA badge
@@ -5856,14 +6093,16 @@ function drawShareCard(){
   ctx.fillStyle=accentColor;ctx.fillText(dcaTxt,dcaX+dcaW/2-ctx.measureText(dcaTxt).width/2,dcaY+dcaH*.68);
 
   // ── 8. ROI LABEL + NUMBER ──
-  ctx.font='500 30px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.7)';
+  ctx.font='500 30px "Segoe UI",Arial,sans-serif';
+  ctx.fillStyle = isGlass ? 'rgba(28,28,30,.45)' : 'rgba(148,163,184,.7)';
   ctx.fillText('ROI Unrealized',PAD,330);
   var roiStr=(isProfit?'+':'')+pp.toFixed(2)+'%';
   var rfs=155;
   ctx.font='900 '+rfs+'px "Segoe UI Black",Arial,sans-serif';
   while(ctx.measureText(roiStr).width>W-PAD*2-20&&rfs>80){rfs-=6;ctx.font='900 '+rfs+'px "Segoe UI Black",Arial,sans-serif';}
-  ctx.shadowColor=accentColor;ctx.shadowBlur=80;ctx.fillStyle=accentColor;
-  ctx.fillText(roiStr,PAD,510);ctx.shadowBlur=35;ctx.fillText(roiStr,PAD,510);ctx.shadowBlur=0;
+  const roiColor = isGlass ? (isProfit ? '#007aff' : '#ff3b30') : accentColor;
+  ctx.shadowColor=roiColor;ctx.shadowBlur= isGlass ? 20 : 80;ctx.fillStyle=roiColor;
+  ctx.fillText(roiStr,PAD,510);ctx.shadowBlur= isGlass ? 8 : 35;ctx.fillText(roiStr,PAD,510);ctx.shadowBlur=0;
 
   // Sep line 2
   var sl2=ctx.createLinearGradient(PAD,565,W-PAD,565);
@@ -5874,25 +6113,41 @@ function drawShareCard(){
   var CW=(W-PAD*2-18)/2,CH=155,CG=18,CY1=605,CY2=CY1+CH+CG;
   function sCard(label,value,cx,cy,vc){
     ctx.save();
-    var bg=ctx.createLinearGradient(cx,cy,cx+CW,cy+CH);
-    bg.addColorStop(0,'rgba(255,255,255,.065)');bg.addColorStop(1,'rgba(255,255,255,.02)');
-    ctx.fillStyle=bg;rr(cx,cy,CW,CH,20);ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.09)';ctx.lineWidth=1;rr(cx,cy,CW,CH,20);ctx.stroke();
-    var sh=ctx.createLinearGradient(cx+20,cy,cx+CW-20,cy);
-    sh.addColorStop(0,'transparent');sh.addColorStop(.4,'rgba(255,255,255,.2)');sh.addColorStop(1,'transparent');
-    ctx.strokeStyle=sh;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx+20,cy+1);ctx.lineTo(cx+CW-20,cy+1);ctx.stroke();
-    ctx.fillStyle=vc+'33';ctx.fillRect(cx+20,cy+CH-4,CW-40,3);
-    ctx.font='500 22px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.6)';ctx.fillText(label,cx+26,cy+44);
-    ctx.font='800 48px "Segoe UI Black",Arial,sans-serif';
-    var fz=48;while(ctx.measureText(value).width>CW-44&&fz>24){fz-=4;ctx.font='800 '+fz+'px "Segoe UI Black",Arial,sans-serif';}
-    ctx.fillStyle=vc;ctx.shadowColor=vc;ctx.shadowBlur=12;ctx.fillText(value,cx+26,cy+116);ctx.shadowBlur=0;
+    if (isGlass) {
+      // Glass frosted card
+      ctx.fillStyle='rgba(255,255,255,.5)';rr(cx,cy,CW,CH,24);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;rr(cx,cy,CW,CH,24);ctx.stroke();
+      // specular top line
+      const sh2=ctx.createLinearGradient(cx+20,cy,cx+CW-20,cy);
+      sh2.addColorStop(0,'transparent');sh2.addColorStop(.4,'rgba(255,255,255,.8)');sh2.addColorStop(1,'transparent');
+      ctx.strokeStyle=sh2;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx+20,cy+1);ctx.lineTo(cx+CW-20,cy+1);ctx.stroke();
+      ctx.fillStyle=vc+'33';ctx.fillRect(cx+20,cy+CH-4,CW-40,3);
+      ctx.font='500 22px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(28,28,30,.45)';ctx.fillText(label,cx+26,cy+44);
+      ctx.font='800 48px "Segoe UI Black",Arial,sans-serif';
+      var fz=48;while(ctx.measureText(value).width>CW-44&&fz>24){fz-=4;ctx.font='800 '+fz+'px "Segoe UI Black",Arial,sans-serif';}
+      ctx.fillStyle='#1c1c1e';ctx.shadowBlur=0;ctx.fillText(value,cx+26,cy+116);
+    } else {
+      var bg=ctx.createLinearGradient(cx,cy,cx+CW,cy+CH);
+      bg.addColorStop(0,'rgba(255,255,255,.065)');bg.addColorStop(1,'rgba(255,255,255,.02)');
+      ctx.fillStyle=bg;rr(cx,cy,CW,CH,20);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.09)';ctx.lineWidth=1;rr(cx,cy,CW,CH,20);ctx.stroke();
+      var sh=ctx.createLinearGradient(cx+20,cy,cx+CW-20,cy);
+      sh.addColorStop(0,'transparent');sh.addColorStop(.4,'rgba(255,255,255,.2)');sh.addColorStop(1,'transparent');
+      ctx.strokeStyle=sh;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx+20,cy+1);ctx.lineTo(cx+CW-20,cy+1);ctx.stroke();
+      ctx.fillStyle=vc+'33';ctx.fillRect(cx+20,cy+CH-4,CW-40,3);
+      ctx.font='500 22px "Segoe UI",Arial,sans-serif';ctx.fillStyle='rgba(148,163,184,.6)';ctx.fillText(label,cx+26,cy+44);
+      ctx.font='800 48px "Segoe UI Black",Arial,sans-serif';
+      var fz=48;while(ctx.measureText(value).width>CW-44&&fz>24){fz-=4;ctx.font='800 '+fz+'px "Segoe UI Black",Arial,sans-serif';}
+      ctx.fillStyle=vc;ctx.shadowColor=vc;ctx.shadowBlur=12;ctx.fillText(value,cx+26,cy+116);ctx.shadowBlur=0;
+    }
     ctx.restore();
   }
   var colL=PAD,colR=PAD+CW+CG;
-  sCard('Avg Entry','$'+Math.round(avg).toLocaleString('en-US'),colL,CY1,'#e2e8f0');
-  sCard('Harga Kini','$'+Math.round(p).toLocaleString('en-US'),colR,CY1,isProfit?GREEN:RED);
-  sCard('DCA Sejak',since,colL,CY2,'#94a3b8');
-  sCard('Transaksi',S.dca.length+' kali',colR,CY2,'#94a3b8');
+  const glassGreen='#1c9c4e', glassRed='#ff3b30', glassMuted='#8e8e93', glassBlue='#007aff';
+  sCard('Avg Entry','$'+Math.round(avg).toLocaleString('en-US'),colL,CY1, isGlass?'#1c1c1e':'#e2e8f0');
+  sCard('Harga Kini','$'+Math.round(p).toLocaleString('en-US'),colR,CY1, isGlass?(isProfit?glassBlue:glassRed):(isProfit?GREEN:RED));
+  sCard('DCA Sejak',since,colL,CY2, isGlass?glassMuted:'#94a3b8');
+  sCard('Transaksi',S.dca.length+' kali',colR,CY2, isGlass?glassMuted:'#94a3b8');
 
   // ── 10. PROGRESS BAR ──
   var barY=CY2+CH+46,barW=W-PAD*2,barH2=12;
