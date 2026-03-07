@@ -3987,7 +3987,8 @@ function refreshDashStats(){
   if(!p) return;
   let ti=0,tb=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb+=e.btcAmount});
   const cv=tb*p*r,pnl=cv-ti,pp=ti>0?pnl/ti*100:0;
-  let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
+  // FIX: exclude aset BTC auto-sync dari DCA agar tidak double count dengan cv
+  let ptot=0;S.port.forEach(x=>{ if(!(x.ticker?.toLowerCase()==='btc'&&x._dcaManaged===true)) ptot+=x.qty*x.currentPrice; });
   const q=id=>document.getElementById(id);
   q('d-total').textContent=fmtIDR(cv+ptot);
   q('d-invest').textContent=fmtIDR(ti);
@@ -4014,15 +4015,24 @@ function renderDash(){
     return`<tr><td>${esc(e.date)}</td><td>${fmtUSD(e.priceUSD)}</td><td>${fmtIDR(e.amountIDR)}</td><td style="color:var(--accent4)">${e.btcAmount.toFixed(8)}</td><td>${fmtIDR(cv)}</td><td class="${pnl>=0?'pos':'neg'}">${fmtPct(pp)}</td></tr>`;
   }).join('');
 
-  // Alloc chart
+  // Alloc chart — per-aset, tidak double BTC, nama asli masing-masing
   let ti=0,tb2=0;S.dca.forEach(e=>{ti+=e.amountIDR;tb2+=e.btcAmount});
-  const dcaVal=tb2*p*r;let ptot=0;S.port.forEach(x=>ptot+=x.qty*x.currentPrice);
+  const dcaVal=tb2*p*r;
+  // Palette warna untuk aset non-BTC
+  const _allocPalette=['#7c3aed','#06b6d4','#10b981','#f59e0b','#f43f5e','#a78bfa','#34d399','#fb923c'];
+  // Build slices: BTC DCA dulu, lalu aset manual (skip yg _dcaManaged BTC)
+  const _allocLabels=[], _allocData=[], _allocColors=[];
+  if(dcaVal>0){ _allocLabels.push('Bitcoin DCA'); _allocData.push(dcaVal); _allocColors.push('#F7931A'); }
+  S.port.filter(x=>!(x.ticker?.toLowerCase()==='btc'&&x._dcaManaged===true)).forEach((x,i)=>{
+    const v=x.qty*x.currentPrice;
+    if(v>0){ _allocLabels.push(x.name); _allocData.push(v); _allocColors.push(_allocPalette[i%_allocPalette.length]); }
+  });
   if(cAlloc)cAlloc.destroy();
   const ctx1=document.getElementById('c-alloc').getContext('2d');
-  const hasData=dcaVal>0||ptot>0;
+  const hasData=_allocData.length>0;
   cAlloc=new Chart(ctx1,{type:'doughnut',data:{
-    labels:hasData?['Bitcoin DCA','Aset Lain']:['Kosong'],
-    datasets:[{data:hasData?[dcaVal,ptot]:[1],backgroundColor:hasData?['#F7931A','#7c3aed']:['rgba(100,116,139,0.3)'],borderWidth:0,hoverOffset:4}]
+    labels:hasData?_allocLabels:['Kosong'],
+    datasets:[{data:hasData?_allocData:[1],backgroundColor:hasData?_allocColors:['rgba(100,116,139,0.3)'],borderWidth:0,hoverOffset:4}]
   },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12},usePointStyle:true,pointStyle:'rectRounded',pointStyleWidth:18,boxHeight:18}}}}}); 
 
   // PNL chart
@@ -4922,7 +4932,7 @@ function renderPort(){
         </div>
         <button class="btn-del" onclick="delPort('${esc(x.id)}')">✕</button>
       </div>
-      <div class="asset-price">${fmtIDR(x.currentPrice)}</div>
+      <div class="asset-price">${fmtIDR(val)}</div><!-- nilai total = qty × harga -->
       <div style="font-size:.8rem;font-family:'Space Mono',monospace;font-weight:700" class="${pnl>=0?'pos':'neg'}">${fmtPct(pp)} &nbsp; ${pnl>=0?'+':''} ${fmtIDR(pnl)}</div>
       <div class="pbar"><div class="pbar-fill" style="width:${Math.min(Math.abs(pp),100)}%;background:${pnl>=0?'var(--accent3)':'var(--danger)'}"></div></div>
       <div style="font-size:.7rem;color:var(--muted)">${fmtIDR(val)} · ${total>0?(val/total*100).toFixed(1):'0'}% portofolio</div>
@@ -5295,7 +5305,11 @@ async function exportPDF(){
   const avgBuyUSD=tb>0?ti/tb/r:0;
   const dcaAsc=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
   let portTotal=0,portInvest=0;
-  S.port.forEach(x=>{portTotal+=x.qty*x.currentPrice;portInvest+=x.qty*x.avgPrice});
+  // FIX: exclude aset BTC auto-sync dari DCA (sudah dihitung di btcVal)
+  S.port.forEach(x=>{
+    if(x.ticker?.toLowerCase()==='btc'&&x._dcaManaged===true) return;
+    portTotal+=x.qty*x.currentPrice;portInvest+=x.qty*x.avgPrice;
+  });
   const portPnl=portTotal-portInvest,portPnlPct=portInvest>0?portPnl/portInvest*100:0;
   let cfInc=0,cfExp=0,cfInv=0;
   S.cf.forEach(e=>{if(e.type==='income')cfInc+=e.amount;else if(e.type==='expense')cfExp+=e.amount;else cfInv+=e.amount;});
