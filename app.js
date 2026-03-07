@@ -704,6 +704,34 @@ async function enterApp(seed,data){
   curSeed=seed;
   S.dca=data.dca||data.dcaEntries||[];
   S.port=data.port||data.portfolioItems||[];
+  // FIX: Migrasi & sync DCA → porto saat login/load
+  // Dijalankan setelah harga BTC ada (~3 detik)
+  setTimeout(() => {
+    if (typeof _syncDCAToPorto !== 'function') return;
+    if (S.dca.length === 0) return; // tidak ada data DCA, skip
+
+    // Cek apakah sudah ada aset BTC di porto (input manual oleh user)
+    const existingBTC = S.port.find(x => x.ticker && x.ticker.toLowerCase() === 'btc');
+
+    if (!existingBTC) {
+      // Belum ada aset BTC di porto sama sekali → buat otomatis dari DCA
+      _syncDCAToPorto();
+      saveState();
+    } else if (existingBTC._dcaManaged === true) {
+      // Sudah ada dan dikelola otomatis → update saja
+      _syncDCAToPorto();
+      saveState();
+    } else if (existingBTC._dcaManaged === undefined) {
+      // Ada aset BTC lama (input manual / dari sesi sebelumnya) → tanya user
+      // Tandai sebagai managed agar sync bisa jalan
+      existingBTC._dcaManaged = true;
+      _syncDCAToPorto();
+      saveState();
+      // Toast info (tidak perlu konfirmasi, data DCA lebih akurat)
+      setTimeout(() => toast('ℹ️ Aset Bitcoin di Porto diperbarui otomatis dari data DCA kamu.', 0, 4000), 500);
+    }
+    // existingBTC._dcaManaged === false → user sudah opt-out, jangan diubah
+  }, 3000);
   S.cf=data.cf||data.cashflowItems||[];
   // Restore BTC addresses milik akun ini
   walletState.btcAddresses = [];
@@ -1160,6 +1188,11 @@ function _applyBTCPrice(usd, change, usdIdr) {
   if (change !== undefined && change !== null) S.btcChange = change;
   if (usdIdr && usdIdr > 10000 && usdIdr < 25000) S.usdIdr = usdIdr;
   _btcLastWSMsg = Date.now();
+  // FIX: update currentPrice porto item yang bertipe BTC/Kripto agar Home tidak Rp 0
+  const btcIDR = usd * (S.usdIdr || 16300);
+  S.port.forEach(x => {
+    if (x.ticker && x.ticker.toLowerCase() === 'btc') x.currentPrice = btcIDR;
+  });
   updateBTCDisplay();
   updateChartsInPlace();
   updateBTCLiveDisplay();
@@ -4060,6 +4093,35 @@ function renderDCA(){
     ]);
   }
 }
+// FIX: Helper — selalu sync total BTC dari DCA ke aset porto otomatis
+function _syncDCAToPorto() {
+  const totalBTC = S.dca.reduce((s,e) => s + e.btcAmount, 0);
+  const totalIDR = S.dca.reduce((s,e) => s + e.amountIDR, 0);
+  const btcIDR = (S.btcPrice || 0) * (S.usdIdr || 16300);
+
+  // Cari aset BTC yang bisa dimanage (bukan yang di-opt-out user dengan _dcaManaged:false)
+  let btcAsset = S.port.find(x => x.ticker && x.ticker.toLowerCase() === 'btc' && x._dcaManaged !== false);
+
+  if (totalBTC <= 0) {
+    // Tidak ada DCA → hapus aset auto jika ada
+    if (btcAsset && btcAsset._dcaManaged === true)
+      S.port = S.port.filter(x => !(x.ticker?.toLowerCase() === 'btc' && x._dcaManaged === true));
+    return;
+  }
+  if (!btcAsset) {
+    // Belum ada → buat baru
+    btcAsset = { id:'dca-btc-auto', name:'Bitcoin', ticker:'btc', type:'crypto', qty:0, avgPrice:0, currentPrice:btcIDR, _dcaManaged:true };
+    S.port.push(btcAsset);
+  } else {
+    // Pastikan flag terpasang (handle data lama tanpa flag)
+    btcAsset._dcaManaged = true;
+  }
+  // Update qty, avgPrice, currentPrice dari data DCA
+  btcAsset.qty = totalBTC;
+  btcAsset.avgPrice = totalBTC > 0 ? totalIDR / totalBTC : 0;
+  if (btcIDR > 0) btcAsset.currentPrice = btcIDR; // jaga nilai lama jika harga belum load
+}
+
 function addDCA(){
   const date=document.getElementById('m-dca-date').value;
   const time=document.getElementById('m-dca-time')?.value||'';
@@ -4068,7 +4130,12 @@ function addDCA(){
   const idr=getRawVal('m-dca-idr');
   const note=document.getElementById('m-dca-note').value;
   if(!date||!usd||!idr){toast('Isi tanggal, harga BTC, dan jumlah IDR!',1);return}
-  S.dca.push({id:Date.now().toString(),date,time,priceUSD:usd,kurs:rate,amountIDR:idr,btcAmount:idr/rate/usd,note});
+  const newEntry = {id:Date.now().toString(),date,time,priceUSD:usd,kurs:rate,amountIDR:idr,btcAmount:idr/rate/usd,note};
+  S.dca.push(newEntry);
+
+  // FIX: Sync DCA ke Porto secara otomatis
+  _syncDCAToPorto();
+
   saveState();closeModal('modal-dca');
   document.getElementById('m-dca-usd').value='';document.getElementById('m-dca-date').value='';
   document.getElementById('m-dca-idr').value='';
@@ -4078,8 +4145,19 @@ function addDCA(){
   if(document.getElementById('m-dca-time-hint')) document.getElementById('m-dca-time-hint').textContent='';
   toast('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Transaksi ditambahkan!');renderDCA();
 }
-function delDCA(id){S.dca=S.dca.filter(e=>e.id!==id);saveState();toast('Dihapus');renderDCA()}
-function clearDCA(){if(!confirm('Hapus semua data DCA?'))return;S.dca=[];saveState();toast('Semua data DCA dihapus');renderDCA()}
+function delDCA(id){
+  S.dca=S.dca.filter(e=>e.id!==id);
+  // FIX: sync porto BTC setelah delete
+  _syncDCAToPorto();
+  saveState();toast('Dihapus');renderDCA();
+}
+function clearDCA(){
+  if(!confirm('Hapus semua data DCA?'))return;
+  S.dca=[];
+  // FIX: sync porto BTC setelah clear
+  _syncDCAToPorto();
+  saveState();toast('Semua data DCA dihapus');renderDCA();
+}
 // Format angka USD dengan titik sebagai pemisah ribuan
 function fmtInputUSD(el){
   const raw=el.value.replace(/[^0-9]/g,'');
@@ -13075,6 +13153,7 @@ const ChatNotif = (() => {
 
   return { onNewMessage, resetUnread, init, playSound, requestPushPermission };
 })();
+window.ChatNotif = ChatNotif; // FIX: expose ke window agar if(window.ChatNotif) berfungsi
 
 // ── Prompt izin notifikasi (non-intrusive banner) ──
 function showNotifPermissionPrompt() {
@@ -15191,6 +15270,22 @@ function renderWalletSummaryBar() {
   const hasEVM  = walletState.connected;
   const hasBTC  = walletState.btcAddresses.some(b => b.btc !== null);
 
+  // ── Hitung Total Porto (DCA + aset manual, TIDAK termasuk wallet) ──
+  const dcaValIDR   = (() => { let tb=0; S.dca.forEach(e=>tb+=e.btcAmount); return tb*(S.btcPrice||0)*(S.usdIdr||16300); })();
+  const dcaInvestIDR = (() => { let ti=0; S.dca.forEach(e=>ti+=e.amountIDR); return ti; })();
+  // Aset manual di porto (exclude aset auto-sync dari DCA agar tidak double count)
+  const manualPortoIDR = S.port
+    .filter(x => !(x.ticker?.toLowerCase()==='btc' && x._dcaManaged===true))
+    .reduce((s,x) => s + x.qty * x.currentPrice, 0);
+  const manualPortoInvest = S.port
+    .filter(x => !(x.ticker?.toLowerCase()==='btc' && x._dcaManaged===true))
+    .reduce((s,x) => s + x.qty * x.avgPrice, 0);
+  const totalPortoIDR   = dcaValIDR + manualPortoIDR;
+  const totalPortoInvest = dcaInvestIDR + manualPortoInvest;
+  const portoPnlPct = totalPortoInvest > 0 ? (totalPortoIDR - totalPortoInvest) / totalPortoInvest * 100 : null;
+  const portoColor  = portoPnlPct === null ? 'var(--muted)' : portoPnlPct >= 0 ? '#10b981' : '#f43f5e';
+  const portoArrow  = portoPnlPct !== null ? (portoPnlPct >= 0 ? '▲' : '▼') : '';
+
   el.innerHTML = `
     <div style="background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,58,237,.08));border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:.8rem 1rem">
       <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Total Wallet</div>
@@ -15199,6 +15294,16 @@ function renderWalletSummaryBar() {
       </div>
       <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem">${totalUSD > 0 ? '$'+totalUSD.toLocaleString('en-US',{maximumFractionDigits:2}) : ''}</div>
       ${changeEl}
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(245,158,11,.06));border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:.8rem 1rem">
+      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Total Porto</div>
+      <div style="font-size:1.1rem;font-weight:900;color:var(--text);font-family:'Space Mono',monospace">
+        ${totalPortoIDR > 0 ? fmtIDR(Math.round(totalPortoIDR)) : '<span style="color:var(--muted)">—</span>'}
+      </div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.1rem">Modal: ${totalPortoInvest > 0 ? fmtIDR(Math.round(totalPortoInvest)) : '—'}</div>
+      ${portoPnlPct !== null
+        ? `<div style="font-size:.7rem;font-weight:700;color:${portoColor};margin-top:.15rem">${portoArrow} ${Math.abs(portoPnlPct).toFixed(2)}%</div>`
+        : `<div style="font-size:.65rem;color:var(--muted);margin-top:.15rem">DCA + Aset Manual</div>`}
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem">
       <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem">Jumlah Token</div>
