@@ -4033,7 +4033,18 @@ function renderDash(){
   cAlloc=new Chart(ctx1,{type:'doughnut',data:{
     labels:hasData?_allocLabels:['Kosong'],
     datasets:[{data:hasData?_allocData:[1],backgroundColor:hasData?_allocColors:['rgba(100,116,139,0.3)'],borderWidth:0,hoverOffset:4}]
-  },options:{...CO,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12},usePointStyle:true,pointStyle:'rectRounded',pointStyleWidth:18,boxHeight:18}}}}}); 
+  },options:{...CO,cutout:'68%',plugins:{
+    legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12},usePointStyle:true,pointStyle:'rectRounded',pointStyleWidth:18,boxHeight:18}},
+    tooltip:{callbacks:{
+      label: function(ctx){
+        const total=ctx.dataset.data.reduce((a,b)=>a+b,0);
+        const val=ctx.parsed;
+        const pct=total>0?(val/total*100).toFixed(1):'0';
+        const fmt=v=>v>=1e9?'Rp '+(v/1e9).toFixed(2)+'M':v>=1e6?'Rp '+(v/1e6).toFixed(2)+'jt':'Rp '+Math.round(v).toLocaleString('id-ID');
+        return ' '+fmt(val)+' ('+pct+'%)';
+      }
+    }}
+  }}}); 
 
   // PNL chart
   const sorted=[...S.dca].sort((a,b)=>new Date(a.date)-new Date(b.date));
