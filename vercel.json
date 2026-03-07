@@ -1,14 +1,21 @@
 {
   "rewrites": [
-    { 
-      "source": "/api/(.*)", 
-      "destination": "/api/$1" 
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ],
   "crons": [
     {
       "path": "/api/market?action=price-check",
-      "schedule": "0 0 * * *"
+      "schedule": "*/15 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/market.js":        { "maxDuration": 30 },
+    "api/notifications.js": { "maxDuration": 30 },
+    "api/news_api.js":      { "maxDuration": 20 },
+    "api/ai.js":            { "maxDuration": 60 },
+    "api/proxy.js":         { "maxDuration": 15 }
+  }
 }
