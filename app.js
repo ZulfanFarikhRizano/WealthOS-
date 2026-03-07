@@ -793,6 +793,9 @@ async function enterApp(seed,data){
   if ('Notification' in window && Notification.permission === 'default') {
     setTimeout(() => showNotifPermissionPrompt(), 3000);
   }
+
+  // FIX: Mulai auto-refresh berita sejak login, bukan nunggu user buka Dashboard
+  setTimeout(() => startNewsAutoRefresh(), 3000);
 }
 
 let _activeTab='new'; // track active tab for showLL/hideLL
@@ -868,6 +871,8 @@ async function doLogout(){
   Object.values(_sigActiveTrades).forEach(t => { if(t.intervalId) clearInterval(t.intervalId); });
   _sigActiveTrades = {};
   localStorage.removeItem('sig_active_trades');
+  // Clear news auto-refresh interval
+  if (_newsAutoRefreshInterval) { clearInterval(_newsAutoRefreshInterval); _newsAutoRefreshInterval = null; }
   // Clear dashboard feed subscription
   if (_dashFeedSub) { try { chatSB?.removeChannel(_dashFeedSub); } catch(e) {} _dashFeedSub = null; }
   if (_dashFeedInterval) { clearInterval(_dashFeedInterval); _dashFeedInterval = null; }
@@ -1371,7 +1376,7 @@ async function fetchKlines(symbol, interval, limit=150) {
   // 4. Binance via proxy (crypto only, XAUUSD skip)
   if (symbol !== 'XAUUSD') {
     const bnUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
+    for (const fn of [u=>u, u=>`/api/proxy?url=${encodeURIComponent(u)}`]) {
       try {
         const r = await fetch(fn(bnUrl), {signal: AbortSignal.timeout(8000)});
         const text = await r.text();
@@ -1430,7 +1435,7 @@ async function fetchXAUKlines(interval, limit = 150) {
 
   // 4. OKX via allorigins proxy
   try {
-    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(okxUrl)}`, {signal: AbortSignal.timeout(10000)});
+    const r = await fetch(`/api/proxy?url=${encodeURIComponent(okxUrl)}`, {signal: AbortSignal.timeout(10000)});
     const text = await r.text();
     if (!text.trim().startsWith('<')) {
       const result = parseOKX(JSON.parse(text));
@@ -1531,7 +1536,7 @@ async function fetchTicker24h(symbol) {
   // 4. Binance via allorigins proxy
   try {
     const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`;
-    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
+    const r = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
     const text = await r.text();
     if (!text.trim().startsWith('<')) return JSON.parse(text);
   } catch(e) { console.warn('[Binance proxy ticker]', e.message); }
@@ -1567,7 +1572,7 @@ async function fetchXAUTicker() {
   // 3. Binance XAUUSDT via allorigins proxy
   try {
     const url = 'https://api.binance.com/api/v3/ticker/24hr?symbol=XAUUSDT';
-    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
+    const r = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, {signal: AbortSignal.timeout(6000)});
     const text = await r.text();
     if (!text.trim().startsWith('<')) {
       const d = JSON.parse(text);
@@ -1581,7 +1586,7 @@ async function fetchXAUTicker() {
 // Legacy binanceFetch — untuk kompatibilitas
 async function binanceFetch(path, ms=8000) {
   let lastErr;
-  for (const fn of [u=>u, u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) {
+  for (const fn of [u=>u, u=>`/api/proxy?url=${encodeURIComponent(u)}`]) {
     try {
       const r = await fetch(fn(path), {signal: AbortSignal.timeout(ms)});
       const text = await r.text();
@@ -2040,7 +2045,7 @@ async function fetchM2Data(tf) {
 
   // CORS proxy untuk FRED WM2NS (Global M2, miliar USD)
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=WM2NS&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
 
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
@@ -2100,7 +2105,7 @@ async function fetchGoldData(tf) {
 
   // FRED: GOLDAMGBD228NLBM = Gold Fixing Price daily (USD per Troy Ounce)
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=GOLDAMGBD228NLBM&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(10000)});
     if (!r.ok) throw new Error('proxy error');
@@ -2717,7 +2722,7 @@ async function fetchSP500Data(tf) {
 
   // FRED: SP500 = S&P 500 Index
   const fredUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&observation_start=${fmt(startDate)}`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(fredUrl)}`;
   try {
     const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
     if (!r.ok) throw new Error('proxy error');
@@ -4652,7 +4657,7 @@ async function fillBTCPriceByDate(dateStr){
       if(!result){
         try{
           const bnUrl=`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${candleStartMs}&endTime=${candleEndMs}&limit=1`;
-          const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(bnUrl)}`;
+          const proxyUrl=`/api/proxy?url=${encodeURIComponent(bnUrl)}`;
           const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(12000)});
           if(r.ok){
             const text=await r.text();
@@ -6860,15 +6865,18 @@ async function chatBoot() {
     // Sync token ke DB — chatSB & myCode sudah siap di sini
     // Juga sync alert & reminder ke DB supaya cron job bisa baca
     _syncUserPushData();
-    const existingToken = localStorage.getItem('zw_fcm_token');
-    if (existingToken) {
-      await _saveFCMTokenToDB(existingToken);
-    } else if (Notification.permission === 'granted') {
-      // Belum ada token sama sekali — minta token baru
+    // FIX: Selalu minta token fresh dari FCM setiap app dibuka
+    // Firebase SDK return token lama jika masih valid, atau buat baru jika expired
+    // Ini memastikan token di Supabase DB selalu up-to-date
+    if (Notification.permission === 'granted') {
       try {
-        const newToken = await ZW_FCM.getToken();
-        if (newToken) await _saveFCMTokenToDB(newToken);
-      } catch(e) {}
+        const freshToken = await ZW_FCM.getToken();
+        if (freshToken) await _saveFCMTokenToDB(freshToken);
+      } catch(e) {
+        // Fallback: sync token lama jika FCM gagal
+        const existingToken = localStorage.getItem('zw_fcm_token');
+        if (existingToken) _saveFCMTokenToDB(existingToken).catch(()=>{});
+      }
     }
   }, 2500);
 
@@ -8417,26 +8425,25 @@ const ZW_FCM = (() => {
 
   async function init() {
     if (_initialized) return;
-    if (typeof firebase === 'undefined') return;
+    if (typeof firebase === 'undefined') {
+      console.warn('[FCM] Firebase SDK belum loaded, init ditunda');
+      return; // _initialized tetap false agar bisa retry
+    }
     try {
       // Cek apakah sudah ada Firebase app
       if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       _messaging = firebase.messaging();
       _initialized = true;
 
-      // Handle token refresh otomatis
-      // onTokenRefresh dihapus di Firebase v10+
-      // Token refresh ditangani otomatis oleh Firebase SDK
-
-      // Handle notif saat app TERBUKA (foreground)
-      // FCM tidak otomatis tampilkan notif di foreground — kita handle manual
-      // Tapi karena sendBrowserNotif sudah pakai ZW_FCM.sendPush yang trigger ini,
-      // kita HANYA tampilkan toast, tidak sendSWNotif (agar tidak double dengan reg.showNotification)
+      // FIX: Single onMessage handler — foreground toast + token-refresh detection
       _messaging.onMessage(payload => {
-        const { title, body } = payload.notification || {};
-        // Hanya toast — notif sistem sudah dihandle oleh SW saat background/closed
-        // Saat foreground, toast sudah cukup sebagai feedback visual
-        // Truncate for toast display — full content in browser notification
+        // Deteksi token refresh: jika token di memory != localStorage, sync ke DB
+        const savedToken = localStorage.getItem('zw_fcm_token');
+        if (_fcmToken && savedToken && _fcmToken !== savedToken) {
+          _saveFCMTokenToDB(_fcmToken).catch(()=>{});
+        }
+        // Tampilkan toast saat app foreground
+        const { title } = payload.notification || {};
         const toastTitle = (title || 'z-wealth').slice(0, 80) + ((title || '').length > 80 ? '…' : '');
         toast(`🔔 ${toastTitle}`, false, 5000);
       });
@@ -13013,12 +13020,8 @@ const ChatNotif = (() => {
     const toast = document.getElementById('chat-notif-toast');
     if (!toast) return;
     toast.classList.remove('show');
-    toast.style.transform = 'translateY(-120px)';
-    toast.style.opacity = '0';
-    setTimeout(() => {
-      toast.style.transform = '';
-      toast.style.opacity = '';
-    }, 400);
+    // Inline style tidak di-set agar tidak konflik dengan animasi show berikutnya
+    // HTML sudah memiliki transform:translateY(-120px) dan opacity:0 sebagai default
   }
 
   // ── Handler saat toast diklik ──
@@ -16105,7 +16108,7 @@ async function loadCryptoNews(forceRefresh = false) {
     // ── Step 1: RSS Feed ──
     let rawPosts = [];
     try {
-      const rssRes = await fetch('/api/news?action=rss');
+      const rssRes = await fetch('/api/news_api?action=rss');
       if (rssRes.ok) {
         const rssData = await rssRes.json();
         rawPosts = (rssData.articles || []).map(a => ({
@@ -16253,9 +16256,10 @@ function updateDashNewsHighlight(articles) {
 }
 
 // ── NEWS NOTIFICATION SYSTEM ──
-let _newsNotifLastSent = 0;           // timestamp terakhir kirim notif
-let _newsNotifSentTitles = new Set(); // judul yang sudah pernah dinotif (hindari repeat)
-const NEWS_NOTIF_COOLDOWN = 30 * 60 * 1000; // 30 menit — jangan spam
+// FIX: Persist state ke localStorage agar tidak reset setiap app dibuka
+const NEWS_NOTIF_COOLDOWN = 60 * 60 * 1000; // 1 jam antar notif berita
+let _newsNotifLastSent = parseInt(localStorage.getItem('zw_news_notif_last') || '0');
+let _newsNotifSentTitles = new Set(JSON.parse(localStorage.getItem('zw_news_notif_titles') || '[]'));
 
 function checkAndSendNewsNotif(articles) {
   // Tidak kirim jika notif belum diizinkan
@@ -16275,6 +16279,7 @@ function checkAndSendNewsNotif(articles) {
   if (!topBullish && !topBearish) return;
 
   _newsNotifLastSent = now;
+  localStorage.setItem('zw_news_notif_last', now.toString()); // FIX: persist
 
   // Helper: ambil teks hingga titik pertama (maks 200 karakter)
   function getUpToFirstPeriod(text, fallback) {
@@ -16293,6 +16298,7 @@ function checkAndSendNewsNotif(articles) {
       const first = _newsNotifSentTitles.values().next().value;
       _newsNotifSentTitles.delete(first);
     }
+    localStorage.setItem('zw_news_notif_titles', JSON.stringify([..._newsNotifSentTitles])); // FIX: persist
     setTimeout(() => {
       const src = topBullish.source || 'Crypto News';
       const coins = (topBullish.coins || []).slice(0,3).join(', ');
@@ -16314,6 +16320,7 @@ function checkAndSendNewsNotif(articles) {
       const first = _newsNotifSentTitles.values().next().value;
       _newsNotifSentTitles.delete(first);
     }
+    localStorage.setItem('zw_news_notif_titles', JSON.stringify([..._newsNotifSentTitles])); // FIX: persist
     setTimeout(() => {
       const src = topBearish.source || 'Crypto News';
       const coins = (topBearish.coins || []).slice(0,3).join(', ');
@@ -16329,17 +16336,22 @@ function checkAndSendNewsNotif(articles) {
   }
 }
 
-// Auto-refresh berita setiap 30 menit + cek notif
+// Auto-refresh berita setiap 1 jam + cek notif
 let _newsAutoRefreshInterval = null;
 function startNewsAutoRefresh() {
   if (_newsAutoRefreshInterval) return; // sudah jalan
+
+  // FIX: Langsung cek notif saat pertama kali dipanggil (tanpa nunggu 1 jam)
+  setTimeout(async () => {
+    _newsCache = null;
+    await loadCryptoNews();
+  }, 5000); // 5 detik setelah login
+
   _newsAutoRefreshInterval = setInterval(async () => {
-    // Force refresh berita
-    const prevCache = _newsCache;
     _newsCache = null;
     await loadCryptoNews();
     // checkAndSendNewsNotif dipanggil dari dalam renderNewsList
-  }, 30 * 60 * 1000); // setiap 30 menit
+  }, 60 * 60 * 1000); // setiap 1 jam
 }
 
 function renderNewsList(articles) {
