@@ -5,12 +5,6 @@
       "destination": "/api/$1"
     }
   ],
-  "crons": [
-    {
-      "path": "/api/market?action=price-check",
-      "schedule": "*/15 * * * *"
-    }
-  ],
   "functions": {
     "api/market.js":        { "maxDuration": 30 },
     "api/notifications.js": { "maxDuration": 30 },
