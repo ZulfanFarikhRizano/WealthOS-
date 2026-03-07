@@ -13,6 +13,8 @@ export default async function handler(req, res) {
     'api.stlouisfed.org',
     'query1.finance.yahoo.com',
     'api.coingecko.com',
+    'api.binance.com',       // FIX: dipakai app.js untuk klines & ticker fallback
+    'www.okx.com',           // FIX: dipakai app.js untuk klines & ticker fallback
   ];
 
   let targetUrl;

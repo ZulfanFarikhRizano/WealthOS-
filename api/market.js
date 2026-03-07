@@ -206,25 +206,56 @@ export default async function handler(req, res) {
         }
       }
 
-      // 4. Cek berita (tiap 30 menit)
+      // 4. Kirim notif berita
+      // FIX: global.* tidak persisten di Vercel (stateless) — cooldown disimpan di Supabase
       let newsSent = 0;
-      if ((Date.now()-(global._lastNewsCheck||0)) >= 30*60000 && tokenMap.size > 0) {
-        global._lastNewsCheck = Date.now();
+      if (tokenMap.size > 0) {
         try {
-          const nd = (await (await fetch(`${SB_URL}/rest/v1/news_cache?id=eq.latest&select=bullish,bearish,updated_at`,{headers:sbH})).json())?.[0];
-          if (nd && (Date.now()-new Date(nd.updated_at))/60000 <= 120) {
-            if (!global._sentNewsTitles) global._sentNewsTitles = new Set();
-            const allTk = [...tokenMap.values()];
-            for (const [key, emoji] of [['bullish','📈'],['bearish','📉']]) {
-              const item = (nd[key]||[])[0];
-              if (item && !global._sentNewsTitles.has(item.title)) {
-                global._sentNewsTitles.add(item.title);
+          // Baca state cooldown dari DB
+          const stateRows = await (await fetch(
+            `${SB_URL}/rest/v1/news_notif_state?id=eq.singleton&select=last_sent_at,sent_titles`,
+            {headers:sbH}
+          )).json();
+          const stateRow   = stateRows?.[0];
+          const lastSentAt = stateRow ? new Date(stateRow.last_sent_at).getTime() : 0;
+          const sentTitles = new Set(stateRow?.sent_titles || []);
+          const NEWS_COOLDOWN = 60 * 60 * 1000; // 1 jam
+
+          if (Date.now() - lastSentAt >= NEWS_COOLDOWN) {
+            // Baca berita dari news_cache (diisi oleh app.js saat user aktif)
+            const nd = (await (await fetch(
+              `${SB_URL}/rest/v1/news_cache?id=eq.latest&select=bullish,bearish,updated_at`,
+              {headers:sbH}
+            )).json())?.[0];
+
+            // Hanya kirim jika cache segar (< 3 jam)
+            if (nd && (Date.now() - new Date(nd.updated_at).getTime()) < 3*60*60*1000) {
+              const allTk = [...tokenMap.values()];
+              const newSentTitles = new Set(sentTitles);
+
+              for (const [key, emoji] of [['bullish','📈'],['bearish','📉']]) {
+                const item = (nd[key]||[])[0];
+                if (!item || sentTitles.has(item.title)) continue; // skip jika sudah dikirim
+                newSentTitles.add(item.title);
                 const body = (item.summary||`${emoji} ${item.source||'Crypto News'}`).slice(0,100);
                 await Promise.allSettled(allTk.map(t => _fcm(t, item.title.slice(0,80), body, `news-${key}`, at)));
                 newsSent++;
               }
+
+              // Simpan state cooldown ke DB agar persisten lintas invokasi
+              if (newsSent > 0) {
+                const titlesArr = [...newSentTitles].slice(-200);
+                await fetch(`${SB_URL}/rest/v1/news_notif_state`, {
+                  method: 'POST',
+                  headers: { ...sbH, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+                  body: JSON.stringify({
+                    id: 'singleton',
+                    last_sent_at: new Date().toISOString(),
+                    sent_titles: titlesArr
+                  })
+                }).catch(()=>{});
+              }
             }
-            if (global._sentNewsTitles.size > 200) global._sentNewsTitles.clear();
           }
         } catch(e) { console.warn('[market/price-check] news:', e.message); }
       }
