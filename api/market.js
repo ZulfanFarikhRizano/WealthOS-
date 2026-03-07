@@ -120,8 +120,12 @@ export default async function handler(req, res) {
 
   // ── price-check (Cron) ───────────────────────────────────
   if (action === 'price-check') {
-    const CRON_SECRET = process.env.CRON_SECRET || '';
-    if (CRON_SECRET && req.headers['authorization'] !== `Bearer ${CRON_SECRET}`)
+    // FIX: CRON_SECRET wajib ada — endpoint ini dipanggil external (cron-job.org)
+    // Set CRON_SECRET di Vercel Environment Variables
+    const CRON_SECRET = process.env.CRON_SECRET;
+    if (!CRON_SECRET) return res.status(500).json({ error: 'CRON_SECRET env var not set' });
+    const authHeader = req.headers['authorization'] || req.headers['x-cron-key'] || '';
+    if (authHeader !== `Bearer ${CRON_SECRET}`)
       return res.status(401).json({ error: 'Unauthorized' });
 
     const SB_URL = process.env.SUPABASE_URL || 'https://kpikyqafapclyirpqflp.supabase.co';
@@ -331,4 +335,5 @@ function _b64u(input) {
   const b = typeof input==='string' ? new TextEncoder().encode(input) : new Uint8Array(input instanceof ArrayBuffer ? input : input.buffer??input);
   let s=''; for (const x of b) s+=String.fromCharCode(x);
   return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
+        }
+        
