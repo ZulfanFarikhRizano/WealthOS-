@@ -7069,6 +7069,9 @@ async function renderDashFeed() {
     let slotDM      = null; // dm (terbaru dari semua DM)
 
     for (const m of allMsgs) {
+      // Skip live card — jangan tampil di preview
+      if (m.content?.startsWith('__LIVE_CARD__:')) continue;
+
       const isNull = !m.room_id || m.room_id === NULL_UUID;
       const room = isNull ? { id: null, name: '# General', type: 'public', avatar_color: '#00e5ff' } : roomMap[m.room_id];
       if (!room) continue;
@@ -7495,15 +7498,20 @@ function buildMsgBubble(msg) {
       const data = JSON.parse(msg.content.replace('__LIVE_CARD__:', ''));
       const isMine = msg.sender_code === chatState.myCode;
       const t = new Date(msg.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const hostCode = escHtml(data.host||msg.sender_code);
+      const roomId   = escHtml(data.room_id||'general');
+      const roomName = escHtml((data.room_name||'General').replace(/^#+\s*/,''));
       return `<div class="msg-row theirs" style="justify-content:center;margin:.4rem 0">
-        <div class="live-card-bubble">
+        <div class="live-card-bubble" data-live-host="${hostCode}">
           <div class="live-card-top">
-            <span class="live-card-dot"></span>
+            <span class="live-card-dot live-card-dot--${hostCode}"></span>
             <span class="live-card-label">SEDANG LIVE</span>
-            <span class="live-card-room"># ${escHtml(data.room_name||'General')}</span>
+            <span class="live-card-room"># ${roomName}</span>
           </div>
-          <div class="live-card-host">Dimulai oleh <b>${escHtml(data.host||msg.sender_code)}</b></div>
-          <button class="live-card-btn" onclick="zwLive.joinFromLiveCard('${escHtml(data.room_id||'general')}', '${escHtml(data.room_name||'General')}')">
+          <div class="live-card-host">Dimulai oleh <b>${hostCode}</b></div>
+          <button class="live-card-btn live-card-btn--${hostCode}" 
+            onclick="zwLive.joinFromLiveCard('${roomId}','${roomName}')"
+            data-host="${hostCode}">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             Gabung Live
           </button>
@@ -13932,7 +13940,7 @@ const zwLive = (() => {
       await _sbUpsertSession({
         host_code: myCode,
         room_id: _roomId || 'general',
-        room_name: (_roomName || 'General').replace(/^#+ ?/, ''),
+        room_name: (_roomName || 'General').replace(/^[# ]+/, '').trim() || 'General',
         participant_count: (_participants?.size || 0) + 1,
         started_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -13944,6 +13952,32 @@ const zwLive = (() => {
 
   // ── Poll sesi live dari Supabase setiap 15 detik ──
   let _livePollTimer = null;
+  // Update semua live card di DOM — aktif/nonaktif berdasarkan sesi live saat ini
+  function _updateLiveCardsStatus(activeSessions) {
+    const activeHosts = new Set((activeSessions || []).map(s => s.host_code));
+    // Temukan semua card di halaman chat
+    document.querySelectorAll('.live-card-bubble[data-live-host]').forEach(card => {
+      const host = card.getAttribute('data-live-host');
+      const btn = card.querySelector('.live-card-btn');
+      const dot = card.querySelector('.live-card-dot');
+      const isActive = activeHosts.has(host);
+      if (btn) {
+        btn.disabled = !isActive;
+        btn.style.opacity = isActive ? '1' : '0.4';
+        btn.style.cursor = isActive ? 'pointer' : 'not-allowed';
+        btn.style.background = isActive ? '' : 'rgba(100,100,100,.15)';
+        btn.style.borderColor = isActive ? '' : 'rgba(100,100,100,.3)';
+        btn.innerHTML = isActive
+          ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Gabung Live'
+          : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Live Selesai';
+      }
+      if (dot) {
+        dot.style.animationPlayState = isActive ? 'running' : 'paused';
+        dot.style.background = isActive ? '#ef4444' : '#64748b';
+      }
+    });
+  }
+
   async function _pollLiveSessions() {
     try {
       let data = await _sbSelectSessions();
@@ -13956,6 +13990,9 @@ const zwLive = (() => {
       // Exclude hanya kalau kita sendiri sedang host live (room connected)
       const iAmLive = _room && _room.state === 'connected';
       const activeSessions = (data || []).filter(s => !iAmLive || s.host_code !== myCode);
+
+      // Update status card live di chat DOM
+      _updateLiveCardsStatus(data || []);
 
       if (activeSessions.length > 0) {
         const first = activeSessions[0];
@@ -13995,9 +14032,26 @@ const zwLive = (() => {
     const myCode = chatState?.myCode || '';
     if (!myCode) return;
     const roomId = _roomId || chatState?.currentRoomId;
-    const roomName = _roomName || chatState?.currentRoomName || 'General';
+    const roomName = (_roomName || chatState?.currentRoomName || 'General').replace(/^#+\s*/, '');
     if (!roomId) return;
     const cardContent = '__LIVE_CARD__:' + JSON.stringify({ room_name: roomName, room_id: roomId, host: myCode });
+
+    // Cek apakah sudah ada live card dari user ini di room ini (dalam 3 jam terakhir)
+    // Kalau sudah ada → skip, jangan spam
+    try {
+      const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const checkUrl = _SB_URL + '/rest/v1/messages?sender_code=eq.' + encodeURIComponent(myCode)
+        + '&room_id=eq.' + encodeURIComponent(roomId)
+        + '&content=like.__LIVE_CARD__*'
+        + '&created_at=gte.' + encodeURIComponent(cutoff)
+        + '&limit=1';
+      const res = await fetch(checkUrl, { headers: _SB_HDR });
+      if (res.ok) {
+        const existing = await res.json();
+        if (existing && existing.length > 0) return; // sudah ada, skip
+      }
+    } catch(e) {}
+
     await _sbInsertMessage(roomId, myCode, cardContent);
   }
 
