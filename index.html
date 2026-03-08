@@ -873,6 +873,24 @@
       <button onclick="hideComingSoon()" style="background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:12px;padding:.75rem 2rem;color:#fff;font-weight:800;font-size:.88rem;cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 20px rgba(124,58,237,.4)">Oke, Ditunggu!</button>
     </div>
   </div>
+  <!-- LIVE NOW BANNER — hanya tampil jika ada yang live -->
+  <div id="dash-live-banner" style="display:none;margin-bottom:.85rem">
+    <div class="dlb-wrap">
+      <div class="dlb-left">
+        <span class="dlb-dot"></span>
+        <div class="dlb-info">
+          <span class="dlb-label">SEDANG LIVE</span>
+          <span class="dlb-room" id="dlb-room-name">General</span>
+        </div>
+        <span class="dlb-count" id="dlb-count">— peserta</span>
+      </div>
+      <button class="dlb-join-btn" onclick="zwLive.joinFromBanner()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Gabung
+      </button>
+    </div>
+  </div>
+
   <!-- CHAT COMMUNITY PREVIEW -->
   <div id="dash-chat-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:1.2rem;overflow:hidden;min-height:60px;display:block">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem 1rem .4rem;border-bottom:1px solid rgba(255,255,255,.06)">
@@ -4079,6 +4097,87 @@
   font-size:.63rem;color:#f59e0b;
   font-family:'Inter',sans-serif;
 }
+
+/* ── Screen Share Stage ── */
+.zlp-screen-stage {
+  flex-shrink:0;padding:.6rem .75rem .3rem;
+  border-bottom:1px solid rgba(124,58,237,.15);
+}
+.zlp-screen-hdr {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:.4rem;
+}
+.zlp-screen-presenter {
+  display:flex;align-items:center;gap:.35rem;
+  font-size:.65rem;font-weight:600;color:#a78bfa;
+  font-family:'Inter',sans-serif;
+}
+.zlp-screen-expand-btn {
+  width:28px;height:28px;border-radius:8px;
+  background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);
+  color:#a78bfa;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.zlp-screen-expand-btn:active { transform:scale(.9); background:rgba(124,58,237,.3); }
+.zlp-screen-tile {
+  width:100%;
+  aspect-ratio:16/9!important;
+  background:#000;
+  border:1.5px solid rgba(124,58,237,.35);
+  border-radius:12px;
+}
+.zlp-screen-tile video {
+  width:100%;height:100%;
+  object-fit:contain!important;
+  background:#000;
+}
+
+/* ── Dashboard Live Banner ── */
+.dlb-wrap {
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(124,58,237,.1));
+  border:1px solid rgba(239,68,68,.3);
+  border-radius:14px;padding:.6rem .85rem;
+  gap:.6rem;
+  animation:dlbGlow 2.5s ease-in-out infinite;
+}
+@keyframes dlbGlow {
+  0%,100% { border-color:rgba(239,68,68,.3); box-shadow:0 0 0 0 rgba(239,68,68,0); }
+  50%      { border-color:rgba(239,68,68,.55); box-shadow:0 0 12px rgba(239,68,68,.12); }
+}
+.dlb-left {
+  display:flex;align-items:center;gap:.5rem;flex:1;min-width:0;
+}
+.dlb-dot {
+  width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;
+  animation:zlpPulse 1.4s ease-in-out infinite;
+}
+.dlb-info {
+  display:flex;flex-direction:column;gap:.05rem;min-width:0;
+}
+.dlb-label {
+  font-size:.52rem;font-weight:800;color:#ef4444;
+  font-family:'Space Mono',monospace;letter-spacing:.08em;
+}
+.dlb-room {
+  font-size:.78rem;font-weight:700;color:#f1f5f9;
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dlb-count {
+  font-size:.62rem;color:rgba(148,163,184,.55);
+  font-family:'Space Mono',monospace;white-space:nowrap;flex-shrink:0;
+}
+.dlb-join-btn {
+  display:flex;align-items:center;gap:.3rem;flex-shrink:0;
+  background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.45);
+  border-radius:100px;padding:.38rem .85rem;
+  color:#fff;font-size:.72rem;font-weight:800;cursor:pointer;
+  font-family:'Inter',sans-serif;letter-spacing:.03em;
+  transition:all .18s;
+}
+.dlb-join-btn:active { transform:scale(.94); background:rgba(239,68,68,.3); }
 
 /* Live button in room header — pulsing pill */
 #room-live-btn { transition:all .2s cubic-bezier(.4,0,.2,1); }

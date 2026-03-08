@@ -13255,28 +13255,15 @@ const zwLive = (() => {
       _addLocalTile();
       _updateCount();
       _showConnecting(false);
-      // Deteksi iOS Safari saja — memang tidak support screen share
-      // Android Chrome dan desktop: biarkan tetap aktif
-      const ua = navigator.userAgent;
-      const _isIosSafari = /iPad|iPhone|iPod/.test(ua) && /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
+      // Tombol presentasi selalu tampil — mobile dapat notif saat dipencet
       const iosNote = document.getElementById('zw-ios-note');
-      if (iosNote) iosNote.style.display = _isIosSafari ? 'block' : 'none';
-      const screenBtn = document.getElementById('zw-live-screen-btn');
-      if (screenBtn) {
-        if (_isIosSafari) {
-          screenBtn.style.opacity = '0.3';
-          screenBtn.style.pointerEvents = 'none';
-          screenBtn.title = 'Tidak support di iOS Safari';
-        } else {
-          screenBtn.style.opacity = '1';
-          screenBtn.style.pointerEvents = 'auto';
-          screenBtn.title = 'Presentasi layar';
-        }
-      }
+      if (iosNote) iosNote.style.display = 'none';
 
       // Update Live button jadi active
       const liveBtn = document.getElementById('room-live-btn');
       if (liveBtn) liveBtn.classList.add('live-active');
+      // Update dashboard banner
+      _updateDashBanner();
 
       // Render peserta yang sudah ada
       const _rp = _room.remoteParticipants;
@@ -13303,6 +13290,8 @@ const zwLive = (() => {
     _closePanel();
     const liveBtn = document.getElementById('room-live-btn');
     if (liveBtn) liveBtn.classList.remove('live-active');
+    const banner = document.getElementById('dash-live-banner');
+    if (banner) banner.style.display = 'none';
     _updateCount();
   }
 
@@ -13360,9 +13349,9 @@ const zwLive = (() => {
   async function toggleCam() {
     if (!_room) return;
     _camOn = !_camOn;
-    await _room.localParticipant.setCameraEnabled(_camOn, {
-      facingMode: _camFacing,
-    });
+    // LiveKit JS: setCameraEnabled tidak support facingMode langsung
+    // facingMode dihandle via switchActiveDevice di flipCam
+    await _room.localParticipant.setCameraEnabled(_camOn);
     const btn = document.getElementById('zw-live-cam-btn');
     if (btn) {
       if (_camOn) btn.classList.add('active');
@@ -13377,34 +13366,61 @@ const zwLive = (() => {
   // ── Flip kamera depan ↔ belakang ──
   async function flipCam() {
     if (!_room || !_camOn) return;
-    _camFacing = _camFacing === 'user' ? 'environment' : 'user';
+    const newFacing = _camFacing === 'user' ? 'environment' : 'user';
+
     // Animasi tombol flip
     const flipBtn = document.getElementById('zw-live-flip-btn');
     if (flipBtn) {
+      flipBtn.disabled = true;
       flipBtn.classList.add('flipping');
-      setTimeout(() => flipBtn.classList.remove('flipping'), 400);
+      setTimeout(() => { flipBtn.classList.remove('flipping'); flipBtn.disabled = false; }, 500);
     }
-    // Re-publish kamera dengan facing baru
+
     try {
-      await _room.localParticipant.setCameraEnabled(false);
-      await _room.localParticipant.setCameraEnabled(true, {
-        facingMode: _camFacing,
-      });
+      // Cara paling reliable: minta stream baru dengan facingMode exact via getUserMedia
+      // lalu replace track yang sedang berjalan
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: newFacing } },
+        audio: false
+      }).catch(() =>
+        // Fallback: tanpa 'exact' jika device tidak kenal facing mode
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: newFacing }, audio: false })
+      );
+
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (!newVideoTrack) throw new Error('Tidak ada video track');
+
+      // Replace track di LiveKit tanpa disconnect
+      const camPub = _room.localParticipant.getTrackPublication?.(LivekitClient.Track.Source.Camera)
+                  ?? _room.localParticipant.getTrack?.(LivekitClient.Track.Source.Camera);
+      if (camPub?.track) {
+        await camPub.track.replaceTrack(newVideoTrack);
+      } else {
+        // Fallback: off → on
+        await _room.localParticipant.setCameraEnabled(false);
+        await _room.localParticipant.setCameraEnabled(true, { facingMode: newFacing });
+      }
+
+      _camFacing = newFacing;
       _addLocalTile();
     } catch(e) {
-      toast('Gagal flip kamera: ' + e.message, 1);
-      _camFacing = _camFacing === 'user' ? 'environment' : 'user'; // rollback
+      // NotReadableError / OverconstrainedError = device tidak support facing itu
+      if (e.name === 'OverconstrainedError' || e.name === 'NotFoundError') {
+        toast('Kamera ' + (newFacing === 'environment' ? 'belakang' : 'depan') + ' tidak ditemukan', 1);
+      } else {
+        toast('Gagal flip kamera: ' + e.message, 1);
+      }
     }
   }
 
   // ── Screen Share / Presentasi ──
   async function toggleScreen() {
     if (!_room) return;
-    // Blokir hanya iOS Safari — yang lain biarkan coba
+    // Mobile: toast informatif saat tombol dipencet
     const _ua = navigator.userAgent;
-    const _iosSafari = /iPad|iPhone|iPod/.test(_ua) && /Safari/.test(_ua) && !/Chrome|CriOS|FxiOS/.test(_ua);
-    if (_iosSafari) {
-      toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>iOS Safari tidak mendukung screen share</span>', 1);
+    const _isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(_ua);
+    if (_isMobileBrowser) {
+      toast('<span style="display:flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Presentasi layar hanya bisa di laptop/desktop</span>', 0, 3500);
       return;
     }
     _screenOn = !_screenOn;
@@ -13413,9 +13429,13 @@ const zwLive = (() => {
       await _room.localParticipant.setScreenShareEnabled(_screenOn);
     } catch(e) {
       _screenOn = false;
-      // NotAllowedError = user cancel, jangan tampilkan error
-      if (e.name !== 'NotAllowedError') {
-        toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Screen share gagal: ' + e.message + '</span>', 1);
+      const msg = (e.message || '').toLowerCase();
+      const isNotSupported = msg.includes('not supported') || msg.includes('getdisplaymedia') || e.name === 'NotSupportedError';
+      const isUserCancel   = e.name === 'NotAllowedError' || msg.includes('permission') || msg.includes('denied');
+      if (isNotSupported) {
+        toast('<span style="display:flex;align-items:center;gap:.4rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Presentasi layar hanya bisa di laptop/desktop</span>', 0, 3500);
+      } else if (!isUserCancel) {
+        toast('Presentasi tidak dapat dimulai', 1);
       }
       _updateScreenBtn();
       return;
@@ -13457,43 +13477,66 @@ const zwLive = (() => {
     const old = document.getElementById('zw-screen-stage');
     if (old) old.remove();
 
+    // ── Stage wrapper ──
     const stage = document.createElement('div');
     stage.id = 'zw-screen-stage';
-    stage.style.cssText = 'padding:.5rem .7rem 0;';
+    stage.className = 'zlp-screen-stage';
 
+    // ── Header stage: nama presenter + tombol expand ──
+    const stageHdr = document.createElement('div');
+    stageHdr.className = 'zlp-screen-hdr';
+    stageHdr.innerHTML = `
+      <div class="zlp-screen-presenter">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>${identity}${isLocal ? ' (Kamu)' : ''} sedang presentasi</span>
+      </div>
+      <button class="zlp-screen-expand-btn" onclick="zwLive._expandScreen('${isLocal ? 'tile-screen-local' : 'tile-screen-' + identity}')" title="Perbesar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      </button>`;
+    stage.appendChild(stageHdr);
+
+    // ── Tile 16:9 ──
+    const tileId = isLocal ? 'tile-screen-local' : 'tile-screen-' + identity;
     const tile = document.createElement('div');
-    tile.id = isLocal ? 'tile-screen-local' : 'tile-screen-' + identity;
-    tile.className = 'zw-live-tile';
-    tile.style.cssText = 'width:100%;aspect-ratio:16/9;border:2px solid rgba(124,58,237,.5);';
+    tile.id = tileId;
+    tile.className = 'zw-live-tile zlp-screen-tile';
+    // Tambah expand button dari _makeTile logic
+    const expBtn = document.createElement('button');
+    expBtn.className = 'zw-tile-expand-btn';
+    expBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+    expBtn.onclick = (e) => { e.stopPropagation(); _expandTile(tileId); };
+    tile.appendChild(expBtn);
+    tile.ondblclick = () => _expandTile(tileId);
 
     if (isLocal) {
-      // Attach local screen track
-      const screenPub = _room?.localParticipant?.getTrackPublication
-        ? _room.localParticipant.getTrackPublication(LivekitClient.Track.Source.ScreenShare)
-        : _room?.localParticipant?.getTrack?.(LivekitClient.Track.Source.ScreenShare);
-      const screenTrackObj = screenPub?.track || screenPub?.videoTrack;
-      if (screenTrackObj) {
-        const vid = document.createElement('video');
-        vid.autoplay = true; vid.playsInline = true; vid.muted = true;
-        screenTrackObj.attach(vid);
-        tile.appendChild(vid);
-      } else {
-        tile.innerHTML = '<div style="color:var(--muted);font-size:.8rem">Menginisialisasi screen share...</div>';
-      }
+      // Attach local screen track (dengan delay kecil agar track siap)
+      setTimeout(() => {
+        const screenPub = _room?.localParticipant?.getTrackPublication
+          ? _room.localParticipant.getTrackPublication(LivekitClient.Track.Source.ScreenShare)
+          : _room?.localParticipant?.getTrack?.(LivekitClient.Track.Source.ScreenShare);
+        const screenTrackObj = screenPub?.track || screenPub?.videoTrack;
+        if (screenTrackObj) {
+          tile.innerHTML = '';
+          tile.appendChild(expBtn);
+          const vid = document.createElement('video');
+          vid.autoplay = true; vid.playsInline = true; vid.muted = true;
+          vid.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
+          screenTrackObj.attach(vid);
+          tile.appendChild(vid);
+        }
+      }, 600);
     }
 
-    const nameEl = document.createElement('div');
-    nameEl.className = 'zw-live-tile-name';
-    nameEl.style.cssText = 'background:rgba(124,58,237,.8);font-size:.65rem;';
-    nameEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${identity}${isLocal ? ' (Kamu)' : ''}`;
-    tile.appendChild(nameEl);
-
     stage.appendChild(tile);
-    // Insert sebelum grid
+
+    // Insert antara topbar dan grid (sebelum grid)
     const grid = document.getElementById('zw-live-grid');
-    if (grid) panel.querySelector('div:has(#zw-live-grid)')?.insertBefore(stage, grid);
+    if (grid && grid.parentNode) grid.parentNode.insertBefore(stage, grid);
     else panel.appendChild(stage);
   }
+
+  // ── Expand screen share khusus ──
+  _expandScreen = function(tileId) { _expandTile(tileId); };
 
   function _restoreGrid() {
     const stage = document.getElementById('zw-screen-stage');
@@ -13662,6 +13705,7 @@ const zwLive = (() => {
     }
     _fillTileAvatar(tile, identity, identity + ' (Kamu)');
     _reflow();
+    _updateDashBanner();
   }
 
   function _onParticipantJoin(participant) {
@@ -13717,15 +13761,19 @@ const zwLive = (() => {
         const tile = document.getElementById('tile-screen-' + participant.identity);
         if (tile) {
           tile.innerHTML = '';
+          // Tambah expand button
+          const _expBtnSc = document.createElement('button');
+          _expBtnSc.className = 'zw-tile-expand-btn';
+          _expBtnSc.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+          const _scTileId = tile.id;
+          _expBtnSc.onclick = (e) => { e.stopPropagation(); _expandTile(_scTileId); };
+          tile.appendChild(_expBtnSc);
+          tile.ondblclick = () => _expandTile(_scTileId);
           const vid = document.createElement('video');
           vid.autoplay = true; vid.playsInline = true;
+          vid.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
           track.attach(vid);
           tile.appendChild(vid);
-          const nameEl = document.createElement('div');
-          nameEl.className = 'zw-live-tile-name';
-          nameEl.style.cssText = 'background:rgba(124,58,237,.8);font-size:.65rem;';
-          nameEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${participant.identity}`;
-          tile.appendChild(nameEl);
         }
       }, 300);
       toast(`<span style='display:flex;align-items:center;gap:.3rem'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${participant.identity} mulai presentasi</span>`, 0, 3000);
@@ -13765,7 +13813,36 @@ const zwLive = (() => {
   }
 
   // ── Public API ──
-  return { join, leave, togglePanel, toggleMic, toggleCam, flipCam, toggleScreen, showLiveBtn };
+  // ── Dashboard live banner ──
+  function _updateDashBanner() {
+    const banner = document.getElementById('dash-live-banner');
+    if (!banner) return;
+    const isActive = !!_room && _room.state === 'connected';
+    banner.style.display = isActive ? 'block' : 'none';
+    if (isActive) {
+      const roomEl = document.getElementById('dlb-room-name');
+      const countEl = document.getElementById('dlb-count');
+      if (roomEl) roomEl.textContent = _roomName || 'General';
+      if (countEl) {
+        const n = _participants.size + 1; // +1 local
+        countEl.textContent = n + ' peserta';
+      }
+    }
+  }
+
+  function joinFromBanner() {
+    // Buka panel live langsung
+    if (_room && _room.state === 'connected') {
+      const panel = document.getElementById('zw-live-panel');
+      if (panel) panel.classList.add('open');
+      _panelOpen = true;
+    } else {
+      // Buka chat dulu ke room yang sedang live
+      showPage('chat'); initChat();
+    }
+  }
+
+  return { join, leave, togglePanel, toggleMic, toggleCam, flipCam, toggleScreen, showLiveBtn, joinFromBanner };
 })();
 
 
