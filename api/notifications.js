@@ -82,8 +82,17 @@ export default async function handler(req, res) {
       const roomName = room?.name || 'Chat';
       const roomType = room?.type || 'public';
 
-      const preview    = content ? content.slice(0,80)
-        : media_url ? (media_type?.startsWith('image')?'📷 Foto':media_type?.startsWith('video')?'🎥 Video':'📎 Media') : '...';
+      // Skip system cards dari notifikasi push
+      if (content?.startsWith('__LIVE_CARD__:') || content?.startsWith('__LIVE_JOIN__:')) {
+        return res.status(200).json({ skipped: true, reason: 'System card' });
+      }
+      let preview;
+      if (false) {
+        preview = '';
+      } else {
+        preview = content ? content.slice(0,80)
+          : media_url ? (media_type?.startsWith('image')?'📷 Foto':media_type?.startsWith('video')?'🎥 Video':'📎 Media') : '...';
+      }
       const notifTitle = roomType==='dm' ? `💬 ${sender_code}` : `💬 ${roomName}`;
       const notifBody  = roomType==='dm' ? preview : `${sender_code}: ${preview}`;
 
