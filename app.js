@@ -13216,6 +13216,34 @@ window.ChatNotif = ChatNotif; // FIX: expose ke window agar if(window.ChatNotif)
    Identity = user_code dari chatState
 ═══════════════════════════════════════════════════════════ */
 const zwLive = (() => {
+  // ── Supabase REST langsung — tidak tergantung chatSB ──
+  const _SB_URL = 'https://kpikyqafapclyirpqflp.supabase.co';
+  const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c';
+  const _SB_HDR = { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
+
+  async function _sbUpsertSession(payload) {
+    try {
+      await fetch(_SB_URL + '/rest/v1/live_sessions', { method:'POST', headers:_SB_HDR, body:JSON.stringify(payload) });
+    } catch(e) {}
+  }
+  async function _sbDeleteSession(hostCode) {
+    try {
+      await fetch(_SB_URL + '/rest/v1/live_sessions?host_code=eq.' + encodeURIComponent(hostCode), { method:'DELETE', headers:_SB_HDR });
+    } catch(e) {}
+  }
+  async function _sbSelectSessions() {
+    try {
+      const cutoff = new Date(Date.now() - 2*60*1000).toISOString();
+      const r = await fetch(_SB_URL + '/rest/v1/live_sessions?updated_at=gte.' + encodeURIComponent(cutoff) + '&order=started_at.desc&limit=5', { headers:_SB_HDR });
+      return r.ok ? r.json() : [];
+    } catch(e) { return []; }
+  }
+  async function _sbInsertMessage(roomId, senderCode, content) {
+    try {
+      await fetch(_SB_URL + '/rest/v1/messages', { method:'POST', headers:_SB_HDR, body:JSON.stringify({ room_id:roomId, sender_code:senderCode, content }) });
+    } catch(e) {}
+  }
+
   let _room      = null;  // LiveKit Room instance
   let _roomName  = '';    // nama room (untuk display)
   let _roomId    = '';    // ID yang dikirim ke API
@@ -13888,38 +13916,27 @@ const zwLive = (() => {
 
   // ── Simpan / hapus sesi live di Supabase ──
   async function _upsertLiveSession(isActive) {
-    if (!window.chatSB) return;
     const myCode = chatState?.myCode || localStorage.getItem('zw_anon_code') || '';
     if (!myCode) return;
-    try {
-      if (isActive) {
-        const payload = {
-          host_code: myCode,
-          room_id: _roomId || 'general',
-          room_name: _roomName || 'General',
-          participant_count: (_participants?.size || 0) + 1,
-          started_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        await chatSB.from('live_sessions').upsert(payload, { onConflict: 'host_code' });
-      } else {
-        await chatSB.from('live_sessions').delete().eq('host_code', myCode);
-      }
-    } catch(e) { /* silent */ }
+    if (isActive) {
+      await _sbUpsertSession({
+        host_code: myCode,
+        room_id: _roomId || 'general',
+        room_name: _roomName || 'General',
+        participant_count: (_participants?.size || 0) + 1,
+        started_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      await _sbDeleteSession(myCode);
+    }
   }
 
   // ── Poll sesi live dari Supabase setiap 15 detik ──
   let _livePollTimer = null;
   async function _pollLiveSessions() {
-    if (!window.chatSB) return;
     try {
-      // Ambil semua sesi live yang updated dalam 2 menit terakhir
-      const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-      const { data } = await chatSB.from('live_sessions')
-        .select('*')
-        .gte('updated_at', cutoff)
-        .order('started_at', { ascending: false })
-        .limit(5);
+      let data = await _sbSelectSessions();
 
       const banner = document.getElementById('dash-live-banner');
       if (!banner) return;
@@ -13963,28 +13980,13 @@ const zwLive = (() => {
 
   // ── Kirim card live ke room chat ──
   async function _sendLiveChatCard() {
-    if (!window.chatSB) return;
     const myCode = chatState?.myCode || '';
     if (!myCode) return;
-
-    // Gunakan room ID yang benar — pastikan sudah tersedia
     const roomId = _roomId || chatState?.currentRoomId;
     const roomName = _roomName || chatState?.currentRoomName || 'General';
     if (!roomId) return;
-
-    try {
-      const cardContent = '__LIVE_CARD__:' + JSON.stringify({
-        room_name: roomName,
-        room_id: roomId,
-        host: myCode
-      });
-      const { error } = await chatSB.from('messages').insert({
-        room_id: roomId,
-        sender_code: myCode,
-        content: cardContent
-      });
-      if (error) console.warn('[live card]', error.message);
-    } catch(e) { console.warn('[live card]', e.message); }
+    const cardContent = '__LIVE_CARD__:' + JSON.stringify({ room_name: roomName, room_id: roomId, host: myCode });
+    await _sbInsertMessage(roomId, myCode, cardContent);
   }
 
   // ── Kirim push notif live ke semua subscriber ──
