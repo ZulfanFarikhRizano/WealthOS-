@@ -13262,8 +13262,10 @@ const zwLive = (() => {
       // Update Live button jadi active
       const liveBtn = document.getElementById('room-live-btn');
       if (liveBtn) liveBtn.classList.add('live-active');
-      // Update dashboard banner
-      _updateDashBanner();
+      // Update dashboard banner — delay agar state sudah settled
+      setTimeout(_updateDashBanner, 300);
+      // Kirim push notif live ke semua subscriber (sekali saat pertama join)
+      setTimeout(_sendLiveNotif, 1000);
 
       // Render peserta yang sudah ada
       const _rp = _room.remoteParticipants;
@@ -13489,10 +13491,7 @@ const zwLive = (() => {
       <div class="zlp-screen-presenter">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         <span>${identity}${isLocal ? ' (Kamu)' : ''} sedang presentasi</span>
-      </div>
-      <button class="zlp-screen-expand-btn" onclick="zwLive._expandScreen('${isLocal ? 'tile-screen-local' : 'tile-screen-' + identity}')" title="Perbesar">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-      </button>`;
+      </div>`;
     stage.appendChild(stageHdr);
 
     // ── Tile 16:9 ──
@@ -13509,22 +13508,28 @@ const zwLive = (() => {
     tile.ondblclick = () => _expandTile(tileId);
 
     if (isLocal) {
-      // Attach local screen track (dengan delay kecil agar track siap)
-      setTimeout(() => {
+      // Attach local screen track — coba beberapa kali sampai track siap
+      const _tryAttach = (attempt) => {
         const screenPub = _room?.localParticipant?.getTrackPublication
           ? _room.localParticipant.getTrackPublication(LivekitClient.Track.Source.ScreenShare)
           : _room?.localParticipant?.getTrack?.(LivekitClient.Track.Source.ScreenShare);
         const screenTrackObj = screenPub?.track || screenPub?.videoTrack;
         if (screenTrackObj) {
-          tile.innerHTML = '';
-          tile.appendChild(expBtn);
+          // Bersihkan tile, pasang video
+          Array.from(tile.children).forEach(c => { if (c !== expBtn) c.remove(); });
           const vid = document.createElement('video');
           vid.autoplay = true; vid.playsInline = true; vid.muted = true;
-          vid.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
+          vid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;border-radius:12px;';
           screenTrackObj.attach(vid);
           tile.appendChild(vid);
+          vid.play().catch(()=>{});
+        } else if (attempt < 8) {
+          // Belum siap — coba lagi
+          setTimeout(() => _tryAttach(attempt + 1), 400);
         }
-      }, 600);
+      };
+      tile.style.position = 'relative'; // pastikan posisi relatif untuk video absolute
+      setTimeout(() => _tryAttach(0), 300);
     }
 
     stage.appendChild(tile);
@@ -13578,64 +13583,60 @@ const zwLive = (() => {
   let _expandedTile = null;
 
   function _expandTile(tileId) {
-    const tile = document.getElementById(tileId);
-    if (!tile) return;
     const overlay = document.getElementById('zw-tile-fullscreen');
     if (!overlay) return;
 
-    if (_expandedTile === tileId) {
-      // Tutup fullscreen
+    // ── TUTUP ──
+    if (_expandedTile) {
       _expandedTile = null;
       overlay.classList.remove('open');
-      overlay.innerHTML = '';
+      // Bersihkan setelah animasi selesai
+      setTimeout(() => { overlay.innerHTML = ''; overlay.style.cssText = ''; }, 300);
       return;
     }
 
+    const tile = document.getElementById(tileId);
+    if (!tile) return;
     _expandedTile = tileId;
-    overlay.innerHTML = '';
 
-    // Clone konten tile (video/avatar)
     const vid = tile.querySelector('video');
-    const nameLabel = tile.querySelector('.zw-live-tile-name')?.textContent || '';
+    const nameLabel = tile.querySelector('.zw-live-tile-name')?.textContent
+                   || tile.querySelector('.zw-live-tile-avatar')?.getAttribute('data-name')
+                   || '';
 
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    overlay.innerHTML = '';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#000;flex-direction:column;align-items:center;justify-content:center;';
     overlay.classList.add('open');
 
-    if (vid) {
+    if (vid && vid.srcObject) {
       const clone = document.createElement('video');
       clone.autoplay = true; clone.playsInline = true; clone.muted = vid.muted;
-      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-      // Attach same track
-      const allTracks = [...(vid.srcObject?.getVideoTracks?.() || [])];
-      if (allTracks.length) {
-        clone.srcObject = vid.srcObject;
-      } else {
-        // LiveKit: re-attach via MediaStreamTrack
-        clone.srcObject = vid.srcObject || null;
-        if (!clone.srcObject) clone.src = vid.src;
-      }
+      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
+      clone.srcObject = vid.srcObject;
       overlay.appendChild(clone);
+      clone.play().catch(()=>{});
     } else {
       // Avatar mode
       const av = tile.querySelector('.zw-live-tile-avatar');
       if (av) {
         const clone = av.cloneNode(true);
-        clone.style.width = '120px'; clone.style.height = '120px';
-        clone.style.fontSize = '2.5rem';
+        clone.style.width = '120px'; clone.style.height = '120px'; clone.style.fontSize = '2.5rem';
         overlay.appendChild(clone);
       }
     }
 
-    // Label nama
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'position:absolute;bottom:2.5rem;left:1rem;right:1rem;text-align:center;font-size:.9rem;font-weight:700;color:#fff;font-family:"Inter",sans-serif;text-shadow:0 1px 8px rgba(0,0,0,.8)';
-    lbl.textContent = nameLabel;
-    overlay.appendChild(lbl);
+    // Nama
+    if (nameLabel) {
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'position:absolute;bottom:5rem;left:1rem;right:1rem;text-align:center;font-size:.9rem;font-weight:700;color:#fff;font-family:"Inter",sans-serif;text-shadow:0 1px 8px rgba(0,0,0,.8)';
+      lbl.textContent = nameLabel;
+      overlay.appendChild(lbl);
+    }
 
-    // Tombol tutup
+    // Tombol tutup — X besar di pojok kanan atas
     const closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'position:absolute;top:1rem;right:1rem;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)';
-    closeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    closeBtn.style.cssText = 'position:absolute;top:1.2rem;right:1.2rem;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);z-index:10;transition:all .15s;';
+    closeBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     closeBtn.onclick = () => _expandTile(tileId);
     overlay.appendChild(closeBtn);
   }
@@ -13711,6 +13712,15 @@ const zwLive = (() => {
   function _onParticipantJoin(participant) {
     _addParticipantTile(participant);
     _updateCount();
+    _updateDashBanner();
+    // In-app toast: ada yang gabung live
+    const name = participant.identity || 'Seseorang';
+    toast(
+      `<span style="display:flex;align-items:center;gap:.4rem">` +
+      `<span style="width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0"></span>` +
+      `<b>${name}</b> bergabung ke live</span>`,
+      0, 3000
+    );
   }
 
   function _onParticipantLeave(participant) {
@@ -13718,6 +13728,15 @@ const zwLive = (() => {
     if (tile) tile.remove();
     _participants.delete(participant.identity);
     _reflow();
+    _updateDashBanner();
+    // In-app toast: ada yang keluar live
+    const name = participant.identity || 'Seseorang';
+    toast(
+      `<span style="display:flex;align-items:center;gap:.4rem">` +
+      `<span style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>` +
+      `<b>${name}</b> meninggalkan live</span>`,
+      0, 2500
+    );
     _updateCount();
   }
 
@@ -13817,17 +13836,32 @@ const zwLive = (() => {
   function _updateDashBanner() {
     const banner = document.getElementById('dash-live-banner');
     if (!banner) return;
-    const isActive = !!_room && _room.state === 'connected';
+    const isActive = !!_room && (_room.state === 'connected' || _room.state === 'reconnecting');
     banner.style.display = isActive ? 'block' : 'none';
     if (isActive) {
       const roomEl = document.getElementById('dlb-room-name');
       const countEl = document.getElementById('dlb-count');
       if (roomEl) roomEl.textContent = _roomName || 'General';
       if (countEl) {
-        const n = _participants.size + 1; // +1 local
+        const n = (_participants ? _participants.size : 0) + 1;
         countEl.textContent = n + ' peserta';
       }
     }
+  }
+
+  // ── Kirim push notif live ke semua subscriber ──
+  async function _sendLiveNotif() {
+    try {
+      await fetch('/api/notifications?action=live-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_name: _roomName,
+          room_id: _roomId,
+          host_code: window.myAnonCode || localStorage.getItem('zw_anon_code') || ''
+        })
+      });
+    } catch(e) { /* silent fail */ }
   }
 
   function joinFromBanner() {

@@ -3880,16 +3880,36 @@
   display:none;flex-direction:column;
   position:fixed;inset:0;z-index:9000;
   background:#090d14;
-  /* Slide up entrance */
   transform:translateY(100%);
   transition:transform .35s cubic-bezier(.32,0,.67,0),opacity .35s ease;
   opacity:0;
+  overflow-y:auto; /* scroll seluruh panel di mobile */
 }
 #zw-live-panel.open {
   display:flex!important;
   transform:translateY(0)!important;
   opacity:1!important;
   animation:zlpSlideIn .35s cubic-bezier(.16,1,.3,1) forwards;
+}
+/* Desktop: panel centered max 480px seperti app mobile */
+@media (min-width:600px) {
+  #zw-live-panel {
+    inset:auto;
+    top:0;bottom:0;
+    right:0;left:50%;
+    transform:translateX(-50%) translateY(100%);
+    width:480px;
+    margin-left:-240px;
+    left:50%;
+    border-left:1px solid rgba(255,255,255,.06);
+    border-right:1px solid rgba(255,255,255,.06);
+    box-shadow:-20px 0 60px rgba(0,0,0,.5),20px 0 60px rgba(0,0,0,.5);
+  }
+  #zw-live-panel.open {
+    transform:translateX(0) translateY(0)!important;
+    left:50%;
+    margin-left:-240px;
+  }
 }
 @keyframes zlpSlideIn {
   from { transform:translateY(100%); opacity:0; }
@@ -3942,7 +3962,7 @@
   display:grid;grid-template-columns:1fr;
   gap:.6rem;padding:.75rem;
   flex:1;overflow-y:auto;
-  align-content:center;min-height:0;
+  align-content:start;min-height:0;
 }
 
 /* Connecting overlay */
@@ -3972,8 +3992,10 @@
 .zlp-controls {
   display:flex;align-items:center;justify-content:center;
   gap:.5rem;padding:.75rem 1rem 1.1rem;flex-shrink:0;
-  background:linear-gradient(to top,rgba(9,13,20,1),rgba(9,13,20,.85));
-  border-top:1px solid rgba(255,255,255,.04);
+  background:rgba(9,13,20,.97);
+  border-top:1px solid rgba(255,255,255,.07);
+  position:sticky;bottom:0;z-index:5;
+  backdrop-filter:blur(12px);
 }
 .zlp-ctrl-item {
   display:flex;flex-direction:column;align-items:center;gap:.28rem;
