@@ -13266,7 +13266,9 @@ const zwLive = (() => {
       if (liveBtn) liveBtn.classList.add('live-active');
 
       // Render peserta yang sudah ada
-      _room.participants.forEach(p => _onParticipantJoin(p));
+      const _rp = _room.remoteParticipants;
+      if (_rp instanceof Map) _rp.forEach(p => _onParticipantJoin(p));
+      else if (_rp) Object.values(_rp).forEach(p => _onParticipantJoin(p));
 
     } catch(e) {
       _showConnecting(false);
@@ -13559,7 +13561,7 @@ const zwLive = (() => {
   }
 
   function _updateCount() {
-    const count = _room ? (_room.participants.size + 1) : 0;
+    const rp = _room?.remoteParticipants; const count = _room ? ((rp instanceof Map ? rp.size : (rp ? Object.keys(rp).length : 0)) + 1) : 0;
     const el = document.getElementById('zw-live-count');
     if (el) el.textContent = count + ' peserta';
   }
