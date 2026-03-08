@@ -7516,27 +7516,35 @@ function buildMsgBubble(msg) {
   if (msg.content?.startsWith('__LIVE_CARD__:')) {
     try {
       const data = JSON.parse(msg.content.replace('__LIVE_CARD__:', ''));
-      const isMine = msg.sender_code === chatState.myCode;
       const t = new Date(msg.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
       const hostCode = escHtml(data.host||msg.sender_code);
       const roomId   = escHtml(data.room_id||'general');
       const roomName = escHtml((data.room_name||'General').replace(/^[# ]+/,'').trim()||'General');
-      // Jadwalkan cek status async setelah card dirender ke DOM
+      // Tandai card ini dengan session_ts untuk identifikasi terbaru
+      const sessionTs = data.session_ts || new Date(msg.created_at).getTime();
+      // Card dianggap expired permanen jika dibuat lebih dari 1 jam lalu
+      const ageMs = Date.now() - new Date(msg.created_at).getTime();
+      const isExpiredByAge = ageMs > 60 * 60 * 1000; // > 1 jam
+      // Jadwalkan cek status aktif/nonaktif setelah render
       setTimeout(() => zwLive._checkAndUpdateCards && zwLive._checkAndUpdateCards(), 300);
+      const btnHtml = isExpiredByAge
+        ? `<button class="live-card-btn" disabled style="opacity:.35;cursor:not-allowed;background:rgba(100,100,100,.1);border-color:rgba(100,100,100,.2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Live Selesai</button>`
+        : `<button class="live-card-btn live-card-btn--${hostCode}"
+            onclick="zwLive.joinFromLiveCard('${roomId}','${roomName}')"
+            data-host="${hostCode}" data-session-ts="${sessionTs}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Gabung Live</button>`;
       return `<div class="msg-row theirs" style="justify-content:center;margin:.4rem 0">
-        <div class="live-card-bubble" data-live-host="${hostCode}">
+        <div class="live-card-bubble" data-live-host="${hostCode}" data-session-ts="${sessionTs}">
           <div class="live-card-top">
-            <span class="live-card-dot live-card-dot--${hostCode}"></span>
-            <span class="live-card-label">SEDANG LIVE</span>
+            <span class="live-card-dot" style="${isExpiredByAge ? 'background:#64748b;animation:none' : ''}"></span>
+            <span class="live-card-label" style="${isExpiredByAge ? 'color:#64748b' : ''}">SEDANG LIVE</span>
             <span class="live-card-room"># ${roomName}</span>
           </div>
           <div class="live-card-host">${escHtml(data.host||msg.sender_code) === (chatState?.myCode||'') ? '🎙️ <b>Live kamu</b>' : 'Dimulai oleh <b>' + hostCode + '</b>'}</div>
-          <button class="live-card-btn live-card-btn--${hostCode}" 
-            onclick="zwLive.joinFromLiveCard('${roomId}','${roomName}')"
-            data-host="${hostCode}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Gabung Live
-          </button>
+          ${btnHtml}
           <div class="live-card-time">${t}</div>
         </div>
       </div>`;
@@ -13356,6 +13364,7 @@ const zwLive = (() => {
       _startHeartbeat();
       // Update dashboard banner
       setTimeout(_updateDashBanner, 300);
+      setTimeout(() => _updateRoomLivePin([{ host_code: chatState?.myCode||'', room_id: _roomId, room_name: _roomName, participant_count: 1 }]), 400);
       // Kirim push notif live ke semua subscriber
       setTimeout(_sendLiveNotif, 1000);
       // Kirim card live ke room chat
@@ -13989,20 +13998,30 @@ const zwLive = (() => {
     const currentRoomId = chatState?.currentRoomId;
     if (!currentRoomId) { pin.style.display = 'none'; return; }
 
-    // Cari sesi live yang room_id-nya match dengan room yang sedang dibuka
     const myCode = chatState?.myCode || '';
-    const liveInRoom = (activeSessions || []).find(s =>
-      s.room_id === currentRoomId && s.host_code !== myCode
-    );
 
-    if (liveInRoom) {
+    // Cek apakah kita sendiri yang live di room ini
+    const iAmLiveHere = _room && _room.state === 'connected' && _roomId === currentRoomId;
+
+    // Cari sesi live orang lain di room ini
+    const liveInRoom = (activeSessions || []).find(s => s.room_id === currentRoomId);
+
+    const txt = document.getElementById('room-live-pin-text');
+    const pinHint = pin.querySelector('span:last-child');
+
+    if (iAmLiveHere) {
+      // Host melihat banner "Live kamu sedang berjalan"
       pin.style.display = 'block';
-      const txt = document.getElementById('room-live-pin-text');
-      if (txt) {
-        const name = (liveInRoom.room_name || 'room ini').replace(/^[# ]+/,'').trim();
-        const count = liveInRoom.participant_count || 1;
-        txt.textContent = `${liveInRoom.host_code} sedang live · ${count} peserta`;
-      }
+      pin.style.background = 'linear-gradient(90deg,rgba(239,68,68,.18),rgba(124,58,237,.12))';
+      if (txt) txt.textContent = '🎙️ Live kamu sedang berjalan · ' + ((_participants?.size || 0) + 1) + ' peserta';
+      if (pinHint) pinHint.textContent = 'Ketuk untuk buka panel →';
+    } else if (liveInRoom && liveInRoom.host_code !== myCode) {
+      // User lain melihat banner orang yang live
+      pin.style.display = 'block';
+      pin.style.background = 'linear-gradient(90deg,rgba(239,68,68,.12),rgba(124,58,237,.08))';
+      const count = liveInRoom.participant_count || 1;
+      if (txt) txt.textContent = `${liveInRoom.host_code} sedang live · ${count} peserta`;
+      if (pinHint) pinHint.textContent = 'Ketuk untuk gabung →';
     } else {
       pin.style.display = 'none';
     }
@@ -14011,12 +14030,29 @@ const zwLive = (() => {
   // Update semua live card di DOM — aktif/nonaktif berdasarkan sesi live saat ini
   function _updateLiveCardsStatus(activeSessions) {
     const activeHosts = new Set((activeSessions || []).map(s => s.host_code));
-    // Temukan semua card di halaman chat
+
+    // Kumpulkan session_ts terbaru per host dari semua card di DOM
+    const latestTsByHost = {};
     document.querySelectorAll('.live-card-bubble[data-live-host]').forEach(card => {
       const host = card.getAttribute('data-live-host');
+      const ts = parseInt(card.getAttribute('data-session-ts') || '0');
+      if (!latestTsByHost[host] || ts > latestTsByHost[host]) latestTsByHost[host] = ts;
+    });
+
+    document.querySelectorAll('.live-card-bubble[data-live-host]').forEach(card => {
+      const host = card.getAttribute('data-live-host');
+      const ts = parseInt(card.getAttribute('data-session-ts') || '0');
       const btn = card.querySelector('.live-card-btn');
       const dot = card.querySelector('.live-card-dot');
-      const isActive = activeHosts.has(host);
+
+      // Card expired permanen jika: bukan ts terbaru dari host ini, ATAU host tidak active
+      const isLatestCard = ts >= (latestTsByHost[host] || 0);
+      const isHostActive = activeHosts.has(host);
+      const isActive = isLatestCard && isHostActive;
+
+      // Jika card sudah hardcoded disabled (dari render awal > 1 jam) — jangan ubah
+      if (btn && btn.hasAttribute('disabled') && !btn.getAttribute('data-host')) return;
+
       if (btn) {
         btn.disabled = !isActive;
         btn.style.opacity = isActive ? '1' : '0.4';
@@ -14094,24 +14130,30 @@ const zwLive = (() => {
     const roomId = _roomId || chatState?.currentRoomId;
     const roomName = (_roomName || chatState?.currentRoomName || 'General').replace(/^[# ]+/, '').trim() || 'General';
     if (!roomId) return;
-    const cardContent = '__LIVE_CARD__:' + JSON.stringify({ room_name: roomName, room_id: roomId, host: myCode });
 
-    // Cek apakah sudah ada live card dari user ini di room ini (dalam 3 jam terakhir)
-    // Kalau sudah ada → skip, jangan spam
+    // Cooldown 1 jam — cek card terakhir dari host ini di room ini
     try {
-      const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const cutoff1h = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       const checkUrl = _SB_URL + '/rest/v1/messages?sender_code=eq.' + encodeURIComponent(myCode)
         + '&room_id=eq.' + encodeURIComponent(roomId)
         + '&content=like.__LIVE_CARD__*'
-        + '&created_at=gte.' + encodeURIComponent(cutoff)
-        + '&limit=1';
+        + '&created_at=gte.' + encodeURIComponent(cutoff1h)
+        + '&order=created_at.desc&limit=1';
       const res = await fetch(checkUrl, { headers: _SB_HDR });
       if (res.ok) {
         const existing = await res.json();
-        if (existing && existing.length > 0) return; // sudah ada, skip
+        if (existing && existing.length > 0) return; // masih dalam cooldown 1 jam, skip
       }
     } catch(e) {}
 
+    // Sertakan session_ts agar card bisa diidentifikasi sebagai sesi terbaru
+    const session_ts = Date.now();
+    const cardContent = '__LIVE_CARD__:' + JSON.stringify({
+      room_name: roomName,
+      room_id: roomId,
+      host: myCode,
+      session_ts
+    });
     await _sbInsertMessage(roomId, myCode, cardContent);
   }
 
