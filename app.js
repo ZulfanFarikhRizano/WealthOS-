@@ -13254,12 +13254,16 @@ const zwLive = (() => {
       _addLocalTile();
       _updateCount();
       _showConnecting(false);
-      // Deteksi iOS — screen share tidak support
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      // Deteksi support screen share
+      const _hasScreenShare = !!navigator.mediaDevices?.getDisplayMedia;
       const iosNote = document.getElementById('zw-ios-note');
-      if (iosNote) iosNote.style.display = isIOS ? 'block' : 'none';
+      if (iosNote) iosNote.style.display = _hasScreenShare ? 'none' : 'block';
       const screenBtn = document.getElementById('zw-live-screen-btn');
-      if (screenBtn && isIOS) { screenBtn.style.opacity = '0.3'; screenBtn.style.pointerEvents = 'none'; screenBtn.title = 'Tidak support di iOS'; }
+      if (screenBtn && !_hasScreenShare) {
+        screenBtn.style.opacity = '0.3';
+        screenBtn.style.pointerEvents = 'none';
+        screenBtn.title = 'Perangkat tidak mendukung screen share';
+      }
 
       // Update Live button jadi active
       const liveBtn = document.getElementById('room-live-btn');
@@ -13307,11 +13311,11 @@ const zwLive = (() => {
 
   function _openPanel() {
     const p = document.getElementById('zw-live-panel');
-    if (p) { p.style.display = 'block'; _panelOpen = true; }
+    if (p) { p.classList.add('open'); _panelOpen = true; }
   }
   function _closePanel() {
     const p = document.getElementById('zw-live-panel');
-    if (p) { p.style.display = 'none'; _panelOpen = false; }
+    if (p) { p.classList.remove('open'); _panelOpen = false; }
   }
   function _showConnecting(show) {
     const c = document.getElementById('zw-live-connecting');
@@ -13344,14 +13348,21 @@ const zwLive = (() => {
   // ── Screen Share / Presentasi ──
   async function toggleScreen() {
     if (!_room) return;
+    // Cek support getDisplayMedia sebelum mencoba
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Perangkat ini tidak mendukung screen share</span>', 1);
+      return;
+    }
     _screenOn = !_screenOn;
 
     try {
       await _room.localParticipant.setScreenShareEnabled(_screenOn);
     } catch(e) {
-      // User cancel dialog atau browser tidak support
       _screenOn = false;
-      if (e.name !== 'NotAllowedError') toast('⚠️ Screen share gagal: ' + e.message, 1);
+      // NotAllowedError = user cancel, jangan tampilkan error
+      if (e.name !== 'NotAllowedError') {
+        toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Screen share gagal: ' + e.message + '</span>', 1);
+      }
       _updateScreenBtn();
       return;
     }
@@ -13407,11 +13418,14 @@ const zwLive = (() => {
 
     if (isLocal) {
       // Attach local screen track
-      const screenTrack = _room?.localParticipant?.getTrack(LivekitClient.Track.Source.ScreenShare);
-      if (screenTrack?.track) {
+      const screenPub = _room?.localParticipant?.getTrackPublication
+        ? _room.localParticipant.getTrackPublication(LivekitClient.Track.Source.ScreenShare)
+        : _room?.localParticipant?.getTrack?.(LivekitClient.Track.Source.ScreenShare);
+      const screenTrackObj = screenPub?.track || screenPub?.videoTrack;
+      if (screenTrackObj) {
         const vid = document.createElement('video');
         vid.autoplay = true; vid.playsInline = true; vid.muted = true;
-        screenTrack.track.attach(vid);
+        screenTrackObj.attach(vid);
         tile.appendChild(vid);
       } else {
         tile.innerHTML = '<div style="color:var(--muted);font-size:.8rem">Menginisialisasi screen share...</div>';
@@ -13449,12 +13463,15 @@ const zwLive = (() => {
       grid.prepend(tile);
     }
     if (_camOn && _room?.localParticipant) {
-      const camTrack = _room.localParticipant.getTrack(LivekitClient.Track.Source.Camera);
-      if (camTrack?.track) {
+      const camPub = _room.localParticipant.getTrackPublication
+        ? _room.localParticipant.getTrackPublication(LivekitClient.Track.Source.Camera)
+        : _room.localParticipant.getTrack?.(LivekitClient.Track.Source.Camera);
+      const camTrackObj = camPub?.track || camPub?.videoTrack;
+      if (camTrackObj) {
         tile.innerHTML = '';
         const vid = document.createElement('video');
         vid.autoplay = true; vid.muted = true; vid.playsInline = true;
-        camTrack.track.attach(vid);
+        camTrackObj.attach(vid);
         tile.appendChild(vid);
       }
     } else {

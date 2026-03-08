@@ -2125,19 +2125,20 @@
       <div class="room-header-name" id="room-header-name">—</div>
       <div class="room-header-sub" id="room-header-sub">—</div>
     </div>
-    <button id="room-invite-btn" onclick="showRoomInvite()" style="display:none;align-items:center;gap:.3rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);border-radius:10px;padding:.35rem .65rem;color:var(--accent);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-      Undang
-    </button>
-    <button id="room-sharelink-btn" onclick="shareRoomLink()" style="display:none;align-items:center;gap:.3rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:.35rem .65rem;color:#f59e0b;font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      Link
-    </button>
-    <!-- Live button -->
-    <button id="room-live-btn" onclick="zwLive.togglePanel()" style="display:none;align-items:center;gap:.3rem;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:.35rem .65rem;color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s" title="Live Bareng">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="#ef4444" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
-      LIVE
-    </button>
+    <!-- Room action buttons: icon-only untuk hemat ruang -->
+    <div style="display:flex;gap:.35rem;align-items:center;flex-shrink:0">
+      <button id="room-invite-btn" onclick="showRoomInvite()" style="display:none;width:32px;height:32px;align-items:center;justify-content:center;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);border-radius:50%;color:var(--accent);cursor:pointer;flex-shrink:0;transition:all .18s" title="Undang">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </button>
+      <button id="room-sharelink-btn" onclick="shareRoomLink()" style="display:none;width:32px;height:32px;align-items:center;justify-content:center;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:50%;color:#f59e0b;cursor:pointer;flex-shrink:0;transition:all .18s" title="Salin Link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </button>
+      <!-- Live button — tetap dengan label -->
+      <button id="room-live-btn" onclick="zwLive.togglePanel()" style="display:none;align-items:center;gap:.3rem;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:20px;padding:.3rem .7rem;color:#ef4444;font-size:.72rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s;letter-spacing:.04em" title="Live Bareng">
+        <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#ef4444"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle></svg>
+        LIVE
+      </button>
+    </div>
     <div class="online-dot" title="Online"></div>
   </div>
 
@@ -3773,9 +3774,9 @@
 </div><!-- /fp-lock-screen -->
 
 <!-- ══════════ LIVEKIT LIVE PANEL ══════════ -->
-<div id="zw-live-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9000;background:linear-gradient(180deg,rgba(5,8,16,.97),rgba(5,8,16,1));border-top:1px solid rgba(239,68,68,.3);border-radius:20px 20px 0 0;max-height:75vh;overflow:hidden;transition:transform .3s cubic-bezier(.4,0,.2,1)">
+<div id="zw-live-panel" style="display:none;position:fixed;inset:0;z-index:9000;background:#050810;overflow:hidden;flex-direction:column;">
   <!-- Panel header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .6rem;border-bottom:1px solid rgba(255,255,255,.06)">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.08);background:#050810;flex-shrink:0">
     <div style="display:flex;align-items:center;gap:.6rem">
       <div id="zw-live-dot" style="width:9px;height:9px;border-radius:50%;background:#ef4444;animation:livePulse 1.2s ease-in-out infinite"></div>
       <span id="zw-live-room-name" style="font-size:.85rem;font-weight:700;color:var(--text);font-family:'Inter',sans-serif">Live</span>
@@ -3797,7 +3798,7 @@
     </div>
   </div>
   <!-- Video grid -->
-  <div id="zw-live-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding:.7rem;max-height:calc(75vh - 120px);overflow-y:auto"></div>
+  <div id="zw-live-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding:.7rem;flex:1;overflow-y:auto;height:calc(100vh - 130px)"></div>
   <!-- Join / connecting state -->
   <div id="zw-live-connecting" style="display:none;padding:2rem;text-align:center">
     <div style="width:32px;height:32px;border:3px solid rgba(239,68,68,.3);border-top-color:#ef4444;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto .8rem"></div>
@@ -3833,8 +3834,9 @@
 #room-live-btn.live-active {
   background:rgba(239,68,68,.25)!important;
   border-color:rgba(239,68,68,.8)!important;
-  animation:livePulse 1.5s ease-in-out infinite;
 }
+#zw-live-panel { display:none; flex-direction:column; }
+#zw-live-panel.open { display:flex!important; }
 </style>
 </body></html>
 <!-- ══════════════════════════════════════════════════════
