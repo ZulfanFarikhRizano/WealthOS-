@@ -2160,6 +2160,15 @@
     <div class="online-dot" title="Online"></div>
   </div>
 
+  <!-- Pin live banner — muncul di atas chat jika ada yang live di room ini -->
+  <div id="room-live-pin" style="display:none;padding:.4rem .75rem;background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(124,58,237,.08));border-bottom:1px solid rgba(239,68,68,.2);cursor:pointer;flex-shrink:0" onclick="zwLive.togglePanel()">
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <span style="width:7px;height:7px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:zlpPulse 1.4s ease-in-out infinite;display:inline-block"></span>
+      <span id="room-live-pin-text" style="font-size:.7rem;font-weight:700;color:#f87171;font-family:'Inter',sans-serif;flex:1">Sedang ada live di room ini</span>
+      <span style="font-size:.65rem;color:rgba(248,113,113,.6);font-family:'Space Mono',monospace">Ketuk untuk gabung →</span>
+    </div>
+  </div>
+
   <div class="messages-area" id="messages-area">
     <div class="chat-empty">
       <div class="chat-empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="13" cy="10" r="1" fill="#00e5ff" stroke="none"/><circle cx="17" cy="10" r="1" fill="#00e5ff" stroke="none"/></svg></div>
