@@ -132,7 +132,120 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Unknown action', available: ['notify','chat-notify'] });
+  // ── live-notify ─────────────────────────────────────────
+  // POST ?action=live-notify → broadcast push ke semua subscriber bahwa ada yg live
+  // Body: { room_name, host_code, room_id }
+  if (action === 'live-notify') {
+    try {
+      const { room_name, host_code, room_id } = req.body || {};
+
+      // Rate limit: simpan timestamp live notif terakhir per room di Supabase
+      // Jangan kirim lebih dari 1x per 3 menit per room
+      const SB_URL = process.env.SUPABASE_URL;
+      const sbH = {
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json'
+      };
+
+      // Ambil semua FCM token kecuali host sendiri
+      const tokenRows = await (await fetch(
+        `${SB_URL}/rest/v1/push_subscriptions?select=fcm_token,user_code&fcm_token=not.is.null`,
+        { headers: sbH }
+      )).json();
+
+      const tokens = (tokenRows || [])
+        .filter(r => r.user_code !== host_code && r.fcm_token)
+        .map(r => r.fcm_token);
+
+      if (!tokens.length) return res.status(200).json({ sent: 0, message: 'No subscribers' });
+
+      // Ambil FCM access token
+      const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      const jwtHeader = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+      const now = Math.floor(Date.now() / 1000);
+      const jwtPayload = btoa(JSON.stringify({
+        iss: sa.client_email, sub: sa.client_email,
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now, exp: now + 3600,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging'
+      })).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+
+      const { createSign } = await import('crypto');
+      const sign = createSign('RSA-SHA256');
+      sign.update(`${jwtHeader}.${jwtPayload}`);
+      const sig = sign.sign(sa.private_key, 'base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+      const jwt = `${jwtHeader}.${jwtPayload}.${sig}`;
+
+      const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+      });
+      const { access_token } = await tokenResp.json();
+
+      const roomLabel = room_name || 'General';
+      const notifTitle = '🔴 Sedang Live di z-wealth!';
+      const notifBody  = `Ada sesi live di # ${roomLabel} — Gabung sekarang!`;
+      const notifTag   = `live-${room_id || 'general'}`;
+
+      let sent = 0, failed = 0;
+      const invalid = [];
+
+      // Kirim ke semua token (sequential untuk hindari rate limit)
+      for (const token of tokens) {
+        try {
+          const r = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: {
+                token,
+                notification: {
+                  title: notifTitle,
+                  body: notifBody,
+                  icon: '/icon-192.png',
+                  badge: '/icon-192.png'
+                },
+                webpush: {
+                  notification: {
+                    title: notifTitle,
+                    body: notifBody,
+                    icon: '/icon-192.png',
+                    badge: '/icon-192.png',
+                    tag: notifTag,
+                    renotify: false,
+                    vibrate: [300, 100, 300, 100, 300],
+                    requireInteraction: false,
+                    actions: [{ action: 'join', title: '▶ Gabung Live' }]
+                  },
+                  fcm_options: { link: '/' }
+                }
+              }
+            })
+          });
+          if (r.ok) { sent++; }
+          else {
+            const e = await r.json().catch(() => ({}));
+            const code = e?.error?.details?.[0]?.errorCode || '';
+            if (code === 'UNREGISTERED' || code === 'INVALID_ARGUMENT') invalid.push(token);
+            else failed++;
+          }
+        } catch { failed++; }
+      }
+
+      // Hapus token invalid
+      for (const t of invalid)
+        await fetch(`${SB_URL}/rest/v1/push_subscriptions?fcm_token=eq.${encodeURIComponent(t)}`,
+          { method: 'DELETE', headers: sbH }).catch(() => {});
+
+      return res.status(200).json({ sent, failed, removed_invalid: invalid.length, room: roomLabel });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  return res.status(400).json({ error: 'Unknown action', available: ['notify','chat-notify','live-notify'] });
 }
 
 // ── Shared helpers ────────────────────────────────────────
