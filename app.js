@@ -7262,6 +7262,8 @@ function renderRoomList(containerId, rooms) {
 async function openRoom(roomId, name, type, color) {
   chatState.currentRoomId = roomId;
   chatState.currentRoomName = name;
+  // Tampilkan tombol Live saat masuk room (General atau Group)
+  if (typeof zwLive !== 'undefined') zwLive.showLiveBtn(true);
   chatState.currentRoomType = type;
 
   // Update header
@@ -7975,6 +7977,8 @@ function closeEmojiOutside(e) {
 
 // ── NAVIGATION ──
 function chatGoBack() {
+  // Sembunyikan Live button saat kembali ke list
+  if (typeof zwLive !== 'undefined') zwLive.showLiveBtn(false);
   // Unsubscribe
   if (chatState.msgSubscription) {
     chatSB?.removeChannel(chatState.msgSubscription);
@@ -13179,6 +13183,391 @@ const ChatNotif = (() => {
   return { onNewMessage, resetUnread, init, playSound, requestPushPermission };
 })();
 window.ChatNotif = ChatNotif; // FIX: expose ke window agar if(window.ChatNotif) berfungsi
+
+/* ═══════════════════════════════════════════════════════════
+   z-LIVE — LiveKit WebRTC In-App Live Bareng
+   Mendukung: Room General + Room Grup
+   Identity = user_code dari chatState
+═══════════════════════════════════════════════════════════ */
+const zwLive = (() => {
+  let _room      = null;  // LiveKit Room instance
+  let _roomName  = '';    // nama room (untuk display)
+  let _roomId    = '';    // ID yang dikirim ke API
+  let _panelOpen = false;
+  let _micOn      = true;
+  let _camOn      = false; // default cam off
+  let _screenOn   = false; // screen share
+  let _participants = new Map(); // identity → { track, el }
+
+  // ── Ambil identity dari chatState ──
+  function _identity() {
+    return chatState?.myCode || 'anon-' + Math.random().toString(36).slice(2,7);
+  }
+
+  // ── Tampilkan/sembunyikan Live button di room header ──
+  function showLiveBtn(show) {
+    const btn = document.getElementById('room-live-btn');
+    if (btn) btn.style.display = show ? 'flex' : 'none';
+  }
+
+  // ── Join room LiveKit ──
+  async function join(roomId, displayName) {
+    if (_room) { togglePanel(); return; } // sudah join, toggle panel saja
+
+    _roomId   = roomId;
+    _roomName = displayName || roomId;
+
+    // Update UI
+    const nameEl = document.getElementById('zw-live-room-name');
+    if (nameEl) nameEl.innerHTML = '<svg width="8" height="8" viewBox="0 0 8 8" style="display:inline-block;vertical-align:middle;margin-right:.3rem;flex-shrink:0"><circle cx="4" cy="4" r="4" fill="#ef4444"><animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite"/></circle></svg>' + _roomName;
+    _showConnecting(true);
+    _openPanel();
+
+    try {
+      // 1. Ambil token dari /api/livekit
+      const identity = _identity();
+      const safeRoom = ('zw-' + roomId).replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,64);
+      const r = await fetch(`/api/livekit?room=${encodeURIComponent(safeRoom)}&identity=${encodeURIComponent(identity)}`);
+      if (!r.ok) throw new Error('Gagal ambil token: ' + r.status);
+      const { token, url } = await r.json();
+
+      // 2. Connect ke LiveKit
+      _room = new LivekitClient.Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: { resolution: LivekitClient.VideoPresets.h360.resolution },
+      });
+
+      _room.on(LivekitClient.RoomEvent.ParticipantConnected,    _onParticipantJoin);
+      _room.on(LivekitClient.RoomEvent.ParticipantDisconnected, _onParticipantLeave);
+      _room.on(LivekitClient.RoomEvent.TrackSubscribed,         _onTrackSubscribed);
+      _room.on(LivekitClient.RoomEvent.TrackUnsubscribed,       _onTrackUnsubscribed);
+      _room.on(LivekitClient.RoomEvent.Disconnected,            _onDisconnected);
+      _room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged,   _onSpeakers);
+      _room.on(LivekitClient.RoomEvent.ParticipantMetadataChanged, _updateCount);
+
+      await _room.connect(url, token);
+
+      // 3. Publish local tracks
+      await _room.localParticipant.setMicrophoneEnabled(_micOn);
+      // Kamera default off — user toggle manual
+      _addLocalTile();
+      _updateCount();
+      _showConnecting(false);
+      // Deteksi iOS — screen share tidak support
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const iosNote = document.getElementById('zw-ios-note');
+      if (iosNote) iosNote.style.display = isIOS ? 'block' : 'none';
+      const screenBtn = document.getElementById('zw-live-screen-btn');
+      if (screenBtn && isIOS) { screenBtn.style.opacity = '0.3'; screenBtn.style.pointerEvents = 'none'; screenBtn.title = 'Tidak support di iOS'; }
+
+      // Update Live button jadi active
+      const liveBtn = document.getElementById('room-live-btn');
+      if (liveBtn) liveBtn.classList.add('live-active');
+
+      // Render peserta yang sudah ada
+      _room.participants.forEach(p => _onParticipantJoin(p));
+
+    } catch(e) {
+      _showConnecting(false);
+      _closePanel();
+      _room = null;
+      toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Gagal join live: ' + e.message + '</span>', 1);
+    }
+  }
+
+  // ── Leave ──
+  async function leave() {
+    if (_room) {
+      await _room.disconnect();
+      _room = null;
+    }
+    _participants.clear();
+    const grid = document.getElementById('zw-live-grid');
+    if (grid) grid.innerHTML = '';
+    _closePanel();
+    const liveBtn = document.getElementById('room-live-btn');
+    if (liveBtn) liveBtn.classList.remove('live-active');
+    _updateCount();
+  }
+
+  // ── Toggle panel ──
+  function togglePanel() {
+    if (!_room) {
+      // Belum join — join ke room yang sedang aktif
+      const roomId   = chatState?.currentRoomId || 'general';
+      const roomName = chatState?.currentRoomName || 'General';
+      join(roomId, roomName);
+    } else {
+      _panelOpen ? _closePanel() : _openPanel();
+    }
+  }
+
+  function _openPanel() {
+    const p = document.getElementById('zw-live-panel');
+    if (p) { p.style.display = 'block'; _panelOpen = true; }
+  }
+  function _closePanel() {
+    const p = document.getElementById('zw-live-panel');
+    if (p) { p.style.display = 'none'; _panelOpen = false; }
+  }
+  function _showConnecting(show) {
+    const c = document.getElementById('zw-live-connecting');
+    const g = document.getElementById('zw-live-grid');
+    if (c) c.style.display = show ? 'block' : 'none';
+    if (g) g.style.display = show ? 'none' : 'grid';
+  }
+
+  // ── Mic & Cam toggle ──
+  async function toggleMic() {
+    if (!_room) return;
+    _micOn = !_micOn;
+    await _room.localParticipant.setMicrophoneEnabled(_micOn);
+    const btn = document.getElementById('zw-live-mic-btn');
+    if (btn) btn.style.background = _micOn ? 'rgba(255,255,255,.08)' : 'rgba(239,68,68,.2)';
+    const icon = document.getElementById('zw-mic-icon');
+    if (icon) icon.style.opacity = _micOn ? '1' : '0.4';
+  }
+
+  async function toggleCam() {
+    if (!_room) return;
+    _camOn = !_camOn;
+    await _room.localParticipant.setCameraEnabled(_camOn);
+    const btn = document.getElementById('zw-live-cam-btn');
+    if (btn) btn.style.background = _camOn ? 'rgba(0,229,255,.15)' : 'rgba(255,255,255,.08)';
+    // Refresh local tile
+    _addLocalTile();
+  }
+
+  // ── Screen Share / Presentasi ──
+  async function toggleScreen() {
+    if (!_room) return;
+    _screenOn = !_screenOn;
+
+    try {
+      await _room.localParticipant.setScreenShareEnabled(_screenOn);
+    } catch(e) {
+      // User cancel dialog atau browser tidak support
+      _screenOn = false;
+      if (e.name !== 'NotAllowedError') toast('⚠️ Screen share gagal: ' + e.message, 1);
+      _updateScreenBtn();
+      return;
+    }
+
+    _updateScreenBtn();
+
+    if (_screenOn) {
+      // Tampilkan tile presentasi besar
+      _showScreenTile(_identity(), true);
+      toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Presentasi dimulai</span>', 0, 3000);
+    } else {
+      // Hapus tile presentasi lokal
+      const t = document.getElementById('tile-screen-local');
+      if (t) t.remove();
+      _restoreGrid();
+      toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Presentasi dihentikan</span>', 0, 2000);
+    }
+  }
+
+  function _updateScreenBtn() {
+    const btn = document.getElementById('zw-live-screen-btn');
+    if (!btn) return;
+    if (_screenOn) {
+      btn.style.background = 'rgba(124,58,237,.25)';
+      btn.style.borderColor = 'rgba(124,58,237,.7)';
+      btn.style.color = '#a78bfa';
+      btn.title = 'Stop Presentasi';
+    } else {
+      btn.style.background = 'rgba(255,255,255,.08)';
+      btn.style.borderColor = 'rgba(255,255,255,.15)';
+      btn.style.color = 'var(--text)';
+      btn.title = 'Mulai Presentasi';
+    }
+  }
+
+  // Tampilkan tile screen share besar di atas grid
+  function _showScreenTile(identity, isLocal) {
+    const panel = document.getElementById('zw-live-panel');
+    if (!panel) return;
+
+    // Hapus tile screen lama jika ada
+    const old = document.getElementById('zw-screen-stage');
+    if (old) old.remove();
+
+    const stage = document.createElement('div');
+    stage.id = 'zw-screen-stage';
+    stage.style.cssText = 'padding:.5rem .7rem 0;';
+
+    const tile = document.createElement('div');
+    tile.id = isLocal ? 'tile-screen-local' : 'tile-screen-' + identity;
+    tile.className = 'zw-live-tile';
+    tile.style.cssText = 'width:100%;aspect-ratio:16/9;border:2px solid rgba(124,58,237,.5);';
+
+    if (isLocal) {
+      // Attach local screen track
+      const screenTrack = _room?.localParticipant?.getTrack(LivekitClient.Track.Source.ScreenShare);
+      if (screenTrack?.track) {
+        const vid = document.createElement('video');
+        vid.autoplay = true; vid.playsInline = true; vid.muted = true;
+        screenTrack.track.attach(vid);
+        tile.appendChild(vid);
+      } else {
+        tile.innerHTML = '<div style="color:var(--muted);font-size:.8rem">Menginisialisasi screen share...</div>';
+      }
+    }
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'zw-live-tile-name';
+    nameEl.style.cssText = 'background:rgba(124,58,237,.8);font-size:.65rem;';
+    nameEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${identity}${isLocal ? ' (Kamu)' : ''}`;
+    tile.appendChild(nameEl);
+
+    stage.appendChild(tile);
+    // Insert sebelum grid
+    const grid = document.getElementById('zw-live-grid');
+    if (grid) panel.querySelector('div:has(#zw-live-grid)')?.insertBefore(stage, grid);
+    else panel.appendChild(stage);
+  }
+
+  function _restoreGrid() {
+    const stage = document.getElementById('zw-screen-stage');
+    if (stage) stage.remove();
+  }
+
+  // ── Tiles ──
+  function _addLocalTile() {
+    const identity = _identity();
+    const grid = document.getElementById('zw-live-grid');
+    if (!grid) return;
+    let tile = document.getElementById('tile-local');
+    if (!tile) {
+      tile = document.createElement('div');
+      tile.className = 'zw-live-tile';
+      tile.id = 'tile-local';
+      grid.prepend(tile);
+    }
+    if (_camOn && _room?.localParticipant) {
+      const camTrack = _room.localParticipant.getTrack(LivekitClient.Track.Source.Camera);
+      if (camTrack?.track) {
+        tile.innerHTML = '';
+        const vid = document.createElement('video');
+        vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+        camTrack.track.attach(vid);
+        tile.appendChild(vid);
+      }
+    } else {
+      const initials = identity.slice(0,2).toUpperCase();
+      tile.innerHTML = `<div class="zw-live-tile-avatar">${initials}</div>`;
+    }
+    const nameEl = document.createElement('div');
+    nameEl.className = 'zw-live-tile-name';
+    nameEl.textContent = identity + ' (Kamu)';
+    tile.appendChild(nameEl);
+  }
+
+  function _onParticipantJoin(participant) {
+    _addParticipantTile(participant);
+    _updateCount();
+  }
+
+  function _onParticipantLeave(participant) {
+    const tile = document.getElementById('tile-' + participant.identity);
+    if (tile) tile.remove();
+    _participants.delete(participant.identity);
+    _updateCount();
+  }
+
+  function _addParticipantTile(participant) {
+    const grid = document.getElementById('zw-live-grid');
+    if (!grid) return;
+    const id = 'tile-' + participant.identity;
+    if (document.getElementById(id)) return;
+    const tile = document.createElement('div');
+    tile.className = 'zw-live-tile';
+    tile.id = id;
+    const initials = participant.identity.slice(0,2).toUpperCase();
+    tile.innerHTML = `<div class="zw-live-tile-avatar">${initials}</div><div class="zw-live-tile-name">${participant.identity}</div>`;
+    grid.appendChild(tile);
+    _participants.set(participant.identity, { tile });
+  }
+
+  function _onTrackSubscribed(track, pub, participant) {
+    if (track.kind === LivekitClient.Track.Kind.Video) {
+      const tile = document.getElementById('tile-' + participant.identity);
+      if (!tile) { _addParticipantTile(participant); return; }
+      tile.innerHTML = '';
+      const vid = document.createElement('video');
+      vid.autoplay = true; vid.playsInline = true;
+      track.attach(vid);
+      tile.appendChild(vid);
+      const nameEl = document.createElement('div');
+      nameEl.className = 'zw-live-tile-name';
+      nameEl.textContent = participant.identity;
+      tile.appendChild(nameEl);
+    }
+    if (track.kind === LivekitClient.Track.Kind.Audio) {
+      const aud = document.createElement('audio');
+      aud.autoplay = true;
+      track.attach(aud);
+      document.body.appendChild(aud);
+    }
+    // Screen share dari peserta lain
+    if (track.source === LivekitClient.Track.Source.ScreenShare) {
+      _showScreenTile(participant.identity, false);
+      // Attach track ke tile
+      setTimeout(() => {
+        const tile = document.getElementById('tile-screen-' + participant.identity);
+        if (tile) {
+          tile.innerHTML = '';
+          const vid = document.createElement('video');
+          vid.autoplay = true; vid.playsInline = true;
+          track.attach(vid);
+          tile.appendChild(vid);
+          const nameEl = document.createElement('div');
+          nameEl.className = 'zw-live-tile-name';
+          nameEl.style.cssText = 'background:rgba(124,58,237,.8);font-size:.65rem;';
+          nameEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${participant.identity}`;
+          tile.appendChild(nameEl);
+        }
+      }, 300);
+      toast(`<span style='display:flex;align-items:center;gap:.3rem'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${participant.identity} mulai presentasi</span>`, 0, 3000);
+    }
+  }
+
+  function _onTrackUnsubscribed(track, pub, participant) {
+    track.detach();
+    // Hapus stage jika screen share berhenti
+    if (track.source === LivekitClient.Track.Source.ScreenShare) {
+      const stage = document.getElementById('zw-screen-stage');
+      if (stage) stage.remove();
+      toast(`<span style='display:flex;align-items:center;gap:.3rem'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>${participant?.identity || 'Presenter'} menghentikan presentasi</span>`, 0, 2000);
+    }
+  }
+
+  function _onDisconnected() {
+    leave();
+    toast('<span style="display:flex;align-items:center;gap:.3rem"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline-block;vertical-align:middle;margin-right:.25rem"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>Koneksi live terputus</span>', 1);
+  }
+
+  function _onSpeakers(speakers) {
+    // Highlight border tile yang sedang bicara
+    document.querySelectorAll('.zw-live-tile').forEach(t => t.style.border = '');
+    speakers.forEach(p => {
+      const tile = document.getElementById('tile-' + p.identity);
+      if (tile) tile.style.border = '2px solid #10b981';
+    });
+  }
+
+  function _updateCount() {
+    const count = _room ? (_room.participants.size + 1) : 0;
+    const el = document.getElementById('zw-live-count');
+    if (el) el.textContent = count + ' peserta';
+  }
+
+  // ── Public API ──
+  return { join, leave, togglePanel, toggleMic, toggleCam, toggleScreen, showLiveBtn };
+})();
+
 
 // ── Prompt izin notifikasi (non-intrusive banner) ──
 function showNotifPermissionPrompt() {

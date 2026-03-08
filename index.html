@@ -35,6 +35,8 @@
 <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- LiveKit WebRTC SDK -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <!-- ══════════ VISUAL ENHANCEMENT LAYER ══════════ -->
 
@@ -2131,6 +2133,11 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       Link
     </button>
+    <!-- Live button -->
+    <button id="room-live-btn" onclick="zwLive.togglePanel()" style="display:none;align-items:center;gap:.3rem;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:.35rem .65rem;color:#ef4444;font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;transition:all .18s" title="Live Bareng">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="#ef4444" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
+      LIVE
+    </button>
     <div class="online-dot" title="Online"></div>
   </div>
 
@@ -3764,6 +3771,71 @@
   </button>
   <div id="fp-lock-err" style="font-size:.75rem;color:#ef4444;display:none">Autentikasi gagal. Coba lagi.</div>
 </div><!-- /fp-lock-screen -->
+
+<!-- ══════════ LIVEKIT LIVE PANEL ══════════ -->
+<div id="zw-live-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9000;background:linear-gradient(180deg,rgba(5,8,16,.97),rgba(5,8,16,1));border-top:1px solid rgba(239,68,68,.3);border-radius:20px 20px 0 0;max-height:75vh;overflow:hidden;transition:transform .3s cubic-bezier(.4,0,.2,1)">
+  <!-- Panel header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .6rem;border-bottom:1px solid rgba(255,255,255,.06)">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div id="zw-live-dot" style="width:9px;height:9px;border-radius:50%;background:#ef4444;animation:livePulse 1.2s ease-in-out infinite"></div>
+      <span id="zw-live-room-name" style="font-size:.85rem;font-weight:700;color:var(--text);font-family:'Inter',sans-serif">Live</span>
+      <span id="zw-live-count" style="font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace">0 peserta</span>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button id="zw-live-mic-btn" onclick="zwLive.toggleMic()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s" title="Mic">
+        <svg id="zw-mic-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button id="zw-live-cam-btn" onclick="zwLive.toggleCam()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s" title="Kamera">
+        <svg id="zw-cam-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      </button>
+      <button id="zw-live-screen-btn" onclick="zwLive.toggleScreen()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s" title="Mulai Presentasi">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </button>
+      <button onclick="zwLive.leave()" style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s" title="Keluar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Video grid -->
+  <div id="zw-live-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding:.7rem;max-height:calc(75vh - 120px);overflow-y:auto"></div>
+  <!-- Join / connecting state -->
+  <div id="zw-live-connecting" style="display:none;padding:2rem;text-align:center">
+    <div style="width:32px;height:32px;border:3px solid rgba(239,68,68,.3);border-top-color:#ef4444;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto .8rem"></div>
+    <div style="font-size:.8rem;color:var(--muted)">Menghubungkan...</div>
+  </div>
+  <!-- iOS screen share note -->
+  <div id="zw-ios-note" style="display:none;padding:.5rem 1rem;background:rgba(245,158,11,.08);border-top:1px solid rgba(245,158,11,.2);font-size:.65rem;color:#f59e0b;text-align:center">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:.3rem;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    iOS Safari tidak mendukung presentasi layar. Gunakan desktop atau Android Chrome untuk presentasi.
+  </div>
+</div>
+
+<style>
+@keyframes livePulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(1.3)}
+}
+.zw-live-tile {
+  position:relative;border-radius:12px;overflow:hidden;background:#0d1117;
+  aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+}
+.zw-live-tile video { width:100%;height:100%;object-fit:cover;border-radius:12px; }
+.zw-live-tile-name {
+  position:absolute;bottom:.3rem;left:.4rem;font-size:.6rem;font-weight:700;
+  color:#fff;background:rgba(0,0,0,.6);padding:.15rem .4rem;border-radius:6px;
+  font-family:'Inter',sans-serif;max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.zw-live-tile-avatar {
+  width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:1.2rem;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#ef4444,#f97316);font-family:'Space Mono',monospace;
+}
+#room-live-btn.live-active {
+  background:rgba(239,68,68,.25)!important;
+  border-color:rgba(239,68,68,.8)!important;
+  animation:livePulse 1.5s ease-in-out infinite;
+}
+</style>
 </body></html>
 <!-- ══════════════════════════════════════════════════════
      Z-WEALTH · FINAL POLISH LAYER v5.0
