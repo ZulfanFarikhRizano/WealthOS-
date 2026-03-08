@@ -7014,6 +7014,8 @@ async function loadDashChatPreview() {
   `;
 
   await renderDashFeed();
+  // Mulai polling live sessions untuk dashboard banner
+  if (window.zwLive?.startLivePoll) zwLive.startLivePoll();
 
   // Realtime: subscribe ke semua perubahan messages
   if (_dashFeedSub) { try { chatSB.removeChannel(_dashFeedSub); } catch(e) {} }
@@ -7481,6 +7483,30 @@ function buildMsgBubble(msg) {
       <div style="color:var(--accent);font-weight:700;font-size:.65rem;margin-bottom:.15rem">↩ ${escHtml(msg.reply_sender || 'Pesan')}</div>
       <div style="font-size:.73rem;opacity:.75;line-height:1.4;word-break:break-word">${escHtml(String(msg.reply_text).slice(0,120))}${(msg.reply_text?.length||0)>120?'…':''}</div>
     </div>`;
+  }
+
+  // ── LIVE CARD ──
+  if (msg.content?.startsWith('__LIVE_CARD__:')) {
+    try {
+      const data = JSON.parse(msg.content.replace('__LIVE_CARD__:', ''));
+      const isMine = msg.sender_code === chatState.myCode;
+      const t = new Date(msg.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="msg-row theirs" style="justify-content:center;margin:.4rem 0">
+        <div class="live-card-bubble">
+          <div class="live-card-top">
+            <span class="live-card-dot"></span>
+            <span class="live-card-label">SEDANG LIVE</span>
+            <span class="live-card-room"># ${escHtml(data.room_name||'General')}</span>
+          </div>
+          <div class="live-card-host">Dimulai oleh <b>${escHtml(data.host||msg.sender_code)}</b></div>
+          <button class="live-card-btn" onclick="zwLive.joinFromLiveCard('${escHtml(data.room_id||'general')}', '${escHtml(data.room_name||'General')}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Gabung Live
+          </button>
+          <div class="live-card-time">${t}</div>
+        </div>
+      </div>`;
+    } catch(e) { /* fallback ke bubble biasa */ }
   }
 
   // Media content
@@ -13262,10 +13288,14 @@ const zwLive = (() => {
       // Update Live button jadi active
       const liveBtn = document.getElementById('room-live-btn');
       if (liveBtn) liveBtn.classList.add('live-active');
-      // Update dashboard banner — delay agar state sudah settled
+      // Simpan sesi live ke Supabase agar device lain bisa tahu
+      _upsertLiveSession(true);
+      // Update dashboard banner
       setTimeout(_updateDashBanner, 300);
-      // Kirim push notif live ke semua subscriber (sekali saat pertama join)
+      // Kirim push notif live ke semua subscriber
       setTimeout(_sendLiveNotif, 1000);
+      // Kirim card live ke room chat
+      setTimeout(_sendLiveChatCard, 1500);
 
       // Render peserta yang sudah ada
       const _rp = _room.remoteParticipants;
@@ -13294,6 +13324,7 @@ const zwLive = (() => {
     if (liveBtn) liveBtn.classList.remove('live-active');
     const banner = document.getElementById('dash-live-banner');
     if (banner) banner.style.display = 'none';
+    _upsertLiveSession(false);
     _updateCount();
   }
 
@@ -13849,6 +13880,102 @@ const zwLive = (() => {
     }
   }
 
+  // ── Simpan / hapus sesi live di Supabase ──
+  async function _upsertLiveSession(isActive) {
+    if (!window.chatSB) return;
+    const myCode = chatState?.myCode || localStorage.getItem('zw_anon_code') || '';
+    if (!myCode) return;
+    try {
+      if (isActive) {
+        await chatSB.from('live_sessions').upsert({
+          host_code: myCode,
+          room_id: _roomId || 'general',
+          room_name: _roomName || 'General',
+          participant_count: (_participants?.size || 0) + 1,
+          started_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'host_code' });
+      } else {
+        await chatSB.from('live_sessions').delete().eq('host_code', myCode);
+      }
+    } catch(e) { /* silent */ }
+  }
+
+  // ── Poll sesi live dari Supabase setiap 15 detik ──
+  let _livePollTimer = null;
+  async function _pollLiveSessions() {
+    if (!window.chatSB) return;
+    try {
+      // Ambil semua sesi live yang updated dalam 2 menit terakhir
+      const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { data } = await chatSB.from('live_sessions')
+        .select('*')
+        .gte('updated_at', cutoff)
+        .order('started_at', { ascending: false })
+        .limit(5);
+
+      const banner = document.getElementById('dash-live-banner');
+      if (!banner) return;
+
+      // Jika ada sesi aktif dan kita sendiri TIDAK sedang live
+      const myCode = chatState?.myCode || '';
+      const activeSessions = (data || []).filter(s => s.host_code !== myCode);
+
+      if (activeSessions.length > 0) {
+        const first = activeSessions[0];
+        banner.style.display = 'block';
+        const roomEl = document.getElementById('dlb-room-name');
+        const countEl = document.getElementById('dlb-count');
+        if (roomEl) roomEl.textContent = first.room_name || 'General';
+        if (countEl) countEl.textContent = (first.participant_count || 1) + ' peserta';
+        // Update joinFromBanner ke room yang benar
+        const joinBtn = banner.querySelector('.dlb-join-btn');
+        if (joinBtn) {
+          joinBtn.onclick = () => {
+            // Buka live panel di room itu
+            if (_room && _room.state === 'connected') {
+              document.getElementById('zw-live-panel')?.classList.add('open');
+            } else {
+              // Join live room
+              const roomId = first.room_id || 'general';
+              const displayName = chatState?.myCode || 'anon-' + Math.random().toString(36).slice(2,6);
+              zwLive.join(roomId, displayName);
+            }
+          };
+        }
+      } else if (!(_room && _room.state === 'connected')) {
+        // Tidak ada sesi aktif dan kita tidak live
+        banner.style.display = 'none';
+      }
+    } catch(e) { /* silent */ }
+  }
+
+  // Mulai polling saat app load
+  function _startLivePoll() {
+    if (_livePollTimer) clearInterval(_livePollTimer);
+    _pollLiveSessions(); // langsung
+    _livePollTimer = setInterval(_pollLiveSessions, 15000); // tiap 15 detik
+  }
+
+  // ── Kirim card live ke room chat ──
+  async function _sendLiveChatCard() {
+    if (!window.chatSB || !_roomId) return;
+    const myCode = chatState?.myCode || '';
+    if (!myCode) return;
+    try {
+      const cardContent = `__LIVE_CARD__:${JSON.stringify({
+        room_name: _roomName || 'General',
+        room_id: _roomId,
+        host: myCode
+      })}`;
+      await chatSB.from('messages').insert({
+        room_id: _roomId,
+        sender_code: myCode,
+        content: cardContent
+      });
+    } catch(e) { /* silent */ }
+  }
+
   // ── Kirim push notif live ke semua subscriber ──
   async function _sendLiveNotif() {
     try {
@@ -13865,18 +13992,22 @@ const zwLive = (() => {
   }
 
   function joinFromBanner() {
-    // Buka panel live langsung
     if (_room && _room.state === 'connected') {
       const panel = document.getElementById('zw-live-panel');
       if (panel) panel.classList.add('open');
       _panelOpen = true;
     } else {
-      // Buka chat dulu ke room yang sedang live
       showPage('chat'); initChat();
     }
   }
 
-  return { join, leave, togglePanel, toggleMic, toggleCam, flipCam, toggleScreen, showLiveBtn, joinFromBanner };
+  function joinFromLiveCard(roomId, roomName) {
+    // Join live langsung dari card chat
+    const displayName = chatState?.myCode || 'anon-' + Math.random().toString(36).slice(2,7);
+    zwLive.join(roomId, displayName);
+  }
+
+  return { join, leave, togglePanel, toggleMic, toggleCam, flipCam, toggleScreen, showLiveBtn, joinFromBanner, joinFromLiveCard, startLivePoll: _startLivePoll };
 })();
 
 
