@@ -7124,9 +7124,13 @@ function renderDashFeedMessages(container, grouped, myCode) {
       const color = colorPalette[colorIdx];
       const diffMin = Math.round((Date.now() - new Date(m.created_at).getTime()) / 60000);
       const timeAgo = diffMin < 1 ? 'baru saja' : diffMin < 60 ? diffMin + ' mnt lalu' : diffMin < 1440 ? Math.floor(diffMin/60) + ' jam lalu' : '1 hari lalu';
+      let previewContent = m.content || '';
+      let isLiveCard = previewContent.startsWith('__LIVE_CARD__:');
       const text = m.media_url
         ? `<span style="color:#94a3b8;font-size:.75rem">📎 Media</span>`
-        : `<span style="font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">${escHtml((m.content || '').slice(0, 60))}${(m.content||'').length > 60 ? '...' : ''}</span>`;
+        : isLiveCard
+          ? `<span style="color:#ef4444;font-size:.75rem">🔴 Sesi Live dimulai</span>`
+          : `<span style="font-size:.8rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">${escHtml(previewContent.slice(0, 60))}${previewContent.length > 60 ? '...' : ''}</span>`;
       const roomBadgeColor = room.type === 'public' ? '#10b981' : room.type === 'dm' ? '#a78bfa' : '#f59e0b';
       const roomIcon = room.type === 'public' ? '🌐' : room.type === 'dm' ? '💬' : '👥';
       const clickId = room.id || 'general';
@@ -13466,6 +13470,12 @@ const zwLive = (() => {
 
       _camFacing = newFacing;
       _addLocalTile();
+      // Update mirror langsung pada video yang sedang tampil
+      const localTile = document.getElementById('tile-' + (_room.localParticipant?.identity || ''));
+      if (localTile) {
+        const vid = localTile.querySelector('video');
+        if (vid) vid.style.transform = newFacing === 'user' ? 'scaleX(-1)' : 'none';
+      }
     } catch(e) {
       // NotReadableError / OverconstrainedError = device tidak support facing itu
       if (e.name === 'OverconstrainedError' || e.name === 'NotFoundError') {
@@ -13756,8 +13766,8 @@ const zwLive = (() => {
         tile.innerHTML = '';
         const vid = document.createElement('video');
         vid.autoplay = true; vid.muted = true; vid.playsInline = true;
-        // Fix mirror: selfie view di-flip (natural seperti cermin tapi tidak terbalik bagi peserta lain)
-        vid.style.transform = 'scaleX(-1)';
+        // Mirror hanya kamera depan (user), kamera belakang tidak di-mirror
+        vid.style.transform = _camFacing === 'user' ? 'scaleX(-1)' : 'none';
         camTrackObj.attach(vid);
         tile.appendChild(vid);
         _addTileName(tile, identity + ' (Kamu)');
@@ -13922,7 +13932,7 @@ const zwLive = (() => {
       await _sbUpsertSession({
         host_code: myCode,
         room_id: _roomId || 'general',
-        room_name: _roomName || 'General',
+        room_name: (_roomName || 'General').replace(/^#+ ?/, ''),
         participant_count: (_participants?.size || 0) + 1,
         started_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -13943,7 +13953,9 @@ const zwLive = (() => {
 
       // Jika ada sesi aktif dan kita sendiri TIDAK sedang live
       const myCode = chatState?.myCode || '';
-      const activeSessions = (data || []).filter(s => s.host_code !== myCode);
+      // Exclude hanya kalau kita sendiri sedang host live (room connected)
+      const iAmLive = _room && _room.state === 'connected';
+      const activeSessions = (data || []).filter(s => !iAmLive || s.host_code !== myCode);
 
       if (activeSessions.length > 0) {
         const first = activeSessions[0];
@@ -14030,14 +14042,13 @@ const zwLive = (() => {
     if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }
   }
 
-  function _waitAndStartPoll() {
-    if (window.chatSB) {
-      _startLivePoll();
-    } else {
-      setTimeout(_waitAndStartPoll, 1000);
-    }
+  function _waitAndStartPoll(attempt) {
+    attempt = attempt || 0;
+    // Poll bisa langsung jalan — tidak perlu chatSB karena pakai REST
+    _startLivePoll();
   }
-  setTimeout(_waitAndStartPoll, 2000);
+  // Mulai segera setelah module load
+  setTimeout(_waitAndStartPoll, 500);
 
   return { join, leave, togglePanel, toggleMic, toggleCam, flipCam, toggleScreen, showLiveBtn, joinFromBanner, joinFromLiveCard, startLivePoll: _startLivePoll };
 })();
