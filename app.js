@@ -20007,49 +20007,168 @@ async function _calFetchActualAndAnalyze(ev) {
   // ── Helper: render actual box ──
   function renderActual(actualData) {
     if (!actualData) {
-      actualEl.innerHTML = '';
+      actualEl.innerHTML = `<div style="font-size:.62rem;color:rgba(100,116,139,.4);margin-top:.4rem;padding:.4rem 0">Data aktual tidak tersedia untuk event ini.</div>`;
       return;
     }
-    const act = actualData.actual + actualData.unit;
-    const est = actualData.estimate != null ? actualData.estimate + actualData.unit : null;
-    const prv = actualData.prev != null ? actualData.prev + actualData.unit : null;
+    const fmt = v => v != null ? String(v) + (actualData.unit || '') : null;
+    const act = fmt(actualData.actual);
+    const est = actualData.estimate != null ? fmt(actualData.estimate) : null;
+    const prv = actualData.prev != null ? fmt(actualData.prev) : null;
+
+    // Warna aktual vs forecast/prev
     let actColor = '#f1f5f9';
-    if (est !== null) {
-      const actNum = parseFloat(actualData.actual), estNum = parseFloat(actualData.estimate);
+    const compareVal = actualData.estimate ?? actualData.prev;
+    if (compareVal != null) {
+      const actNum = parseFloat(actualData.actual), cmpNum = parseFloat(compareVal);
       const bullishHigh = /payroll|gdp|employment|earning/i.test(ev.title);
       const bullishLow  = /cpi|inflation|unemployment|jobless|ppi/i.test(ev.title);
-      if (!isNaN(actNum) && !isNaN(estNum)) {
-        if (bullishHigh) actColor = actNum >= estNum ? '#10b981' : '#ef4444';
-        else if (bullishLow) actColor = actNum <= estNum ? '#10b981' : '#ef4444';
+      if (!isNaN(actNum) && !isNaN(cmpNum)) {
+        if (bullishHigh) actColor = actNum >= cmpNum ? '#10b981' : '#ef4444';
+        else if (bullishLow) actColor = actNum <= cmpNum ? '#10b981' : '#ef4444';
       }
     }
+
+    const srcBadge = actualData.source
+      ? `<span style="font-size:.52rem;color:rgba(100,116,139,.5);font-family:'Space Mono',monospace">via ${actualData.source}</span>`
+      : '';
+    const dateHint = actualData.actDate
+      ? `<span style="font-size:.52rem;color:rgba(100,116,139,.4)">${actualData.actDate}</span>` : '';
+
     actualEl.innerHTML = `
       <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
-        <div style="font-size:.58rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.45rem;text-transform:uppercase;letter-spacing:.06em">Hasil Aktual</div>
-        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
-          <div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Aktual</div>
-            <div style="font-size:1.15rem;font-weight:800;color:${actColor};font-family:'Space Mono',monospace;line-height:1">${act}</div></div>
-          ${est !== null ? `<div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Forecast</div>
-            <div style="font-size:.8rem;font-weight:600;color:rgba(148,163,184,.7);font-family:'Space Mono',monospace">${est}</div></div>` : ''}
-          ${prv !== null ? `<div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Sebelumnya</div>
-            <div style="font-size:.8rem;font-weight:600;color:rgba(148,163,184,.7);font-family:'Space Mono',monospace">${prv}</div></div>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.45rem">
+          <span style="font-size:.58rem;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Hasil Aktual</span>
+          <div style="display:flex;gap:.4rem;align-items:center">${dateHint}${srcBadge}</div>
+        </div>
+        <div style="display:flex;gap:1.2rem;flex-wrap:wrap;align-items:flex-end">
+          <div>
+            <div style="font-size:.52rem;color:var(--muted);margin-bottom:.1rem">Aktual</div>
+            <div style="font-size:1.2rem;font-weight:800;color:${actColor};font-family:'Space Mono',monospace;line-height:1">${act}</div>
+          </div>
+          ${est !== null ? `<div>
+            <div style="font-size:.52rem;color:var(--muted);margin-bottom:.1rem">Forecast</div>
+            <div style="font-size:.82rem;font-weight:600;color:rgba(148,163,184,.65);font-family:'Space Mono',monospace">${est}</div>
+          </div>` : ''}
+          ${prv !== null ? `<div>
+            <div style="font-size:.52rem;color:var(--muted);margin-bottom:.1rem">Sebelumnya</div>
+            <div style="font-size:.82rem;font-weight:600;color:rgba(148,163,184,.65);font-family:'Space Mono',monospace">${prv}</div>
+          </div>` : ''}
         </div>
       </div>`;
   }
 
-  // ── Step 1: Fetch Finnhub actual (cepat, ~1-2 detik) ──
+  // ── FRED Series ID map — event title → FRED series ──
+  // BLS series ID resmi (Bureau of Labor Statistics)
+  const BLS_MAP = [
+    { keys: ['nfp','non-farm payroll'],  series: 'CES0000000001', unit: 'K',  scale: 1/1000, label: 'Nonfarm Payroll' },
+    { keys: ['unemployment rate'],       series: 'LNS14000000',   unit: '%',  scale: 1,      label: 'Unemployment Rate' },
+    { keys: ['cpi','consumer price'],    series: 'CUUR0000SA0',   unit: '',   scale: 1,      label: 'CPI' },
+    { keys: ['core cpi'],               series: 'CUUR0000SA0L1E', unit: '',   scale: 1,      label: 'Core CPI' },
+    { keys: ['ppi','producer price'],   series: 'WPU00000000',    unit: '',   scale: 1,      label: 'PPI' },
+    { keys: ['jobless','initial claims'],series: 'ICSA',          unit: 'K',  scale: 1/1000, label: 'Initial Claims' },
+    { keys: ['average hourly earning'], series: 'CES0500000003',  unit: '',   scale: 1,      label: 'Avg Hourly Earnings' },
+  ];
+
+  function _blsSeriesFor(title) {
+    const tl = title.toLowerCase();
+    return BLS_MAP.find(m => m.keys.some(k => tl.includes(k))) || null;
+  }
+
+  // Fetch dari BLS via Vercel proxy (API key aman di server)
+  async function _fetchBLS(seriesId, scale, unit) {
+    try {
+      const res = await fetch(`/api/market?action=bls&series=${seriesId}`,
+        { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json.error) return null;
+      const series = json?.Results?.series?.[0]?.data;
+      if (!series || series.length < 2) return null;
+      // Sort ascending by year+period (BLS returns newest first)
+      const sorted = [...series].sort((a, b) => {
+        const ta = parseInt(a.year)*100 + parseInt(a.period.replace('M','').replace('Q',''));
+        const tb = parseInt(b.year)*100 + parseInt(b.period.replace('M','').replace('Q',''));
+        return ta - tb;
+      });
+      const last    = sorted[sorted.length - 1];
+      const prelast = sorted[sorted.length - 2];
+      const fmt = d => ({
+        date: `${d.year}-${d.period.replace('M','').replace('Q','')}`,
+        val:  parseFloat(d.value) * scale
+      });
+      const actual = fmt(last);
+      const prev   = fmt(prelast);
+      if (isNaN(actual.val)) return null;
+      return { actual, prev, source: 'BLS.gov' };
+    } catch(e) { console.warn('BLS fetch error:', e); return null; }
+  }
+
+  const FRED_MAP = [
+    { keys: ['nfp','non-farm payroll'],  series: 'PAYEMS',   unit: 'K', scale: 1/1000, label: 'NFP (ribuan)' },
+    { keys: ['unemployment rate'],       series: 'UNRATE',   unit: '%', scale: 1,      label: 'Unemployment Rate' },
+    { keys: ['cpi','consumer price'],    series: 'CPIAUCSL', unit: '',  scale: 1,      label: 'CPI' },
+    { keys: ['core cpi'],                series: 'CPILFESL', unit: '',  scale: 1,      label: 'Core CPI' },
+    { keys: ['pce'],                     series: 'PCEPI',    unit: '',  scale: 1,      label: 'PCE' },
+    { keys: ['core pce'],                series: 'PCEPILFE', unit: '',  scale: 1,      label: 'Core PCE' },
+    { keys: ['gdp'],                     series: 'GDP',      unit: 'B', scale: 1,      label: 'GDP' },
+    { keys: ['ppi','producer price'],    series: 'PPIACO',   unit: '',  scale: 1,      label: 'PPI' },
+    { keys: ['jobless','initial claims'],series: 'IC4WSA',   unit: 'K', scale: 1/1000, label: 'Initial Claims (ribuan)' },
+    { keys: ['fed funds','fomc','interest rate'], series: 'FEDFUNDS', unit: '%', scale: 1, label: 'Fed Funds Rate' },
+  ];
+
+  // ── Helper: cari FRED series untuk event ini ──
+  function _fredSeriesFor(title) {
+    const tl = title.toLowerCase();
+    return FRED_MAP.find(m => m.keys.some(k => tl.includes(k))) || null;
+  }
+
+  // ── Helper: fetch 2 data terbaru dari FRED API ──
+  async function _fetchFRED(series) {
+    try {
+      // FRED API publik — tidak perlu API key untuk observasi
+      const fredApiUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&sort_order=desc&limit=3&file_type=json&api_key=` + 'b8e6b8c8e8c8e8c8e8c8e8c8e8c8e8c8';
+      // Gunakan proxy karena CORS
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent('https://fred.stlouisfed.org/graph/fredgraph.csv?id=' + series + '&vintage_date=' + new Date().toISOString().slice(0,10))}`;
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000), cache: 'no-store' });
+      if (!res.ok) return null;
+      const text = await res.text();
+      // Parse CSV: DATE,VALUE per baris
+      const lines = text.trim().split('\n').filter(l => l && !l.startsWith('DATE') && !l.startsWith('"DATE'));
+      if (lines.length < 2) return null;
+      const parse = line => {
+        const parts = line.split(',');
+        const date = parts[0]?.replace(/"/g,'').trim();
+        const val  = parseFloat(parts[1]);
+        return { date, val };
+      };
+      const rows = lines.map(parse).filter(r => !isNaN(r.val) && r.val !== undefined);
+      if (rows.length < 1) return null;
+      const last    = rows[rows.length - 1];
+      const prelast = rows.length >= 2 ? rows[rows.length - 2] : null;
+      return { actual: last, prev: prelast };
+    } catch(e) { return null; }
+  }
+
+  // ── Step 1: BLS (utama) → FRED → Finnhub paralel ──
   let actualData = null;
-  try {
-    let evDateObj = ev.date ? new Date(ev.date) : new Date();
-    if (isNaN(evDateObj.getTime())) evDateObj = new Date();
-    const ymd = d => d.toISOString().slice(0, 10);
-    const dateFrom = ymd(new Date(evDateObj.getTime() - 86400000));
-    const dateTo   = ymd(new Date(evDateObj.getTime() + 3 * 86400000));
-    const res = await fetch(`/api/market?action=finnhub&dateFrom=${dateFrom}&dateTo=${dateTo}`,
-      { signal: AbortSignal.timeout(8000), cache: 'no-store' });
-    if (res.ok) {
+  const tl = ev.title.toLowerCase();
+  const blsMeta  = _blsSeriesFor(ev.title);
+  const fredMeta = _fredSeriesFor(ev.title);
+
+  // Fetch BLS, FRED, dan Finnhub sekaligus paralel
+  const [blsResult, fredResult, finnhubResult] = await Promise.allSettled([
+    blsMeta ? _fetchBLS(blsMeta.series, blsMeta.scale, blsMeta.unit) : Promise.resolve(null),
+    fredMeta ? _fetchFRED(fredMeta.series) : Promise.resolve(null),
+    (async () => {
+      let evDateObj = ev.date ? new Date(ev.date) : new Date();
+      if (isNaN(evDateObj.getTime())) evDateObj = new Date();
+      const ymd = d => d.toISOString().slice(0, 10);
+      const dateFrom = ymd(new Date(evDateObj.getTime() - 86400000));
+      const dateTo   = ymd(new Date(evDateObj.getTime() + 3 * 86400000));
+      const res = await fetch(`/api/market?action=finnhub&dateFrom=${dateFrom}&dateTo=${dateTo}`,
+        { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+      if (!res.ok) return null;
       const items = (await res.json()).economicCalendar || [];
-      const tl = ev.title.toLowerCase();
       const match = items.find(it => {
         const il = (it.event || '').toLowerCase();
         if (tl.includes('nfp') || tl.includes('non-farm')) return il.includes('payroll') || il.includes('nfp');
@@ -20064,42 +20183,133 @@ async function _calFetchActualAndAnalyze(ev) {
         if (tl.includes('adp'))          return il.includes('adp');
         return il.includes(tl.split(/\s+/)[0]);
       });
-      if (match && match.actual !== undefined && match.actual !== null) {
-        actualData = { actual: match.actual, estimate: match.estimate, prev: match.prev, unit: match.unit || '' };
-      }
-    }
-  } catch(e) { console.warn('Finnhub fetch:', e); }
+      return (match && match.actual !== undefined && match.actual !== null) ? match : null;
+    })()
+  ]);
+
+  // Prioritas: FRED > Finnhub
+  const fredData = fredResult.status === 'fulfilled' ? fredResult.value : null;
+  const finnhubMatch = finnhubResult.status === 'fulfilled' ? finnhubResult.value : null;
+
+  // Prioritas: BLS > FRED > Finnhub
+  const blsData = blsResult?.status === 'fulfilled' ? blsResult.value : null;
+  if (blsData && blsMeta) {
+    actualData = {
+      actual:   Math.round(blsData.actual.val * 10) / 10,
+      prev:     blsData.prev ? Math.round(blsData.prev.val * 10) / 10 : null,
+      estimate: null, // BLS tidak sediakan forecast
+      unit:     blsMeta.unit,
+      actDate:  blsData.actual.date,
+      source:   'BLS.gov'
+    };
+  }
+
+  if (!actualData && fredData && fredMeta) {
+    // FRED data — actual = nilai terbaru, prev = nilai sebelumnya
+    const rawAct  = fredData.actual.val * fredMeta.scale;
+    const rawPrev = fredData.prev?.val * fredMeta.scale;
+    // Format: jika kecil (< 100) pakai desimal, jika besar bulatkan
+    const fmt = v => Math.abs(v) < 100 ? parseFloat(v.toFixed(2)) : Math.round(v);
+    actualData = {
+      actual:   fmt(rawAct),
+      prev:     isNaN(rawPrev) ? null : fmt(rawPrev),
+      estimate: finnhubMatch?.estimate ?? null,
+      unit:     fredMeta.unit,
+      source:   'FRED',
+      label:    fredMeta.label,
+      actDate:  fredData.actual.date,
+      prevDate: fredData.prev?.date
+    };
+  } else if (finnhubMatch) {
+    actualData = {
+      actual:   finnhubMatch.actual,
+      prev:     finnhubMatch.prev ?? null,
+      estimate: finnhubMatch.estimate ?? null,
+      unit:     finnhubMatch.unit || '',
+      source:   'Finnhub'
+    };
+  }
 
   // Render actual segera setelah dapat (tidak menunggu AI)
   renderActual(actualData);
 
-  // ── Step 2: AI analisis TANPA web_search agar cepat (~2-3 detik) ──
+  // ── Step 2: AI — jika tidak ada data Finnhub, minta AI sekalian berikan angkanya ──
   try {
     const evDateStr = ev.date ? (() => { try { return new Date(ev.date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; } })() : '';
     let actualInfo = '';
     if (actualData) {
-      actualInfo = `Data aktual: ${actualData.actual}${actualData.unit}`;
-      if (actualData.estimate != null) actualInfo += `, Forecast: ${actualData.estimate}${actualData.unit}`;
-      if (actualData.prev != null)     actualInfo += `, Sebelumnya: ${actualData.prev}${actualData.unit}`;
+      actualInfo = `DATA FAKTUAL (${actualData.source || 'database'}):\n`;
+      actualInfo += `- Aktual: ${actualData.actual}${actualData.unit}`;
+      if (actualData.estimate != null) actualInfo += `\n- Forecast: ${actualData.estimate}${actualData.unit}`;
+      if (actualData.prev != null)     actualInfo += `\n- Sebelumnya: ${actualData.prev}${actualData.unit}`;
+      if (actualData.actDate)          actualInfo += `\n- Periode: ${actualData.actDate}`;
     }
 
-    const prompt = `Kamu analis crypto. Event: "${ev.title}"${evDateStr ? ' ('+evDateStr+')' : ''}.
-${actualInfo || 'Data aktual belum tersedia.'}
+    const needAIData = !actualData;
 
-Tulis analisis 3-4 kalimat Bahasa Indonesia: dampak data ini ke ekonomi AS, implikasi ke Bitcoin (bullish/bearish/netral), dan proyeksi sentimen pasar jangka pendek. Jika tidak ada data aktual, analisis berdasarkan historis event ini. Mulai langsung dengan inti analisis, tanpa salam atau label.`;
+    // Tanggal dalam format YYYY-MM-DD untuk query yang lebih presisi
+    const evDateISO = ev.date ? (() => { try { return new Date(ev.date).toISOString().slice(0,10); } catch(e){ return ''; } })() : '';
+
+    const prompt = needAIData
+      ? `You are a financial data analyst. I need the ACTUAL released data for this economic event:
+Event: "${ev.title}"
+Release date: ${evDateISO || evDateStr}
+
+Reply ONLY with a JSON object, no markdown, no explanation:
+{"actual":"exact released value with unit (e.g. -92K or 3.1% or -0.3%)","forecast":"consensus forecast","previous":"prior period value","analysis":"3-4 kalimat Bahasa Indonesia: sebutkan angka aktual vs forecast, dampak ke ekonomi AS, dampak ke Bitcoin bullish/bearish/netral dengan alasan konkret, proyeksi sentimen pasar"}
+Use your training data. If truly unknown write "N/A".`
+      : `Kamu analis crypto profesional. Analisis event ini berdasarkan data faktual:
+
+Event: "${ev.title}"${evDateStr ? ' — ' + evDateStr : ''}
+${actualInfo}
+
+Tulis TEPAT 3-4 kalimat Bahasa Indonesia:
+- Kalimat 1: Sebutkan angka aktual (${actualData?.actual}${actualData?.unit || ''}) vs forecast — apakah mengejutkan?
+- Kalimat 2: Dampak ke ekonomi AS
+- Kalimat 3: Dampak ke Bitcoin — bullish/bearish/netral + alasan konkret
+- Kalimat 4: Proyeksi sentimen pasar jangka pendek (1-3 hari)
+Mulai langsung dengan angka. Jangan salam, jangan label, jangan bullet point.`;
 
     const resp = await fetch('/api/ai?action=groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 300,
+        max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const result = await resp.json();
-    // Groq pakai format OpenAI: choices[0].message.content
-    const analysis = result.choices?.[0]?.message?.content?.trim() || '';
+    const raw = result.choices?.[0]?.message?.content?.trim() || '';
+    if (!raw) throw new Error('empty');
+
+    let analysis = raw;
+
+    // Jika kita minta JSON (tidak ada data Finnhub), parse dan update actual box
+    if (needAIData) {
+      try {
+        const cleaned = raw.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        analysis = parsed.analysis || raw;
+        // Render data aktual dari AI jika bukan N/A
+        if (parsed.actual && parsed.actual !== 'N/A') {
+          const aiActualData = {
+            actual: parsed.actual,
+            estimate: parsed.forecast !== 'N/A' ? parsed.forecast : null,
+            prev: parsed.previous !== 'N/A' ? parsed.previous : null,
+            unit: ''
+          };
+          renderActual(aiActualData);
+        } else {
+          actualEl.innerHTML = ''; // hapus loading jika tidak ada data
+        }
+      } catch(e) {
+        // Bukan JSON valid — pakai sebagai teks analisis biasa
+        analysis = raw;
+        actualEl.innerHTML = '';
+      }
+    }
+
     if (!analysis) throw new Error('empty');
 
     const lower = analysis.toLowerCase();
