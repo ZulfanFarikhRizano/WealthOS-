@@ -40,6 +40,31 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── bls ──────────────────────────────────────────────────
+  // GET ?action=bls&series=CES0000000001
+  if (action === 'bls') {
+    const { series } = req.query;
+    if (!series) return res.status(400).json({ error: 'series required' });
+    const apiKey = process.env.BLS_API_KEY || '';
+    const year   = new Date().getFullYear();
+    const blsUrl = apiKey
+      ? `https://api.bls.gov/publicAPI/v2/timeseries/data/${series}?startyear=${year-1}&endyear=${year}&registrationkey=${apiKey}`
+      : `https://api.bls.gov/publicAPI/v1/timeseries/data/${series}?startyear=${year-1}&endyear=${year}`;
+    try {
+      const r = await fetch(blsUrl, {
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!r.ok) throw new Error('BLS ' + r.status);
+      const data = await r.json();
+      if (data.status !== 'REQUEST_SUCCEEDED') throw new Error('BLS: ' + (data.message?.[0] || 'failed'));
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
+      return res.status(200).json(data);
+    } catch (e) {
+      return res.status(502).json({ error: e.message });
+    }
+  }
+
   // ── finnhub ─────────────────────────────────────────────
   if (action === 'finnhub') {
     const { dateFrom, dateTo } = req.query;

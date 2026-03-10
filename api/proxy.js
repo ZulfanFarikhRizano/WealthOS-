@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   const allowed = [
     'fred.stlouisfed.org',
     'api.stlouisfed.org',
+    'api.bls.gov',           // BLS — Bureau of Labor Statistics (NFP, CPI, Unemployment)
     'query1.finance.yahoo.com',
     'api.coingecko.com',
     'api.binance.com',       // FIX: dipakai app.js untuk klines & ticker fallback
