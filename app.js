@@ -19999,164 +19999,122 @@ async function _calFetchActualAndAnalyze(ev) {
   const aiEl = document.getElementById('cal-ai-analysis');
   if (!actualEl || !aiEl) return;
 
-  // Loading state
-  actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.6rem .8rem;margin-top:.5rem">
-    <div style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.4rem">HASIL AKTUAL</div>
-    <div style="font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:.3rem">
-      <span style="display:inline-block;width:10px;height:10px;border:2px solid rgba(0,229,255,.4);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite"></span>
-      Mengambil data...
-    </div>
-  </div>`;
+  const spinner = `<span style="display:inline-block;width:9px;height:9px;border:1.5px solid rgba(0,229,255,.3);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></span>`;
 
-  aiEl.innerHTML = `<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:.6rem .8rem;margin-top:.5rem">
-    <div style="font-size:.6rem;color:#00e5ff;font-family:'Space Mono',monospace;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem">
-      <span style="display:inline-block;width:8px;height:8px;border:1.5px solid rgba(0,229,255,.4);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite"></span>
-      ANALISIS DAMPAK BITCOIN
-    </div>
-    <div style="font-size:.65rem;color:var(--muted)">Sedang menganalisis...</div>
-  </div>`;
+  actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.55rem .8rem;margin-top:.5rem;display:flex;align-items:center;gap:.4rem">${spinner}<span style="font-size:.65rem;color:var(--muted)">Memuat data aktual...</span></div>`;
+  aiEl.innerHTML = `<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:.55rem .8rem;margin-top:.5rem;display:flex;align-items:center;gap:.4rem">${spinner}<span style="font-size:.65rem;color:rgba(0,229,255,.6)">Menyiapkan analisis...</span></div>`;
 
-  // Fetch dari Finnhub untuk dapat actual value
-  let actualData = null;
-  try {
-    // Gunakan ev.date jika valid, fallback ke hari ini
-    let evDateObj = ev.date ? new Date(ev.date) : new Date();
-    if (isNaN(evDateObj.getTime())) evDateObj = new Date();
-    // Ambil tanggal saja (YYYY-MM-DD) agar tidak ada masalah timezone
-    const ymd = d => d.toISOString().slice(0, 10);
-    const dateStr  = ymd(new Date(evDateObj.getTime() - 86400000)); // 1 hari sebelum (buffer)
-    const dayAfter = ymd(new Date(evDateObj.getTime() + 3 * 86400000)); // 3 hari sesudah
-    const url = `/api/market?action=finnhub&dateFrom=${dateStr}&dateTo=${dayAfter}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10000), cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      const items = data.economicCalendar || [];
-      // Cari event yang judulnya mirip
-      const titleLower = ev.title.toLowerCase();
-      const match = items.find(it => {
-        const itLower = (it.event || '').toLowerCase();
-        // Cek keyword utama
-        if (titleLower.includes('nfp') || titleLower.includes('non-farm')) return itLower.includes('payroll') || itLower.includes('nfp');
-        if (titleLower.includes('cpi')) return itLower.includes('cpi') || itLower.includes('consumer price');
-        if (titleLower.includes('fomc')) return itLower.includes('fomc') || itLower.includes('interest rate') || itLower.includes('federal');
-        if (titleLower.includes('pce')) return itLower.includes('pce') || itLower.includes('personal consumption');
-        if (titleLower.includes('gdp')) return itLower.includes('gdp') || itLower.includes('gross domestic');
-        if (titleLower.includes('ppi')) return itLower.includes('ppi') || itLower.includes('producer price');
-        if (titleLower.includes('unemployment')) return itLower.includes('unemployment');
-        if (titleLower.includes('jobless')) return itLower.includes('jobless') || itLower.includes('initial claims');
-        return itLower.includes(titleLower.split(' ')[0]);
-      });
-      // match.actual bisa 0 (valid!) jadi cek dengan !== undefined
-      if (match && match.actual !== undefined && match.actual !== null) {
-        actualData = {
-          actual: match.actual,
-          estimate: match.estimate,
-          prev: match.prev,
-          unit: match.unit || '',
-          event: match.event
-        };
-      }
+  // ── Helper: render actual box ──
+  function renderActual(actualData) {
+    if (!actualData) {
+      actualEl.innerHTML = '';
+      return;
     }
-  } catch(e) { console.warn('Finnhub actual fetch error:', e); }
-
-  // Render actual result
-  if (actualData) {
     const act = actualData.actual + actualData.unit;
     const est = actualData.estimate != null ? actualData.estimate + actualData.unit : null;
     const prv = actualData.prev != null ? actualData.prev + actualData.unit : null;
-    // Tentukan warna: actual vs estimate
     let actColor = '#f1f5f9';
     if (est !== null) {
-      const actNum = parseFloat(actualData.actual);
-      const estNum = parseFloat(actualData.estimate);
-      // NFP/GDP/Employment: lebih tinggi = lebih baik untuk ekonomi
-      const isBullishIfHigh = /payroll|gdp|employment|earning/i.test(ev.title);
-      const isBullishIfLow = /cpi|inflation|unemployment|jobless|ppi/i.test(ev.title);
+      const actNum = parseFloat(actualData.actual), estNum = parseFloat(actualData.estimate);
+      const bullishHigh = /payroll|gdp|employment|earning/i.test(ev.title);
+      const bullishLow  = /cpi|inflation|unemployment|jobless|ppi/i.test(ev.title);
       if (!isNaN(actNum) && !isNaN(estNum)) {
-        if (isBullishIfHigh) actColor = actNum >= estNum ? '#10b981' : '#ef4444';
-        else if (isBullishIfLow) actColor = actNum <= estNum ? '#10b981' : '#ef4444';
+        if (bullishHigh) actColor = actNum >= estNum ? '#10b981' : '#ef4444';
+        else if (bullishLow) actColor = actNum <= estNum ? '#10b981' : '#ef4444';
       }
     }
     actualEl.innerHTML = `
       <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
-        <div style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em">Hasil Aktual</div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-          <div style="text-align:center">
-            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Aktual</div>
-            <div style="font-size:1.1rem;font-weight:800;color:${actColor};font-family:'Space Mono',monospace">${act}</div>
-          </div>
-          ${est !== null ? `<div style="text-align:center">
-            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Forecast</div>
-            <div style="font-size:.85rem;font-weight:700;color:var(--muted);font-family:'Space Mono',monospace">${est}</div>
-          </div>` : ''}
-          ${prv !== null ? `<div style="text-align:center">
-            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Sebelumnya</div>
-            <div style="font-size:.85rem;font-weight:700;color:var(--muted);font-family:'Space Mono',monospace">${prv}</div>
-          </div>` : ''}
+        <div style="font-size:.58rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.45rem;text-transform:uppercase;letter-spacing:.06em">Hasil Aktual</div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+          <div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Aktual</div>
+            <div style="font-size:1.15rem;font-weight:800;color:${actColor};font-family:'Space Mono',monospace;line-height:1">${act}</div></div>
+          ${est !== null ? `<div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Forecast</div>
+            <div style="font-size:.8rem;font-weight:600;color:rgba(148,163,184,.7);font-family:'Space Mono',monospace">${est}</div></div>` : ''}
+          ${prv !== null ? `<div><div style="font-size:.55rem;color:var(--muted);margin-bottom:.1rem">Sebelumnya</div>
+            <div style="font-size:.8rem;font-weight:600;color:rgba(148,163,184,.7);font-family:'Space Mono',monospace">${prv}</div></div>` : ''}
         </div>
       </div>`;
-  } else {
-    // Tidak ada dari Finnhub — tandai supaya AI tahu harus cari sendiri
-    actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.5rem .8rem;margin-top:.5rem;font-size:.62rem;color:rgba(100,116,139,.5)">⏳ Mengambil data via AI...</div>`;
   }
 
-  // Analisis AI via Anthropic — gunakan web_search tool untuk cari actual data
+  // ── Step 1: Fetch Finnhub actual (cepat, ~1-2 detik) ──
+  let actualData = null;
   try {
-    const evDateStr = ev.date ? new Date(ev.date).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '';
-    const actualInfo = actualData
-      ? `Data aktual tersedia: Aktual=${actualData.actual}${actualData.unit}${actualData.estimate != null ? ', Forecast='+actualData.estimate+actualData.unit : ''}${actualData.prev != null ? ', Sebelumnya='+actualData.prev+actualData.unit : ''}`
-      : `Data aktual TIDAK tersedia dari database. Gunakan web search untuk mencari hasil aktual event "${ev.title}" tanggal ${evDateStr}. Sertakan angka aktual, forecast, dan previous jika ditemukan.`;
+    let evDateObj = ev.date ? new Date(ev.date) : new Date();
+    if (isNaN(evDateObj.getTime())) evDateObj = new Date();
+    const ymd = d => d.toISOString().slice(0, 10);
+    const dateFrom = ymd(new Date(evDateObj.getTime() - 86400000));
+    const dateTo   = ymd(new Date(evDateObj.getTime() + 3 * 86400000));
+    const res = await fetch(`/api/market?action=finnhub&dateFrom=${dateFrom}&dateTo=${dateTo}`,
+      { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+    if (res.ok) {
+      const items = (await res.json()).economicCalendar || [];
+      const tl = ev.title.toLowerCase();
+      const match = items.find(it => {
+        const il = (it.event || '').toLowerCase();
+        if (tl.includes('nfp') || tl.includes('non-farm')) return il.includes('payroll') || il.includes('nfp');
+        if (tl.includes('cpi'))          return il.includes('cpi') || il.includes('consumer price');
+        if (tl.includes('fomc'))         return il.includes('fomc') || il.includes('interest rate') || il.includes('federal');
+        if (tl.includes('pce'))          return il.includes('pce') || il.includes('personal consumption');
+        if (tl.includes('gdp'))          return il.includes('gdp') || il.includes('gross domestic');
+        if (tl.includes('ppi'))          return il.includes('ppi') || il.includes('producer price');
+        if (tl.includes('unemployment')) return il.includes('unemployment');
+        if (tl.includes('jobless'))      return il.includes('jobless') || il.includes('initial claims');
+        if (tl.includes('ism'))          return il.includes('ism');
+        if (tl.includes('adp'))          return il.includes('adp');
+        return il.includes(tl.split(/\s+/)[0]);
+      });
+      if (match && match.actual !== undefined && match.actual !== null) {
+        actualData = { actual: match.actual, estimate: match.estimate, prev: match.prev, unit: match.unit || '' };
+      }
+    }
+  } catch(e) { console.warn('Finnhub fetch:', e); }
 
-    const prompt = `Kamu adalah analis crypto Indonesia. 
-Event: "${ev.title}" tanggal ${evDateStr}
-${actualInfo}
+  // Render actual segera setelah dapat (tidak menunggu AI)
+  renderActual(actualData);
 
-${actualData ? 'Berdasarkan data di atas,' : 'Setelah mencari data aktual via web search,'} tulis dalam Bahasa Indonesia:
-1. Angka aktual, forecast, dan previous (jika belum ada di atas, cari dulu)
-2. Apakah hasil ini bagus/buruk/netral untuk ekonomi AS
-3. Dampak ke Bitcoin dan pasar crypto (bullish/bearish/netral + alasan)
-4. Sentimen pasar jangka pendek
+  // ── Step 2: AI analisis TANPA web_search agar cepat (~2-3 detik) ──
+  try {
+    const evDateStr = ev.date ? (() => { try { return new Date(ev.date).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; } })() : '';
+    let actualInfo = '';
+    if (actualData) {
+      actualInfo = `Data aktual: ${actualData.actual}${actualData.unit}`;
+      if (actualData.estimate != null) actualInfo += `, Forecast: ${actualData.estimate}${actualData.unit}`;
+      if (actualData.prev != null)     actualInfo += `, Sebelumnya: ${actualData.prev}${actualData.unit}`;
+    }
 
-Format: teks mengalir 4-5 kalimat, padat, tanpa bullet point. Mulai langsung dengan angkanya.`;
+    const prompt = `Kamu analis crypto. Event: "${ev.title}"${evDateStr ? ' ('+evDateStr+')' : ''}.
+${actualInfo || 'Data aktual belum tersedia.'}
+
+Tulis analisis 3-4 kalimat Bahasa Indonesia: dampak data ini ke ekonomi AS, implikasi ke Bitcoin (bullish/bearish/netral), dan proyeksi sentimen pasar jangka pendek. Jika tidak ada data aktual, analisis berdasarkan historis event ini. Mulai langsung dengan inti analisis, tanpa salam atau label.`;
 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const result = await resp.json();
-    // Gabungkan semua text content blocks (web search bisa return multi block)
-    const analysis = (result.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join(' ')
-      .trim() || 'Analisis tidak tersedia.';
-    
-    // Jika AI berhasil cari data aktual, update actual section juga
-    if (!actualData && analysis.length > 50) {
-      actualEl.innerHTML = ''; // hapus "Mengambil data via AI..."
-    }
+    const analysis = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join(' ').trim();
+    if (!analysis) throw new Error('empty');
 
-    // Tentukan sentiment badge
     const lower = analysis.toLowerCase();
-    let sentiment = { label: '⚪ Netral', color: '#94a3b8', bg: 'rgba(148,163,184,.08)', border: 'rgba(148,163,184,.2)' };
-    const bullishWords = ['bullish', 'positif', 'naik', 'menguat', 'mendukung', 'bagus untuk bitcoin', 'baik untuk crypto', 'peluang', 'rally'];
-    const bearishWords = ['bearish', 'negatif', 'turun', 'melemah', 'tekanan', 'buruk untuk bitcoin', 'hawkish', 'risiko turun'];
-    if (bullishWords.some(w => lower.includes(w))) sentiment = { label: '🟢 Bullish untuk BTC', color: '#10b981', bg: 'rgba(16,185,129,.08)', border: 'rgba(16,185,129,.2)' };
-    else if (bearishWords.some(w => lower.includes(w))) sentiment = { label: '🔴 Bearish untuk BTC', color: '#ef4444', bg: 'rgba(239,68,68,.08)', border: 'rgba(239,68,68,.2)' };
+    let s = { label: '⚪ Netral', color: '#94a3b8', bg: 'rgba(148,163,184,.08)', border: 'rgba(148,163,184,.2)' };
+    if (['bullish','positif','menguat','rally','naik','mendukung','peluang'].some(w => lower.includes(w)))
+      s = { label: '🟢 Bullish BTC', color: '#10b981', bg: 'rgba(16,185,129,.08)', border: 'rgba(16,185,129,.2)' };
+    else if (['bearish','negatif','melemah','tekanan','turun','hawkish'].some(w => lower.includes(w)))
+      s = { label: '🔴 Bearish BTC', color: '#ef4444', bg: 'rgba(239,68,68,.08)', border: 'rgba(239,68,68,.2)' };
 
     aiEl.innerHTML = `
-      <div style="background:${sentiment.bg};border:1px solid ${sentiment.border};border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.45rem">
-          <div style="font-size:.6rem;color:#00e5ff;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">✦ Analisis AI</div>
-          <span style="font-size:.58rem;font-weight:700;color:${sentiment.color};background:${sentiment.bg};border:1px solid ${sentiment.border};border-radius:100px;padding:.1rem .45rem">${sentiment.label}</span>
+      <div style="background:${s.bg};border:1px solid ${s.border};border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+          <span style="font-size:.58rem;color:#00e5ff;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">✦ Analisis AI</span>
+          <span style="font-size:.58rem;font-weight:700;color:${s.color};background:${s.bg};border:1px solid ${s.border};border-radius:100px;padding:.1rem .45rem">${s.label}</span>
         </div>
-        <div style="font-size:.7rem;color:rgba(203,213,225,.85);line-height:1.65">${analysis}</div>
+        <div style="font-size:.7rem;color:rgba(203,213,225,.88);line-height:1.65">${analysis}</div>
       </div>`;
   } catch(e) {
     aiEl.innerHTML = `<div style="font-size:.62rem;color:rgba(100,116,139,.5);margin-top:.4rem">Analisis AI tidak tersedia saat ini.</div>`;
