@@ -20088,17 +20088,18 @@ ${actualInfo || 'Data aktual belum tersedia.'}
 
 Tulis analisis 3-4 kalimat Bahasa Indonesia: dampak data ini ke ekonomi AS, implikasi ke Bitcoin (bullish/bearish/netral), dan proyeksi sentimen pasar jangka pendek. Jika tidak ada data aktual, analisis berdasarkan historis event ini. Mulai langsung dengan inti analisis, tanpa salam atau label.`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('/api/ai?action=groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const result = await resp.json();
-    const analysis = (result.content || []).filter(b => b.type === 'text').map(b => b.text).join(' ').trim();
+    // Groq pakai format OpenAI: choices[0].message.content
+    const analysis = result.choices?.[0]?.message?.content?.trim() || '';
     if (!analysis) throw new Error('empty');
 
     const lower = analysis.toLowerCase();
