@@ -19960,8 +19960,12 @@ async function calShowDetail(evJson) {
   const srcStr  = ev.source ? `<div style="font-size:.62rem;color:rgba(148,163,184,.4);margin-top:.4rem">Sumber: ${ev.source}</div>` : '';
 
   // Cek apakah event sudah lewat (bisa ada hasil aktual)
-  const evDate = ev.date ? new Date(ev.date) : null;
-  const isPast = evDate && evDate < new Date();
+  // ev.date bisa berupa Date object ter-serialize jadi ISO string atau string tanggal biasa
+  let evDate = null;
+  if (ev.date) { evDate = new Date(ev.date); if (isNaN(evDate.getTime())) evDate = null; }
+  // Anggap past jika tanggal event <= hari ini (termasuk hari ini sudah selesai)
+  const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+  const isPast = evDate ? evDate <= todayEnd : true; // jika tidak ada date, tetap coba fetch
 
   content.innerHTML = `
     <div style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.45rem">
@@ -19983,7 +19987,8 @@ async function calShowDetail(evJson) {
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // Jika event sudah lewat — fetch actual result + AI analysis
-  if (isPast && (ev.category === 'macro' || ev.source === 'Finnhub')) {
+  // Berlaku untuk semua event yang sudah lewat
+  if (isPast) {
     _calFetchActualAndAnalyze(ev);
   }
 }
@@ -20014,11 +20019,15 @@ async function _calFetchActualAndAnalyze(ev) {
   // Fetch dari Finnhub untuk dapat actual value
   let actualData = null;
   try {
-    const evDate = new Date(ev.date);
-    const dateStr = evDate.toISOString().slice(0, 10);
-    const dayAfter = new Date(evDate.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    // Gunakan ev.date jika valid, fallback ke hari ini
+    let evDateObj = ev.date ? new Date(ev.date) : new Date();
+    if (isNaN(evDateObj.getTime())) evDateObj = new Date();
+    // Ambil tanggal saja (YYYY-MM-DD) agar tidak ada masalah timezone
+    const ymd = d => d.toISOString().slice(0, 10);
+    const dateStr  = ymd(new Date(evDateObj.getTime() - 86400000)); // 1 hari sebelum (buffer)
+    const dayAfter = ymd(new Date(evDateObj.getTime() + 3 * 86400000)); // 3 hari sesudah
     const url = `/api/market?action=finnhub&dateFrom=${dateStr}&dateTo=${dayAfter}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000), cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       const items = data.economicCalendar || [];
@@ -20037,7 +20046,8 @@ async function _calFetchActualAndAnalyze(ev) {
         if (titleLower.includes('jobless')) return itLower.includes('jobless') || itLower.includes('initial claims');
         return itLower.includes(titleLower.split(' ')[0]);
       });
-      if (match && match.actual != null) {
+      // match.actual bisa 0 (valid!) jadi cek dengan !== undefined
+      if (match && match.actual !== undefined && match.actual !== null) {
         actualData = {
           actual: match.actual,
           estimate: match.estimate,
@@ -20086,22 +20096,28 @@ async function _calFetchActualAndAnalyze(ev) {
         </div>
       </div>`;
   } else {
-    actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.5rem .8rem;margin-top:.5rem;font-size:.65rem;color:rgba(100,116,139,.5)">Data aktual tidak tersedia untuk event ini.</div>`;
+    // Tidak ada dari Finnhub — tandai supaya AI tahu harus cari sendiri
+    actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.5rem .8rem;margin-top:.5rem;font-size:.62rem;color:rgba(100,116,139,.5)">⏳ Mengambil data via AI...</div>`;
   }
 
-  // Analisis AI via Anthropic
+  // Analisis AI via Anthropic — gunakan web_search tool untuk cari actual data
   try {
+    const evDateStr = ev.date ? new Date(ev.date).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '';
     const actualInfo = actualData
-      ? `Hasil aktual: ${actualData.actual}${actualData.unit}${actualData.estimate != null ? ', Forecast: '+actualData.estimate+actualData.unit : ''}${actualData.prev != null ? ', Sebelumnya: '+actualData.prev+actualData.unit : ''}`
-      : 'Data aktual belum tersedia';
+      ? `Data aktual tersedia: Aktual=${actualData.actual}${actualData.unit}${actualData.estimate != null ? ', Forecast='+actualData.estimate+actualData.unit : ''}${actualData.prev != null ? ', Sebelumnya='+actualData.prev+actualData.unit : ''}`
+      : `Data aktual TIDAK tersedia dari database. Gunakan web search untuk mencari hasil aktual event "${ev.title}" tanggal ${evDateStr}. Sertakan angka aktual, forecast, dan previous jika ditemukan.`;
 
-    const prompt = `Kamu adalah analis crypto. Event ekonomi: "${ev.title}"
+    const prompt = `Kamu adalah analis crypto Indonesia. 
+Event: "${ev.title}" tanggal ${evDateStr}
 ${actualInfo}
-Tulis analisis singkat dalam Bahasa Indonesia (3-4 kalimat) tentang:
-1. Apakah hasil ini bagus/buruk/netral untuk ekonomi
-2. Dampak langsung ke Bitcoin dan pasar crypto
-3. Proyeksi singkat sentimen pasar
-Format: teks biasa, padat, tidak perlu label atau bullet point.`;
+
+${actualData ? 'Berdasarkan data di atas,' : 'Setelah mencari data aktual via web search,'} tulis dalam Bahasa Indonesia:
+1. Angka aktual, forecast, dan previous (jika belum ada di atas, cari dulu)
+2. Apakah hasil ini bagus/buruk/netral untuk ekonomi AS
+3. Dampak ke Bitcoin dan pasar crypto (bullish/bearish/netral + alasan)
+4. Sentimen pasar jangka pendek
+
+Format: teks mengalir 4-5 kalimat, padat, tanpa bullet point. Mulai langsung dengan angkanya.`;
 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -20109,11 +20125,22 @@ Format: teks biasa, padat, tidak perlu label atau bullet point.`;
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const result = await resp.json();
-    const analysis = result.content?.[0]?.text || 'Analisis tidak tersedia.';
+    // Gabungkan semua text content blocks (web search bisa return multi block)
+    const analysis = (result.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join(' ')
+      .trim() || 'Analisis tidak tersedia.';
+    
+    // Jika AI berhasil cari data aktual, update actual section juga
+    if (!actualData && analysis.length > 50) {
+      actualEl.innerHTML = ''; // hapus "Mengambil data via AI..."
+    }
 
     // Tentukan sentiment badge
     const lower = analysis.toLowerCase();
