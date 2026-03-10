@@ -52,7 +52,8 @@ export default async function handler(req, res) {
         { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(10000) }
       );
       if (!r.ok) throw new Error(`Finnhub ${r.status}`);
-      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
+      // Cache lebih pendek agar data aktual event yang baru rilis segera tersedia
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
       return res.status(200).json(await r.json());
     } catch (e) {
       return res.status(502).json({ error: e.message });
@@ -335,5 +336,4 @@ function _b64u(input) {
   const b = typeof input==='string' ? new TextEncoder().encode(input) : new Uint8Array(input instanceof ArrayBuffer ? input : input.buffer??input);
   let s=''; for (const x of b) s+=String.fromCharCode(x);
   return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-        }
-        
+}
