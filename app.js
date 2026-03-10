@@ -19938,7 +19938,7 @@ function calImpactLabel(impact) {
   return { label: '⚪ Low', color: '#64748b' };
 }
 
-function calShowDetail(evJson) {
+async function calShowDetail(evJson) {
   let ev;
   try {
     if (typeof evJson === 'string') {
@@ -19959,6 +19959,10 @@ function calShowDetail(evJson) {
   const foreStr = ev.forecast != null ? `<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:var(--muted)">Forecast: ${ev.forecast}</span>` : '';
   const srcStr  = ev.source ? `<div style="font-size:.62rem;color:rgba(148,163,184,.4);margin-top:.4rem">Sumber: ${ev.source}</div>` : '';
 
+  // Cek apakah event sudah lewat (bisa ada hasil aktual)
+  const evDate = ev.date ? new Date(ev.date) : null;
+  const isPast = evDate && evDate < new Date();
+
   content.innerHTML = `
     <div style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.45rem">
       <div style="width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0;margin-top:3px"></div>
@@ -19966,15 +19970,170 @@ function calShowDetail(evJson) {
     </div>
     ${timeStr}
     ${ev.description ? `<div style="font-size:.72rem;color:rgba(203,213,225,.75);line-height:1.6;margin-bottom:.55rem">${ev.description}</div>` : ''}
-    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.3rem">
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem">
       ${ev.category ? `<span style="background:${col}20;border:1px solid ${col}40;border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:${col};font-weight:600">${ev.category}</span>` : ''}
       <span style="background:${impact.color}18;border:1px solid ${impact.color}35;border-radius:6px;padding:.15rem .5rem;font-size:.62rem;color:${impact.color}">${impact.label}</span>
       ${prevStr}${foreStr}
     </div>
     ${srcStr}
+    <div id="cal-actual-result"></div>
+    <div id="cal-ai-analysis"></div>
   `;
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Jika event sudah lewat — fetch actual result + AI analysis
+  if (isPast && (ev.category === 'macro' || ev.source === 'Finnhub')) {
+    _calFetchActualAndAnalyze(ev);
+  }
+}
+
+// ── Fetch actual result dari Finnhub + analisis AI ──
+async function _calFetchActualAndAnalyze(ev) {
+  const actualEl = document.getElementById('cal-actual-result');
+  const aiEl = document.getElementById('cal-ai-analysis');
+  if (!actualEl || !aiEl) return;
+
+  // Loading state
+  actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.6rem .8rem;margin-top:.5rem">
+    <div style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.4rem">HASIL AKTUAL</div>
+    <div style="font-size:.65rem;color:var(--muted);display:flex;align-items:center;gap:.3rem">
+      <span style="display:inline-block;width:10px;height:10px;border:2px solid rgba(0,229,255,.4);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite"></span>
+      Mengambil data...
+    </div>
+  </div>`;
+
+  aiEl.innerHTML = `<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:.6rem .8rem;margin-top:.5rem">
+    <div style="font-size:.6rem;color:#00e5ff;font-family:'Space Mono',monospace;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem">
+      <span style="display:inline-block;width:8px;height:8px;border:1.5px solid rgba(0,229,255,.4);border-top-color:#00e5ff;border-radius:50%;animation:spin .7s linear infinite"></span>
+      ANALISIS DAMPAK BITCOIN
+    </div>
+    <div style="font-size:.65rem;color:var(--muted)">Sedang menganalisis...</div>
+  </div>`;
+
+  // Fetch dari Finnhub untuk dapat actual value
+  let actualData = null;
+  try {
+    const evDate = new Date(ev.date);
+    const dateStr = evDate.toISOString().slice(0, 10);
+    const dayAfter = new Date(evDate.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    const url = `/api/market?action=finnhub&dateFrom=${dateStr}&dateTo=${dayAfter}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = await res.json();
+      const items = data.economicCalendar || [];
+      // Cari event yang judulnya mirip
+      const titleLower = ev.title.toLowerCase();
+      const match = items.find(it => {
+        const itLower = (it.event || '').toLowerCase();
+        // Cek keyword utama
+        if (titleLower.includes('nfp') || titleLower.includes('non-farm')) return itLower.includes('payroll') || itLower.includes('nfp');
+        if (titleLower.includes('cpi')) return itLower.includes('cpi') || itLower.includes('consumer price');
+        if (titleLower.includes('fomc')) return itLower.includes('fomc') || itLower.includes('interest rate') || itLower.includes('federal');
+        if (titleLower.includes('pce')) return itLower.includes('pce') || itLower.includes('personal consumption');
+        if (titleLower.includes('gdp')) return itLower.includes('gdp') || itLower.includes('gross domestic');
+        if (titleLower.includes('ppi')) return itLower.includes('ppi') || itLower.includes('producer price');
+        if (titleLower.includes('unemployment')) return itLower.includes('unemployment');
+        if (titleLower.includes('jobless')) return itLower.includes('jobless') || itLower.includes('initial claims');
+        return itLower.includes(titleLower.split(' ')[0]);
+      });
+      if (match && match.actual != null) {
+        actualData = {
+          actual: match.actual,
+          estimate: match.estimate,
+          prev: match.prev,
+          unit: match.unit || '',
+          event: match.event
+        };
+      }
+    }
+  } catch(e) { console.warn('Finnhub actual fetch error:', e); }
+
+  // Render actual result
+  if (actualData) {
+    const act = actualData.actual + actualData.unit;
+    const est = actualData.estimate != null ? actualData.estimate + actualData.unit : null;
+    const prv = actualData.prev != null ? actualData.prev + actualData.unit : null;
+    // Tentukan warna: actual vs estimate
+    let actColor = '#f1f5f9';
+    if (est !== null) {
+      const actNum = parseFloat(actualData.actual);
+      const estNum = parseFloat(actualData.estimate);
+      // NFP/GDP/Employment: lebih tinggi = lebih baik untuk ekonomi
+      const isBullishIfHigh = /payroll|gdp|employment|earning/i.test(ev.title);
+      const isBullishIfLow = /cpi|inflation|unemployment|jobless|ppi/i.test(ev.title);
+      if (!isNaN(actNum) && !isNaN(estNum)) {
+        if (isBullishIfHigh) actColor = actNum >= estNum ? '#10b981' : '#ef4444';
+        else if (isBullishIfLow) actColor = actNum <= estNum ? '#10b981' : '#ef4444';
+      }
+    }
+    actualEl.innerHTML = `
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
+        <div style="font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em">Hasil Aktual</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+          <div style="text-align:center">
+            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Aktual</div>
+            <div style="font-size:1.1rem;font-weight:800;color:${actColor};font-family:'Space Mono',monospace">${act}</div>
+          </div>
+          ${est !== null ? `<div style="text-align:center">
+            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Forecast</div>
+            <div style="font-size:.85rem;font-weight:700;color:var(--muted);font-family:'Space Mono',monospace">${est}</div>
+          </div>` : ''}
+          ${prv !== null ? `<div style="text-align:center">
+            <div style="font-size:.58rem;color:var(--muted);margin-bottom:.15rem">Sebelumnya</div>
+            <div style="font-size:.85rem;font-weight:700;color:var(--muted);font-family:'Space Mono',monospace">${prv}</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  } else {
+    actualEl.innerHTML = `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:.5rem .8rem;margin-top:.5rem;font-size:.65rem;color:rgba(100,116,139,.5)">Data aktual tidak tersedia untuk event ini.</div>`;
+  }
+
+  // Analisis AI via Anthropic
+  try {
+    const actualInfo = actualData
+      ? `Hasil aktual: ${actualData.actual}${actualData.unit}${actualData.estimate != null ? ', Forecast: '+actualData.estimate+actualData.unit : ''}${actualData.prev != null ? ', Sebelumnya: '+actualData.prev+actualData.unit : ''}`
+      : 'Data aktual belum tersedia';
+
+    const prompt = `Kamu adalah analis crypto. Event ekonomi: "${ev.title}"
+${actualInfo}
+Tulis analisis singkat dalam Bahasa Indonesia (3-4 kalimat) tentang:
+1. Apakah hasil ini bagus/buruk/netral untuk ekonomi
+2. Dampak langsung ke Bitcoin dan pasar crypto
+3. Proyeksi singkat sentimen pasar
+Format: teks biasa, padat, tidak perlu label atau bullet point.`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const result = await resp.json();
+    const analysis = result.content?.[0]?.text || 'Analisis tidak tersedia.';
+
+    // Tentukan sentiment badge
+    const lower = analysis.toLowerCase();
+    let sentiment = { label: '⚪ Netral', color: '#94a3b8', bg: 'rgba(148,163,184,.08)', border: 'rgba(148,163,184,.2)' };
+    const bullishWords = ['bullish', 'positif', 'naik', 'menguat', 'mendukung', 'bagus untuk bitcoin', 'baik untuk crypto', 'peluang', 'rally'];
+    const bearishWords = ['bearish', 'negatif', 'turun', 'melemah', 'tekanan', 'buruk untuk bitcoin', 'hawkish', 'risiko turun'];
+    if (bullishWords.some(w => lower.includes(w))) sentiment = { label: '🟢 Bullish untuk BTC', color: '#10b981', bg: 'rgba(16,185,129,.08)', border: 'rgba(16,185,129,.2)' };
+    else if (bearishWords.some(w => lower.includes(w))) sentiment = { label: '🔴 Bearish untuk BTC', color: '#ef4444', bg: 'rgba(239,68,68,.08)', border: 'rgba(239,68,68,.2)' };
+
+    aiEl.innerHTML = `
+      <div style="background:${sentiment.bg};border:1px solid ${sentiment.border};border-radius:10px;padding:.65rem .8rem;margin-top:.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.45rem">
+          <div style="font-size:.6rem;color:#00e5ff;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">✦ Analisis AI</div>
+          <span style="font-size:.58rem;font-weight:700;color:${sentiment.color};background:${sentiment.bg};border:1px solid ${sentiment.border};border-radius:100px;padding:.1rem .45rem">${sentiment.label}</span>
+        </div>
+        <div style="font-size:.7rem;color:rgba(203,213,225,.85);line-height:1.65">${analysis}</div>
+      </div>`;
+  } catch(e) {
+    aiEl.innerHTML = `<div style="font-size:.62rem;color:rgba(100,116,139,.5);margin-top:.4rem">Analisis AI tidak tersedia saat ini.</div>`;
+  }
 }
 
 // ── Fetch CoinMarketCal via Vercel proxy /api/calendar ──
