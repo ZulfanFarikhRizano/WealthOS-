@@ -4057,6 +4057,346 @@ function renderDash(){
   ]);
 }
 
+/* ══════════ PORTFOLIO HISTORY CHART ══════════ */
+(function(){
+  'use strict';
+  const PC = {
+    chart: null,
+    currentTF: '1D',
+    hidden: false,
+    cache: {},
+    loading: false,
+    currentData: [],
+    _hiddenKey: 'zw_porto_chart_hidden',
+  };
+  const TF_CONFIG = {
+    '1D':  { days: 1,    label: '1 Hari'   },
+    '1W':  { days: 7,    label: '1 Minggu' },
+    '1M':  { days: 30,   label: '1 Bulan'  },
+    '1Y':  { days: 365,  label: '1 Tahun'  },
+    'YTD': { days: null, label: 'YTD'      },
+    '3Y':  { days: 1095, label: '3 Tahun'  },
+    '5Y':  { days: 1825, label: '5 Tahun'  },
+    '10Y': { days: 3650, label: '10 Tahun' },
+  };
+
+  function fmtIDRShort(v){
+    if(v>=1e12) return 'Rp '+(v/1e12).toFixed(2)+'T';
+    if(v>=1e9)  return 'Rp '+(v/1e9).toFixed(2)+'M';
+    if(v>=1e6)  return 'Rp '+(v/1e6).toFixed(2)+'jt';
+    return 'Rp '+Math.round(v).toLocaleString('id-ID');
+  }
+  function fmtIDRFull(v){ return 'Rp '+Math.round(v).toLocaleString('id-ID'); }
+
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  function getBTCAtDate(dateMs){
+    const dateISO = new Date(dateMs).toISOString().slice(0,10);
+    let totalBTC = 0;
+    if(typeof S!=='undefined' && S.dca){
+      S.dca.forEach(e => { if(e.date && e.date<=dateISO) totalBTC += (e.btcAmount||0); });
+    }
+    return totalBTC;
+  }
+  function getNonBTCPortValue(){
+    let ptot = 0;
+    if(typeof S!=='undefined' && S.port){
+      S.port.forEach(x => {
+        if(!(x.ticker && x.ticker.toLowerCase()==='btc' && x._dcaManaged===true))
+          ptot += (x.qty||0)*(x.currentPrice||0);
+      });
+    }
+    return ptot;
+  }
+  function computePortfolioSeries(btcPriceHistory){
+    const usdIdr = (typeof S!=='undefined' && S.usdIdr) ? S.usdIdr : 16300;
+    const nonBTCVal = getNonBTCPortValue();
+    return btcPriceHistory.map(([ts, priceUSD]) => ({
+      x: ts,
+      y: getBTCAtDate(ts)*priceUSD*usdIdr + nonBTCVal,
+      btcHeld: getBTCAtDate(ts),
+      priceUSD,
+      label: new Date(ts).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    }));
+  }
+
+  async function fetchBTCHistory(tf){
+    const cfg = TF_CONFIG[tf];
+    let days = cfg.days;
+    if(tf==='YTD'){
+      const now=new Date(), jan1=new Date(now.getFullYear(),0,1);
+      days = Math.max(1, Math.ceil((now-jan1)/86400000));
+    }
+    const cacheKey = 'btc_hist_'+tf+'_'+new Date().toISOString().slice(0,10);
+    if(PC.cache[cacheKey]) return PC.cache[cacheKey];
+    const urls = [
+      `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${days}`,
+      `/api/proxy?endpoint=${encodeURIComponent('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days='+days)}`
+    ];
+    for(const url of urls){
+      try {
+        const res = await fetch(url, {headers:{'Accept':'application/json'}});
+        if(!res.ok) continue;
+        const json = await res.json();
+        const prices = json.prices || [];
+        if(prices.length < 2) continue;
+        // Subsample max 250 points
+        let out = prices;
+        if(out.length > 250){
+          const step = Math.ceil(out.length/250);
+          out = out.filter((_,i)=>i%step===0||i===out.length-1);
+        }
+        PC.cache[cacheKey] = out;
+        return out;
+      } catch(e){ continue; }
+    }
+    return null;
+  }
+
+  function showLoader(){ 
+    const l=document.getElementById('porto-chart-loader'),c=document.getElementById('porto-main-canvas');
+    if(l) l.style.display='flex'; if(c) c.style.opacity='0';
+  }
+  function hideLoader(){
+    const l=document.getElementById('porto-chart-loader'),c=document.getElementById('porto-main-canvas');
+    if(l) l.style.display='none'; if(c) c.style.opacity='1';
+  }
+
+  function updateStats(series){
+    if(!series||!series.length) return;
+    const vals=series.map(p=>p.y);
+    const minVal=Math.min(...vals), maxVal=Math.max(...vals);
+    const first=series[0].y, last=series[series.length-1].y;
+    const change=last-first, changePct=first>0?(change/first*100):0;
+    const q=id=>document.getElementById(id);
+    const valEl=q('porto-chart-val'), badgeEl=q('porto-change-badge');
+    const minEl=q('porto-period-min'), maxEl=q('porto-period-max');
+    const liveDot=q('porto-live-dot'), dateEl=q('porto-chart-date');
+    if(valEl) valEl.textContent=fmtIDRFull(last);
+    if(minEl) minEl.textContent=fmtIDRShort(minVal);
+    if(maxEl) maxEl.textContent=fmtIDRShort(maxVal);
+    if(liveDot) liveDot.style.opacity='1';
+    if(dateEl) dateEl.textContent=TF_CONFIG[PC.currentTF]?.label||PC.currentTF;
+    if(badgeEl){
+      const sign=change>=0?'+':'';
+      badgeEl.innerHTML=`${change>=0?'▲':'▼'} ${sign}${changePct.toFixed(2)}% <span style="opacity:.65;font-size:.58rem">(${fmtIDRShort(Math.abs(change))})</span>`;
+      badgeEl.className=(change>=0?'pos':change<0?'neg':'neu');
+      badgeEl.id='porto-change-badge';
+    }
+  }
+
+  function renderChart(series){
+    const canvas=document.getElementById('porto-main-canvas');
+    if(!canvas||!series||!series.length) return;
+    if(PC.chart){ PC.chart.destroy(); PC.chart=null; }
+
+    const accent=cssVar('--accent')||'#00e5ff';
+    const muted=cssVar('--muted')||'#64748b';
+    const text=cssVar('--text')||'#e2e8f0';
+    const surface=cssVar('--surface')||'#0b1120';
+    const border=cssVar('--border')||'#1e2d45';
+    const isLight=document.documentElement.getAttribute('data-theme')==='light';
+
+    const values=series.map(p=>p.y);
+    const first=values[0]||0, last=values[values.length-1]||0;
+    const isPos=last>=first;
+    const lineColor=isPos?'#10b981':'#ef4444';
+
+    const ctx=canvas.getContext('2d');
+    const h=canvas.offsetHeight||180;
+    const grad=ctx.createLinearGradient(0,0,0,h);
+    if(isPos){
+      grad.addColorStop(0,'rgba(16,185,129,.38)');
+      grad.addColorStop(.55,'rgba(16,185,129,.1)');
+      grad.addColorStop(1,'rgba(16,185,129,.01)');
+    } else {
+      grad.addColorStop(0,'rgba(239,68,68,.32)');
+      grad.addColorStop(.55,'rgba(239,68,68,.08)');
+      grad.addColorStop(1,'rgba(239,68,68,.01)');
+    }
+
+    PC.chart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels:series.map(p=>p.x),
+        datasets:[{
+          data:values, borderColor:lineColor, borderWidth:2,
+          backgroundColor:grad, fill:true, tension:.35,
+          pointRadius:0, pointHoverRadius:5,
+          pointHoverBackgroundColor:lineColor,
+          pointHoverBorderColor:'#fff', pointHoverBorderWidth:2,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        animation:{duration:550, easing:'easeInOutCubic'},
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            enabled:true,
+            backgroundColor:isLight?'rgba(255,255,255,.97)':'rgba(11,17,32,.97)',
+            borderColor:isLight?'#c8d8f0':'#1e2d45', borderWidth:1,
+            titleColor:isLight?'#0f1e2e':'#e2e8f0',
+            bodyColor:isLight?'#5a6a80':'#94a3b8',
+            titleFont:{family:"'Space Mono',monospace",size:10,weight:'bold'},
+            bodyFont:{family:"'Inter',sans-serif",size:10},
+            padding:10, cornerRadius:10,
+            callbacks:{
+              title(items){
+                const pt=series[items[0].dataIndex];
+                return pt?pt.label:'';
+              },
+              label(item){
+                const pt=series[item.dataIndex];
+                if(!pt) return '';
+                const usdIdr=(typeof S!=='undefined'&&S.usdIdr)?S.usdIdr:16300;
+                return [
+                  ' Portfolio: '+fmtIDRFull(pt.y),
+                  ' BTC: '+(pt.btcHeld>0?pt.btcHeld.toFixed(8)+' BTC':'0 BTC'),
+                  ' Harga BTC: $'+Math.round(pt.priceUSD).toLocaleString(),
+                ];
+              },
+              afterBody(items){
+                const pt=series[items[0].dataIndex];
+                if(!pt) return;
+                const vEl=document.getElementById('porto-chart-val');
+                const dEl=document.getElementById('porto-chart-date');
+                if(vEl) vEl.textContent=fmtIDRFull(pt.y);
+                if(dEl) dEl.textContent=pt.label;
+              }
+            }
+          }
+        },
+        scales:{
+          x:{
+            display:true, grid:{display:false}, border:{display:false},
+            ticks:{
+              maxTicksLimit:5, color:muted, font:{family:"'Inter',sans-serif",size:9},
+              maxRotation:0,
+              callback(val,idx){
+                const ts=series[idx]?.x; if(!ts) return '';
+                const d=new Date(ts), tf=PC.currentTF;
+                if(tf==='1D') return d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+                if(tf==='1W'||tf==='1M') return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+                return d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'});
+              }
+            }
+          },
+          y:{
+            display:true, position:'right',
+            grid:{color:isLight?'rgba(0,0,0,.05)':'rgba(255,255,255,.04)', drawBorder:false},
+            border:{display:false},
+            ticks:{
+              maxTicksLimit:4, color:muted,
+              font:{family:"'Space Mono',monospace",size:9},
+              callback(v){ return fmtIDRShort(v); }
+            }
+          }
+        }
+      }
+    });
+    hideLoader();
+  }
+
+  async function loadPortoChart(tf){
+    if(PC.loading) return;
+    PC.loading=true; PC.currentTF=tf;
+    showLoader();
+    const btcHistory=await fetchBTCHistory(tf);
+    if(!btcHistory){
+      PC.loading=false; hideLoader();
+      const v=document.getElementById('porto-chart-val');
+      if(v) v.textContent='Gagal memuat';
+      return;
+    }
+    const series=computePortfolioSeries(btcHistory);
+    PC.currentData=series;
+    updateStats(series);
+    renderChart(series);
+    PC.loading=false;
+  }
+
+  window.switchPortoTF=function(tf,btn){
+    document.querySelectorAll('.porto-tf').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    loadPortoChart(tf);
+  };
+
+  window.togglePortoChart=function(){
+    PC.hidden=!PC.hidden;
+    const body=document.getElementById('porto-chart-body');
+    const label=document.getElementById('porto-toggle-label');
+    const eyeSvg=document.getElementById('porto-eye-svg');
+    const liveDot=document.getElementById('porto-live-dot');
+    if(PC.hidden){
+      body.style.maxHeight='0'; body.style.opacity='0';
+      if(label) label.textContent='Tampilkan';
+      if(liveDot) liveDot.style.opacity='0';
+      if(eyeSvg) eyeSvg.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+      body.style.maxHeight='420px'; body.style.opacity='1';
+      if(label) label.textContent='Sembunyikan';
+      if(eyeSvg) eyeSvg.innerHTML='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      setTimeout(()=>{ if(PC.currentData.length) renderChart(PC.currentData); }, 50);
+    }
+    try { localStorage.setItem(PC._hiddenKey, PC.hidden?'1':'0'); } catch(e){}
+  };
+
+  window.refreshPortoChart=function(){ loadPortoChart(PC.currentTF); };
+
+  // Re-render on theme toggle
+  const _ott=window.toggleTheme;
+  if(typeof _ott==='function'){
+    window.toggleTheme=function(){
+      _ott.apply(this,arguments);
+      setTimeout(()=>{ if(PC.currentData.length&&!PC.hidden) renderChart(PC.currentData); },350);
+    };
+  }
+
+  // Debounced resize
+  window.addEventListener('resize',(function(){
+    let t; return function(){ clearTimeout(t); t=setTimeout(()=>{ if(PC.currentData.length&&!PC.hidden) renderChart(PC.currentData); },200); };
+  })());
+
+  function _initPortoChart(){
+    try {
+      const h=localStorage.getItem(PC._hiddenKey);
+      if(h==='1'){
+        PC.hidden=true;
+        const body=document.getElementById('porto-chart-body');
+        const label=document.getElementById('porto-toggle-label');
+        const eyeSvg=document.getElementById('porto-eye-svg');
+        if(body){ body.style.maxHeight='0'; body.style.opacity='0'; }
+        if(label) label.textContent='Tampilkan';
+        if(eyeSvg) eyeSvg.innerHTML='<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      }
+    } catch(e){}
+    if(!PC.hidden) loadPortoChart(PC.currentTF);
+  }
+
+  // Hook into renderDash — re-init only if not yet loaded
+  if(typeof window.renderDash==='function'){
+    const __orig=window.renderDash;
+    window.renderDash=function(){
+      __orig.apply(this,arguments);
+      // Only auto-init once; user can manually refresh after
+      if(!PC.chart&&!PC.loading&&!PC.hidden) loadPortoChart(PC.currentTF);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    let tries=0;
+    const _w=setInterval(function(){
+      tries++;
+      const el=document.getElementById('porto-main-canvas');
+      const hasBTC=(typeof S!=='undefined')&&S.btcPrice;
+      if(el&&hasBTC){ clearInterval(_w); _initPortoChart(); }
+      else if(tries>50){ clearInterval(_w); if(el) _initPortoChart(); }
+    },400);
+  });
+})();
+
 /* ══════════ DCA ══════════ */
 function refreshDCAStats(){
   const p=S.btcPrice,r=S.usdIdr;
