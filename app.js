@@ -1064,6 +1064,7 @@ function showPage(id){
   if(id==='news'){ setTimeout(()=>loadCryptoNews(), 100); }
   if(id==='ai-predict'){ setTimeout(()=>{ if(!predData) runBTCPrediction(); }, 100); }
   if(id==='ai-signal'){ /* signal page ready */ }
+  if(id==='trading-bot'){ setTimeout(()=>initTradingBot(), 100); }
   if(id==='ai-chat'){
     setTimeout(()=>initAIChat(), 100);
     // Hide bottom nav saat di AI chat untuk full screen experience
@@ -21422,3 +21423,1206 @@ async function loadCryptoCalendar() {
   }
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   Z-WEALTH · TRADING BOT
+   EMA 13/21 Cross Strategy · Bybit & Binance · Live Order Execution
+   Versi: 1.0 — terintegrasi langsung di app
+   ══════════════════════════════════════════════════════════════════ */
+
+// ── State global bot ─────────────────────────────────────────────
+const _bot = {
+  exchange:     'bybit',
+  tradeMode:    'spot',
+  leverage:     10,
+  isActive:     false,
+  scanning:     false,
+  lastScan:     null,
+  scanInterval: null,
+};
+
+// ── Init: dipanggil saat page trading-bot dibuka ─────────────────
+window.initTradingBot = async function() {
+  await _botLoadConfig();
+  await _botLoadTrades();
+  await _botLoadStats();
+  await _botRefreshTgStatus();
+};
+
+// ── Set exchange toggle ──────────────────────────────────────────
+window.botSetExchange = function(ex) {
+  _bot.exchange = ex;
+  const bybit   = document.getElementById('bot-ex-bybit');
+  const binance = document.getElementById('bot-ex-binance');
+  if (!bybit || !binance) return;
+  const onStyle  = 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981';
+  const offStyle = 'background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
+  bybit.style.cssText   += ';' + (ex === 'bybit'   ? onStyle : offStyle);
+  binance.style.cssText += ';' + (ex === 'binance' ? onStyle : offStyle);
+};
+
+// ── Set mode trading: spot / futures ─────────────────────────────
+window.botSetMode = function(mode) {
+  _bot.tradeMode = mode;
+  const spotBtn  = document.getElementById('bot-mode-spot');
+  const futBtn   = document.getElementById('bot-mode-futures');
+  const levRow   = document.getElementById('bot-leverage-row');
+  if (!spotBtn || !futBtn) return;
+  const onSpot = 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981';
+  const onFut  = 'background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.45);color:#a855f7';
+  const off    = 'background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
+  spotBtn.style.cssText += ';' + (mode === 'spot'    ? onSpot : off);
+  futBtn.style.cssText  += ';' + (mode === 'futures' ? onFut  : off);
+  if (levRow) levRow.style.display = mode === 'futures' ? 'block' : 'none';
+};
+
+// ── Set leverage (hanya untuk futures) ───────────────────────────
+window.botSetLeverage = function(lev) {
+  _bot.leverage = lev;
+  [1, 3, 5, 10, 20].forEach(x => {
+    const btn = document.getElementById('bot-lev-' + x);
+    if (!btn) return;
+    if (x === lev) {
+      btn.style.cssText += ';background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.45);color:#a855f7';
+    } else {
+      btn.style.cssText += ';background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
+    }
+  });
+};
+
+// ── Load config dari localStorage (API key tidak di-load ke input untuk keamanan) ─
+async function _botLoadConfig() {
+  if (!curSeed) return;
+  try {
+    const key    = await seedKeyHash(...curSeed);
+    const cached = localStorage.getItem('bot_cfg_' + key.slice(0,16));
+    if (!cached) return;
+    const cfg = JSON.parse(cached);
+    _bot.exchange  = cfg.exchange   || 'bybit';
+    _bot.tradeMode = cfg.trade_mode || 'spot';
+    _bot.leverage  = cfg.leverage   || 10;
+    _bot.isActive  = cfg.is_active  || false;
+    const amtEl  = document.getElementById('bot-amount');
+    const topnEl = document.getElementById('bot-topn');
+    const symEl  = document.getElementById('bot-symbols');
+    const tgchat = document.getElementById('bot-tg-chatid');
+    if (amtEl)  amtEl.value  = cfg.trade_amount_usdt || 10;
+    if (topnEl) topnEl.value = cfg.top_n_by_volume   || 20;
+    if (symEl)  symEl.value  = (cfg.symbols || []).join(',');
+    if (tgchat) tgchat.value = cfg.telegram_chat_id  || '';
+    botSetExchange(_bot.exchange);
+    botSetMode(_bot.tradeMode);
+    botSetLeverage(_bot.leverage);
+    _botUpdateStatusUI(_bot.isActive);
+    // Jika aktif → restart interval scan
+    if (_bot.isActive) _botStartInterval();
+  } catch(e) { console.warn('[BotConfig] Load error:', e); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ENKRIPSI API KEY — AES-256-GCM via Web Crypto API
+// Kunci enkripsi diturunkan dari seed user (tidak pernah disimpan)
+// Format tersimpan: "iv_hex:ciphertext_hex"
+// ══════════════════════════════════════════════════════════════════
+
+async function _botDeriveEncKey(userKey) {
+  // Turunkan 256-bit key dari userKey (hash Supabase) pakai PBKDF2
+  const enc     = new TextEncoder();
+  const keyMat  = await crypto.subtle.importKey('raw', enc.encode(userKey), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: enc.encode('zw-bot-salt-v1'), iterations: 100000, hash: 'SHA-256' },
+    keyMat,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function _botEncrypt(plaintext, userKey) {
+  const key   = await _botDeriveEncKey(userKey);
+  const iv    = crypto.getRandomValues(new Uint8Array(12));
+  const enc   = new TextEncoder();
+  const ct    = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const toHex = buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  return toHex(iv) + ':' + toHex(ct);
+}
+
+async function _botDecrypt(cipherStr, userKey) {
+  const [ivHex, ctHex] = cipherStr.split(':');
+  const fromHex = h => new Uint8Array(h.match(/.{2}/g).map(b => parseInt(b,16)));
+  const key  = await _botDeriveEncKey(userKey);
+  const pt   = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromHex(ivHex) }, key, fromHex(ctHex));
+  return new TextDecoder().decode(pt);
+}
+
+// ── Simpan config ke Supabase + localStorage ─────────────────────
+window.botSaveConfig = async function() {
+  if (!curSeed) { toast('Login dulu!', 1); return; }
+
+  const apiKey   = document.getElementById('bot-api-key').value.trim();
+  const apiSec   = document.getElementById('bot-api-secret').value.trim();
+  const amount   = parseFloat(document.getElementById('bot-amount').value)  || 10;
+  const topN     = parseInt(document.getElementById('bot-topn').value)       || 20;
+  const symRaw   = document.getElementById('bot-symbols').value.trim();
+  const symbols  = symRaw ? symRaw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) : [];
+
+  if (!apiKey || !apiSec) {
+    toast('API Key dan Secret wajib diisi!', 1); return;
+  }
+
+  const btn = document.querySelector('[onclick="botSaveConfig()"]');
+  if (btn) { btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
+
+  try {
+    const key = await seedKeyHash(...curSeed);
+
+    // Enkripsi API key & secret dengan AES-256-GCM sebelum kirim ke Supabase
+    const encApiKey = await _botEncrypt(apiKey, key);
+    const encApiSec = await _botEncrypt(apiSec, key);
+
+    // Ambil telegram_chat_id yang sudah tersimpan (dari deep link, tidak diinput manual)
+    const existCfgRes = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
+      { headers: SB_HEADERS }
+    );
+    const existCfg = await existCfgRes.json();
+    const existingChatId = existCfg?.[0]?.telegram_chat_id || null;
+
+    const payload = {
+      user_id:            key,
+      exchange:           _bot.exchange,
+      trade_mode:         _bot.tradeMode || 'spot',
+      leverage:           _bot.leverage  || 10,
+      api_key:            encApiKey,   // tersimpan terenkripsi
+      api_secret:         encApiSec,   // tersimpan terenkripsi
+      symbols,
+      top_n_by_volume:    topN,
+      trade_amount_usdt:  amount,
+      telegram_chat_id:   existingChatId, // dipertahankan dari deep link
+      is_active:          _bot.isActive,
+      updated_at:         new Date().toISOString(),
+    };
+
+    const res = await fetch(`${SB_URL}/rest/v1/bot_configs`, {
+      method:  'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body:    JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    // Cache tanpa secret
+    const safe = { ...payload, api_key: '***', api_secret: '***' };
+    localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
+
+    // Kosongkan input API key setelah simpan
+    document.getElementById('bot-api-key').value    = '';
+    document.getElementById('bot-api-secret').value = '';
+
+    toast('✓ Config bot tersimpan aman di Supabase', 0);
+    await _botRefreshTgStatus(); // refresh status telegram
+  } catch(e) {
+    console.error('[BotSave]', e);
+    toast('Gagal simpan: ' + e.message, 1);
+  } finally {
+    if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+  }
+};
+
+// ── Hubungkan Telegram via deep link (@zwealth_bot) ──────────────
+window.botConnectTelegram = async function() {
+  if (!curSeed) { toast('Login dulu!', 1); return; }
+  const key      = await seedKeyHash(...curSeed);
+  const linkCode = key.slice(0, 24); // kode pendek untuk URL
+
+  try {
+    // Simpan link sementara ke DB agar server bot bisa lookup user_id-nya
+    await fetch(`${SB_URL}/rest/v1/pending_tg_links`, {
+      method:  'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body:    JSON.stringify({
+        link_code:  linkCode,
+        user_id:    key,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      }),
+    });
+  } catch(e) { console.warn('[TgLink]', e); }
+
+  // Buka deep link: t.me/zwealth_bot?start=LINK_CODE
+  const deepLink = `https://t.me/zwealth_bot?start=${linkCode}`;
+  window.open(deepLink, '_blank');
+  toast('📲 Buka Telegram lalu tekan START!', 0);
+
+  // Poll status setelah user tekan START di Telegram
+  setTimeout(() => _botRefreshTgStatus(), 8000);
+  setTimeout(() => _botRefreshTgStatus(), 20000);
+  setTimeout(() => _botRefreshTgStatus(), 40000);
+};
+
+// ── Putus koneksi Telegram ───────────────────────────────────────
+window.botTgDisconnect = async function() {
+  if (!curSeed) return;
+  const key = await seedKeyHash(...curSeed);
+  await fetch(
+    `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}`,
+    { method:'PATCH', headers:{ ...SB_HEADERS,'Prefer':'return=minimal' }, body: JSON.stringify({ telegram_chat_id: null }) }
+  );
+  // Update cache
+  const cached = localStorage.getItem('bot_cfg_' + key.slice(0,16));
+  if (cached) {
+    const cfg = JSON.parse(cached);
+    localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify({ ...cfg, telegram_chat_id: null }));
+  }
+  _botRenderTgStatus(null);
+  toast('Telegram diputus', 1);
+};
+
+// ── Cek & render status koneksi Telegram ────────────────────────
+async function _botRefreshTgStatus() {
+  if (!curSeed) return;
+  try {
+    const key = await seedKeyHash(...curSeed);
+    const res = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
+      { headers: SB_HEADERS }
+    );
+    const data = await res.json();
+    _botRenderTgStatus(data?.[0]?.telegram_chat_id || null);
+  } catch(e) { console.warn('[TgStatus]', e); }
+}
+
+function _botRenderTgStatus(chatId) {
+  const dot        = document.getElementById('bot-tg-dot');
+  const statusText = document.getElementById('bot-tg-status-text');
+  const preview    = document.getElementById('bot-tg-chat-preview');
+  const disconnBtn = document.getElementById('bot-tg-disconnect-btn');
+  const connectBtn = document.getElementById('bot-tg-connect-btn');
+  if (!dot) return;
+  if (chatId) {
+    dot.style.background        = '#10b981';
+    dot.style.animation         = 'pulse 2s infinite';
+    statusText.textContent      = '✓ Telegram terhubung';
+    statusText.style.color      = '#10b981';
+    preview.textContent         = `Chat ID: ${chatId}`;
+    preview.style.display       = 'block';
+    disconnBtn.style.display    = 'block';
+    if (connectBtn) connectBtn.textContent = '✓ Sudah terhubung — hubungkan ulang?';
+  } else {
+    dot.style.background        = '#475569';
+    dot.style.animation         = 'none';
+    statusText.textContent      = 'Belum terhubung';
+    statusText.style.color      = 'var(--muted)';
+    preview.style.display       = 'none';
+    disconnBtn.style.display    = 'none';
+    if (connectBtn) connectBtn.textContent = 'Hubungkan ke @zwealth_bot';
+  }
+}
+
+// ── Toggle aktif/nonaktif ────────────────────────────────────────
+window.botToggleActive = async function() {
+  if (!curSeed) { toast('Login dulu!', 1); return; }
+
+  // Cek apakah config sudah disimpan
+  const key    = await seedKeyHash(...curSeed);
+  const cached = localStorage.getItem('bot_cfg_' + key.slice(0,16));
+  if (!cached) { toast('Simpan config dulu sebelum mengaktifkan bot!', 1); return; }
+
+  _bot.isActive = !_bot.isActive;
+
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}`,
+      {
+        method:  'PATCH',
+        headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+        body:    JSON.stringify({ is_active: _bot.isActive, updated_at: new Date().toISOString() }),
+      }
+    );
+    if (!res.ok) throw new Error(await res.text());
+
+    // Update cache
+    const cfg = JSON.parse(cached);
+    localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify({ ...cfg, is_active: _bot.isActive }));
+
+    _botUpdateStatusUI(_bot.isActive);
+
+    if (_bot.isActive) {
+      toast('🟢 Bot AKTIF — scan sinyal tiap 1 menit', 0);
+      _botStartInterval();
+      // Langsung scan pertama kali
+      setTimeout(() => _botRunScan(), 500);
+    } else {
+      toast('Bot dinonaktifkan', 1);
+      _botStopInterval();
+    }
+  } catch(e) {
+    _bot.isActive = !_bot.isActive; // revert
+    toast('Gagal update: ' + e.message, 1);
+  }
+};
+
+// ── Update UI status pill & toggle button ────────────────────────
+function _botUpdateStatusUI(isActive) {
+  const pill   = document.getElementById('bot-status-pill');
+  const dot    = document.getElementById('bot-status-dot');
+  const label  = document.getElementById('bot-status-label');
+  const btn    = document.getElementById('bot-toggle-btn');
+  const btnLbl = document.getElementById('bot-toggle-label');
+  const btnIco = document.getElementById('bot-toggle-icon');
+  if (!pill) return;
+
+  if (isActive) {
+    pill.style.cssText  += ';background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#10b981';
+    dot.style.background = '#10b981';
+    dot.style.animation  = 'pulse 1.5s infinite';
+    if (label)  label.textContent  = 'RUNNING';
+    if (btn) {
+      btn.style.background   = 'rgba(239,68,68,.12)';
+      btn.style.borderColor  = 'rgba(239,68,68,.32)';
+      btn.style.color        = '#ef4444';
+    }
+    if (btnLbl) btnLbl.textContent = 'Hentikan Bot';
+    if (btnIco) btnIco.innerHTML   = '<rect x="6" y="6" width="4" height="12"/><rect x="14" y="6" width="4" height="12"/>';
+  } else {
+    pill.style.cssText  += ';background:rgba(100,116,139,.15);border-color:rgba(100,116,139,.3);color:var(--muted)';
+    dot.style.background = 'var(--muted)';
+    dot.style.animation  = 'none';
+    if (label)  label.textContent  = 'IDLE';
+    if (btn) {
+      btn.style.background  = 'rgba(100,116,139,.12)';
+      btn.style.borderColor = 'rgba(100,116,139,.28)';
+      btn.style.color       = 'var(--muted)';
+    }
+    if (btnLbl) btnLbl.textContent = 'Aktifkan Bot';
+    if (btnIco) btnIco.innerHTML   = '<circle cx="12" cy="12" r="10"/><polyline points="10 15 15 12 10 9 10 15"/>';
+  }
+}
+
+// ── Start / Stop scan interval (1 menit) ────────────────────────
+function _botStartInterval() {
+  _botStopInterval();
+  _bot.scanInterval = setInterval(() => _botRunScan(), 60000);
+}
+function _botStopInterval() {
+  if (_bot.scanInterval) { clearInterval(_bot.scanInterval); _bot.scanInterval = null; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CORE ENGINE — berjalan di browser (fallback jika tidak ada server)
+// Untuk produksi, gunakan Supabase Edge Function + pg_cron
+// ══════════════════════════════════════════════════════════════════
+
+async function _botRunScan() {
+  if (_bot.scanning || !_bot.isActive || !curSeed) return;
+  _bot.scanning = true;
+  _bot.lastScan = new Date();
+
+  try {
+    const key    = await seedKeyHash(...curSeed);
+    // Ambil config dari Supabase
+    const cfgRes = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=*&limit=1`,
+      { headers: SB_HEADERS }
+    );
+    const cfgArr = await cfgRes.json();
+    if (!cfgArr || !cfgArr.length || !cfgArr[0].is_active) {
+      _bot.isActive = false;
+      _botUpdateStatusUI(false);
+      _botStopInterval();
+      return;
+    }
+    const cfgRaw = cfgArr[0];
+
+    // Dekripsi API key & secret sebelum digunakan (hanya di memori, tidak pernah log)
+    let cfg = { ...cfgRaw };
+    if (cfgRaw.api_key && cfgRaw.api_key.includes(':')) {
+      try {
+        cfg.api_key    = await _botDecrypt(cfgRaw.api_key, key);
+        cfg.api_secret = await _botDecrypt(cfgRaw.api_secret, key);
+      } catch(e) {
+        console.warn('[BotDecrypt] Gagal dekripsi, pakai mode simulasi:', e.message);
+        cfg.api_key    = 'SIMULATION';
+        cfg.api_secret = 'SIMULATION';
+      }
+    }
+
+    // 1. Volume screening
+    const symbols = await _botGetTopByVolume(cfg.exchange, cfg.top_n_by_volume || 20, cfg.symbols);
+
+    // 2. Scan EMA signal setiap symbol (paralel, max 10 sekaligus)
+    const chunks = [];
+    for (let i = 0; i < symbols.length; i += 10) chunks.push(symbols.slice(i, i + 10));
+    for (const chunk of chunks) {
+      const results = await Promise.all(chunk.map(sym => _botCheckSignal(sym, cfg.exchange)));
+      for (const signal of results.filter(Boolean)) {
+        await _botHandleSignal(signal, cfg, key);
+      }
+    }
+
+    // Refresh UI
+    await _botLoadTrades();
+    await _botLoadStats();
+  } catch(e) {
+    console.error('[BotScan]', e);
+  } finally {
+    _bot.scanning = false;
+  }
+}
+
+// ── Volume Screening ─────────────────────────────────────────────
+async function _botGetTopByVolume(exchange, topN, whitelist) {
+  try {
+    let tickers = [];
+    if (exchange === 'bybit') {
+      const r = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+      const d = await r.json();
+      tickers = (d.result?.list || [])
+        .filter(t => t.symbol.endsWith('USDT'))
+        .map(t => ({ symbol: t.symbol, vol: parseFloat(t.turnover24h || '0') }));
+    } else {
+      const r = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr');
+      const d = await r.json();
+      tickers = d
+        .filter(t => t.symbol.endsWith('USDT'))
+        .map(t => ({ symbol: t.symbol, vol: parseFloat(t.quoteVolume || '0') }));
+    }
+    if (whitelist && whitelist.length > 0) {
+      const wSet = new Set(whitelist);
+      tickers = tickers.filter(t => wSet.has(t.symbol));
+    }
+    tickers.sort((a, b) => b.vol - a.vol);
+    return tickers.slice(0, topN).map(t => t.symbol);
+  } catch(e) {
+    console.error('[VolumeScreen]', e);
+    return whitelist?.length ? whitelist.slice(0, topN) : ['BTCUSDT','ETHUSDT','SOLUSDT'];
+  }
+}
+
+// ── Fetch OHLCV 1 menit ──────────────────────────────────────────
+async function _botFetchOHLCV(symbol, exchange, limit = 50) {
+  if (exchange === 'bybit') {
+    const r = await fetch(
+      `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=1&limit=${limit}`
+    );
+    const d = await r.json();
+    if (d.retCode !== 0) throw new Error(d.retMsg);
+    return (d.result?.list || [])
+      .map(c => ({ ts: +c[0], open: +c[1], high: +c[2], low: +c[3], close: +c[4], vol: +c[5] }))
+      .reverse();
+  } else {
+    const r = await fetch(
+      `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=1m&limit=${limit}`
+    );
+    const d = await r.json();
+    return d.map(c => ({ ts: c[0], open: +c[1], high: +c[2], low: +c[3], close: +c[4], vol: +c[5] }));
+  }
+}
+
+// ── Hitung EMA ───────────────────────────────────────────────────
+function _calcEMA(prices, period) {
+  if (prices.length < period) return [];
+  const k   = 2 / (period + 1);
+  const ema = [prices.slice(0, period).reduce((s, v) => s + v, 0) / period];
+  for (let i = period; i < prices.length; i++) {
+    ema.push(prices[i] * k + ema[ema.length - 1] * (1 - k));
+  }
+  return ema;
+}
+
+// ── Deteksi sinyal Golden/Death Cross ───────────────────────────
+async function _botCheckSignal(symbol, exchange) {
+  try {
+    const candles = await _botFetchOHLCV(symbol, exchange, 50);
+    if (candles.length < 25) return null;
+    const closes  = candles.map(c => c.close);
+    const ema13   = _calcEMA(closes, 13);
+    const ema21   = _calcEMA(closes, 21);
+    if (ema13.length < 2 || ema21.length < 2) return null;
+
+    const e13Now  = ema13[ema13.length - 1], e13Prev = ema13[ema13.length - 2];
+    const e21Now  = ema21[ema21.length - 1], e21Prev = ema21[ema21.length - 2];
+    const price   = closes[closes.length - 1];
+    const vol24h  = candles.reduce((s, c) => s + c.vol, 0);
+
+    // Golden Cross → BUY
+    if (e13Prev <= e21Prev && e13Now > e21Now) {
+      return { symbol, side: 'BUY', price, ema13: e13Now, ema21: e21Now, vol24h, ts: new Date().toISOString() };
+    }
+    // Death Cross → SELL
+    if (e13Prev >= e21Prev && e13Now < e21Now) {
+      return { symbol, side: 'SELL', price, ema13: e13Now, ema21: e21Now, vol24h, ts: new Date().toISOString() };
+    }
+    return null;
+  } catch(e) {
+    console.warn(`[Signal] ${symbol}:`, e.message);
+    return null;
+  }
+}
+
+// ── Handle sinyal: cek duplikat → eksekusi → log → telegram ─────
+async function _botHandleSignal(signal, cfg, userId) {
+  try {
+    // Cek apakah posisi terakhir sudah sama (hindari double entry)
+    const dupRes = await fetch(
+      `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(userId)}&symbol=eq.${signal.symbol}&order=executed_at.desc&limit=1&select=side,order_status`,
+      { headers: SB_HEADERS }
+    );
+    const dupArr = await dupRes.json();
+    if (dupArr?.length && dupArr[0].side === signal.side && dupArr[0].order_status === 'FILLED') {
+      return; // Skip — posisi sama
+    }
+
+    let orderId = 'SIMULATED', status = 'SIMULATED', errMsg = null;
+
+    // Eksekusi order jika API key tersedia
+    if (cfg.api_key && cfg.api_key !== 'SIMULATION' && cfg.api_key !== '***') {
+      try {
+        const qty = parseFloat((cfg.trade_amount_usdt / signal.price).toFixed(4));
+        if (cfg.exchange === 'bybit') {
+          const result = await _botBybitOrder(cfg.api_key, cfg.api_secret, signal, qty);
+          orderId = result.orderId;
+          status  = 'FILLED';
+        } else {
+          const result = await _botBinanceOrder(cfg.api_key, cfg.api_secret, signal, qty);
+          orderId = result.orderId;
+          status  = 'FILLED';
+        }
+      } catch(e) {
+        errMsg = e.message;
+        status = 'ERROR';
+        console.error(`[Order] ${signal.symbol}:`, e);
+      }
+    }
+
+    // Log ke Supabase
+    await fetch(`${SB_URL}/rest/v1/trades`, {
+      method:  'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        user_id:      userId,
+        symbol:       signal.symbol,
+        side:         signal.side,
+        price:        signal.price,
+        amount_usdt:  cfg.trade_amount_usdt,
+        ema13:        signal.ema13,
+        ema21:        signal.ema21,
+        volume_24h:   signal.vol24h,
+        order_id:     orderId,
+        order_status: status,
+        error_msg:    errMsg,
+        executed_at:  signal.ts,
+      }),
+    });
+
+    // Telegram notifikasi via bot terpusat (@zwealth_bot)
+    if (cfg.telegram_chat_id) {
+      await _botSendTelegram(cfg.telegram_chat_id, signal, orderId, cfg.trade_amount_usdt, status);
+    }
+
+    // Toast di app
+    const emoji = signal.side === 'BUY' ? '🟢' : '🔴';
+    toast(`${emoji} ${signal.side} ${signal.symbol.replace('USDT','')} @$${signal.price.toFixed(2)} — ${status}`, signal.side === 'BUY' ? 0 : 0);
+  } catch(e) {
+    console.error('[HandleSignal]', e);
+  }
+}
+
+// ── Bybit Order Execution (signed HMAC-SHA256) ───────────────────
+async function _botBybitOrder(apiKey, apiSecret, signal, qty) {
+  const ts       = Date.now().toString();
+  const recv     = '5000';
+  const body     = JSON.stringify({
+    category: 'linear', symbol: signal.symbol,
+    side: signal.side === 'BUY' ? 'Buy' : 'Sell',
+    orderType: 'Market', qty: qty.toString(), timeInForce: 'IOC',
+  });
+  const signStr  = `${ts}${apiKey}${recv}${body}`;
+  const key      = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sigBuf   = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signStr));
+  const sig      = Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+  const res = await fetch('https://api.bybit.com/v5/order/create', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-BAPI-API-KEY':apiKey, 'X-BAPI-TIMESTAMP':ts, 'X-BAPI-RECV-WINDOW':recv, 'X-BAPI-SIGN':sig },
+    body,
+  });
+  const d = await res.json();
+  if (d.retCode !== 0) throw new Error(`Bybit: ${d.retMsg}`);
+  return { orderId: d.result?.orderId || 'OK' };
+}
+
+// ── Binance Futures Order Execution ─────────────────────────────
+async function _botBinanceOrder(apiKey, apiSecret, signal, qty) {
+  const ts     = Date.now();
+  const params = new URLSearchParams({
+    symbol: signal.symbol, side: signal.side, type: 'MARKET',
+    quantity: qty.toString(), timestamp: ts.toString(),
+  });
+  const key    = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(params.toString()));
+  const sig    = Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  params.append('signature', sig);
+
+  const res = await fetch(`https://fapi.binance.com/fapi/v1/order?${params}`, {
+    method: 'POST', headers: { 'X-MBX-APIKEY': apiKey },
+  });
+  const d = await res.json();
+  if (d.code && d.code < 0) throw new Error(`Binance: ${d.msg}`);
+  return { orderId: d.orderId?.toString() || 'OK' };
+}
+
+// ── Kirim Telegram (via bot terpusat @zwealth_bot) ───────────────
+// Token bot disimpan di server env, bukan di DB user
+async function _botSendTelegram(chatId, signal, orderId, amountUsdt, status) {
+  if (!chatId) return;
+  const emoji = signal.side === 'BUY' ? '🟢' : '🔴';
+  const label = signal.side === 'BUY' ? 'BELI (Golden Cross ⬆)' : 'JUAL (Death Cross ⬇)';
+  const time  = new Date(signal.ts).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+  const msg   = [
+    `${emoji} <b>TRADE EKSEKUSI — z-wealth Bot</b>`,
+    ``,
+    `📌 <b>Aset:</b> <code>${signal.symbol}</code>`,
+    `🔀 <b>Sinyal:</b> ${label}`,
+    `💰 <b>Harga:</b> $${signal.price.toFixed(4)}`,
+    `💵 <b>Ukuran:</b> $${amountUsdt} USDT`,
+    `📊 <b>EMA13:</b> ${signal.ema13.toFixed(4)}`,
+    `📊 <b>EMA21:</b> ${signal.ema21.toFixed(4)}`,
+    `🆔 <b>Order:</b> <code>${orderId}</code>`,
+    `📋 <b>Status:</b> ${status}`,
+    `⏰ <b>Waktu:</b> ${time} WIB`,
+  ].join('\n');
+  try {
+    // Kirim via Supabase Edge Function — token bot disimpan di Vercel env, tidak di browser
+    await fetch(`${SB_URL}/functions/v1/bot-notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
+      body: JSON.stringify({ chat_id: chatId, text: msg }),
+    });
+  } catch(e) { console.warn('[Telegram]', e); }
+}
+
+// ── Load trade history ───────────────────────────────────────────
+window.botLoadTrades = async function() {
+  if (!curSeed) return;
+  const list = document.getElementById('bot-trade-list');
+  if (!list) return;
+
+  list.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;padding:1.8rem;gap:.45rem;color:var(--muted);font-size:.65rem">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Memuat...
+  </div>`;
+
+  try {
+    const key    = await seedKeyHash(...curSeed);
+    const filter = document.getElementById('bot-log-filter')?.value || 'ALL';
+
+    let url = `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&order=executed_at.desc&limit=60`;
+    if (filter === 'BUY')   url += '&side=eq.BUY';
+    if (filter === 'SELL')  url += '&side=eq.SELL';
+    if (filter === 'ERROR') url += '&order_status=eq.ERROR';
+
+    const res    = await fetch(url, { headers: SB_HEADERS });
+    const trades = await res.json();
+
+    if (!Array.isArray(trades) || trades.length === 0) {
+      list.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.2rem 1rem;gap:.4rem;color:var(--muted)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="opacity:.25"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M7 7l3 3 2-2 3 3"/></svg>
+        <div style="font-size:.7rem">Belum ada trade</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = trades.map(t => {
+      const dt    = new Date(t.executed_at);
+      const time  = dt.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+      const date  = dt.toLocaleDateString('id-ID', { day:'2-digit', month:'short', timeZone:'Asia/Jakarta' });
+      const price = parseFloat(t.price).toLocaleString('en-US', { maximumFractionDigits: 2 });
+      const isBuy = t.side === 'BUY';
+
+      const sideBadge = `<span style="display:inline-flex;align-items:center;padding:.15rem .38rem;border-radius:100px;font-size:.58rem;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:.04em;background:${isBuy?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)'};border:1px solid ${isBuy?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'};color:${isBuy?'#10b981':'#ef4444'}">${isBuy?'▲ BUY':'▼ SELL'}</span>`;
+
+      const statusColor = t.order_status==='FILLED'?'rgba(16,185,129,.8)':t.order_status==='SIMULATED'?'rgba(6,182,212,.8)':'rgba(239,68,68,.8)';
+      const statusBg    = t.order_status==='FILLED'?'rgba(16,185,129,.1)':t.order_status==='SIMULATED'?'rgba(6,182,212,.1)':'rgba(239,68,68,.1)';
+      const statusBadge = `<span style="padding:.13rem .35rem;border-radius:5px;font-size:.55rem;font-weight:700;background:${statusBg};color:${statusColor}" title="${t.error_msg||''}">${t.order_status==='SIMULATED'?'SIM':t.order_status}</span>`;
+
+      return `<div style="display:grid;grid-template-columns:72px 44px 1fr 76px 58px;padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.03);align-items:center;font-size:.64rem;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+        <div style="color:var(--muted)"><div style="font-size:.6rem">${time}</div><div style="font-size:.53rem;opacity:.5">${date}</div></div>
+        <div>${sideBadge}</div>
+        <div style="font-weight:700;font-family:'Space Mono',monospace;font-size:.62rem;color:var(--text)">${t.symbol.replace('USDT','')}<span style="opacity:.4;font-size:.55rem">USDT</span></div>
+        <div style="text-align:right;font-family:'Space Mono',monospace;font-size:.62rem;color:var(--text)">$${price}</div>
+        <div style="text-align:right">${statusBadge}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('[BotTrades]', e);
+    if (list) list.innerHTML = `<div style="text-align:center;padding:1.5rem;font-size:.68rem;color:var(--muted)">Gagal memuat — ${e.message}</div>`;
+  }
+};
+
+// ── Load stats ringkasan ─────────────────────────────────────────
+window._botLoadStats = async function() {
+  if (!curSeed) return;
+  try {
+    const key = await seedKeyHash(...curSeed);
+    const res = await fetch(
+      `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status`,
+      { headers: SB_HEADERS }
+    );
+    const trades = await res.json();
+    if (!Array.isArray(trades)) return;
+
+    const total  = trades.length;
+    const buy    = trades.filter(t => t.side === 'BUY').length;
+    const sell   = trades.filter(t => t.side === 'SELL').length;
+    const vol    = trades.filter(t => ['FILLED','SIMULATED'].includes(t.order_status)).reduce((s,t) => s + parseFloat(t.amount_usdt||0), 0);
+
+    const totalEl = document.getElementById('bot-stat-total');
+    const bsEl    = document.getElementById('bot-stat-buysell');
+    const volEl   = document.getElementById('bot-stat-vol');
+    if (totalEl) totalEl.textContent = total;
+    if (bsEl)    bsEl.innerHTML = `<span style="color:#10b981">${buy}</span><span style="color:var(--muted);font-size:.65rem"> / </span><span style="color:#ef4444">${sell}</span>`;
+    if (volEl)   volEl.textContent = vol >= 1000 ? `$${(vol/1000).toFixed(1)}K` : `$${vol.toFixed(0)}`;
+  } catch(e) { console.warn('[BotStats]', e); }
+};
+
+// alias publik
+window._botLoadStats = _botLoadStats;
+
+// ── Hentikan bot saat user logout ───────────────────────────────
+const _origDoLogout = window.doLogout;
+if (typeof _origDoLogout === 'function') {
+  window.doLogout = async function() {
+    _botStopInterval();
+    _bot.isActive = false;
+    return _origDoLogout.apply(this, arguments);
+  };
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   Z-WEALTH · BOT PORTFOLIO CHART + REAL BALANCE PATCH
+   Merged from bot-chart.js
+   ══════════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  // ── Inject chart HTML ke halaman trading-bot ─────────────────────
+  function _injectChartHTML() {
+    // Chart HTML sudah di-embed langsung di index.html — tidak perlu inject
+    if (document.getElementById('bot-portfolio-chart-wrap')) return;
+
+    const statsCard = document.getElementById('bot-stat-total')?.closest('[style*="grid-template-columns"]');
+    if (!statsCard) return;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'bot-portfolio-chart-wrap';
+    wrap.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:1rem;position:relative';
+    wrap.innerHTML = `
+      <div style="height:2px;background:linear-gradient(90deg,#10b981,#06b6d4,#a855f7)"></div>
+      <div style="padding:.85rem 1rem .6rem">
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem">
+          <div>
+            <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase">Grafik Portfolio</div>
+            <div id="bot-chart-pnl-label" style="font-size:.62rem;color:var(--muted);margin-top:.15rem">—</div>
+          </div>
+          <div style="display:flex;gap:.35rem">
+            <button onclick="botChartSetPeriod('7d')"  id="bcp-7d"  class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981">7D</button>
+            <button onclick="botChartSetPeriod('30d')" id="bcp-30d" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">30D</button>
+            <button onclick="botChartSetPeriod('all')" id="bcp-all" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">All</button>
+          </div>
+        </div>
+
+        <!-- Real balance row -->
+        <div id="bot-real-balance-row" style="display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);margin-bottom:.65rem">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.52rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Saldo Nyata Exchange</div>
+            <div id="bot-real-balance-val" style="font-size:.88rem;font-weight:800;font-family:'Space Mono',monospace;color:#10b981;margin-top:.08rem">—</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:.52rem;color:var(--muted)">Diperbarui</div>
+            <div id="bot-real-balance-ts" style="font-size:.58rem;color:var(--muted);font-family:'Space Mono',monospace">—</div>
+          </div>
+          <button onclick="window.botRefreshBalance()" id="bot-balance-refresh-btn" title="Refresh saldo" style="background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:7px;padding:.28rem .42rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg id="bot-balance-refresh-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+
+        <!-- Canvas chart -->
+        <div style="position:relative;height:140px;width:100%">
+          <canvas id="bot-portfolio-canvas" style="width:100%;height:100%"></canvas>
+          <div id="bot-chart-empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;color:var(--muted)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="opacity:.25"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <div style="font-size:.68rem">Belum ada data trade</div>
+          </div>
+        </div>
+
+        <!-- Summary row -->
+        <div id="bot-chart-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin-top:.7rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.05)">
+          <div style="text-align:center">
+            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Total PnL</div>
+            <div id="bcs-pnl" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Win Rate</div>
+            <div id="bcs-winrate" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Trades</div>
+            <div id="bcs-count" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Avg Size</div>
+            <div id="bcs-avg" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent4)">—</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Insert sebelum stats card
+    statsCard.parentElement.insertBefore(wrap, statsCard);
+  }
+
+  // ── State chart ───────────────────────────────────────────────────
+  let _chartPeriod = '7d';
+  let _chartData   = [];
+
+  window.botChartSetPeriod = function (period) {
+    _chartPeriod = period;
+    ['7d','30d','all'].forEach(p => {
+      const btn = document.getElementById('bcp-' + p);
+      if (!btn) return;
+      if (p === period) {
+        btn.style.cssText += ';background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981';
+      } else {
+        btn.style.cssText += ';background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
+      }
+    });
+    _renderChart();
+  };
+
+  // ── Proses data trades menjadi equity curve ──────────────────────
+  function _buildEquityCurve(trades, period) {
+    const now    = Date.now();
+    const cutoff = period === '7d'  ? now - 7  * 86400000 :
+                   period === '30d' ? now - 30 * 86400000 : 0;
+
+    const valid = trades
+      .filter(t => ['FILLED','SIMULATED'].includes(t.order_status))
+      .filter(t => new Date(t.executed_at).getTime() >= cutoff)
+      .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
+
+    if (valid.length === 0) return { points: [], summary: null };
+
+    let equity = 0;
+    const points = [];
+    let buys = 0, sells = 0, totalVol = 0;
+
+    valid.forEach(t => {
+      const amt = parseFloat(t.amount_usdt) || 0;
+      totalVol += amt;
+      if (t.side === 'BUY') { equity -= amt; buys++; }
+      else                  { equity += amt; sells++; }
+      points.push({ x: new Date(t.executed_at).getTime(), y: equity, side: t.side, symbol: t.symbol });
+    });
+
+    const winRate = valid.length > 0 ? Math.round((sells / valid.length) * 100) : 0;
+    const avgSize = valid.length > 0 ? (totalVol / valid.length) : 0;
+
+    return {
+      points,
+      summary: { pnl: equity, winRate, count: valid.length, avgSize, totalVol },
+    };
+  }
+
+  // ── Render canvas chart ───────────────────────────────────────────
+  function _renderChart() {
+    const canvas  = document.getElementById('bot-portfolio-canvas');
+    const emptyEl = document.getElementById('bot-chart-empty');
+    if (!canvas) return;
+
+    const { points, summary } = _buildEquityCurve(_chartData, _chartPeriod);
+
+    if (points.length < 2) {
+      if (emptyEl) emptyEl.style.display = 'flex';
+      canvas.style.opacity = '0';
+      _updateSummary(null);
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    canvas.style.opacity = '1';
+
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const W = rect.width || 300;
+    const H = 140;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const pad = { top: 12, right: 16, bottom: 28, left: 8 };
+    const cW  = W - pad.left - pad.right;
+    const cH  = H - pad.top  - pad.bottom;
+
+    const ys     = points.map(p => p.y);
+    const xs     = points.map(p => p.x);
+    const minY   = Math.min(0, ...ys), maxY = Math.max(0, ...ys);
+    const minX   = xs[0],              maxX = xs[xs.length - 1];
+    const rangeY = maxY - minY || 1;
+    const rangeX = maxX - minX || 1;
+
+    const toX  = x => pad.left + ((x - minX) / rangeX) * cW;
+    const toY  = y => pad.top  + (1 - (y - minY) / rangeY) * cH;
+    const zeroY = toY(0);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Zero line
+    ctx.beginPath();
+    ctx.moveTo(pad.left, zeroY);
+    ctx.lineTo(W - pad.right, zeroY);
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const isPosEnd = points[points.length - 1].y >= 0;
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, isPosEnd ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+    ctx.beginPath();
+    ctx.moveTo(toX(xs[0]), zeroY);
+    points.forEach(p => ctx.lineTo(toX(p.x), toY(p.y)));
+    ctx.lineTo(toX(xs[xs.length - 1]), zeroY);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(toX(p.x), toY(p.y));
+      else         ctx.lineTo(toX(p.x), toY(p.y));
+    });
+    ctx.strokeStyle = isPosEnd ? '#10b981' : '#ef4444';
+    ctx.lineWidth   = 1.8;
+    ctx.lineJoin    = 'round';
+    ctx.stroke();
+
+    points.forEach(p => {
+      const px = toX(p.x), py = toY(p.y);
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle   = p.side === 'BUY' ? '#10b981' : '#ef4444';
+      ctx.fill();
+      ctx.strokeStyle = '#050810';
+      ctx.lineWidth   = 1.2;
+      ctx.stroke();
+    });
+
+    // X-axis labels
+    ctx.fillStyle  = 'rgba(148,163,184,.4)';
+    ctx.font       = '9px Inter, sans-serif';
+    ctx.textAlign  = 'center';
+    const labelCount = Math.min(4, points.length);
+    const step       = Math.floor(points.length / labelCount);
+    for (let i = 0; i < labelCount; i++) {
+      const p     = points[i * step];
+      const label = new Date(p.x).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+      ctx.fillText(label, toX(p.x), H - 4);
+    }
+
+    const lastP    = points[points.length - 1];
+    const pnlLabel = document.getElementById('bot-chart-pnl-label');
+    if (pnlLabel) {
+      pnlLabel.textContent = 'PnL Kumulatif: ' + (lastP.y >= 0 ? '+' : '') + lastP.y.toFixed(1) + ' USDT';
+      pnlLabel.style.color = lastP.y >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    _updateSummary(summary);
+  }
+
+  function _updateSummary(s) {
+    const pnlEl = document.getElementById('bcs-pnl');
+    const winEl = document.getElementById('bcs-winrate');
+    const cntEl = document.getElementById('bcs-count');
+    const avgEl = document.getElementById('bcs-avg');
+    if (!pnlEl) return;
+    if (!s) {
+      [pnlEl, winEl, cntEl, avgEl].forEach(el => { if (el) el.textContent = '—'; });
+      return;
+    }
+    if (pnlEl) { pnlEl.textContent = (s.pnl >= 0 ? '+' : '') + s.pnl.toFixed(1); pnlEl.style.color = s.pnl >= 0 ? '#10b981' : '#ef4444'; }
+    if (winEl) { winEl.textContent = s.winRate + '%'; winEl.style.color = s.winRate >= 50 ? '#10b981' : '#f59e0b'; }
+    if (cntEl)   cntEl.textContent = s.count;
+    if (avgEl)   avgEl.textContent = '$' + s.avgSize.toFixed(1);
+  }
+
+  // ── Load trade data untuk chart ───────────────────────────────────
+  async function _botLoadChartData() {
+    if (!window.curSeed || !window.seedKeyHash) return;
+    try {
+      const key        = await window.seedKeyHash(...window.curSeed);
+      const SB_URL     = window.SB_URL;
+      const SB_HEADERS = window.SB_HEADERS;
+      if (!SB_URL || !SB_HEADERS) return;
+
+      const res    = await fetch(
+        `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status,executed_at,symbol&order=executed_at.asc&limit=500`,
+        { headers: SB_HEADERS }
+      );
+      const trades = await res.json();
+      if (!Array.isArray(trades)) return;
+
+      _chartData = trades;
+      _renderChart();
+    } catch (e) {
+      console.warn('[BotChart] Load error:', e);
+    }
+  }
+
+  // ── Fetch real balance dari exchange via Edge Function ────────────
+  window.botRefreshBalance = async function () {
+    if (!window.curSeed || !window.seedKeyHash) return;
+    const balVal  = document.getElementById('bot-real-balance-val');
+    const balTs   = document.getElementById('bot-real-balance-ts');
+    const icon    = document.getElementById('bot-balance-refresh-icon');
+
+    if (icon) icon.style.animation = 'spin .7s linear infinite';
+    if (balVal) balVal.textContent = '…';
+
+    try {
+      const key        = await window.seedKeyHash(...window.curSeed);
+      const SB_URL     = window.SB_URL;
+      const SB_ANON    = window.SB_ANON;
+      if (!SB_URL) return;
+
+      // Panggil Edge Function yang ambil saldo dari exchange dengan API key terenkripsi
+      const res  = await fetch(`${SB_URL}/functions/v1/bot-balance`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
+        body:    JSON.stringify({ user_id: key }),
+      });
+
+      if (!res.ok) {
+        // Fallback: ambil data dari bot_configs untuk hitung estimasi
+        await _botBalanceFallback(key);
+        return;
+      }
+
+      const data = await res.json();
+      const usdt = parseFloat(data?.usdt ?? data?.balance ?? data?.available ?? 0);
+
+      if (balVal) {
+        balVal.textContent = usdt.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+        balVal.style.color = '#10b981';
+      }
+      if (balTs) {
+        const now = new Date();
+        balTs.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) + ' WIB';
+      }
+    } catch (e) {
+      console.warn('[BotBalance]', e);
+      await _botBalanceFallback();
+    } finally {
+      if (icon) icon.style.animation = '';
+    }
+  };
+
+  // ── Fallback: estimasi dari trade history jika Edge Function belum ada ─
+  async function _botBalanceFallback(key) {
+    const balVal = document.getElementById('bot-real-balance-val');
+    const balTs  = document.getElementById('bot-real-balance-ts');
+    try {
+      if (!key && window.curSeed && window.seedKeyHash) {
+        key = await window.seedKeyHash(...window.curSeed);
+      }
+      const SB_URL     = window.SB_URL;
+      const SB_HEADERS = window.SB_HEADERS;
+      if (!SB_URL || !key) throw new Error('no config');
+
+      // Ambil konfigurasi untuk tahu exchange-nya
+      const cfgRes  = await fetch(
+        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=trade_amount_usdt,exchange&limit=1`,
+        { headers: SB_HEADERS }
+      );
+      const cfgs = await cfgRes.json();
+      const cfg  = cfgs?.[0];
+
+      // Hitung estimasi saldo dari trade history
+      const tradeRes = await fetch(
+        `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status&order=executed_at.desc&limit=200`,
+        { headers: SB_HEADERS }
+      );
+      const trades   = await tradeRes.json();
+      const filled   = Array.isArray(trades) ? trades.filter(t => ['FILLED','SIMULATED'].includes(t.order_status)) : [];
+      let net        = 0;
+      filled.forEach(t => {
+        const amt = parseFloat(t.amount_usdt) || 0;
+        net += t.side === 'SELL' ? amt : -amt;
+      });
+
+      const label = cfg ? `${cfg.exchange?.toUpperCase() || 'Exchange'} · Est.` : 'Estimasi';
+      if (balVal) {
+        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+        balVal.style.color = net >= 0 ? '#10b981' : '#ef4444';
+        balVal.title       = 'Estimasi berdasarkan history trade (bukan saldo langsung dari exchange)';
+      }
+      const pnlLabel = document.getElementById('bot-chart-pnl-label');
+      if (pnlLabel && !pnlLabel.textContent.includes('USDT')) {
+        pnlLabel.textContent = label + ': ' + (net >= 0 ? '+' : '') + net.toFixed(2) + ' USDT';
+        pnlLabel.style.color = net >= 0 ? '#10b981' : '#ef4444';
+      }
+    } catch (e) {
+      if (balVal) { balVal.textContent = 'API belum terhubung'; balVal.style.color = 'var(--muted)'; }
+    }
+    if (balTs) {
+      const now = new Date();
+      balTs.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) + ' WIB';
+    }
+  }
+
+  // ── Polling stats + balance setiap 30 detik ───────────────────────
+  function _pollStats() {
+    clearInterval(window.__botStatsPollInterval);
+    window.__botStatsPollInterval = setInterval(async () => {
+      const page = document.getElementById('page-trading-bot');
+      const visible = page && (page.classList.contains('active') || page.style.display !== 'none');
+      if (visible) {
+        await window._botLoadStats?.();
+        await _botLoadChartData();
+        // Refresh balance setiap 2 menit (setiap 4 tick × 30 detik)
+        if (!window.__botBalanceTick) window.__botBalanceTick = 0;
+        window.__botBalanceTick++;
+        if (window.__botBalanceTick % 4 === 0) await window.botRefreshBalance();
+      }
+    }, 30000);
+  }
+
+  // ── Patch initTradingBot untuk inject chart ───────────────────────
+  const _origInit = window.initTradingBot;
+  window.initTradingBot = async function () {
+    if (typeof _origInit === 'function') await _origInit.apply(this, arguments);
+    _injectChartHTML();
+    await _botLoadChartData();
+    await window.botRefreshBalance();
+    _pollStats();
+  };
+
+  // ── Patch botLoadTrades untuk refresh chart juga ─────────────────
+  const _origLoadTrades = window.botLoadTrades;
+  window.botLoadTrades = async function () {
+    if (typeof _origLoadTrades === 'function') await _origLoadTrades.apply(this, arguments);
+    await _botLoadChartData();
+  };
+
+  window.addEventListener('resize', () => { if (_chartData.length) _renderChart(); });
+  window._botLoadChartData = _botLoadChartData;
+
+})();
