@@ -824,6 +824,24 @@ async function enterApp(seed,data){
 
   // FIX: Mulai auto-refresh berita sejak login, bukan nunggu user buka Dashboard
   setTimeout(() => startNewsAutoRefresh(), 3000);
+
+  // ── Restore halaman terakhir yang dibuka user ──────────────────
+  // Halaman yang aman untuk di-restore (bukan halaman yang butuh login khusus)
+  const _RESTORABLE_PAGES = [
+    'dashboard','dca','portfolio','simulation','cashflow',
+    'trading-bot','alerts','news','theme','ai-signal','ai-predict'
+  ];
+  try {
+    const lastPage = localStorage.getItem('zw_last_page');
+    if (lastPage && _RESTORABLE_PAGES.includes(lastPage)) {
+      // Tunda sedikit agar semua komponen siap dulu
+      setTimeout(() => showPage(lastPage), 300);
+    } else {
+      setTimeout(() => showPage('dashboard'), 300);
+    }
+  } catch(e) {
+    setTimeout(() => showPage('dashboard'), 300);
+  }
 }
 
 let _activeTab='new'; // track active tab for showLL/hideLL
@@ -1012,6 +1030,8 @@ function showPage(id){
   const pageEl = document.getElementById('page-'+id);
   if(!pageEl){ console.warn('Page not found: page-'+id); return; }
   pageEl.classList.add('active');
+  // Simpan halaman terakhir agar bisa di-restore saat buka app lagi
+  try { localStorage.setItem('zw_last_page', id); } catch(e) {}
   const tabs=document.querySelectorAll('.nav-tab');
   ['dashboard','dca','portfolio','simulation','cashflow','ai-chat'].forEach((p,i)=>{if(p===id&&tabs[i])tabs[i].classList.add('active')});
   // Bottom nav active + animate indicator
@@ -21495,38 +21515,9 @@ async function _botLoadConfig() {
   if (!curSeed) return;
   try {
     const key    = await seedKeyHash(...curSeed);
-
-    // Cek DB langsung untuk data terbaru + tampilkan indikator API
-    const dbRes = await fetch(
-      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=*&limit=1`,
-      { headers: SB_HEADERS }
-    );
-    const dbData = await dbRes.json();
-    const dbCfg  = dbData?.[0];
-
-    // Tampilkan indikator API tersimpan jika ada di DB
-    const indicator = document.getElementById('bot-api-saved-indicator');
-    const exchLabel = document.getElementById('bot-api-saved-exchange');
-    if (indicator) {
-      if (dbCfg?.api_key) {
-        indicator.style.display = 'flex';
-        if (exchLabel) exchLabel.textContent = `· ${(dbCfg.exchange || 'bybit').toUpperCase()} ${(dbCfg.trade_mode || 'spot').toUpperCase()}`;
-      } else {
-        indicator.style.display = 'none';
-      }
-    }
-
-    // Gabungkan data DB dengan cache lokal
     const cached = localStorage.getItem('bot_cfg_' + key.slice(0,16));
-    const cfg    = dbCfg || (cached ? JSON.parse(cached) : null);
-    if (!cfg) return;
-
-    // Update cache lokal dengan data DB terbaru
-    if (dbCfg) {
-      const safe = { ...dbCfg, api_key: '***', api_secret: '***' };
-      localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
-    }
-
+    if (!cached) return;
+    const cfg = JSON.parse(cached);
     _bot.exchange  = cfg.exchange   || 'bybit';
     _bot.tradeMode = cfg.trade_mode || 'spot';
     _bot.leverage  = cfg.leverage   || 10;
@@ -21543,6 +21534,7 @@ async function _botLoadConfig() {
     botSetMode(_bot.tradeMode);
     botSetLeverage(_bot.leverage);
     _botUpdateStatusUI(_bot.isActive);
+    // Jika aktif → restart interval scan
     if (_bot.isActive) _botStartInterval();
   } catch(e) { console.warn('[BotConfig] Load error:', e); }
 }
@@ -21631,11 +21623,23 @@ window.botSaveConfig = async function() {
       updated_at:         new Date().toISOString(),
     };
 
-    const res = await fetch(`${SB_URL}/rest/v1/bot_configs`, {
-      method:  'POST',
-      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body:    JSON.stringify(payload),
-    });
+    // PATCH dulu, INSERT jika belum ada
+    let res = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}`,
+      { method: 'PATCH', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) }
+    );
+    if (res.ok) {
+      const checkRes  = await fetch(
+        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=user_id&limit=1`,
+        { headers: SB_HEADERS }
+      );
+      const checkData = await checkRes.json();
+      if (!checkData || checkData.length === 0) {
+        res = await fetch(`${SB_URL}/rest/v1/bot_configs`, {
+          method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(payload),
+        });
+      }
+    }
     if (!res.ok) throw new Error(await res.text());
 
     // Cache tanpa secret
@@ -21710,13 +21714,37 @@ async function _botRefreshTgStatus() {
   if (!curSeed) return;
   try {
     const key = await seedKeyHash(...curSeed);
+
+    // Tampilkan dari cache dulu agar tidak blank saat load
+    try {
+      const cached = localStorage.getItem('zw_tg_status_' + key.slice(0,16));
+      if (cached) _botRenderTgStatus(cached);
+    } catch(e) {}
+
+    // Fetch dari DB untuk data terbaru
     const res = await fetch(
-      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id,is_telegram_linked&limit=1`,
       { headers: SB_HEADERS }
     );
-    const data = await res.json();
-    _botRenderTgStatus(data?.[0]?.telegram_chat_id || null);
-  } catch(e) { console.warn('[TgStatus]', e); }
+    const data  = await res.json();
+    const chatId = data?.[0]?.telegram_chat_id || null;
+
+    // Simpan ke cache agar tetap ada saat reload
+    try {
+      if (chatId) localStorage.setItem('zw_tg_status_' + key.slice(0,16), chatId);
+      else localStorage.removeItem('zw_tg_status_' + key.slice(0,16));
+    } catch(e) {}
+
+    _botRenderTgStatus(chatId);
+  } catch(e) {
+    // Fallback: tampilkan dari cache jika jaringan gagal
+    try {
+      const key    = await seedKeyHash(...curSeed);
+      const cached = localStorage.getItem('zw_tg_status_' + key.slice(0,16));
+      if (cached) _botRenderTgStatus(cached);
+    } catch(e2) {}
+    console.warn('[TgStatus]', e);
+  }
 }
 
 function _botRenderTgStatus(chatId) {
@@ -22528,28 +22556,60 @@ if (typeof _origDoLogout === 'function') {
     try {
       const key        = await window.seedKeyHash(...window.curSeed);
       const SB_URL     = window.SB_URL;
-      const SB_ANON    = window.SB_ANON;
+      const SB_HEADERS = window.SB_HEADERS;
       if (!SB_URL) return;
 
-      // Panggil Edge Function yang ambil saldo dari exchange dengan API key terenkripsi
-      const res  = await fetch(`${SB_URL}/functions/v1/bot-balance`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
-        body:    JSON.stringify({ user_id: key }),
-      });
+      const cfgRes = await fetch(
+        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,
+        { headers: SB_HEADERS }
+      );
+      const cfgs = await cfgRes.json();
+      const cfg  = cfgs?.[0];
+      if (!cfg?.api_key) { await _botBalanceFallback(key); return; }
 
-      if (!res.ok) {
-        // Fallback: ambil data dari bot_configs untuk hitung estimasi
-        await _botBalanceFallback(key);
-        return;
+      let apiKey, apiSecret;
+      try {
+        apiKey    = await _botDecrypt(cfg.api_key,    key);
+        apiSecret = await _botDecrypt(cfg.api_secret, key);
+      } catch { await _botBalanceFallback(key); return; }
+
+      const exchange  = cfg.exchange   || 'bybit';
+      const tradeMode = cfg.trade_mode || 'spot';
+      let usdt = 0;
+
+      if (exchange === 'bybit') {
+        const ts = Date.now().toString(), rw = '5000';
+        const accountType = tradeMode === 'futures' ? 'CONTRACT' : 'SPOT';
+        const qs  = 'accountType=' + accountType;
+        const ck  = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC',hash:'SHA-256' }, false, ['sign']);
+        const sb  = await crypto.subtle.sign('HMAC', ck, new TextEncoder().encode(ts + apiKey + rw + qs));
+        const sig = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        const res = await fetch(`https://api.bybit.com/v5/account/wallet-balance?${qs}`, {
+          headers: { 'X-BAPI-API-KEY':apiKey,'X-BAPI-SIGN':sig,'X-BAPI-TIMESTAMP':ts,'X-BAPI-RECV-WINDOW':rw }
+        });
+        const d = await res.json();
+        if (d.retCode === 0) {
+          const coins = d.result?.list?.[0]?.coin || [];
+          const uc = coins.find(c => c.coin === 'USDT');
+          usdt = parseFloat(uc?.walletBalance || uc?.availableToWithdraw || 0);
+        } else throw new Error(d.retMsg);
+      } else if (exchange === 'binance') {
+        const ts = Date.now(), isFut = tradeMode === 'futures';
+        const base = isFut ? 'https://fapi.binance.com/fapi/v2/balance' : 'https://api.binance.com/api/v3/account';
+        const qs   = 'timestamp=' + ts + '&recvWindow=5000';
+        const ck   = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC',hash:'SHA-256' }, false, ['sign']);
+        const sb   = await crypto.subtle.sign('HMAC', ck, new TextEncoder().encode(qs));
+        const sig  = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        const res  = await fetch(`${base}?${qs}&signature=${sig}`, { headers: { 'X-MBX-APIKEY': apiKey } });
+        const d    = await res.json();
+        if (isFut) { const a = Array.isArray(d) ? d.find(a=>a.asset==='USDT') : null; usdt = parseFloat(a?.balance||0); }
+        else { const a = d.balances?.find(a=>a.asset==='USDT'); usdt = parseFloat(a?.free||0); }
       }
 
-      const data = await res.json();
-      const usdt = parseFloat(data?.usdt ?? data?.balance ?? data?.available ?? 0);
-
       if (balVal) {
-        balVal.textContent = usdt.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+        balVal.textContent = usdt.toLocaleString('id-ID', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' USDT';
         balVal.style.color = '#10b981';
+        balVal.title = 'Saldo USDT langsung dari ' + exchange.toUpperCase();
       }
       if (balTs) {
         const now = new Date();
