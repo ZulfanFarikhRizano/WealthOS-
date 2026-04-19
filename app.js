@@ -21587,11 +21587,29 @@ async function _botLoadConfig() {
         botSetMode(_bot.tradeMode);
         _botUpdateStatusUI(_bot.isActive);
 
-        // Update cache lokal
+        // Update cache lokal — telegram_chat_id ikut tersimpan
         const safe = { ...db, api_key: '***', api_secret: '***' };
         localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
+
+        // Langsung render TG status dari data DB ini (hindari double-fetch / race condition)
+        const tgChatId = db.telegram_chat_id || null;
+        const tgCacheKey = 'zw_tg_' + key.slice(0,16);
+        try {
+          if (tgChatId) {
+            localStorage.setItem(tgCacheKey, tgChatId);
+          }
+          // PENTING: jangan hapus cache TG di sini walau DB return null
+          // Penghapusan hanya dilakukan saat user klik "Putus" (botTgDisconnect)
+        } catch(e) {}
+        _botRenderTgStatus(tgChatId || localStorage.getItem(tgCacheKey));
       } else {
         _botRenderApiIndicator(false);
+        // Row belum ada di DB — tetap tampilkan dari cache TG lokal jika ada
+        try {
+          const tgCacheKey = 'zw_tg_' + key.slice(0,16);
+          const cachedTg = localStorage.getItem(tgCacheKey);
+          if (cachedTg) _botRenderTgStatus(cachedTg);
+        } catch(e) {}
       }
     } catch(dbErr) {
       // DB gagal → cek cache untuk indikator
@@ -21770,9 +21788,9 @@ window.botTgDisconnect = async function() {
 async function _botRefreshTgStatus() {
   if (!curSeed) return;
   try {
-    const key = await seedKeyHash(...curSeed);
+    const key      = await seedKeyHash(...curSeed);
     const cacheKey = 'zw_tg_' + key.slice(0,16);
-    // Tampilkan dari cache dulu agar tidak blank
+    // Tampilkan dari cache dulu agar UI tidak blank saat menunggu DB
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) _botRenderTgStatus(cached);
@@ -21782,26 +21800,28 @@ async function _botRefreshTgStatus() {
       `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
       { headers: SB_HEADERS }
     );
-    const data   = await res.json();
-    // Jika row tidak ada sama sekali (user baru, belum save config) → pertahankan cache
-    // Hanya hapus cache jika row ada & telegram_chat_id memang null (artinya sudah di-disconnect manual)
+    const data = await res.json();
+    // Jika row tidak ada (array kosong) → user belum save config sama sekali
+    // Pertahankan cache, jangan reset status Telegram
     if (!Array.isArray(data) || data.length === 0) {
-      // Row belum ada → jangan ubah cache, tampilkan dari cache
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) _botRenderTgStatus(cached);
-      } catch(e) {}
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) _botRenderTgStatus(cached);
       return;
     }
     const chatId = data[0]?.telegram_chat_id || null;
-    // Simpan ke cache hanya jika ada chatId; hapus cache hanya jika row ada tapi chatId null
     try {
-      if (chatId) localStorage.setItem(cacheKey, chatId);
-      else localStorage.removeItem(cacheKey);
+      if (chatId) {
+        // Ada chatId baru dari DB → update cache
+        localStorage.setItem(cacheKey, chatId);
+      }
+      // PENTING: jangan hapus cache kalau chatId null —
+      // bisa jadi DB lambat / row belum ada.
+      // Cache hanya dihapus saat user klik "Putus" (botTgDisconnect).
     } catch(e) {}
-    _botRenderTgStatus(chatId);
+    // Render: pakai hasil DB jika ada, fallback ke cache
+    _botRenderTgStatus(chatId || localStorage.getItem(cacheKey));
   } catch(e) {
-    // Network error → tetap tampilkan dari cache, jangan reset status
+    // Jika fetch gagal (network error) → tetap tampilkan dari cache
     try {
       const key = await seedKeyHash(...curSeed);
       const c   = localStorage.getItem('zw_tg_' + key.slice(0,16));
@@ -22635,7 +22655,7 @@ if (typeof _origDoLogout === 'function') {
         const sig = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
         const r = await fetch(`https://api.bybit.com/v5/account/wallet-balance?${qs}`,{headers:{'X-BAPI-API-KEY':apiKey,'X-BAPI-SIGN':sig,'X-BAPI-TIMESTAMP':ts,'X-BAPI-RECV-WINDOW':rw}});
         const d = await r.json();
-        if (d.retCode===0) { const uc=d.result?.list?.[0]?.coin?.find(c=>c.coin==='USDT'); usdt=parseFloat(uc?.walletBalance||'0'); }
+        if (d.retCode===0) { const uc=d.result?.list?.[0]?.coin?.find(c=>c.coin==='USDT'); usdt=parseFloat(uc?.walletBalance||0); }
         else throw new Error(d.retMsg);
       } else if (ex === 'binance') {
         const ts=Date.now(), isFut=mode==='futures';
@@ -22649,31 +22669,28 @@ if (typeof _origDoLogout === 'function') {
         if(isFut){const a=Array.isArray(d)?d.find(a=>a.asset==='USDT'):null;usdt=parseFloat(a?.balance||0);}
         else{const a=d.balances?.find(a=>a.asset==='USDT');usdt=parseFloat(a?.free||0);}
       }
-      // Tampilkan saldo — selalu tampilkan nilai nyata, walau kecil
+      // Selalu tampilkan nilai nyata walau kecil (termasuk 0.00 atau < 1 USDT)
       if (balVal) {
-        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:4}) + ' USDT';
         balVal.style.color = '#10b981';
       }
-      // Coba ambil kurs USD/IDR dan tampilkan nilai IDR di bawahnya
+      // Konversi ke IDR dan tampilkan di bawah nilai USDT
       try {
-        const kursEl = document.getElementById('bot-real-balance-idr');
-        const kursRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const kursRes  = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         const kursData = await kursRes.json();
         const usdToIdr = kursData?.rates?.IDR || 0;
-        if (usdToIdr && balVal) {
+        if (usdToIdr) {
           const idrVal = usdt * usdToIdr;
-          if (!kursEl) {
-            // Inject elemen IDR sekali
-            const idrSpan = document.createElement('div');
-            idrSpan.id = 'bot-real-balance-idr';
-            idrSpan.style.cssText = 'font-size:.58rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
-            balVal.parentElement.insertBefore(idrSpan, balVal.nextSibling);
-            idrSpan.textContent = '≈ Rp ' + idrVal.toLocaleString('id-ID',{maximumFractionDigits:0});
-          } else {
-            kursEl.textContent = '≈ Rp ' + idrVal.toLocaleString('id-ID',{maximumFractionDigits:0});
+          let idrEl = document.getElementById('bot-real-balance-idr');
+          if (!idrEl && balVal?.parentElement) {
+            idrEl = document.createElement('div');
+            idrEl.id = 'bot-real-balance-idr';
+            idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.08rem';
+            balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
           }
+          if (idrEl) idrEl.textContent = '≈ Rp ' + idrVal.toLocaleString('id-ID',{maximumFractionDigits:0});
         }
-      } catch(kursErr) { /* kurs gagal → tampilkan USDT saja */ }
+      } catch(kursErr) { /* kurs gagal — tampilkan USDT saja */ }
       if (balTs)  { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
     } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(); }
     finally { if(icon) icon.style.animation=''; }
@@ -22714,8 +22731,7 @@ if (typeof _origDoLogout === 'function') {
 
       const label = cfg ? `${cfg.exchange?.toUpperCase() || 'Exchange'} · Est.` : 'Estimasi';
       if (balVal) {
-        // Selalu tampilkan nilai — walau 0 atau negatif
-        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT (est.)';
+        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + ' USDT (est.)';
         balVal.style.color = net >= 0 ? '#10b981' : '#ef4444';
         balVal.title       = 'Estimasi berdasarkan history trade (bukan saldo langsung dari exchange)';
       }
