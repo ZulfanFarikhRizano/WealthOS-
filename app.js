@@ -21771,9 +21771,10 @@ async function _botRefreshTgStatus() {
   if (!curSeed) return;
   try {
     const key = await seedKeyHash(...curSeed);
+    const cacheKey = 'zw_tg_' + key.slice(0,16);
     // Tampilkan dari cache dulu agar tidak blank
     try {
-      const cached = localStorage.getItem('zw_tg_' + key.slice(0,16));
+      const cached = localStorage.getItem(cacheKey);
       if (cached) _botRenderTgStatus(cached);
     } catch(e) {}
     // Fetch terbaru dari DB
@@ -21782,14 +21783,25 @@ async function _botRefreshTgStatus() {
       { headers: SB_HEADERS }
     );
     const data   = await res.json();
-    const chatId = data?.[0]?.telegram_chat_id || null;
-    // Simpan ke cache
+    // Jika row tidak ada sama sekali (user baru, belum save config) → pertahankan cache
+    // Hanya hapus cache jika row ada & telegram_chat_id memang null (artinya sudah di-disconnect manual)
+    if (!Array.isArray(data) || data.length === 0) {
+      // Row belum ada → jangan ubah cache, tampilkan dari cache
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) _botRenderTgStatus(cached);
+      } catch(e) {}
+      return;
+    }
+    const chatId = data[0]?.telegram_chat_id || null;
+    // Simpan ke cache hanya jika ada chatId; hapus cache hanya jika row ada tapi chatId null
     try {
-      if (chatId) localStorage.setItem('zw_tg_' + key.slice(0,16), chatId);
-      else localStorage.removeItem('zw_tg_' + key.slice(0,16));
+      if (chatId) localStorage.setItem(cacheKey, chatId);
+      else localStorage.removeItem(cacheKey);
     } catch(e) {}
     _botRenderTgStatus(chatId);
   } catch(e) {
+    // Network error → tetap tampilkan dari cache, jangan reset status
     try {
       const key = await seedKeyHash(...curSeed);
       const c   = localStorage.getItem('zw_tg_' + key.slice(0,16));
@@ -22623,7 +22635,7 @@ if (typeof _origDoLogout === 'function') {
         const sig = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
         const r = await fetch(`https://api.bybit.com/v5/account/wallet-balance?${qs}`,{headers:{'X-BAPI-API-KEY':apiKey,'X-BAPI-SIGN':sig,'X-BAPI-TIMESTAMP':ts,'X-BAPI-RECV-WINDOW':rw}});
         const d = await r.json();
-        if (d.retCode===0) { const uc=d.result?.list?.[0]?.coin?.find(c=>c.coin==='USDT'); usdt=parseFloat(uc?.walletBalance||0); }
+        if (d.retCode===0) { const uc=d.result?.list?.[0]?.coin?.find(c=>c.coin==='USDT'); usdt=parseFloat(uc?.walletBalance||'0'); }
         else throw new Error(d.retMsg);
       } else if (ex === 'binance') {
         const ts=Date.now(), isFut=mode==='futures';
@@ -22637,7 +22649,31 @@ if (typeof _origDoLogout === 'function') {
         if(isFut){const a=Array.isArray(d)?d.find(a=>a.asset==='USDT'):null;usdt=parseFloat(a?.balance||0);}
         else{const a=d.balances?.find(a=>a.asset==='USDT');usdt=parseFloat(a?.free||0);}
       }
-      if (balVal) { balVal.textContent=usdt.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT'; balVal.style.color='#10b981'; }
+      // Tampilkan saldo — selalu tampilkan nilai nyata, walau kecil
+      if (balVal) {
+        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT';
+        balVal.style.color = '#10b981';
+      }
+      // Coba ambil kurs USD/IDR dan tampilkan nilai IDR di bawahnya
+      try {
+        const kursEl = document.getElementById('bot-real-balance-idr');
+        const kursRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const kursData = await kursRes.json();
+        const usdToIdr = kursData?.rates?.IDR || 0;
+        if (usdToIdr && balVal) {
+          const idrVal = usdt * usdToIdr;
+          if (!kursEl) {
+            // Inject elemen IDR sekali
+            const idrSpan = document.createElement('div');
+            idrSpan.id = 'bot-real-balance-idr';
+            idrSpan.style.cssText = 'font-size:.58rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
+            balVal.parentElement.insertBefore(idrSpan, balVal.nextSibling);
+            idrSpan.textContent = '≈ Rp ' + idrVal.toLocaleString('id-ID',{maximumFractionDigits:0});
+          } else {
+            kursEl.textContent = '≈ Rp ' + idrVal.toLocaleString('id-ID',{maximumFractionDigits:0});
+          }
+        }
+      } catch(kursErr) { /* kurs gagal → tampilkan USDT saja */ }
       if (balTs)  { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
     } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(); }
     finally { if(icon) icon.style.animation=''; }
@@ -22678,7 +22714,8 @@ if (typeof _origDoLogout === 'function') {
 
       const label = cfg ? `${cfg.exchange?.toUpperCase() || 'Exchange'} · Est.` : 'Estimasi';
       if (balVal) {
-        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+        // Selalu tampilkan nilai — walau 0 atau negatif
+        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT (est.)';
         balVal.style.color = net >= 0 ? '#10b981' : '#ef4444';
         balVal.title       = 'Estimasi berdasarkan history trade (bukan saldo langsung dari exchange)';
       }
