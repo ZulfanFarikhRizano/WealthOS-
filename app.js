@@ -22247,10 +22247,10 @@ async function _botSendTelegram(chatId, signal, orderId, amountUsdt, status) {
   ].join('\n');
   try {
     // Kirim via Supabase Edge Function — token bot disimpan di Vercel env, tidak di browser
-    await fetch(`${SB_URL}/functions/v1/bot-notify`, {
+    await fetch(`${SB_URL}/functions/v1/trading-worker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
-      body: JSON.stringify({ chat_id: chatId, text: msg }),
+      body: JSON.stringify({ _type: 'bot_status_notif', chat_id: chatId, message: msg }),
     });
   } catch(e) { console.warn('[Telegram]', e); }
 }
@@ -22259,10 +22259,10 @@ async function _botSendTelegram(chatId, signal, orderId, amountUsdt, status) {
 async function _botSendTgText(chatId, text) {
   if (!chatId) return;
   try {
-    await fetch(`${SB_URL}/functions/v1/bot-notify`, {
+    await fetch(`${SB_URL}/functions/v1/trading-worker`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
-      body:    JSON.stringify({ chat_id: chatId, text }),
+      body:    JSON.stringify({ _type: 'bot_status_notif', chat_id: chatId, message: text }),
     });
   } catch(e) { console.warn('[TgText]', e); }
 }
@@ -22663,7 +22663,7 @@ if (typeof _origDoLogout === 'function') {
     if (balVal) balVal.textContent = '…';
     try {
       const key    = await window.seedKeyHash(...window.curSeed);
-      const SB_URL = window.SB_URL, SB_HEADERS = window.SB_HEADERS;
+      const SB_URL = window.SB_URL, SB_HEADERS = window.SB_HEADERS, SB_ANON = window.SB_ANON;
       if (!SB_URL) return;
       const cfgRes = await fetch(`${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,{headers:SB_HEADERS});
       const cfgs   = await cfgRes.json();
@@ -22673,51 +22673,33 @@ if (typeof _origDoLogout === 'function') {
       try { apiKey = await _botDecrypt(cfg.api_key, key); apiSecret = await _botDecrypt(cfg.api_secret, key); }
       catch { await _botBalanceFallback(key); return; }
       const ex = cfg.exchange || 'bybit', mode = cfg.trade_mode || 'spot';
-      let usdt = 0;
-      if (ex === 'bybit') {
-        const ts = Date.now().toString(), rw = '5000', at = mode==='futures'?'CONTRACT':'SPOT', qs='accountType='+at;
-        const ck = await crypto.subtle.importKey('raw',new TextEncoder().encode(apiSecret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
-        const sb = await crypto.subtle.sign('HMAC',ck,new TextEncoder().encode(ts+apiKey+rw+qs));
-        const sig = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
-        const r = await fetch(`https://api.bybit.com/v5/account/wallet-balance?${qs}`,{headers:{'X-BAPI-API-KEY':apiKey,'X-BAPI-SIGN':sig,'X-BAPI-TIMESTAMP':ts,'X-BAPI-RECV-WINDOW':rw}});
-        const d = await r.json();
-        if (d.retCode===0) {
-          const acct = d.result?.list?.[0];
-          usdt = parseFloat(acct?.totalEquity || acct?.totalWalletBalance || '0');
-          if (!usdt && acct?.coin?.length) {
-            usdt = acct.coin.reduce((s,c) => s + parseFloat(c.usdValue || c.walletBalance || 0), 0);
-          }
-        } else throw new Error(d.retMsg);
-      } else if (ex === 'binance') {
-        const ts=Date.now(), isFut=mode==='futures';
-        const base=isFut?'https://fapi.binance.com/fapi/v2/balance':'https://api.binance.com/api/v3/account';
-        const qs='timestamp='+ts+'&recvWindow=5000';
-        const ck=await crypto.subtle.importKey('raw',new TextEncoder().encode(apiSecret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
-        const sb=await crypto.subtle.sign('HMAC',ck,new TextEncoder().encode(qs));
-        const sig=Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
-        const r=await fetch(`${base}?${qs}&signature=${sig}`,{headers:{'X-MBX-APIKEY':apiKey}});
-        const d=await r.json();
-        if(isFut){const a=Array.isArray(d)?d.find(a=>a.asset==='USDT'):null;usdt=parseFloat(a?.balance||0);}
-        else{const a=d.balances?.find(a=>a.asset==='USDT');usdt=parseFloat(a?.free||0);}
-      }
+
+      // Proxy via trading-worker (fix CORS — browser tidak bisa fetch langsung ke exchange API)
+      const proxyRes = await fetch(`${SB_URL}/functions/v1/trading-worker`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
+        body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, api_key: apiKey, api_secret: apiSecret }),
+      });
+      if (!proxyRes.ok) throw new Error(`Proxy error: ${proxyRes.status}`);
+      const result = await proxyRes.json();
+      if (!result.ok) throw new Error(result.error || 'Unknown error');
+
+      const usdt = result.usdt || 0;
+      const idr  = result.idr  || 0;
+
       if (balVal) {
         const dec = usdt >= 1 ? 2 : 4;
         balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' USDT';
         balVal.style.color = '#10b981';
       }
-      try {
-        const kr = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-        const kd = await kr.json();
-        const rate = kd?.rates?.IDR || 16000;
-        let idrEl = document.getElementById('bot-real-balance-idr');
-        if (!idrEl && balVal?.parentElement) {
-          idrEl = document.createElement('div');
-          idrEl.id = 'bot-real-balance-idr';
-          idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
-          balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
-        }
-        if (idrEl) idrEl.textContent = '≈ Rp ' + (usdt * rate).toLocaleString('id-ID',{maximumFractionDigits:0});
-      } catch(e) {}
+      let idrEl = document.getElementById('bot-real-balance-idr');
+      if (!idrEl && balVal?.parentElement) {
+        idrEl = document.createElement('div');
+        idrEl.id = 'bot-real-balance-idr';
+        idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
+        balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
+      }
+      if (idrEl) idrEl.textContent = '≈ Rp ' + idr.toLocaleString('id-ID',{maximumFractionDigits:0});
       if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
     } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(); }
     finally { if(icon) icon.style.animation=''; }
