@@ -21587,11 +21587,23 @@ async function _botLoadConfig() {
         botSetMode(_bot.tradeMode);
         _botUpdateStatusUI(_bot.isActive);
 
-        // Update cache lokal
+        // Update cache lokal — telegram_chat_id ikut tersimpan
         const safe = { ...db, api_key: '***', api_secret: '***' };
         localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
+
+        // Render TG status langsung dari data DB ini (hindari double-fetch/race)
+        const _tgId = db.telegram_chat_id || null;
+        const _tgCk = 'zw_tg_' + key.slice(0,16);
+        try { if (_tgId) localStorage.setItem(_tgCk, _tgId); } catch(e) {}
+        _botRenderTgStatus(_tgId || localStorage.getItem(_tgCk));
       } else {
         _botRenderApiIndicator(false);
+        // Row belum ada — tampilkan dari cache TG lokal jika ada
+        try {
+          const _tgCk2 = 'zw_tg_' + key.slice(0,16);
+          const _tgC2  = localStorage.getItem(_tgCk2);
+          if (_tgC2) _botRenderTgStatus(_tgC2);
+        } catch(e) {}
       }
     } catch(dbErr) {
       // DB gagal → cek cache untuk indikator
@@ -21770,26 +21782,29 @@ window.botTgDisconnect = async function() {
 async function _botRefreshTgStatus() {
   if (!curSeed) return;
   try {
-    const key = await seedKeyHash(...curSeed);
-    // Tampilkan dari cache dulu agar tidak blank
-    try {
-      const cached = localStorage.getItem('zw_tg_' + key.slice(0,16));
-      if (cached) _botRenderTgStatus(cached);
-    } catch(e) {}
-    // Fetch terbaru dari DB
+    const key      = await seedKeyHash(...curSeed);
+    const cacheKey = 'zw_tg_' + key.slice(0,16);
+    // Tampilkan cache dulu agar tidak blank saat menunggu DB
+    try { const c = localStorage.getItem(cacheKey); if (c) _botRenderTgStatus(c); } catch(e) {}
+    // Fetch dari DB
     const res  = await fetch(
       `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
       { headers: SB_HEADERS }
     );
-    const data   = await res.json();
-    const chatId = data?.[0]?.telegram_chat_id || null;
-    // Simpan ke cache
+    const data = await res.json();
+    // Row tidak ada (user baru / belum save config) → pertahankan cache
+    if (!Array.isArray(data) || data.length === 0) {
+      try { const c = localStorage.getItem(cacheKey); if (c) _botRenderTgStatus(c); } catch(e) {}
+      return;
+    }
+    const chatId = data[0]?.telegram_chat_id || null;
     try {
-      if (chatId) localStorage.setItem('zw_tg_' + key.slice(0,16), chatId);
-      else localStorage.removeItem('zw_tg_' + key.slice(0,16));
+      if (chatId) localStorage.setItem(cacheKey, chatId);
+      // PENTING: jangan hapus cache di sini — hanya botTgDisconnect() yang boleh hapus
     } catch(e) {}
-    _botRenderTgStatus(chatId);
+    _botRenderTgStatus(chatId || localStorage.getItem(cacheKey));
   } catch(e) {
+    // Network error → tetap tampilkan cache
     try {
       const key = await seedKeyHash(...curSeed);
       const c   = localStorage.getItem('zw_tg_' + key.slice(0,16));
@@ -21864,39 +21879,36 @@ window.botToggleActive = async function() {
       _botStopInterval();
     }
 
-    // Kirim notifikasi Telegram ke user
+    // ── Kirim notifikasi Telegram ──────────────────────────────────
     try {
-      const tgCfgRes = await fetch(
+      const _tgCfgRes = await fetch(
         `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id,exchange,trade_mode&limit=1`,
         { headers: SB_HEADERS }
       );
-      const tgCfgArr = await tgCfgRes.json();
-      const tgChatId = tgCfgArr?.[0]?.telegram_chat_id;
-      const ex       = (tgCfgArr?.[0]?.exchange || 'bybit').toUpperCase();
-      const mode     = (tgCfgArr?.[0]?.trade_mode || 'spot').toUpperCase();
-      const timeStr  = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
-      if (tgChatId) {
-        const msg = _bot.isActive
-          ? [
-              `🟢 <b>Bot z-wealth AKTIF</b>`,
-              ``,
-              `⚡ Bot mulai memantau pasar setiap 1 menit.`,
-              `📊 Exchange: <b>${ex}</b> · Mode: <b>${mode}</b>`,
-              `🕒 Diaktifkan: ${timeStr} WIB`,
-              ``,
-              `<i>Kamu akan menerima notifikasi setiap ada sinyal trade.</i>`,
-            ].join('\n')
-          : [
-              `🔴 <b>Bot z-wealth DIHENTIKAN</b>`,
-              ``,
-              `⏸ Bot tidak lagi memantau pasar.`,
-              `🕒 Dihentikan: ${timeStr} WIB`,
-              ``,
-              `<i>Aktifkan kembali melalui aplikasi z-wealth kapan saja.</i>`,
-            ].join('\n');
-        await _botSendTgText(tgChatId, msg);
+      const _tgCfg   = (await _tgCfgRes.json())?.[0];
+      const _tgChat  = _tgCfg?.telegram_chat_id;
+      if (_tgChat) {
+        const _ex   = (_tgCfg.exchange   || 'bybit').toUpperCase();
+        const _mode = (_tgCfg.trade_mode || 'spot').toUpperCase();
+        const _ts   = new Date().toLocaleString('id-ID', { timeZone:'Asia/Jakarta', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+        const _msg  = _bot.isActive
+          ? `🟢 <b>Bot z-wealth AKTIF</b>
+
+⚡ Bot mulai memantau pasar setiap 1 menit.
+📊 Exchange: <b>${_ex}</b> · Mode: <b>${_mode}</b>
+🕒 Diaktifkan: ${_ts} WIB
+
+<i>Kamu akan menerima notifikasi setiap ada sinyal trade.</i>`
+          : `🔴 <b>Bot z-wealth DIHENTIKAN</b>
+
+⏸ Bot tidak lagi memantau pasar.
+🕒 Dihentikan: ${_ts} WIB
+
+<i>Aktifkan kembali melalui aplikasi z-wealth kapan saja.</i>`;
+        await _botSendTgText(_tgChat, _msg);
       }
-    } catch(tgErr) { console.warn('[BotToggleTg]', tgErr); }
+    } catch(_tgErr) { console.warn('[BotToggleTg]', _tgErr); }
+
   } catch(e) {
     _bot.isActive = !_bot.isActive; // revert
     toast('Gagal update: ' + e.message, 1);
@@ -22247,9 +22259,9 @@ async function _botSendTelegram(chatId, signal, orderId, amountUsdt, status) {
 async function _botSendTgText(chatId, text) {
   if (!chatId) return;
   try {
-    await fetch(`${window.SB_URL}/functions/v1/bot-notify`, {
+    await fetch(`${SB_URL}/functions/v1/bot-notify`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window.SB_ANON },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
       body:    JSON.stringify({ chat_id: chatId, text }),
     });
   } catch(e) { console.warn('[TgText]', e); }
@@ -22669,8 +22681,13 @@ if (typeof _origDoLogout === 'function') {
         const sig = Array.from(new Uint8Array(sb)).map(b=>b.toString(16).padStart(2,'0')).join('');
         const r = await fetch(`https://api.bybit.com/v5/account/wallet-balance?${qs}`,{headers:{'X-BAPI-API-KEY':apiKey,'X-BAPI-SIGN':sig,'X-BAPI-TIMESTAMP':ts,'X-BAPI-RECV-WINDOW':rw}});
         const d = await r.json();
-        if (d.retCode===0) { const uc=d.result?.list?.[0]?.coin?.find(c=>c.coin==='USDT'); usdt=parseFloat(uc?.walletBalance||0); }
-        else throw new Error(d.retMsg);
+        if (d.retCode===0) {
+          const acct = d.result?.list?.[0];
+          usdt = parseFloat(acct?.totalEquity || acct?.totalWalletBalance || '0');
+          if (!usdt && acct?.coin?.length) {
+            usdt = acct.coin.reduce((s,c) => s + parseFloat(c.usdValue || c.walletBalance || 0), 0);
+          }
+        } else throw new Error(d.retMsg);
       } else if (ex === 'binance') {
         const ts=Date.now(), isFut=mode==='futures';
         const base=isFut?'https://fapi.binance.com/fapi/v2/balance':'https://api.binance.com/api/v3/account';
@@ -22683,8 +22700,25 @@ if (typeof _origDoLogout === 'function') {
         if(isFut){const a=Array.isArray(d)?d.find(a=>a.asset==='USDT'):null;usdt=parseFloat(a?.balance||0);}
         else{const a=d.balances?.find(a=>a.asset==='USDT');usdt=parseFloat(a?.free||0);}
       }
-      if (balVal) { balVal.textContent=usdt.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDT'; balVal.style.color='#10b981'; }
-      if (balTs)  { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
+      if (balVal) {
+        const dec = usdt >= 1 ? 2 : 4;
+        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' USDT';
+        balVal.style.color = '#10b981';
+      }
+      try {
+        const kr = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const kd = await kr.json();
+        const rate = kd?.rates?.IDR || 16000;
+        let idrEl = document.getElementById('bot-real-balance-idr');
+        if (!idrEl && balVal?.parentElement) {
+          idrEl = document.createElement('div');
+          idrEl.id = 'bot-real-balance-idr';
+          idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
+          balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
+        }
+        if (idrEl) idrEl.textContent = '≈ Rp ' + (usdt * rate).toLocaleString('id-ID',{maximumFractionDigits:0});
+      } catch(e) {}
+      if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
     } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(); }
     finally { if(icon) icon.style.animation=''; }
   };
@@ -22734,7 +22768,11 @@ if (typeof _origDoLogout === 'function') {
         pnlLabel.style.color = net >= 0 ? '#10b981' : '#ef4444';
       }
     } catch (e) {
-      if (balVal) { balVal.textContent = 'API belum terhubung'; balVal.style.color = 'var(--muted)'; }
+      if (balVal && balVal.textContent === '…') {
+        balVal.textContent = '0.00 USDT';
+        balVal.style.color = 'var(--muted)';
+        balVal.title = 'Simpan API key exchange untuk melihat saldo nyata';
+      }
     }
     if (balTs) {
       const now = new Date();
