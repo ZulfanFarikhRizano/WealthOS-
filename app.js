@@ -21495,9 +21495,38 @@ async function _botLoadConfig() {
   if (!curSeed) return;
   try {
     const key    = await seedKeyHash(...curSeed);
+
+    // Cek DB langsung untuk data terbaru + tampilkan indikator API
+    const dbRes = await fetch(
+      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=*&limit=1`,
+      { headers: SB_HEADERS }
+    );
+    const dbData = await dbRes.json();
+    const dbCfg  = dbData?.[0];
+
+    // Tampilkan indikator API tersimpan jika ada di DB
+    const indicator = document.getElementById('bot-api-saved-indicator');
+    const exchLabel = document.getElementById('bot-api-saved-exchange');
+    if (indicator) {
+      if (dbCfg?.api_key) {
+        indicator.style.display = 'flex';
+        if (exchLabel) exchLabel.textContent = `· ${(dbCfg.exchange || 'bybit').toUpperCase()} ${(dbCfg.trade_mode || 'spot').toUpperCase()}`;
+      } else {
+        indicator.style.display = 'none';
+      }
+    }
+
+    // Gabungkan data DB dengan cache lokal
     const cached = localStorage.getItem('bot_cfg_' + key.slice(0,16));
-    if (!cached) return;
-    const cfg = JSON.parse(cached);
+    const cfg    = dbCfg || (cached ? JSON.parse(cached) : null);
+    if (!cfg) return;
+
+    // Update cache lokal dengan data DB terbaru
+    if (dbCfg) {
+      const safe = { ...dbCfg, api_key: '***', api_secret: '***' };
+      localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
+    }
+
     _bot.exchange  = cfg.exchange   || 'bybit';
     _bot.tradeMode = cfg.trade_mode || 'spot';
     _bot.leverage  = cfg.leverage   || 10;
@@ -21514,7 +21543,6 @@ async function _botLoadConfig() {
     botSetMode(_bot.tradeMode);
     botSetLeverage(_bot.leverage);
     _botUpdateStatusUI(_bot.isActive);
-    // Jika aktif → restart interval scan
     if (_bot.isActive) _botStartInterval();
   } catch(e) { console.warn('[BotConfig] Load error:', e); }
 }
@@ -21603,25 +21631,11 @@ window.botSaveConfig = async function() {
       updated_at:         new Date().toISOString(),
     };
 
-    // PATCH dulu (update jika sudah ada row)
-    let res = await fetch(
-      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}`,
-      { method: 'PATCH', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(payload) }
-    );
-    if (res.ok) {
-      const checkRes = await fetch(
-        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=user_id&limit=1`,
-        { headers: SB_HEADERS }
-      );
-      const checkData = await checkRes.json();
-      if (!checkData || checkData.length === 0) {
-        res = await fetch(`${SB_URL}/rest/v1/bot_configs`, {
-          method: 'POST',
-          headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify(payload),
-        });
-      }
-    }
+    const res = await fetch(`${SB_URL}/rest/v1/bot_configs`, {
+      method:  'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body:    JSON.stringify(payload),
+    });
     if (!res.ok) throw new Error(await res.text());
 
     // Cache tanpa secret
@@ -22514,86 +22528,28 @@ if (typeof _origDoLogout === 'function') {
     try {
       const key        = await window.seedKeyHash(...window.curSeed);
       const SB_URL     = window.SB_URL;
-      const SB_HEADERS = window.SB_HEADERS;
+      const SB_ANON    = window.SB_ANON;
       if (!SB_URL) return;
 
-      // Ambil config (api_key terenkripsi) dari Supabase
-      const cfgRes = await fetch(
-        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,
-        { headers: SB_HEADERS }
-      );
-      const cfgs = await cfgRes.json();
-      const cfg  = cfgs?.[0];
-      if (!cfg?.api_key) { await _botBalanceFallback(key); return; }
+      // Panggil Edge Function yang ambil saldo dari exchange dengan API key terenkripsi
+      const res  = await fetch(`${SB_URL}/functions/v1/bot-balance`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
+        body:    JSON.stringify({ user_id: key }),
+      });
 
-      // Decrypt di browser pakai seed user
-      let apiKey, apiSecret;
-      try {
-        apiKey    = await _botDecrypt(cfg.api_key,    key);
-        apiSecret = await _botDecrypt(cfg.api_secret, key);
-      } catch { await _botBalanceFallback(key); return; }
-
-      const exchange  = cfg.exchange   || 'bybit';
-      const tradeMode = cfg.trade_mode || 'spot';
-      let usdt = 0;
-
-      // ── Bybit ─────────────────────────────────────────────────────
-      if (exchange === 'bybit') {
-        const ts          = Date.now().toString();
-        const recvWindow  = '5000';
-        const accountType = tradeMode === 'futures' ? 'CONTRACT' : 'SPOT';
-        const queryStr    = 'accountType=' + accountType;
-        const signStr     = ts + apiKey + recvWindow + queryStr;
-        const cryptoKey   = await crypto.subtle.importKey(
-          'raw', new TextEncoder().encode(apiSecret),
-          { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-        );
-        const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(signStr));
-        const sig    = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
-        const res    = await fetch(
-          `https://api.bybit.com/v5/account/wallet-balance?${queryStr}`,
-          { headers: {
-            'X-BAPI-API-KEY': apiKey, 'X-BAPI-SIGN': sig,
-            'X-BAPI-TIMESTAMP': ts,  'X-BAPI-RECV-WINDOW': recvWindow,
-          }}
-        );
-        const data = await res.json();
-        if (data.retCode === 0) {
-          const coins    = data.result?.list?.[0]?.coin || [];
-          const usdtCoin = coins.find(c => c.coin === 'USDT');
-          usdt = parseFloat(usdtCoin?.walletBalance || usdtCoin?.availableToWithdraw || 0);
-        } else { throw new Error(data.retMsg); }
+      if (!res.ok) {
+        // Fallback: ambil data dari bot_configs untuk hitung estimasi
+        await _botBalanceFallback(key);
+        return;
       }
 
-      // ── Binance ───────────────────────────────────────────────────
-      else if (exchange === 'binance') {
-        const ts        = Date.now();
-        const isFutures = tradeMode === 'futures';
-        const base      = isFutures
-          ? 'https://fapi.binance.com/fapi/v2/balance'
-          : 'https://api.binance.com/api/v3/account';
-        const qs        = 'timestamp=' + ts + '&recvWindow=5000';
-        const cryptoKey = await crypto.subtle.importKey(
-          'raw', new TextEncoder().encode(apiSecret),
-          { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-        );
-        const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(qs));
-        const sig    = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
-        const res    = await fetch(`${base}?${qs}&signature=${sig}`, { headers: { 'X-MBX-APIKEY': apiKey } });
-        const data   = await res.json();
-        if (isFutures) {
-          const a = Array.isArray(data) ? data.find(a => a.asset === 'USDT') : null;
-          usdt = parseFloat(a?.balance || a?.availableBalance || 0);
-        } else {
-          const a = data.balances?.find(a => a.asset === 'USDT');
-          usdt = parseFloat(a?.free || 0);
-        }
-      }
+      const data = await res.json();
+      const usdt = parseFloat(data?.usdt ?? data?.balance ?? data?.available ?? 0);
 
       if (balVal) {
         balVal.textContent = usdt.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
         balVal.style.color = '#10b981';
-        balVal.title = 'Saldo USDT langsung dari ' + exchange.toUpperCase();
       }
       if (balTs) {
         const now = new Date();
