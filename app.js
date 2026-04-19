@@ -21506,31 +21506,31 @@ window.botSetLeverage = function(lev) {
 // ── Load config dari localStorage (API key tidak di-load ke input untuk keamanan) ─
 // ── Render indikator API tersimpan (inject via JS, tidak perlu ubah HTML) ──
 function _botRenderApiIndicator(hasSaved, exchange, tradeMode) {
-  // Cari atau buat elemen indikator
   let ind = document.getElementById('bot-api-saved-indicator');
   if (!ind) {
-    // Inject setelah container input API key
     const apiKeyInput = document.getElementById('bot-api-key');
     if (!apiKeyInput) return;
     const container = apiKeyInput.closest('div')?.parentElement?.parentElement;
     if (!container) return;
     ind = document.createElement('div');
     ind.id = 'bot-api-saved-indicator';
-    ind.style.cssText = 'display:none;align-items:center;gap:.4rem;padding:.32rem .7rem;border-radius:8px;margin-bottom:.6rem;font-size:.62rem;font-weight:700';
     container.parentElement.insertBefore(ind, container.nextSibling);
   }
   if (hasSaved) {
-    const exLabel = (exchange || 'bybit').toUpperCase();
-    const modeLabel = (tradeMode || 'spot').toUpperCase();
-    ind.style.display = 'flex';
-    ind.style.background = 'rgba(16,185,129,.12)';
-    ind.style.border = '1px solid rgba(16,185,129,.3)';
-    ind.style.color = '#10b981';
-    ind.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-      '<span>API Key tersimpan di database</span>' +
-      '<span style="opacity:.6;font-weight:500;margin-left:.2rem">· ' + exLabel + ' ' + modeLabel + '</span>';
+    const ex   = (exchange  || 'bybit').charAt(0).toUpperCase() + (exchange  || 'bybit').slice(1);
+    const mode = (tradeMode || 'spot').charAt(0).toUpperCase()  + (tradeMode || 'spot').slice(1);
+    ind.style.cssText = [
+      'display:flex','align-items:center','gap:.35rem',
+      'padding:.3rem .6rem','border-radius:7px','margin-bottom:.65rem',
+      'background:rgba(16,185,129,.08)','border:1px solid rgba(16,185,129,.2)',
+      'width:fit-content','max-width:100%'
+    ].join(';');
+    ind.innerHTML =
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.8" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '<span style="font-size:.62rem;font-weight:600;color:#10b981;white-space:nowrap">API Key tersimpan</span>' +
+      '<span style="font-size:.58rem;color:rgba(16,185,129,.55);font-weight:500;white-space:nowrap;background:rgba(16,185,129,.12);padding:.1rem .3rem;border-radius:4px">' + ex + ' · ' + mode + '</span>';
   } else {
-    ind.style.display = 'none';
+    ind.style.cssText = 'display:none';
   }
 }
 
