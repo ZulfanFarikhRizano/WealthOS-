@@ -22663,7 +22663,7 @@ if (typeof _origDoLogout === 'function') {
     if (balVal) balVal.textContent = '…';
     try {
       const key    = await window.seedKeyHash(...window.curSeed);
-      const SB_URL = window.SB_URL, SB_HEADERS = window.SB_HEADERS, SB_ANON = window.SB_ANON;
+      const SB_URL = window.SB_URL || SB_URL, SB_HEADERS = window.SB_HEADERS || SB_HEADERS, _anonKey = (typeof SB_ANON !== 'undefined' ? SB_ANON : window.SB_ANON) || '';
       if (!SB_URL) return;
       const cfgRes = await fetch(`${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,{headers:SB_HEADERS});
       const cfgs   = await cfgRes.json();
@@ -22677,7 +22677,7 @@ if (typeof _origDoLogout === 'function') {
       // Proxy via trading-worker (fix CORS — browser tidak bisa fetch langsung ke exchange API)
       const proxyRes = await fetch(`${SB_URL}/functions/v1/trading-worker`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_ANON },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
         body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, api_key: apiKey, api_secret: apiSecret }),
       });
       if (!proxyRes.ok) throw new Error(`Proxy error: ${proxyRes.status}`);
