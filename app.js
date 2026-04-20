@@ -545,6 +545,10 @@ const SB_HEADERS = {
   'Content-Type': 'application/json',
   'Prefer': 'return=representation'
 };
+// Expose ke window agar fungsi-fungsi dalam closure bisa akses
+window.SB_URL     = SB_URL;
+window.SB_HEADERS = SB_HEADERS;
+window.SB_ANON    = SB_ANON;
 
 async function sbGet(seedKey){
   const url=`${SB_URL}/rest/v1/accounts?seed_key=eq.${encodeURIComponent(seedKey)}&select=data`;
@@ -22662,10 +22666,12 @@ if (typeof _origDoLogout === 'function') {
     if (icon) icon.style.animation = 'spin .7s linear infinite';
     if (balVal) balVal.textContent = '…';
     try {
-      const key    = await window.seedKeyHash(...window.curSeed);
-      const SB_URL = window.SB_URL || SB_URL, SB_HEADERS = window.SB_HEADERS || SB_HEADERS, _anonKey = (typeof SB_ANON !== 'undefined' ? SB_ANON : window.SB_ANON) || '';
-      if (!SB_URL) return;
-      const cfgRes = await fetch(`${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,{headers:SB_HEADERS});
+      const key        = await window.seedKeyHash(...window.curSeed);
+      const _sbUrl     = window.SB_URL     || SB_URL;
+      const _sbHeaders = window.SB_HEADERS || SB_HEADERS;
+      const _anonKey   = window.SB_ANON    || (typeof SB_ANON !== 'undefined' ? SB_ANON : '') || '';
+      if (!_sbUrl) return;
+      const cfgRes = await fetch(`${_sbUrl}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,{headers:_sbHeaders});
       const cfgs   = await cfgRes.json();
       const cfg    = cfgs?.[0];
       if (!cfg?.api_key) { await _botBalanceFallback(key); return; }
@@ -22675,7 +22681,7 @@ if (typeof _origDoLogout === 'function') {
       const ex = cfg.exchange || 'bybit', mode = cfg.trade_mode || 'spot';
 
       // Proxy via trading-worker (fix CORS — browser tidak bisa fetch langsung ke exchange API)
-      const proxyRes = await fetch(`${SB_URL}/functions/v1/trading-worker`, {
+      const proxyRes = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
         body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, api_key: apiKey, api_secret: apiSecret }),
@@ -22701,7 +22707,7 @@ if (typeof _origDoLogout === 'function') {
       }
       if (idrEl) idrEl.textContent = '≈ Rp ' + idr.toLocaleString('id-ID',{maximumFractionDigits:0});
       if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
-    } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(); }
+    } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(key); }
     finally { if(icon) icon.style.animation=''; }
   };
 
