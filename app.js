@@ -546,9 +546,10 @@ const SB_HEADERS = {
   'Prefer': 'return=representation'
 };
 // Expose ke window agar fungsi-fungsi dalam closure bisa akses
-window.SB_URL     = SB_URL;
-window.SB_HEADERS = SB_HEADERS;
-window.SB_ANON    = SB_ANON;
+window.SB_URL        = SB_URL;
+window.SB_HEADERS    = SB_HEADERS;
+window.SB_ANON       = SB_ANON;
+window.seedKeyHash   = seedKeyHash;
 
 async function sbGet(seedKey){
   const url=`${SB_URL}/rest/v1/accounts?seed_key=eq.${encodeURIComponent(seedKey)}&select=data`;
@@ -706,6 +707,7 @@ async function doLogin(){
 
 async function enterApp(seed,data){
   curSeed=seed;
+  window.curSeed=seed; // expose ke window agar botRefreshBalance bisa akses
   S.dca=data.dca||data.dcaEntries||[];
   S.port=data.port||data.portfolioItems||[];
   // FIX: Migrasi & sync DCA → porto saat login/load
@@ -894,7 +896,7 @@ async function doLogout(){
     try{chatSB.removeChannel(chatState.msgSubscription);}catch(e){}
     chatState.msgSubscription=null;
   }
-  curSeed=null;lastSync=null;
+  curSeed=null;window.curSeed=null;lastSync=null;
   S.dca=[];S.port=[];S.cf=[];
   localStorage.removeItem('wo_cache');
   localStorage.removeItem('zw_btc_addrs'); // hapus BTC addrs global (legacy)
