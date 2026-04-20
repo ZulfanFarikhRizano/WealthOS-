@@ -21995,15 +21995,22 @@ async function _botRunScan() {
 
     // Dekripsi API key & secret sebelum digunakan (hanya di memori, tidak pernah log)
     let cfg = { ...cfgRaw };
-    if (cfgRaw.api_key && cfgRaw.api_key.includes(':')) {
-      try {
+    try {
+      if (cfgRaw.api_key && cfgRaw.api_key.includes(':')) {
         cfg.api_key    = await _botDecrypt(cfgRaw.api_key, key);
         cfg.api_secret = await _botDecrypt(cfgRaw.api_secret, key);
-      } catch(e) {
-        console.warn('[BotDecrypt] Gagal dekripsi, pakai mode simulasi:', e.message);
+      } else if (cfgRaw.api_key) {
+        console.warn('[BotDecrypt] Format api_key tidak dikenal, pakai simulasi');
+        cfg.api_key    = 'SIMULATION';
+        cfg.api_secret = 'SIMULATION';
+      } else {
         cfg.api_key    = 'SIMULATION';
         cfg.api_secret = 'SIMULATION';
       }
+    } catch(e) {
+      console.warn('[BotDecrypt] Gagal dekripsi, pakai mode simulasi:', e.message);
+      cfg.api_key    = 'SIMULATION';
+      cfg.api_secret = 'SIMULATION';
     }
 
     // 1. Volume screening
@@ -22134,19 +22141,18 @@ async function _botHandleSignal(signal, cfg, userId) {
 
     let orderId = 'SIMULATED', status = 'SIMULATED', errMsg = null;
 
-    // Eksekusi order jika API key tersedia
+    // Eksekusi order via Edge Function proxy (fix CORS — browser tidak bisa hit exchange langsung)
     if (cfg.api_key && cfg.api_key !== 'SIMULATION' && cfg.api_key !== '***') {
       try {
         const qty = parseFloat((cfg.trade_amount_usdt / signal.price).toFixed(4));
-        if (cfg.exchange === 'bybit') {
-          const result = await _botBybitOrder(cfg.api_key, cfg.api_secret, signal, qty);
-          orderId = result.orderId;
-          status  = 'FILLED';
-        } else {
-          const result = await _botBinanceOrder(cfg.api_key, cfg.api_secret, signal, qty);
-          orderId = result.orderId;
-          status  = 'FILLED';
-        }
+        const result = await _botExecuteOrderViaProxy(
+          cfg.api_key, cfg.api_secret,
+          cfg.exchange, cfg.trade_mode || 'spot',
+          cfg.leverage || 10,
+          signal, qty, cfg.trade_amount_usdt
+        );
+        orderId = result.orderId;
+        status  = 'FILLED';
       } catch(e) {
         errMsg = e.message;
         status = 'ERROR';
@@ -22187,48 +22193,37 @@ async function _botHandleSignal(signal, cfg, userId) {
   }
 }
 
-// ── Bybit Order Execution (signed HMAC-SHA256) ───────────────────
-async function _botBybitOrder(apiKey, apiSecret, signal, qty) {
-  const ts       = Date.now().toString();
-  const recv     = '5000';
-  const body     = JSON.stringify({
-    category: 'linear', symbol: signal.symbol,
-    side: signal.side === 'BUY' ? 'Buy' : 'Sell',
-    orderType: 'Market', qty: qty.toString(), timeInForce: 'IOC',
-  });
-  const signStr  = `${ts}${apiKey}${recv}${body}`;
-  const key      = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
-  const sigBuf   = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signStr));
-  const sig      = Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+// ── Execute Order via Edge Function Proxy (fix CORS browser) ───────
+// Browser tidak bisa fetch langsung ke Bybit/Binance karena CORS block.
+// Semua order diproxy lewat Supabase Edge Function trading-worker.
+async function _botExecuteOrderViaProxy(apiKey, apiSecret, exchange, tradeMode, leverage, signal, qty, amountUsdt) {
+  const _anonKey = window.SB_ANON || (typeof SB_ANON !== 'undefined' ? SB_ANON : '');
+  const _sbUrl   = window.SB_URL   || (typeof SB_URL   !== 'undefined' ? SB_URL   : '');
 
-  const res = await fetch('https://api.bybit.com/v5/order/create', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'X-BAPI-API-KEY':apiKey, 'X-BAPI-TIMESTAMP':ts, 'X-BAPI-RECV-WINDOW':recv, 'X-BAPI-SIGN':sig },
-    body,
+  const res = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer ' + _anonKey,
+    },
+    body: JSON.stringify({
+      _type:       'execute_order',
+      exchange:    exchange,
+      mode:        tradeMode,
+      leverage:    leverage,
+      api_key:     apiKey,
+      api_secret:  apiSecret,
+      symbol:      signal.symbol,
+      side:        signal.side,
+      qty:         qty.toString(),
+      amount_usdt: amountUsdt,
+    }),
   });
-  const d = await res.json();
-  if (d.retCode !== 0) throw new Error(`Bybit: ${d.retMsg}`);
-  return { orderId: d.result?.orderId || 'OK' };
-}
 
-// ── Binance Futures Order Execution ─────────────────────────────
-async function _botBinanceOrder(apiKey, apiSecret, signal, qty) {
-  const ts     = Date.now();
-  const params = new URLSearchParams({
-    symbol: signal.symbol, side: signal.side, type: 'MARKET',
-    quantity: qty.toString(), timestamp: ts.toString(),
-  });
-  const key    = await crypto.subtle.importKey('raw', new TextEncoder().encode(apiSecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
-  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(params.toString()));
-  const sig    = Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  params.append('signature', sig);
-
-  const res = await fetch(`https://fapi.binance.com/fapi/v1/order?${params}`, {
-    method: 'POST', headers: { 'X-MBX-APIKEY': apiKey },
-  });
-  const d = await res.json();
-  if (d.code && d.code < 0) throw new Error(`Binance: ${d.msg}`);
-  return { orderId: d.orderId?.toString() || 'OK' };
+  if (!res.ok) throw new Error(`Proxy HTTP error: ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Order gagal di server');
+  return { orderId: data.orderId || 'OK' };
 }
 
 // ── Kirim Telegram (via bot terpusat @zwealth_bot) ───────────────
