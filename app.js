@@ -21999,11 +21999,12 @@ async function _botRunScan() {
       if (cfgRaw.api_key && cfgRaw.api_key.includes(':')) {
         cfg.api_key    = await _botDecrypt(cfgRaw.api_key, key);
         cfg.api_secret = await _botDecrypt(cfgRaw.api_secret, key);
-      } else if (cfgRaw.api_key) {
-        console.warn('[BotDecrypt] Format api_key tidak dikenal, pakai simulasi');
-        cfg.api_key    = 'SIMULATION';
-        cfg.api_secret = 'SIMULATION';
+        console.log('[BotDecrypt] OK — api_key berhasil didekripsi');
+      } else if (cfgRaw.api_key && cfgRaw.api_key.length > 10) {
+        // api_key ada tapi tidak terenkripsi (plain text) — pakai langsung
+        console.log('[BotDecrypt] api_key plain text — dipakai langsung');
       } else {
+        console.warn('[BotDecrypt] api_key kosong — pakai simulasi');
         cfg.api_key    = 'SIMULATION';
         cfg.api_secret = 'SIMULATION';
       }
@@ -22193,7 +22194,7 @@ async function _botHandleSignal(signal, cfg, userId) {
   }
 }
 
-// ── Execute Order via Edge Function Proxy (fix CORS browser) ───────
+// ── Execute Order via Edge Function Proxy (fix CORS browser) ────
 // Browser tidak bisa fetch langsung ke Bybit/Binance karena CORS block.
 // Semua order diproxy lewat Supabase Edge Function trading-worker.
 async function _botExecuteOrderViaProxy(apiKey, apiSecret, exchange, tradeMode, leverage, signal, qty, amountUsdt) {
