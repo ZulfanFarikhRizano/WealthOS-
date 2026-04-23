@@ -21677,10 +21677,6 @@ window.botSaveConfig = async function() {
   try {
     const key = await seedKeyHash(...curSeed);
 
-    // Enkripsi API key & secret dengan AES-256-GCM sebelum kirim ke Supabase
-    const encApiKey = await _botEncrypt(apiKey, key);
-    const encApiSec = await _botEncrypt(apiSec, key);
-
     // Ambil telegram_chat_id yang sudah tersimpan (dari deep link, tidak diinput manual)
     const existCfgRes = await fetch(
       `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=telegram_chat_id&limit=1`,
@@ -21689,21 +21685,24 @@ window.botSaveConfig = async function() {
     const existCfg = await existCfgRes.json();
     const existingChatId = existCfg?.[0]?.telegram_chat_id || null;
 
+    // OPSI B: Simpan config dulu TANPA api_key (pakai placeholder)
+    // Lalu kirim api_key ke Edge Function untuk dienkripsi server-side
     const payload = {
       user_id:            key,
       exchange:           _bot.exchange,
       trade_mode:         _bot.tradeMode || 'spot',
       leverage:           _bot.leverage  || 10,
-      api_key:            encApiKey,   // tersimpan terenkripsi
-      api_secret:         encApiSec,   // tersimpan terenkripsi
+      api_key:            'PENDING_SERVER_ENCRYPT',  // akan diisi oleh Edge Function
+      api_secret:         'PENDING_SERVER_ENCRYPT',
       symbols,
       top_n_by_volume:    topN,
       trade_amount_usdt:  amount,
-      telegram_chat_id:   existingChatId, // dipertahankan dari deep link
+      telegram_chat_id:   existingChatId,
       is_active:          _bot.isActive,
       updated_at:         new Date().toISOString(),
     };
 
+    // Upsert config ke DB
     let res = await fetch(
       `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}`,
       { method:'PATCH', headers:{...SB_HEADERS,'Prefer':'return=minimal'}, body:JSON.stringify(payload) }
@@ -21714,19 +21713,29 @@ window.botSaveConfig = async function() {
       if (!rows?.length) res = await fetch(`${SB_URL}/rest/v1/bot_configs`,{method:'POST',headers:{...SB_HEADERS,'Prefer':'return=minimal'},body:JSON.stringify(payload)});
     }
     if (!res.ok) throw new Error(await res.text());
-    // Tampilkan indikator API tersimpan
+
+    // OPSI B: Kirim API key plain text ke Edge Function → dienkripsi server-side → disimpan ke DB
+    // Ini yang membuat Edge Function (cron worker) bisa dekripsi dan eksekusi order LIVE
+    const _anonKey = window.SB_ANON || (typeof SB_ANON !== 'undefined' ? SB_ANON : '');
+    const encRes = await fetch(`${SB_URL}/functions/v1/trading-worker`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
+      body: JSON.stringify({ _type: 'save_api_key', user_id: key, api_key: apiKey, api_secret: apiSec }),
+    });
+    const encData = await encRes.json();
+    if (!encData.ok) throw new Error('Gagal enkripsi server: ' + (encData.error || 'unknown'));
+
     _botRenderApiIndicator(true, payload.exchange, payload.trade_mode);
 
     // Cache tanpa secret
     const safe = { ...payload, api_key: '***', api_secret: '***' };
     localStorage.setItem('bot_cfg_' + key.slice(0,16), JSON.stringify(safe));
 
-    // Kosongkan input API key setelah simpan
     document.getElementById('bot-api-key').value    = '';
     document.getElementById('bot-api-secret').value = '';
 
-    toast('✓ Config bot tersimpan aman di Supabase', 0);
-    await _botRefreshTgStatus(); // refresh status telegram
+    toast('✓ API Key tersimpan aman (server encrypted) — bot siap trading LIVE!', 0);
+    await _botRefreshTgStatus();
   } catch(e) {
     console.error('[BotSave]', e);
     toast('Gagal simpan: ' + e.message, 1);
@@ -22128,67 +22137,14 @@ async function _botCheckSignal(symbol, exchange) {
 }
 
 // ── Handle sinyal: cek duplikat → eksekusi → log → telegram ─────
+// OPSI B: Eksekusi order sekarang dilakukan oleh Edge Function cron worker (24/7)
+// Browser TIDAK lagi eksekusi order sendiri untuk menghindari konflik duplikat
+// Fungsi ini masih dipanggil tapi hanya untuk refresh UI saja
 async function _botHandleSignal(signal, cfg, userId) {
   try {
-    // Cek apakah posisi terakhir sudah sama (hindari double entry)
-    const dupRes = await fetch(
-      `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(userId)}&symbol=eq.${signal.symbol}&order=executed_at.desc&limit=1&select=side,order_status`,
-      { headers: SB_HEADERS }
-    );
-    const dupArr = await dupRes.json();
-    if (dupArr?.length && dupArr[0].side === signal.side && dupArr[0].order_status === 'FILLED') {
-      return; // Skip — posisi sama
-    }
-
-    let orderId = 'SIMULATED', status = 'SIMULATED', errMsg = null;
-
-    // Eksekusi order via Edge Function proxy (fix CORS — browser tidak bisa hit exchange langsung)
-    if (cfg.api_key && cfg.api_key !== 'SIMULATION' && cfg.api_key !== '***') {
-      try {
-        const qty = parseFloat((cfg.trade_amount_usdt / signal.price).toFixed(4));
-        const result = await _botExecuteOrderViaProxy(
-          cfg.api_key, cfg.api_secret,
-          cfg.exchange, cfg.trade_mode || 'spot',
-          cfg.leverage || 10,
-          signal, qty, cfg.trade_amount_usdt
-        );
-        orderId = result.orderId;
-        status  = 'FILLED';
-      } catch(e) {
-        errMsg = e.message;
-        status = 'ERROR';
-        console.error(`[Order] ${signal.symbol}:`, e);
-      }
-    }
-
-    // Log ke Supabase
-    await fetch(`${SB_URL}/rest/v1/trades`, {
-      method:  'POST',
-      headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        user_id:      userId,
-        symbol:       signal.symbol,
-        side:         signal.side,
-        price:        signal.price,
-        amount_usdt:  cfg.trade_amount_usdt,
-        ema13:        signal.ema13,
-        ema21:        signal.ema21,
-        volume_24h:   signal.vol24h,
-        order_id:     orderId,
-        order_status: status,
-        error_msg:    errMsg,
-        executed_at:  signal.ts,
-      }),
-    });
-
-    // Telegram notifikasi via bot terpusat (@zwealth_bot)
-    if (cfg.telegram_chat_id) {
-      await _botSendTelegram(cfg.telegram_chat_id, signal, orderId, cfg.trade_amount_usdt, status);
-    }
-
-    // Toast di app
-    const emoji = signal.side === 'BUY' ? '🟢' : '🔴';
-    toast(`${emoji} ${signal.side} ${signal.symbol.replace('USDT','')} @$${signal.price.toFixed(2)} — ${status}`, signal.side === 'BUY' ? 0 : 0);
+    // Hanya refresh UI — order dieksekusi oleh cron worker
+    await _botLoadTrades();
+    await _botLoadStats();
   } catch(e) {
     console.error('[HandleSignal]', e);
   }
