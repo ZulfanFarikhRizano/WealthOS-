@@ -1,5 +1,4 @@
 name: Deploy Edge Functions
-
 on:
   push:
     branches:
