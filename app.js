@@ -708,6 +708,30 @@ async function doLogin(){
 async function enterApp(seed,data){
   curSeed=seed;
   window.curSeed=seed; // expose ke window agar botRefreshBalance bisa akses
+
+  // FIXED: Sync status bot dari DB saat login agar tombol aktif/mati tidak reset
+  // Sebelumnya: _bot.isActive selalu false saat app dibuka ulang
+  // Sekarang: langsung baca is_active dari DB → tombol langsung sesuai kondisi nyata
+  setTimeout(async () => {
+    try {
+      const key = await seedKeyHash(...seed);
+      const res = await fetch(
+        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=is_active&limit=1`,
+        { headers: SB_HEADERS }
+      );
+      const data = await res.json();
+      const isActive = data?.[0]?.is_active ?? false;
+      _bot.isActive = isActive;
+      window._bot   = _bot;
+      // Update tombol di halaman bot jika sudah terbuka
+      if (typeof _botUpdateStatusUI === 'function') _botUpdateStatusUI(isActive);
+      // Mulai interval refresh UI jika bot aktif (tidak scan sinyal, hanya refresh DB)
+      if (isActive && typeof _botStartInterval === 'function') _botStartInterval();
+      console.log(`[BotSync] is_active=${isActive} (dari DB saat login)`);
+    } catch(e) {
+      console.warn('[BotSync] Gagal sync status bot:', e.message);
+    }
+  }, 1500); // delay 1.5 detik agar auth header sudah siap
   S.dca=data.dca||data.dcaEntries||[];
   S.port=data.port||data.portfolioItems||[];
   // FIX: Migrasi & sync DCA → porto saat login/load
@@ -21981,62 +22005,17 @@ function _botStopInterval() {
 // Untuk produksi, gunakan Supabase Edge Function + pg_cron
 // ══════════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════════
+// CORE ENGINE — DINONAKTIFKAN (Opsi B: semua eksekusi via Edge Function cron)
+// Browser hanya refresh UI dari DB, tidak scan sinyal sendiri
+// ══════════════════════════════════════════════════════════════════
+
 async function _botRunScan() {
   if (_bot.scanning || !_bot.isActive || !curSeed) return;
   _bot.scanning = true;
   _bot.lastScan = new Date();
-
   try {
-    const key    = await seedKeyHash(...curSeed);
-    // Ambil config dari Supabase
-    const cfgRes = await fetch(
-      `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=*&limit=1`,
-      { headers: SB_HEADERS }
-    );
-    const cfgArr = await cfgRes.json();
-    if (!cfgArr || !cfgArr.length || !cfgArr[0].is_active) {
-      _bot.isActive = false;
-      _botUpdateStatusUI(false);
-      _botStopInterval();
-      return;
-    }
-    const cfgRaw = cfgArr[0];
-
-    // Dekripsi API key & secret sebelum digunakan (hanya di memori, tidak pernah log)
-    let cfg = { ...cfgRaw };
-    try {
-      if (cfgRaw.api_key && cfgRaw.api_key.includes(':')) {
-        cfg.api_key    = await _botDecrypt(cfgRaw.api_key, key);
-        cfg.api_secret = await _botDecrypt(cfgRaw.api_secret, key);
-        console.log('[BotDecrypt] OK — api_key berhasil didekripsi');
-      } else if (cfgRaw.api_key && cfgRaw.api_key.length > 10) {
-        // api_key ada tapi tidak terenkripsi (plain text) — pakai langsung
-        console.log('[BotDecrypt] api_key plain text — dipakai langsung');
-      } else {
-        console.warn('[BotDecrypt] api_key kosong — pakai simulasi');
-        cfg.api_key    = 'SIMULATION';
-        cfg.api_secret = 'SIMULATION';
-      }
-    } catch(e) {
-      console.warn('[BotDecrypt] Gagal dekripsi, pakai mode simulasi:', e.message);
-      cfg.api_key    = 'SIMULATION';
-      cfg.api_secret = 'SIMULATION';
-    }
-
-    // 1. Volume screening
-    const symbols = await _botGetTopByVolume(cfg.exchange, cfg.top_n_by_volume || 20, cfg.symbols);
-
-    // 2. Scan EMA signal setiap symbol (paralel, max 10 sekaligus)
-    const chunks = [];
-    for (let i = 0; i < symbols.length; i += 10) chunks.push(symbols.slice(i, i + 10));
-    for (const chunk of chunks) {
-      const results = await Promise.all(chunk.map(sym => _botCheckSignal(sym, cfg.exchange)));
-      for (const signal of results.filter(Boolean)) {
-        await _botHandleSignal(signal, cfg, key);
-      }
-    }
-
-    // Refresh UI
+    // OPSI B: Browser tidak scan sinyal — hanya refresh UI dari DB
     await _botLoadTrades();
     await _botLoadStats();
   } catch(e) {
@@ -22264,9 +22243,10 @@ window.botLoadTrades = async function() {
 
       const sideBadge = `<span style="display:inline-flex;align-items:center;padding:.15rem .38rem;border-radius:100px;font-size:.58rem;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:.04em;background:${isBuy?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)'};border:1px solid ${isBuy?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'};color:${isBuy?'#10b981':'#ef4444'}">${isBuy?'▲ BUY':'▼ SELL'}</span>`;
 
-      const statusColor = t.order_status==='FILLED'?'rgba(16,185,129,.8)':t.order_status==='SIMULATED'?'rgba(6,182,212,.8)':'rgba(239,68,68,.8)';
-      const statusBg    = t.order_status==='FILLED'?'rgba(16,185,129,.1)':t.order_status==='SIMULATED'?'rgba(6,182,212,.1)':'rgba(239,68,68,.1)';
-      const statusBadge = `<span style="padding:.13rem .35rem;border-radius:5px;font-size:.55rem;font-weight:700;background:${statusBg};color:${statusColor}" title="${t.error_msg||''}">${t.order_status==='SIMULATED'?'SIM':t.order_status}</span>`;
+      const statusColor = t.order_status==='FILLED'||t.order_status==='CLOSED'?'rgba(16,185,129,.8)':t.order_status==='SIMULATED'?'rgba(6,182,212,.8)':'rgba(239,68,68,.8)';
+      const statusBg    = t.order_status==='FILLED'||t.order_status==='CLOSED'?'rgba(16,185,129,.1)':t.order_status==='SIMULATED'?'rgba(6,182,212,.1)':'rgba(239,68,68,.1)';
+      const statusLabel = t.order_status==='SIMULATED'?'SIM':t.order_status==='FILLED'?'LIVE':t.order_status==='CLOSED'?'CLOSE':t.order_status;
+      const statusBadge = `<span style="padding:.13rem .35rem;border-radius:5px;font-size:.55rem;font-weight:700;background:${statusBg};color:${statusColor}" title="${t.error_msg||''}">${statusLabel}</span>`;
 
       return `<div style="display:grid;grid-template-columns:72px 44px 1fr 76px 58px;padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.03);align-items:center;font-size:.64rem;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
         <div style="color:var(--muted)"><div style="font-size:.6rem">${time}</div><div style="font-size:.53rem;opacity:.5">${date}</div></div>
@@ -22297,7 +22277,7 @@ window._botLoadStats = async function() {
     const total  = trades.length;
     const buy    = trades.filter(t => t.side === 'BUY').length;
     const sell   = trades.filter(t => t.side === 'SELL').length;
-    const vol    = trades.filter(t => ['FILLED','SIMULATED'].includes(t.order_status)).reduce((s,t) => s + parseFloat(t.amount_usdt||0), 0);
+    const vol    = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status)).reduce((s,t) => s + parseFloat(t.amount_usdt||0), 0);
 
     const totalEl = document.getElementById('bot-stat-total');
     const bsEl    = document.getElementById('bot-stat-buysell');
