@@ -22218,13 +22218,15 @@ window.botLoadTrades = async function() {
     const key    = await seedKeyHash(...curSeed);
     const filter = document.getElementById('bot-log-filter')?.value || 'ALL';
 
-    let url = `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&order=executed_at.desc&limit=60`;
+    let url = `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&order=executed_at.desc&limit=100`;
     if (filter === 'BUY')   url += '&side=eq.BUY';
     if (filter === 'SELL')  url += '&side=eq.SELL';
     if (filter === 'ERROR') url += '&order_status=eq.ERROR';
 
+    console.log(`[BotTrades] Fetching for user_id=${key.slice(0,12)}...`);
     const res    = await fetch(url, { headers: SB_HEADERS });
     const trades = await res.json();
+    console.log(`[BotTrades] Found ${Array.isArray(trades) ? trades.length : 'ERROR'} trades`, trades?.slice?.(0,2));
 
     if (!Array.isArray(trades) || trades.length === 0) {
       list.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.2rem 1rem;gap:.4rem;color:var(--muted)">
@@ -22605,14 +22607,46 @@ if (typeof _origDoLogout === 'function') {
       const _sbHeaders = window.SB_HEADERS || SB_HEADERS;
       const _anonKey   = window.SB_ANON    || (typeof SB_ANON !== 'undefined' ? SB_ANON : '') || '';
       if (!_sbUrl) return;
-      const cfgRes = await fetch(`${_sbUrl}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,api_secret,exchange,trade_mode&limit=1`,{headers:_sbHeaders});
+
+      // FIXED Opsi B: Tidak perlu dekripsi di browser lagi
+      // Cukup kirim user_id ke Edge Function → server dekripsi sendiri → return balance
+      const cfgRes = await fetch(`${_sbUrl}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=exchange,trade_mode&limit=1`,{headers:_sbHeaders});
       const cfgs   = await cfgRes.json();
       const cfg    = cfgs?.[0];
-      if (!cfg?.api_key) { await _botBalanceFallback(key); return; }
-      let apiKey, apiSecret;
-      try { apiKey = await _botDecrypt(cfg.api_key, key); apiSecret = await _botDecrypt(cfg.api_secret, key); }
-      catch { await _botBalanceFallback(key); return; }
+      if (!cfg) { if (balVal) { balVal.textContent = 'Config belum ada'; balVal.style.color = 'var(--muted)'; } return; }
+
       const ex = cfg.exchange || 'bybit', mode = cfg.trade_mode || 'spot';
+
+      // Proxy ke Edge Function — server yang dekripsi API key dan fetch balance
+      const proxyRes = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
+        body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, user_id: key }),
+      });
+      if (!proxyRes.ok) throw new Error(`Proxy error: ${proxyRes.status}`);
+      const result = await proxyRes.json();
+      if (!result.ok) throw new Error(result.error || 'Unknown error');
+
+      const usdt = result.usdt || 0;
+      const idr  = result.idr  || 0;
+
+      if (balVal) {
+        const dec = usdt >= 1 ? 2 : 4;
+        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' USDT';
+        balVal.style.color = usdt >= 0 ? '#10b981' : '#ef4444';
+      }
+      let idrEl = document.getElementById('bot-real-balance-idr');
+      if (!idrEl && balVal?.parentElement) {
+        idrEl = document.createElement('div');
+        idrEl.id = 'bot-real-balance-idr';
+        idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
+        balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
+      }
+      if (idrEl) idrEl.textContent = '≈ Rp ' + idr.toLocaleString('id-ID',{maximumFractionDigits:0});
+      if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
+    } catch(e) { console.warn('[BotBalance]',e); if(balVal){balVal.textContent='Gagal fetch';balVal.style.color='#ef4444';} }
+    finally { if(icon) icon.style.animation=''; }
+  };
 
       // Proxy via trading-worker (fix CORS — browser tidak bisa fetch langsung ke exchange API)
       const proxyRes = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
