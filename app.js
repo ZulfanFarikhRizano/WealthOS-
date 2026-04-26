@@ -22648,37 +22648,6 @@ if (typeof _origDoLogout === 'function') {
     finally { if(icon) icon.style.animation=''; }
   };
 
-      // Proxy via trading-worker (fix CORS — browser tidak bisa fetch langsung ke exchange API)
-      const proxyRes = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
-        body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, api_key: apiKey, api_secret: apiSecret }),
-      });
-      if (!proxyRes.ok) throw new Error(`Proxy error: ${proxyRes.status}`);
-      const result = await proxyRes.json();
-      if (!result.ok) throw new Error(result.error || 'Unknown error');
-
-      const usdt = result.usdt || 0;
-      const idr  = result.idr  || 0;
-
-      if (balVal) {
-        const dec = usdt >= 1 ? 2 : 4;
-        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' USDT';
-        balVal.style.color = '#10b981';
-      }
-      let idrEl = document.getElementById('bot-real-balance-idr');
-      if (!idrEl && balVal?.parentElement) {
-        idrEl = document.createElement('div');
-        idrEl.id = 'bot-real-balance-idr';
-        idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
-        balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
-      }
-      if (idrEl) idrEl.textContent = '≈ Rp ' + idr.toLocaleString('id-ID',{maximumFractionDigits:0});
-      if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
-    } catch(e) { console.warn('[BotBalance]',e); await _botBalanceFallback(key); }
-    finally { if(icon) icon.style.animation=''; }
-  };
-
   // ── Fallback: estimasi dari trade history jika Edge Function belum ada ─
   async function _botBalanceFallback(key) {
     const balVal = document.getElementById('bot-real-balance-val');
