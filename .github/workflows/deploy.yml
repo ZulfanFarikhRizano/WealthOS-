@@ -2,7 +2,7 @@ name: Deploy Edge Functions
 on:
   push:
     branches:
-      - main
+       - main
     
 jobs:
   deploy:
