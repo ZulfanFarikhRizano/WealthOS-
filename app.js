@@ -22266,9 +22266,9 @@ window.botLoadTrades = async function() {
 
 // ── Load stats ringkasan ─────────────────────────────────────────
 window._botLoadStats = async function() {
-  if (!curSeed) return;
+  if (!window.curSeed) return;
   try {
-    const key = await seedKeyHash(...curSeed);
+    const key = await window.seedKeyHash(...window.curSeed);
     const res = await fetch(
       `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status`,
       { headers: SB_HEADERS }
@@ -22276,10 +22276,11 @@ window._botLoadStats = async function() {
     const trades = await res.json();
     if (!Array.isArray(trades)) return;
 
-    const total  = trades.length;
-    const buy    = trades.filter(t => t.side === 'BUY').length;
-    const sell   = trades.filter(t => t.side === 'SELL').length;
-    const vol    = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status)).reduce((s,t) => s + parseFloat(t.amount_usdt||0), 0);
+    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status));
+    const total  = valid.length;
+    const buy    = valid.filter(t => t.side === 'BUY').length;
+    const sell   = valid.filter(t => t.side === 'SELL').length;
+    const vol    = valid.reduce((s,t) => s + parseFloat(t.amount_usdt||0), 0);
 
     const totalEl = document.getElementById('bot-stat-total');
     const bsEl    = document.getElementById('bot-stat-buysell');
@@ -22291,7 +22292,7 @@ window._botLoadStats = async function() {
 };
 
 // alias publik
-window._botLoadStats = _botLoadStats;
+window._botLoadStats = window._botLoadStats;
 
 // ── Hentikan bot saat user logout ───────────────────────────────
 const _origDoLogout = window.doLogout;
@@ -22305,41 +22306,116 @@ if (typeof _origDoLogout === 'function') {
 
 
 /* ══════════════════════════════════════════════════════════════════
-   Z-WEALTH · BOT PORTFOLIO CHART + REAL BALANCE PATCH
-   Merged from bot-chart.js
+   Z-WEALTH · BOT PORTFOLIO CHART v2 — Fix PnL logic + UI upgrade
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  // ── Inject chart HTML ke halaman trading-bot ─────────────────────
-  function _injectChartHTML() {
-    // Chart HTML sudah di-embed langsung di index.html — tidak perlu inject
-    if (document.getElementById('bot-portfolio-chart-wrap')) return;
+  // ── Inject CSS ─────────────────────────────────────────────────────
+  const _chartStyle = document.createElement('style');
+  _chartStyle.textContent = `
+    #bot-portfolio-chart-wrap {
+      background: linear-gradient(145deg, rgba(10,14,26,.98) 0%, rgba(8,12,22,.98) 100%);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+      animation: _bcFadeIn .4s ease both;
+    }
+    @keyframes _bcFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    .bcp-btn { transition: all .18s cubic-bezier(.4,0,.2,1) !important; }
+    .bcp-btn:hover { transform: translateY(-1px); }
+    .bcs-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.055);
+      border-radius: 10px;
+      padding: .45rem .5rem;
+      text-align: center;
+      transition: background .15s;
+    }
+    .bcs-card:hover { background: rgba(255,255,255,.055); }
+    .bcs-label {
+      font-size: .48rem;
+      color: rgba(148,163,184,.55);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: .22rem;
+    }
+    .bcs-value {
+      font-size: .82rem;
+      font-weight: 800;
+      font-family: 'Space Mono', monospace;
+      color: var(--text, #e2e8f0);
+      line-height: 1;
+    }
+    #bot-real-balance-row {
+      background: rgba(16,185,129,.05) !important;
+      border: 1px solid rgba(16,185,129,.12) !important;
+      border-radius: 12px !important;
+      padding: .5rem .75rem !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: .55rem !important;
+      margin-bottom: .7rem !important;
+      box-shadow: inset 0 1px 0 rgba(16,185,129,.08) !important;
+    }
+    #bot-real-balance-val {
+      font-size: .95rem !important;
+      font-weight: 800 !important;
+      font-family: 'Space Mono', monospace !important;
+      letter-spacing: -.02em !important;
+    }
+    #bot-chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(10,14,26,.96);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: .35rem .55rem;
+      font-size: .6rem;
+      font-family: 'Space Mono', monospace;
+      color: #e2e8f0;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity .1s;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+  `;
+  document.head.appendChild(_chartStyle);
 
+  // ── State ───────────────────────────────────────────────────────────
+  let _chartPeriod = '7d';
+  let _chartData   = [];
+  let _tooltipEl   = null;
+
+  // ── Inject chart HTML ───────────────────────────────────────────────
+  function _injectChartHTML() {
+    if (document.getElementById('bot-portfolio-chart-wrap')) return;
     const statsCard = document.getElementById('bot-stat-total')?.closest('[style*="grid-template-columns"]');
     if (!statsCard) return;
 
     const wrap = document.createElement('div');
     wrap.id = 'bot-portfolio-chart-wrap';
-    wrap.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:1rem;position:relative';
     wrap.innerHTML = `
-      <div style="height:2px;background:linear-gradient(90deg,#10b981,#06b6d4,#a855f7)"></div>
+      <div style="height:2px;background:linear-gradient(90deg,#10b981,#06b6d4,#a855f7,#f59e0b);opacity:.85"></div>
       <div style="padding:.85rem 1rem .6rem">
-        <!-- Header row -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem">
           <div>
-            <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase">Grafik Portfolio</div>
-            <div id="bot-chart-pnl-label" style="font-size:.62rem;color:var(--muted);margin-top:.15rem">—</div>
+            <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase">Grafik PnL Bot</div>
+            <div id="bot-chart-pnl-label" style="font-size:.65rem;font-weight:700;color:var(--muted);margin-top:.15rem">—</div>
           </div>
           <div style="display:flex;gap:.35rem">
-            <button onclick="botChartSetPeriod('7d')"  id="bcp-7d"  class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981">7D</button>
-            <button onclick="botChartSetPeriod('30d')" id="bcp-30d" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">30D</button>
-            <button onclick="botChartSetPeriod('all')" id="bcp-all" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">All</button>
+            <button onclick="botChartSetPeriod('7d')"  id="bcp-7d"  class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981">7D</button>
+            <button onclick="botChartSetPeriod('30d')" id="bcp-30d" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">30D</button>
+            <button onclick="botChartSetPeriod('all')" id="bcp-all" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">All</button>
           </div>
         </div>
 
-        <!-- Real balance row -->
         <div id="bot-real-balance-row" style="display:flex;align-items:center;gap:.5rem;padding:.45rem .7rem;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);margin-bottom:.65rem">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
           <div style="flex:1;min-width:0">
@@ -22355,94 +22431,117 @@ if (typeof _origDoLogout === 'function') {
           </button>
         </div>
 
-        <!-- Canvas chart -->
-        <div style="position:relative;height:140px;width:100%">
+        <div style="position:relative;height:155px;width:100%">
           <canvas id="bot-portfolio-canvas" style="width:100%;height:100%"></canvas>
           <div id="bot-chart-empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;color:var(--muted)">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="opacity:.25"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             <div style="font-size:.68rem">Belum ada data trade</div>
           </div>
+          <div id="bot-chart-tooltip"></div>
         </div>
 
-        <!-- Summary row -->
-        <div id="bot-chart-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin-top:.7rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.05)">
-          <div style="text-align:center">
-            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Total PnL</div>
-            <div id="bcs-pnl" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+        <div id="bot-chart-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.75rem;padding-top:.65rem;border-top:1px solid rgba(255,255,255,.05)">
+          <div class="bcs-card">
+            <div class="bcs-label">Total PnL</div>
+            <div id="bcs-pnl" class="bcs-value">—</div>
           </div>
-          <div style="text-align:center">
-            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Win Rate</div>
-            <div id="bcs-winrate" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+          <div class="bcs-card">
+            <div class="bcs-label">Win Rate</div>
+            <div id="bcs-winrate" class="bcs-value">—</div>
           </div>
-          <div style="text-align:center">
-            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Trades</div>
-            <div id="bcs-count" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--text)">—</div>
+          <div class="bcs-card">
+            <div class="bcs-label">Buy / Sell</div>
+            <div id="bcs-count" class="bcs-value">—</div>
           </div>
-          <div style="text-align:center">
-            <div style="font-size:.5rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.18rem">Avg Size</div>
-            <div id="bcs-avg" style="font-size:.85rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent4)">—</div>
+          <div class="bcs-card">
+            <div class="bcs-label">Avg Size</div>
+            <div id="bcs-avg" class="bcs-value">—</div>
           </div>
         </div>
       </div>
     `;
-
-    // Insert sebelum stats card
     statsCard.parentElement.insertBefore(wrap, statsCard);
   }
 
-  // ── State chart ───────────────────────────────────────────────────
-  let _chartPeriod = '7d';
-  let _chartData   = [];
-
-  window.botChartSetPeriod = function (period) {
-    _chartPeriod = period;
-    ['7d','30d','all'].forEach(p => {
-      const btn = document.getElementById('bcp-' + p);
-      if (!btn) return;
-      if (p === period) {
-        btn.style.cssText += ';background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981';
-      } else {
-        btn.style.cssText += ';background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
-      }
-    });
-    _renderChart();
-  };
-
-  // ── Proses data trades menjadi equity curve ──────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // EQUITY CURVE — logika PnL yang benar
+  // Tracking BUY-SELL pairs per symbol, hitung PnL realised saat SELL
+  // ══════════════════════════════════════════════════════════════════
   function _buildEquityCurve(trades, period) {
     const now    = Date.now();
     const cutoff = period === '7d'  ? now - 7  * 86400000 :
                    period === '30d' ? now - 30 * 86400000 : 0;
 
-    const valid = trades
-      .filter(t => ['FILLED','SIMULATED'].includes(t.order_status))
-      .filter(t => new Date(t.executed_at).getTime() >= cutoff)
+    const allValid = trades
+      .filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status))
       .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
 
-    if (valid.length === 0) return { points: [], summary: null };
+    if (allValid.length === 0) return { points: [], summary: null };
 
-    let equity = 0;
-    const points = [];
-    let buys = 0, sells = 0, totalVol = 0;
+    const openPositions = {};
+    let cumulativePnl = 0;
+    const allPoints = [];
+    let wins = 0, losses = 0, buyCount = 0, sellCount = 0, totalVol = 0;
 
-    valid.forEach(t => {
+    allValid.forEach(t => {
+      const ts  = new Date(t.executed_at).getTime();
       const amt = parseFloat(t.amount_usdt) || 0;
       totalVol += amt;
-      if (t.side === 'BUY') { equity -= amt; buys++; }
-      else                  { equity += amt; sells++; }
-      points.push({ x: new Date(t.executed_at).getTime(), y: equity, side: t.side, symbol: t.symbol });
+
+      if (t.side === 'BUY') {
+        buyCount++;
+        openPositions[t.symbol] = {
+          entryPrice: parseFloat(t.price) || 0,
+          amountUsdt: amt,
+        };
+        allPoints.push({ x: ts, y: cumulativePnl, side: 'BUY', symbol: t.symbol, pnl: 0 });
+
+      } else if (t.side === 'SELL') {
+        sellCount++;
+        let tradePnl = 0;
+
+        // Prioritas 1: pnl_usdt sudah ada di record (dari Edge Function)
+        if (t.pnl_usdt != null && parseFloat(t.pnl_usdt) !== 0) {
+          tradePnl = parseFloat(t.pnl_usdt);
+        }
+        // Prioritas 2: hitung dari entry price vs exit price
+        else if (openPositions[t.symbol] && openPositions[t.symbol].entryPrice > 0) {
+          const pos       = openPositions[t.symbol];
+          const exitPrice = parseFloat(t.price) || 0;
+          if (exitPrice > 0) {
+            tradePnl = ((exitPrice - pos.entryPrice) / pos.entryPrice) * pos.amountUsdt;
+          }
+        }
+
+        cumulativePnl += tradePnl;
+        if (tradePnl > 0) wins++; else if (tradePnl < 0) losses++;
+        delete openPositions[t.symbol];
+        allPoints.push({ x: ts, y: cumulativePnl, side: 'SELL', symbol: t.symbol, pnl: tradePnl });
+      }
     });
 
-    const winRate = valid.length > 0 ? Math.round((sells / valid.length) * 100) : 0;
-    const avgSize = valid.length > 0 ? (totalVol / valid.length) : 0;
+    // Filter periode untuk display
+    let points = allPoints.filter(p => p.x >= cutoff);
+
+    // Tambah titik awal dengan equity sebelum periode (agar grafik tidak mulai dari 0)
+    if (points.length > 0 && allPoints.length > points.length) {
+      const before = allPoints.filter(p => p.x < cutoff);
+      const equityBefore = before.length > 0 ? before[before.length - 1].y : 0;
+      points.unshift({ x: cutoff, y: equityBefore, side: null, symbol: null, pnl: 0 });
+    }
+
+    const winRate = sellCount > 0 ? Math.round((wins / sellCount) * 100) : 0;
+    const avgSize = allValid.length > 0 ? totalVol / allValid.length : 0;
 
     return {
       points,
-      summary: { pnl: equity, winRate, count: valid.length, avgSize, totalVol },
+      summary: { pnl: cumulativePnl, winRate, wins, losses, buyCount, sellCount, avgSize, totalVol },
     };
   }
 
-  // ── Render canvas chart ───────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════
+  // RENDER CHART — smooth bezier, glow, tooltip
+  // ══════════════════════════════════════════════════════════════════
   function _renderChart() {
     const canvas  = document.getElementById('bot-portfolio-canvas');
     const emptyEl = document.getElementById('bot-chart-empty');
@@ -22461,8 +22560,8 @@ if (typeof _origDoLogout === 'function') {
 
     const dpr  = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
-    const W = rect.width || 300;
-    const H = 140;
+    const W    = rect.width  || 300;
+    const H    = 155;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width  = W + 'px';
@@ -22471,38 +22570,68 @@ if (typeof _origDoLogout === 'function') {
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    const pad = { top: 12, right: 16, bottom: 28, left: 8 };
-    const cW  = W - pad.left - pad.right;
-    const cH  = H - pad.top  - pad.bottom;
+    const pad    = { top: 18, right: 20, bottom: 30, left: 14 };
+    const cW     = W - pad.left - pad.right;
+    const cH     = H - pad.top  - pad.bottom;
 
     const ys     = points.map(p => p.y);
     const xs     = points.map(p => p.x);
-    const minY   = Math.min(0, ...ys), maxY = Math.max(0, ...ys);
-    const minX   = xs[0],              maxX = xs[xs.length - 1];
-    const rangeY = maxY - minY || 1;
-    const rangeX = maxX - minX || 1;
+    const rawMin = Math.min(0, ...ys);
+    const rawMax = Math.max(0, ...ys);
+    const yPad   = (rawMax - rawMin) * 0.18 || 0.5;
+    const minY   = rawMin - yPad;
+    const maxY   = rawMax + yPad;
+    const minX   = xs[0];
+    const maxX   = xs[xs.length - 1];
+    const rangeY = (maxY - minY) || 1;
+    const rangeX = (maxX - minX) || 1;
 
-    const toX  = x => pad.left + ((x - minX) / rangeX) * cW;
-    const toY  = y => pad.top  + (1 - (y - minY) / rangeY) * cH;
-    const zeroY = toY(0);
+    const toX    = x => pad.left + ((x - minX) / rangeX) * cW;
+    const toY    = y => pad.top  + (1 - (y - minY) / rangeY) * cH;
+    const zeroY  = toY(0);
+
+    const lastPnl   = points[points.length - 1].y;
+    const isProfit  = lastPnl >= 0;
+    const lineColor = isProfit ? '#10b981' : '#ef4444';
 
     ctx.clearRect(0, 0, W, H);
 
+    // Grid lines
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([3, 6]);
+    for (let i = 0; i <= 3; i++) {
+      const y = pad.top + (cH / 3) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    }
+    ctx.restore();
+
     // Zero line
-    ctx.beginPath();
-    ctx.moveTo(pad.left, zeroY);
-    ctx.lineTo(W - pad.right, zeroY);
-    ctx.strokeStyle = 'rgba(255,255,255,.08)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    if (zeroY >= pad.top && zeroY <= H - pad.bottom) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(W - pad.right, zeroY); ctx.stroke();
+      ctx.fillStyle   = 'rgba(148,163,184,.3)';
+      ctx.font        = '8px "Space Mono", monospace';
+      ctx.textAlign   = 'right';
+      ctx.fillText('0', pad.left - 3, zeroY + 3);
+      ctx.restore();
+    }
 
-    const isPosEnd = points[points.length - 1].y >= 0;
+    // Gradient fill
     const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-    grad.addColorStop(0, isPosEnd ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-
+    if (isProfit) {
+      grad.addColorStop(0,   'rgba(16,185,129,.25)');
+      grad.addColorStop(0.6, 'rgba(16,185,129,.07)');
+      grad.addColorStop(1,   'rgba(16,185,129,.01)');
+    } else {
+      grad.addColorStop(0,   'rgba(239,68,68,.01)');
+      grad.addColorStop(0.4, 'rgba(239,68,68,.07)');
+      grad.addColorStop(1,   'rgba(239,68,68,.25)');
+    }
     ctx.beginPath();
     ctx.moveTo(toX(xs[0]), zeroY);
     points.forEach(p => ctx.lineTo(toX(p.x), toY(p.y)));
@@ -22511,49 +22640,129 @@ if (typeof _origDoLogout === 'function') {
     ctx.fillStyle = grad;
     ctx.fill();
 
+    // Smooth bezier line + glow
+    ctx.save();
+    ctx.shadowColor = lineColor;
+    ctx.shadowBlur  = 10;
     ctx.beginPath();
     points.forEach((p, i) => {
-      if (i === 0) ctx.moveTo(toX(p.x), toY(p.y));
-      else         ctx.lineTo(toX(p.x), toY(p.y));
-    });
-    ctx.strokeStyle = isPosEnd ? '#10b981' : '#ef4444';
-    ctx.lineWidth   = 1.8;
-    ctx.lineJoin    = 'round';
-    ctx.stroke();
-
-    points.forEach(p => {
       const px = toX(p.x), py = toY(p.y);
-      ctx.beginPath();
-      ctx.arc(px, py, 3, 0, Math.PI * 2);
-      ctx.fillStyle   = p.side === 'BUY' ? '#10b981' : '#ef4444';
-      ctx.fill();
-      ctx.strokeStyle = '#050810';
-      ctx.lineWidth   = 1.2;
-      ctx.stroke();
+      if (i === 0) {
+        ctx.moveTo(px, py);
+      } else {
+        const prev = points[i - 1];
+        const cpx  = (toX(prev.x) + px) / 2;
+        ctx.bezierCurveTo(cpx, toY(prev.y), cpx, py, px, py);
+      }
+    });
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth   = 2.4;
+    ctx.lineJoin    = 'round';
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    // Trade dots
+    points.forEach(p => {
+      if (p.side === null) return;
+      const px = toX(p.x), py = toY(p.y);
+      const dc = p.side === 'BUY' ? '#10b981' : '#ef4444';
+      const dr = p.side === 'SELL' ? 5 : 4;
+      ctx.save();
+      ctx.shadowColor = dc; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.arc(px, py, dr, 0, Math.PI * 2);
+      ctx.fillStyle = dc; ctx.fill();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(px, py, dr * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
     });
 
-    // X-axis labels
-    ctx.fillStyle  = 'rgba(148,163,184,.4)';
-    ctx.font       = '9px Inter, sans-serif';
-    ctx.textAlign  = 'center';
-    const labelCount = Math.min(4, points.length);
-    const step       = Math.floor(points.length / labelCount);
-    for (let i = 0; i < labelCount; i++) {
-      const p     = points[i * step];
-      const label = new Date(p.x).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
-      ctx.fillText(label, toX(p.x), H - 4);
-    }
+    // X-axis date labels
+    ctx.fillStyle = 'rgba(148,163,184,.32)';
+    ctx.font      = '8.5px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const seen = new Set();
+    const dayPts = [];
+    points.forEach(p => {
+      const d = new Date(p.x).toLocaleDateString('id-ID', { day:'2-digit', month:'short', timeZone:'Asia/Jakarta' });
+      if (!seen.has(d)) { seen.add(d); dayPts.push({ x: p.x, label: d }); }
+    });
+    const dstep = Math.max(1, Math.floor(dayPts.length / 4));
+    dayPts.filter((_, i) => i % dstep === 0 || i === dayPts.length - 1).forEach(d => {
+      ctx.fillText(d.label, toX(d.x), H - 6);
+    });
 
-    const lastP    = points[points.length - 1];
+    // Last value pill label
+    const lastPx = toX(xs[xs.length - 1]);
+    const lastPy = toY(lastPnl);
+    const lbl    = (lastPnl >= 0 ? '+' : '') + lastPnl.toFixed(2);
+    ctx.save();
+    ctx.font = 'bold 8.5px "Space Mono", monospace';
+    const lblW  = ctx.measureText(lbl).width + 12;
+    const lblH  = 15;
+    const lblX  = lastPx > W * 0.7 ? lastPx - lblW - 6 : lastPx + 6;
+    const lblY  = Math.max(pad.top + 2, lastPy - lblH / 2);
+    _roundRect(ctx, lblX, lblY, lblW, lblH, 5);
+    ctx.fillStyle = isProfit ? 'rgba(16,185,129,.2)' : 'rgba(239,68,68,.2)';
+    ctx.fill();
+    ctx.fillStyle   = lineColor;
+    ctx.shadowColor = lineColor; ctx.shadowBlur = 5;
+    ctx.textAlign   = 'left';
+    ctx.fillText(lbl, lblX + 6, lblY + 10.5);
+    ctx.restore();
+
+    // Update header PnL label
     const pnlLabel = document.getElementById('bot-chart-pnl-label');
     if (pnlLabel) {
-      pnlLabel.textContent = 'PnL Kumulatif: ' + (lastP.y >= 0 ? '+' : '') + lastP.y.toFixed(1) + ' USDT';
-      pnlLabel.style.color = lastP.y >= 0 ? '#10b981' : '#ef4444';
+      pnlLabel.textContent = 'PnL Kumulatif: ' + (lastPnl >= 0 ? '+' : '') + lastPnl.toFixed(2) + ' USDT';
+      pnlLabel.style.color = isProfit ? '#10b981' : '#ef4444';
     }
 
     _updateSummary(summary);
+    _setupTooltip(canvas, points, toX, toY, W, H, pad);
   }
 
+  function _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+  }
+
+  // ── Tooltip ─────────────────────────────────────────────────────────
+  function _setupTooltip(canvas, points, toX, toY, W, H, pad) {
+    if (!_tooltipEl) {
+      _tooltipEl = document.createElement('div');
+      _tooltipEl.id = 'bot-chart-tooltip';
+      canvas.parentElement.appendChild(_tooltipEl);
+    }
+    canvas.onmousemove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx   = e.clientX - rect.left;
+      let closest = 0, minDist = Infinity;
+      points.forEach((p, i) => { const d = Math.abs(toX(p.x) - mx); if (d < minDist) { minDist = d; closest = i; } });
+      const p = points[closest];
+      if (!p || p.side === null) { _tooltipEl.style.opacity = '0'; return; }
+      const sc = p.side === 'BUY' ? '#10b981' : '#ef4444';
+      const dt = new Date(p.x).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+      const sym = (p.symbol || '').replace('USDT','');
+      _tooltipEl.innerHTML = `
+        <div style="color:${sc};font-weight:700;margin-bottom:.18rem">${p.side === 'BUY' ? '▲' : '▼'} ${p.side} ${sym}</div>
+        <div style="color:rgba(148,163,184,.6);font-size:.55rem">${dt}</div>
+        ${p.side === 'SELL' ? `<div style="margin-top:.18rem;color:${p.pnl >= 0 ? '#10b981' : '#ef4444'}">PnL: ${p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(3)} USDT</div>` : ''}
+        <div style="color:rgba(148,163,184,.5);margin-top:.1rem">Equity: ${p.y >= 0 ? '+' : ''}${p.y.toFixed(3)}</div>
+      `;
+      const tipW = 145, px = toX(p.x), py = toY(p.y);
+      _tooltipEl.style.left    = (px + tipW > W - pad.right ? px - tipW - 6 : px + 10) + 'px';
+      _tooltipEl.style.top     = Math.max(pad.top, py - 32) + 'px';
+      _tooltipEl.style.opacity = '1';
+    };
+    canvas.onmouseleave = () => { if (_tooltipEl) _tooltipEl.style.opacity = '0'; };
+  }
+
+  // ── Update summary cards ─────────────────────────────────────────────
   function _updateSummary(s) {
     const pnlEl = document.getElementById('bcs-pnl');
     const winEl = document.getElementById('bcs-winrate');
@@ -22564,13 +22773,18 @@ if (typeof _origDoLogout === 'function') {
       [pnlEl, winEl, cntEl, avgEl].forEach(el => { if (el) el.textContent = '—'; });
       return;
     }
-    if (pnlEl) { pnlEl.textContent = (s.pnl >= 0 ? '+' : '') + s.pnl.toFixed(1); pnlEl.style.color = s.pnl >= 0 ? '#10b981' : '#ef4444'; }
-    if (winEl) { winEl.textContent = s.winRate + '%'; winEl.style.color = s.winRate >= 50 ? '#10b981' : '#f59e0b'; }
-    if (cntEl)   cntEl.textContent = s.count;
-    if (avgEl)   avgEl.textContent = '$' + s.avgSize.toFixed(1);
+    if (pnlEl) { pnlEl.textContent = (s.pnl >= 0 ? '+' : '') + s.pnl.toFixed(2); pnlEl.style.color = s.pnl >= 0 ? '#10b981' : '#ef4444'; }
+    if (winEl) {
+      winEl.textContent  = s.winRate + '%';
+      winEl.style.color  = s.winRate >= 50 ? '#10b981' : s.winRate >= 35 ? '#f59e0b' : '#ef4444';
+    }
+    if (cntEl) {
+      cntEl.innerHTML   = `<span style="color:#10b981;font-size:.72rem">${s.buyCount}</span><span style="opacity:.4;font-size:.62rem">/${s.sellCount}</span>`;
+    }
+    if (avgEl) { avgEl.textContent = '$' + s.avgSize.toFixed(1); avgEl.style.color = '#f59e0b'; }
   }
 
-  // ── Load trade data untuk chart ───────────────────────────────────
+  // ── Load chart data (fetch trades + enrich dengan positions PnL) ─────
   async function _botLoadChartData() {
     if (!window.curSeed || !window.seedKeyHash) return;
     try {
@@ -22579,21 +22793,67 @@ if (typeof _origDoLogout === 'function') {
       const SB_HEADERS = window.SB_HEADERS;
       if (!SB_URL || !SB_HEADERS) return;
 
-      const res    = await fetch(
-        `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status,executed_at,symbol&order=executed_at.asc&limit=500`,
-        { headers: SB_HEADERS }
-      );
-      const trades = await res.json();
+      const [tradesRes, posRes] = await Promise.all([
+        fetch(`${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status,executed_at,symbol,price,pnl_usdt&order=executed_at.asc&limit=500`, { headers: SB_HEADERS }),
+        fetch(`${SB_URL}/rest/v1/positions?user_id=eq.${encodeURIComponent(key)}&select=symbol,entry_price,pnl_usdt,status&order=opened_at.asc&limit=200`,                          { headers: SB_HEADERS }),
+      ]);
+
+      const trades    = await tradesRes.json();
+      const positions = await posRes.json().catch(() => []);
       if (!Array.isArray(trades)) return;
+
+      // Enrich SELL trades dengan pnl dari positions jika trade tidak punya pnl_usdt
+      if (Array.isArray(positions)) {
+        const posMap = {};
+        positions.forEach(p => { if (p.pnl_usdt) posMap[p.symbol] = parseFloat(p.pnl_usdt); });
+        trades.forEach(t => {
+          if (t.side === 'SELL' && (t.pnl_usdt == null || parseFloat(t.pnl_usdt) === 0) && posMap[t.symbol] != null) {
+            t.pnl_usdt = posMap[t.symbol];
+          }
+        });
+      }
 
       _chartData = trades;
       _renderChart();
+      _updateStatsFromTrades(trades);
     } catch (e) {
       console.warn('[BotChart] Load error:', e);
     }
   }
 
-  // ── Fetch real balance dari exchange via Edge Function ────────────
+  function _updateStatsFromTrades(trades) {
+    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status));
+    const buy    = valid.filter(t => t.side === 'BUY').length;
+    const sell   = valid.filter(t => t.side === 'SELL').length;
+    const vol    = valid.reduce((s, t) => s + (parseFloat(t.amount_usdt) || 0), 0);
+    const totalEl = document.getElementById('bot-stat-total');
+    const bsEl    = document.getElementById('bot-stat-buysell');
+    const volEl   = document.getElementById('bot-stat-vol');
+    if (totalEl) totalEl.textContent = valid.length;
+    if (bsEl)    bsEl.innerHTML = `<span style="color:#10b981">${buy}</span><span style="color:var(--muted);font-size:.65rem"> / </span><span style="color:#ef4444">${sell}</span>`;
+    if (volEl)   volEl.textContent = vol >= 1000 ? `$${(vol/1000).toFixed(1)}K` : `$${vol.toFixed(0)}`;
+  }
+
+  // ── Period selector ──────────────────────────────────────────────────
+  window.botChartSetPeriod = function (period) {
+    _chartPeriod = period;
+    ['7d','30d','all'].forEach(p => {
+      const btn = document.getElementById('bcp-' + p);
+      if (!btn) return;
+      if (p === period) {
+        btn.style.background = 'rgba(16,185,129,.15)';
+        btn.style.border     = '1px solid rgba(16,185,129,.4)';
+        btn.style.color      = '#10b981';
+      } else {
+        btn.style.background = 'var(--surface2, rgba(255,255,255,.04))';
+        btn.style.border     = '1px solid var(--border, rgba(255,255,255,.08))';
+        btn.style.color      = 'var(--muted, rgba(148,163,184,.6))';
+      }
+    });
+    _renderChart();
+  };
+
+  // ── Real balance fetch ───────────────────────────────────────────────
   window.botRefreshBalance = async function () {
     if (!window.curSeed || !window.seedKeyHash) return;
     const balVal = document.getElementById('bot-real-balance-val');
@@ -22603,37 +22863,26 @@ if (typeof _origDoLogout === 'function') {
     if (balVal) balVal.textContent = '…';
     try {
       const key        = await window.seedKeyHash(...window.curSeed);
-      const _sbUrl     = window.SB_URL     || SB_URL;
-      const _sbHeaders = window.SB_HEADERS || SB_HEADERS;
-      const _anonKey   = window.SB_ANON    || (typeof SB_ANON !== 'undefined' ? SB_ANON : '') || '';
+      const _sbUrl     = window.SB_URL;
+      const _sbHeaders = window.SB_HEADERS;
+      const _anonKey   = window.SB_ANON || (typeof SB_ANON !== 'undefined' ? SB_ANON : '') || '';
       if (!_sbUrl) return;
-
-      // FIXED Opsi B: Tidak perlu dekripsi di browser lagi
-      // Cukup kirim user_id ke Edge Function → server dekripsi sendiri → return balance
-      const cfgRes = await fetch(`${_sbUrl}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=exchange,trade_mode&limit=1`,{headers:_sbHeaders});
+      const cfgRes = await fetch(`${_sbUrl}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=exchange,trade_mode&limit=1`, { headers: _sbHeaders });
       const cfgs   = await cfgRes.json();
       const cfg    = cfgs?.[0];
       if (!cfg) { if (balVal) { balVal.textContent = 'Config belum ada'; balVal.style.color = 'var(--muted)'; } return; }
-
-      const ex = cfg.exchange || 'bybit', mode = cfg.trade_mode || 'spot';
-
-      // Proxy ke Edge Function — server yang dekripsi API key dan fetch balance
       const proxyRes = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _anonKey },
-        body:    JSON.stringify({ _type: 'exchange_balance', exchange: ex, mode, user_id: key }),
+        body: JSON.stringify({ _type: 'exchange_balance', exchange: cfg.exchange || 'bybit', mode: cfg.trade_mode || 'spot', user_id: key }),
       });
       if (!proxyRes.ok) throw new Error(`Proxy error: ${proxyRes.status}`);
       const result = await proxyRes.json();
       if (!result.ok) throw new Error(result.error || 'Unknown error');
-
       const usdt = result.usdt || 0;
-      const idr  = result.idr  || 0;
-
       if (balVal) {
-        const dec = usdt >= 1 ? 2 : 4;
-        balVal.textContent = usdt.toLocaleString('id-ID',{minimumFractionDigits:dec,maximumFractionDigits:dec}) + ' USDT';
-        balVal.style.color = usdt >= 0 ? '#10b981' : '#ef4444';
+        balVal.textContent = usdt.toLocaleString('id-ID', { minimumFractionDigits: usdt >= 1 ? 2 : 4, maximumFractionDigits: usdt >= 1 ? 2 : 4 }) + ' USDT';
+        balVal.style.color = '#10b981';
       }
       let idrEl = document.getElementById('bot-real-balance-idr');
       if (!idrEl && balVal?.parentElement) {
@@ -22642,79 +22891,25 @@ if (typeof _origDoLogout === 'function') {
         idrEl.style.cssText = 'font-size:.6rem;color:var(--muted);font-family:"Space Mono",monospace;margin-top:.05rem';
         balVal.parentElement.insertBefore(idrEl, balVal.nextSibling);
       }
-      if (idrEl) idrEl.textContent = '≈ Rp ' + idr.toLocaleString('id-ID',{maximumFractionDigits:0});
-      if (balTs) { balTs.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'})+' WIB'; }
-    } catch(e) { console.warn('[BotBalance]',e); if(balVal){balVal.textContent='Gagal fetch';balVal.style.color='#ef4444';} }
-    finally { if(icon) icon.style.animation=''; }
+      if (idrEl && result.idr) idrEl.textContent = '≈ Rp ' + Math.round(result.idr).toLocaleString('id-ID');
+      if (balTs) balTs.textContent = new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) + ' WIB';
+    } catch(e) {
+      console.warn('[BotBalance]', e);
+      if (balVal) { balVal.textContent = 'Gagal fetch'; balVal.style.color = '#ef4444'; }
+    } finally {
+      if (icon) icon.style.animation = '';
+    }
   };
 
-  // ── Fallback: estimasi dari trade history jika Edge Function belum ada ─
-  async function _botBalanceFallback(key) {
-    const balVal = document.getElementById('bot-real-balance-val');
-    const balTs  = document.getElementById('bot-real-balance-ts');
-    try {
-      if (!key && window.curSeed && window.seedKeyHash) {
-        key = await window.seedKeyHash(...window.curSeed);
-      }
-      const SB_URL     = window.SB_URL;
-      const SB_HEADERS = window.SB_HEADERS;
-      if (!SB_URL || !key) throw new Error('no config');
-
-      // Ambil konfigurasi untuk tahu exchange-nya
-      const cfgRes  = await fetch(
-        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=trade_amount_usdt,exchange&limit=1`,
-        { headers: SB_HEADERS }
-      );
-      const cfgs = await cfgRes.json();
-      const cfg  = cfgs?.[0];
-
-      // Hitung estimasi saldo dari trade history
-      const tradeRes = await fetch(
-        `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status&order=executed_at.desc&limit=200`,
-        { headers: SB_HEADERS }
-      );
-      const trades   = await tradeRes.json();
-      const filled   = Array.isArray(trades) ? trades.filter(t => ['FILLED','SIMULATED'].includes(t.order_status)) : [];
-      let net        = 0;
-      filled.forEach(t => {
-        const amt = parseFloat(t.amount_usdt) || 0;
-        net += t.side === 'SELL' ? amt : -amt;
-      });
-
-      const label = cfg ? `${cfg.exchange?.toUpperCase() || 'Exchange'} · Est.` : 'Estimasi';
-      if (balVal) {
-        balVal.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
-        balVal.style.color = net >= 0 ? '#10b981' : '#ef4444';
-        balVal.title       = 'Estimasi berdasarkan history trade (bukan saldo langsung dari exchange)';
-      }
-      const pnlLabel = document.getElementById('bot-chart-pnl-label');
-      if (pnlLabel && !pnlLabel.textContent.includes('USDT')) {
-        pnlLabel.textContent = label + ': ' + (net >= 0 ? '+' : '') + net.toFixed(2) + ' USDT';
-        pnlLabel.style.color = net >= 0 ? '#10b981' : '#ef4444';
-      }
-    } catch (e) {
-      if (balVal && balVal.textContent === '…') {
-        balVal.textContent = '0.00 USDT';
-        balVal.style.color = 'var(--muted)';
-        balVal.title = 'Simpan API key exchange untuk melihat saldo nyata';
-      }
-    }
-    if (balTs) {
-      const now = new Date();
-      balTs.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) + ' WIB';
-    }
-  }
-
-  // ── Polling stats + balance setiap 30 detik ───────────────────────
+  // ── Polling 30 detik ─────────────────────────────────────────────────
   function _pollStats() {
     clearInterval(window.__botStatsPollInterval);
     window.__botStatsPollInterval = setInterval(async () => {
       const page = document.getElementById('page-trading-bot');
-      const visible = page && (page.classList.contains('active') || page.style.display !== 'none');
-      if (visible) {
+      const vis  = page && (page.classList.contains('active') || page.style.display !== 'none');
+      if (vis) {
         await window._botLoadStats?.();
         await _botLoadChartData();
-        // Refresh balance setiap 2 menit (setiap 4 tick × 30 detik)
         if (!window.__botBalanceTick) window.__botBalanceTick = 0;
         window.__botBalanceTick++;
         if (window.__botBalanceTick % 4 === 0) await window.botRefreshBalance();
@@ -22722,7 +22917,7 @@ if (typeof _origDoLogout === 'function') {
     }, 30000);
   }
 
-  // ── Patch initTradingBot untuk inject chart ───────────────────────
+  // ── Patch initTradingBot ─────────────────────────────────────────────
   const _origInit = window.initTradingBot;
   window.initTradingBot = async function () {
     if (typeof _origInit === 'function') await _origInit.apply(this, arguments);
@@ -22732,7 +22927,7 @@ if (typeof _origDoLogout === 'function') {
     _pollStats();
   };
 
-  // ── Patch botLoadTrades untuk refresh chart juga ─────────────────
+  // ── Patch botLoadTrades ───────────────────────────────────────────────
   const _origLoadTrades = window.botLoadTrades;
   window.botLoadTrades = async function () {
     if (typeof _origLoadTrades === 'function') await _origLoadTrades.apply(this, arguments);
