@@ -9097,12 +9097,13 @@ async function _syncUserPushData() {
     const reminders = getReminders();
     console.log('[Sync] Syncing', userCode, 'alerts:', alerts.length, 'reminders:', reminders.length);
     
+    // FIX: Pakai SB_ANON constant (baris 541) — bukan hardcode duplikat
     const res = await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/user_push_data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'apikey': SB_ANON,
+        'Authorization': 'Bearer ' + SB_ANON,
         'Prefer': 'resolution=merge-duplicates,return=minimal',
       },
       body: JSON.stringify({
@@ -9142,12 +9143,13 @@ async function _syncNewsToDb(articles) {
       })),
       updated_at: new Date().toISOString(),
     };
+    // FIX: Pakai SB_ANON constant — bukan hardcode duplikat
     await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/news_cache', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'apikey': SB_ANON,
+        'Authorization': 'Bearer ' + SB_ANON,
         'Prefer': 'resolution=merge-duplicates,return=minimal',
       },
       body: JSON.stringify(payload)
@@ -9165,12 +9167,13 @@ async function _saveFCMTokenToDB(token) {
   }
   try {
     // Pakai fetch langsung ke Supabase REST API — tidak butuh chatSB
+    // FIX: Pakai SB_ANON constant — bukan hardcode duplikat
     const res = await fetch('https://kpikyqafapclyirpqflp.supabase.co/rest/v1/push_subscriptions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaWt5cWFmYXBjbHlpcnBxZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0Njc3MzAsImV4cCI6MjA4NzA0MzczMH0.OcsM8BBY1AtRs-aUr1RHUG1NOnO-XwJsMMmSZkwNa7c',
+        'apikey': SB_ANON,
+        'Authorization': 'Bearer ' + SB_ANON,
         'Prefer': 'resolution=merge-duplicates,return=minimal',
       },
       body: JSON.stringify({
@@ -21673,7 +21676,13 @@ async function _botEncrypt(plaintext, userKey) {
 }
 
 async function _botDecrypt(cipherStr, userKey) {
-  const [ivHex, ctHex] = cipherStr.split(':');
+  // FIX: Pakai indexOf+slice bukan split(':') agar konsisten dengan serverDecrypt di Edge Function.
+  // Ciphertext hex bisa mengandung ':' secara teori — split(':') akan memotongnya salah.
+  const colonIdx = cipherStr.indexOf(':');
+  if (colonIdx === -1) throw new Error('Format enkripsi tidak valid');
+  const ivHex = cipherStr.slice(0, colonIdx);
+  const ctHex = cipherStr.slice(colonIdx + 1);
+  if (!ivHex || !ctHex) throw new Error('Format enkripsi tidak valid');
   const fromHex = h => new Uint8Array(h.match(/.{2}/g).map(b => parseInt(b,16)));
   const key  = await _botDeriveEncKey(userKey);
   const pt   = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromHex(ivHex) }, key, fromHex(ctHex));
