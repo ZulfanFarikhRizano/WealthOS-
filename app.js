@@ -22131,10 +22131,17 @@ async function _botHandleSignal(signal, cfg, userId) {
 
 // ── Execute Order via Edge Function Proxy (fix CORS browser) ────
 // Browser tidak bisa fetch langsung ke Bybit/Binance karena CORS block.
-// Semua order diproxy lewat Supabase Edge Function trading-worker.
+// FIX ISSUE-1 (SECURITY): Tidak lagi kirim api_key/api_secret dari browser.
+// Cukup kirim user_id → Edge Function ambil + dekripsi dari DB server-side.
+// Signature lama (apiKey, apiSecret, ...) dipertahankan agar tidak perlu ubah semua call site,
+// tapi parameter tersebut diabaikan — hanya user_id yang dikirim ke server.
 async function _botExecuteOrderViaProxy(apiKey, apiSecret, exchange, tradeMode, leverage, signal, qty, amountUsdt) {
   const _anonKey = window.SB_ANON || (typeof SB_ANON !== 'undefined' ? SB_ANON : '');
   const _sbUrl   = window.SB_URL   || (typeof SB_URL   !== 'undefined' ? SB_URL   : '');
+
+  // Ambil user_id dari seed saat ini
+  const userId = window.curSeed ? await window.seedKeyHash(...window.curSeed) : null;
+  if (!userId) throw new Error('Session tidak valid. Login ulang.');
 
   const res = await fetch(`${_sbUrl}/functions/v1/trading-worker`, {
     method:  'POST',
@@ -22144,15 +22151,16 @@ async function _botExecuteOrderViaProxy(apiKey, apiSecret, exchange, tradeMode, 
     },
     body: JSON.stringify({
       _type:       'execute_order',
+      user_id:     userId,       // EF ambil + dekripsi api_key dari DB
+      // exchange/mode/leverage sebagai hint — EF akan override dari DB config
       exchange:    exchange,
       mode:        tradeMode,
       leverage:    leverage,
-      api_key:     apiKey,
-      api_secret:  apiSecret,
       symbol:      signal.symbol,
       side:        signal.side,
       qty:         qty.toString(),
       amount_usdt: amountUsdt,
+      // api_key dan api_secret TIDAK dikirim lagi — aman
     }),
   });
 
@@ -22245,9 +22253,11 @@ window.botLoadTrades = async function() {
 
       const sideBadge = `<span style="display:inline-flex;align-items:center;padding:.15rem .38rem;border-radius:100px;font-size:.58rem;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:.04em;background:${isBuy?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)'};border:1px solid ${isBuy?'rgba(16,185,129,.3)':'rgba(239,68,68,.3)'};color:${isBuy?'#10b981':'#ef4444'}">${isBuy?'▲ BUY':'▼ SELL'}</span>`;
 
-      const statusColor = t.order_status==='FILLED'||t.order_status==='CLOSED'?'rgba(16,185,129,.8)':t.order_status==='SIMULATED'?'rgba(6,182,212,.8)':'rgba(239,68,68,.8)';
-      const statusBg    = t.order_status==='FILLED'||t.order_status==='CLOSED'?'rgba(16,185,129,.1)':t.order_status==='SIMULATED'?'rgba(6,182,212,.1)':'rgba(239,68,68,.1)';
-      const statusLabel = t.order_status==='SIMULATED'?'SIM':t.order_status==='FILLED'?'LIVE':t.order_status==='CLOSED'?'CLOSE':t.order_status;
+      // FIX ISSUE-3: handle semua status variant
+      const statusColor = (t.order_status==='FILLED'||t.order_status==='CLOSED'||t.order_status==='SIM_CLOSED')?'rgba(16,185,129,.8)':(t.order_status==='SIMULATED'||t.order_status==='SIM_OPEN')?'rgba(6,182,212,.8)':'rgba(239,68,68,.8)';
+      const statusBg    = (t.order_status==='FILLED'||t.order_status==='CLOSED'||t.order_status==='SIM_CLOSED')?'rgba(16,185,129,.1)':(t.order_status==='SIMULATED'||t.order_status==='SIM_OPEN')?'rgba(6,182,212,.1)':'rgba(239,68,68,.1)';
+      // FIX ISSUE-3: handle semua status variant termasuk data lama
+      const statusLabel = (t.order_status==='SIMULATED'||t.order_status==='SIM_OPEN')?'SIM':(t.order_status==='SIM_CLOSED'||t.order_status==='CLOSED')?'CLOSE':t.order_status==='FILLED'?'LIVE':t.order_status;
       const statusBadge = `<span style="padding:.13rem .35rem;border-radius:5px;font-size:.55rem;font-weight:700;background:${statusBg};color:${statusColor}" title="${t.error_msg||''}">${statusLabel}</span>`;
 
       return `<div style="display:grid;grid-template-columns:72px 44px 1fr 76px 58px;padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.03);align-items:center;font-size:.64rem;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
@@ -22276,7 +22286,8 @@ window._botLoadStats = async function() {
     const trades = await res.json();
     if (!Array.isArray(trades)) return;
 
-    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status));
+    // FIX ISSUE-2: tambah SIM_OPEN/SIM_CLOSED untuk handle data lama di DB
+    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED','SIM_OPEN','SIM_CLOSED'].includes(t.order_status));
     const total  = valid.length;
     const buy    = valid.filter(t => t.side === 'BUY').length;
     const sell   = valid.filter(t => t.side === 'SELL').length;
@@ -22822,7 +22833,8 @@ if (typeof _origDoLogout === 'function') {
   }
 
   function _updateStatsFromTrades(trades) {
-    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status));
+    // FIX ISSUE-2: tambah SIM_OPEN/SIM_CLOSED untuk handle data lama di DB
+    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED','SIM_OPEN','SIM_CLOSED'].includes(t.order_status));
     const buy    = valid.filter(t => t.side === 'BUY').length;
     const sell   = valid.filter(t => t.side === 'SELL').length;
     const vol    = valid.reduce((s, t) => s + (parseFloat(t.amount_usdt) || 0), 0);
