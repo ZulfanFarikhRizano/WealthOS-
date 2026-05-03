@@ -22806,7 +22806,7 @@ if (typeof _origDoLogout === 'function') {
 
       const [tradesRes, posRes] = await Promise.all([
         fetch(`${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status,executed_at,symbol,price,pnl_usdt&order=executed_at.asc&limit=500`, { headers: SB_HEADERS }),
-        fetch(`${SB_URL}/rest/v1/positions?user_id=eq.${encodeURIComponent(key)}&select=symbol,entry_price,pnl_usdt,status&order=opened_at.asc&limit=200`,                          { headers: SB_HEADERS }),
+        fetch(`${SB_URL}/rest/v1/positions?user_id=eq.${encodeURIComponent(key)}&select=symbol,entry_price,pnl_usdt,status,direction&order=opened_at.asc&limit=200`,              { headers: SB_HEADERS }),
       ]);
 
       const trades    = await tradesRes.json();
