@@ -22453,26 +22453,26 @@ if (typeof _origDoLogout === 'function') {
 
 
 /* ══════════════════════════════════════════════════════════════════
-   Z-WEALTH · BOT PORTFOLIO CHART v2 — Fix PnL logic + UI upgrade
+   Z-WEALTH · BOT BALANCE CHART v3 — Saldo Bybit Real + Buy Pins
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  // ── Inject CSS ─────────────────────────────────────────────────────
-  const _chartStyle = document.createElement('style');
-  _chartStyle.textContent = `
+  // ── CSS ────────────────────────────────────────────────────────────────
+  const _style = document.createElement('style');
+  _style.textContent = `
     #bot-portfolio-chart-wrap {
-      background: linear-gradient(145deg, rgba(10,14,26,.98) 0%, rgba(8,12,22,.98) 100%);
+      background: linear-gradient(145deg,rgba(8,11,20,.99) 0%,rgba(6,9,18,.99) 100%);
       border: 1px solid rgba(255,255,255,.07);
       border-radius: 20px;
       overflow: hidden;
       margin-bottom: 1rem;
       position: relative;
-      box-shadow: 0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
       animation: _bcFadeIn .4s ease both;
     }
-    @keyframes _bcFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes _bcFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
     .bcp-btn { transition: all .18s cubic-bezier(.4,0,.2,1) !important; }
     .bcp-btn:hover { transform: translateY(-1px); }
     .bcs-card {
@@ -22481,9 +22481,7 @@ if (typeof _origDoLogout === 'function') {
       border-radius: 10px;
       padding: .45rem .5rem;
       text-align: center;
-      transition: background .15s;
     }
-    .bcs-card:hover { background: rgba(255,255,255,.055); }
     .bcs-label {
       font-size: .48rem;
       color: rgba(148,163,184,.55);
@@ -22507,7 +22505,6 @@ if (typeof _origDoLogout === 'function') {
       align-items: center !important;
       gap: .55rem !important;
       margin-bottom: .7rem !important;
-      box-shadow: inset 0 1px 0 rgba(16,185,129,.08) !important;
     }
     #bot-real-balance-val {
       font-size: .95rem !important;
@@ -22518,29 +22515,30 @@ if (typeof _origDoLogout === 'function') {
     #bot-chart-tooltip {
       position: absolute;
       pointer-events: none;
-      background: rgba(10,14,26,.96);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 8px;
-      padding: .35rem .55rem;
+      background: rgba(8,11,20,.97);
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 9px;
+      padding: .4rem .6rem;
       font-size: .6rem;
       font-family: 'Space Mono', monospace;
       color: #e2e8f0;
       white-space: nowrap;
       opacity: 0;
       transition: opacity .1s;
-      z-index: 10;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
     }
   `;
-  document.head.appendChild(_chartStyle);
+  document.head.appendChild(_style);
 
-  // ── State ───────────────────────────────────────────────────────────
-  let _chartPeriod = '7d';
-  let _chartData   = [];
+  // ── State ──────────────────────────────────────────────────────────────
+  let _period      = '7d';
+  let _balHistory  = [];  // [{balance_usdt, recorded_at}] dari balance_history
+  let _buyTrades   = [];  // [{symbol, executed_at, price, amount_usdt}] dari trades
   let _tooltipEl   = null;
 
-  // ── Inject chart HTML ───────────────────────────────────────────────
+  // ── Inject HTML ────────────────────────────────────────────────────────
   function _injectChartHTML() {
     if (document.getElementById('bot-portfolio-chart-wrap')) return;
     const statsCard = document.getElementById('bot-stat-total')?.closest('[style*="grid-template-columns"]');
@@ -22549,15 +22547,15 @@ if (typeof _origDoLogout === 'function') {
     const wrap = document.createElement('div');
     wrap.id = 'bot-portfolio-chart-wrap';
     wrap.innerHTML = `
-      <div style="height:2px;background:linear-gradient(90deg,#10b981,#06b6d4,#a855f7,#f59e0b);opacity:.85"></div>
+      <div style="height:2px;background:linear-gradient(90deg,#f59e0b,#ef4444,#f59e0b,#f59e0b);opacity:.9"></div>
       <div style="padding:.85rem 1rem .6rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem">
           <div>
-            <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase">Grafik PnL Bot</div>
-            <div id="bot-chart-pnl-label" style="font-size:.65rem;font-weight:700;color:var(--muted);margin-top:.15rem">—</div>
+            <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase">Grafik Saldo Bybit</div>
+            <div id="bot-chart-bal-label" style="font-size:.65rem;font-weight:700;color:var(--muted);margin-top:.15rem">—</div>
           </div>
           <div style="display:flex;gap:.35rem">
-            <button onclick="botChartSetPeriod('7d')"  id="bcp-7d"  class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981">7D</button>
+            <button onclick="botChartSetPeriod('7d')"  id="bcp-7d"  class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:#f59e0b">7D</button>
             <button onclick="botChartSetPeriod('30d')" id="bcp-30d" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">30D</button>
             <button onclick="botChartSetPeriod('all')" id="bcp-all" class="bcp-btn" style="padding:.22rem .52rem;border-radius:6px;font-size:.6rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">All</button>
           </div>
@@ -22578,137 +22576,62 @@ if (typeof _origDoLogout === 'function') {
           </button>
         </div>
 
-        <div style="position:relative;height:155px;width:100%">
-          <canvas id="bot-portfolio-canvas" style="width:100%;height:100%"></canvas>
-          <div id="bot-chart-empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;color:var(--muted)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="opacity:.25"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <div style="font-size:.68rem">Belum ada data trade</div>
-          </div>
+        <div id="bot-chart-no-data" style="display:none;padding:2rem 0;text-align:center;color:var(--muted)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" style="opacity:.25;margin-bottom:.4rem"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          <div style="font-size:.68rem">Belum ada data saldo historis</div>
+          <div style="font-size:.58rem;margin-top:.25rem;opacity:.6">Bot akan mulai merekam saldo setelah cron run pertama</div>
+        </div>
+        <div style="position:relative;height:170px;width:100%" id="bot-chart-canvas-wrap">
+          <canvas id="bot-portfolio-canvas" style="width:100%;height:100%;display:block"></canvas>
           <div id="bot-chart-tooltip"></div>
         </div>
 
         <div id="bot-chart-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.75rem;padding-top:.65rem;border-top:1px solid rgba(255,255,255,.05)">
-          <div class="bcs-card">
-            <div class="bcs-label">Total PnL</div>
-            <div id="bcs-pnl" class="bcs-value">—</div>
-          </div>
-          <div class="bcs-card">
-            <div class="bcs-label">Win Rate</div>
-            <div id="bcs-winrate" class="bcs-value">—</div>
-          </div>
-          <div class="bcs-card">
-            <div class="bcs-label">Buy / Sell</div>
-            <div id="bcs-count" class="bcs-value">—</div>
-          </div>
-          <div class="bcs-card">
-            <div class="bcs-label">Avg Size</div>
-            <div id="bcs-avg" class="bcs-value">—</div>
-          </div>
+          <div class="bcs-card"><div class="bcs-label">Total PnL</div><div id="bcs-pnl" class="bcs-value">—</div></div>
+          <div class="bcs-card"><div class="bcs-label">Win Rate</div><div id="bcs-winrate" class="bcs-value">—</div></div>
+          <div class="bcs-card"><div class="bcs-label">Trades</div><div id="bcs-count" class="bcs-value">—</div></div>
+          <div class="bcs-card"><div class="bcs-label">Avg Size</div><div id="bcs-avg" class="bcs-value">—</div></div>
         </div>
       </div>
     `;
     statsCard.parentElement.insertBefore(wrap, statsCard);
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // EQUITY CURVE — logika PnL yang benar
-  // Tracking BUY-SELL pairs per symbol, hitung PnL realised saat SELL
-  // ══════════════════════════════════════════════════════════════════
-  function _buildEquityCurve(trades, period) {
-    const now    = Date.now();
-    const cutoff = period === '7d'  ? now - 7  * 86400000 :
-                   period === '30d' ? now - 30 * 86400000 : 0;
-
-    const allValid = trades
-      .filter(t => ['FILLED','CLOSED','SIMULATED'].includes(t.order_status))
-      .sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at));
-
-    if (allValid.length === 0) return { points: [], summary: null };
-
-    const openPositions = {};
-    let cumulativePnl = 0;
-    const allPoints = [];
-    let wins = 0, losses = 0, buyCount = 0, sellCount = 0, totalVol = 0;
-
-    allValid.forEach(t => {
-      const ts  = new Date(t.executed_at).getTime();
-      const amt = parseFloat(t.amount_usdt) || 0;
-      totalVol += amt;
-
-      if (t.side === 'BUY') {
-        buyCount++;
-        openPositions[t.symbol] = {
-          entryPrice: parseFloat(t.price) || 0,
-          amountUsdt: amt,
-        };
-        allPoints.push({ x: ts, y: cumulativePnl, side: 'BUY', symbol: t.symbol, pnl: 0 });
-
-      } else if (t.side === 'SELL') {
-        sellCount++;
-        let tradePnl = 0;
-
-        // Prioritas 1: pnl_usdt sudah ada di record (dari Edge Function)
-        if (t.pnl_usdt != null && parseFloat(t.pnl_usdt) !== 0) {
-          tradePnl = parseFloat(t.pnl_usdt);
-        }
-        // Prioritas 2: hitung dari entry price vs exit price
-        else if (openPositions[t.symbol] && openPositions[t.symbol].entryPrice > 0) {
-          const pos       = openPositions[t.symbol];
-          const exitPrice = parseFloat(t.price) || 0;
-          if (exitPrice > 0) {
-            tradePnl = ((exitPrice - pos.entryPrice) / pos.entryPrice) * pos.amountUsdt;
-          }
-        }
-
-        cumulativePnl += tradePnl;
-        if (tradePnl > 0) wins++; else if (tradePnl < 0) losses++;
-        delete openPositions[t.symbol];
-        allPoints.push({ x: ts, y: cumulativePnl, side: 'SELL', symbol: t.symbol, pnl: tradePnl });
-      }
-    });
-
-    // Filter periode untuk display
-    let points = allPoints.filter(p => p.x >= cutoff);
-
-    // Tambah titik awal dengan equity sebelum periode (agar grafik tidak mulai dari 0)
-    if (points.length > 0 && allPoints.length > points.length) {
-      const before = allPoints.filter(p => p.x < cutoff);
-      const equityBefore = before.length > 0 ? before[before.length - 1].y : 0;
-      points.unshift({ x: cutoff, y: equityBefore, side: null, symbol: null, pnl: 0 });
-    }
-
-    const winRate = sellCount > 0 ? Math.round((wins / sellCount) * 100) : 0;
-    const avgSize = allValid.length > 0 ? totalVol / allValid.length : 0;
-
-    return {
-      points,
-      summary: { pnl: cumulativePnl, winRate, wins, losses, buyCount, sellCount, avgSize, totalVol },
-    };
-  }
-
-  // ══════════════════════════════════════════════════════════════════
-  // RENDER CHART — smooth bezier, glow, tooltip
-  // ══════════════════════════════════════════════════════════════════
+  // ── Render chart ───────────────────────────────────────────────────────
   function _renderChart() {
     const canvas  = document.getElementById('bot-portfolio-canvas');
-    const emptyEl = document.getElementById('bot-chart-empty');
+    const noData  = document.getElementById('bot-chart-no-data');
+    const wrap    = document.getElementById('bot-chart-canvas-wrap');
     if (!canvas) return;
 
-    const { points, summary } = _buildEquityCurve(_chartData, _chartPeriod);
+    const now    = Date.now();
+    const cutoff = _period === '7d'  ? now - 7  * 86400000
+                 : _period === '30d' ? now - 30 * 86400000 : 0;
 
-    if (points.length < 2) {
-      if (emptyEl) emptyEl.style.display = 'flex';
-      canvas.style.opacity = '0';
+    // Filter balance snapshots by period
+    const snaps = _balHistory
+      .filter(s => new Date(s.recorded_at).getTime() >= cutoff)
+      .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+
+    // Filter buy trades by period
+    const buys = _buyTrades.filter(t => {
+      const ts = new Date(t.executed_at).getTime();
+      return ts >= cutoff && ['BUY'].includes(t.side);
+    });
+
+    if (snaps.length < 2) {
+      if (noData) noData.style.display = 'block';
+      if (wrap)   wrap.style.display   = 'none';
       _updateSummary(null);
       return;
     }
-    if (emptyEl) emptyEl.style.display = 'none';
-    canvas.style.opacity = '1';
+    if (noData) noData.style.display = 'none';
+    if (wrap)   wrap.style.display   = 'block';
 
     const dpr  = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
-    const W    = rect.width  || 300;
-    const H    = 155;
+    const W    = rect.width || 320;
+    const H    = 170;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width  = W + 'px';
@@ -22716,34 +22639,30 @@ if (typeof _origDoLogout === 'function') {
 
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-
-    const pad    = { top: 18, right: 20, bottom: 30, left: 14 };
-    const cW     = W - pad.left - pad.right;
-    const cH     = H - pad.top  - pad.bottom;
-
-    const ys     = points.map(p => p.y);
-    const xs     = points.map(p => p.x);
-    const rawMin = Math.min(0, ...ys);
-    const rawMax = Math.max(0, ...ys);
-    const yPad   = (rawMax - rawMin) * 0.18 || 0.5;
-    const minY   = rawMin - yPad;
-    const maxY   = rawMax + yPad;
-    const minX   = xs[0];
-    const maxX   = xs[xs.length - 1];
-    const rangeY = (maxY - minY) || 1;
-    const rangeX = (maxX - minX) || 1;
-
-    const toX    = x => pad.left + ((x - minX) / rangeX) * cW;
-    const toY    = y => pad.top  + (1 - (y - minY) / rangeY) * cH;
-    const zeroY  = toY(0);
-
-    const lastPnl   = points[points.length - 1].y;
-    const isProfit  = lastPnl >= 0;
-    const lineColor = isProfit ? '#10b981' : '#ef4444';
-
     ctx.clearRect(0, 0, W, H);
 
-    // Grid lines
+    const PIN_ZONE   = 44; // top area reserved for buy pins
+    const pad = { top: PIN_ZONE, right: 24, bottom: 28, left: 10 };
+    const cW  = W - pad.left - pad.right;
+    const cH  = H - pad.top  - pad.bottom;
+
+    const xs   = snaps.map(s => new Date(s.recorded_at).getTime());
+    const ys   = snaps.map(s => parseFloat(s.balance_usdt));
+    const minX = xs[0], maxX = xs[xs.length - 1];
+    const rawMin = Math.min(...ys), rawMax = Math.max(...ys);
+    const yPad = (rawMax - rawMin) * 0.12 || rawMax * 0.05 || 1;
+    const minY = rawMin - yPad, maxY = rawMax + yPad;
+    const rangeX = (maxX - minX) || 1;
+    const rangeY = (maxY - minY) || 1;
+
+    const toX = x => pad.left + ((x - minX) / rangeX) * cW;
+    const toY = y => pad.top  + (1 - (y - minY) / rangeY) * cH;
+
+    const isUp     = ys[ys.length - 1] >= ys[0];
+    const lineClr  = isUp ? '#f59e0b' : '#ef4444';
+    const glowClr  = isUp ? 'rgba(245,158,11,.6)' : 'rgba(239,68,68,.5)';
+
+    // ── Grid ──
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,.04)';
     ctx.lineWidth   = 1;
@@ -22754,184 +22673,303 @@ if (typeof _origDoLogout === 'function') {
     }
     ctx.restore();
 
-    // Zero line
-    if (zeroY >= pad.top && zeroY <= H - pad.bottom) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255,255,255,.14)';
-      ctx.lineWidth   = 1;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(W - pad.right, zeroY); ctx.stroke();
-      ctx.fillStyle   = 'rgba(148,163,184,.3)';
-      ctx.font        = '8px "Space Mono", monospace';
-      ctx.textAlign   = 'right';
-      ctx.fillText('0', pad.left - 3, zeroY + 3);
-      ctx.restore();
-    }
-
-    // Gradient fill
+    // ── Gradient fill under line ──
     const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-    if (isProfit) {
-      grad.addColorStop(0,   'rgba(16,185,129,.25)');
-      grad.addColorStop(0.6, 'rgba(16,185,129,.07)');
-      grad.addColorStop(1,   'rgba(16,185,129,.01)');
+    if (isUp) {
+      grad.addColorStop(0,   'rgba(245,158,11,.28)');
+      grad.addColorStop(0.6, 'rgba(245,158,11,.07)');
+      grad.addColorStop(1,   'rgba(245,158,11,.01)');
     } else {
       grad.addColorStop(0,   'rgba(239,68,68,.01)');
       grad.addColorStop(0.4, 'rgba(239,68,68,.07)');
-      grad.addColorStop(1,   'rgba(239,68,68,.25)');
+      grad.addColorStop(1,   'rgba(239,68,68,.28)');
     }
     ctx.beginPath();
-    ctx.moveTo(toX(xs[0]), zeroY);
-    points.forEach(p => ctx.lineTo(toX(p.x), toY(p.y)));
-    ctx.lineTo(toX(xs[xs.length - 1]), zeroY);
+    ctx.moveTo(toX(xs[0]), H - pad.bottom);
+    snaps.forEach(s => ctx.lineTo(toX(new Date(s.recorded_at).getTime()), toY(parseFloat(s.balance_usdt))));
+    ctx.lineTo(toX(xs[xs.length - 1]), H - pad.bottom);
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Smooth bezier line + glow
+    // ── Line with glow ──
     ctx.save();
-    ctx.shadowColor = lineColor;
-    ctx.shadowBlur  = 10;
+    ctx.shadowColor = glowClr;
+    ctx.shadowBlur  = 12;
     ctx.beginPath();
-    points.forEach((p, i) => {
-      const px = toX(p.x), py = toY(p.y);
-      if (i === 0) {
-        ctx.moveTo(px, py);
-      } else {
-        const prev = points[i - 1];
-        const cpx  = (toX(prev.x) + px) / 2;
-        ctx.bezierCurveTo(cpx, toY(prev.y), cpx, py, px, py);
-      }
+    snaps.forEach((s, i) => {
+      const px = toX(new Date(s.recorded_at).getTime());
+      const py = toY(parseFloat(s.balance_usdt));
+      if (i === 0) { ctx.moveTo(px, py); return; }
+      const prev = snaps[i - 1];
+      const cpx  = (toX(new Date(prev.recorded_at).getTime()) + px) / 2;
+      ctx.bezierCurveTo(cpx, toY(parseFloat(prev.balance_usdt)), cpx, py, px, py);
     });
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth   = 2.4;
+    ctx.strokeStyle = lineClr;
+    ctx.lineWidth   = 2.5;
     ctx.lineJoin    = 'round';
     ctx.lineCap     = 'round';
     ctx.stroke();
     ctx.restore();
 
-    // Trade dots
-    points.forEach(p => {
-      if (p.side === null) return;
-      const px = toX(p.x), py = toY(p.y);
-      const dc = p.side === 'BUY' ? '#10b981' : '#ef4444';
-      const dr = p.side === 'SELL' ? 5 : 4;
-      ctx.save();
-      ctx.shadowColor = dc; ctx.shadowBlur = 7;
-      ctx.beginPath(); ctx.arc(px, py, dr, 0, Math.PI * 2);
-      ctx.fillStyle = dc; ctx.fill();
-      ctx.restore();
-      ctx.beginPath(); ctx.arc(px, py, dr * 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
-    });
-
-    // X-axis date labels
-    ctx.fillStyle = 'rgba(148,163,184,.32)';
-    ctx.font      = '8.5px Inter, sans-serif';
+    // ── Min / Max labels ──
+    const maxIdx = ys.indexOf(rawMax);
+    const minIdx = ys.indexOf(rawMin);
+    ctx.font      = 'bold 8px "Space Mono", monospace';
     ctx.textAlign = 'center';
-    const seen = new Set();
-    const dayPts = [];
-    points.forEach(p => {
-      const d = new Date(p.x).toLocaleDateString('id-ID', { day:'2-digit', month:'short', timeZone:'Asia/Jakarta' });
-      if (!seen.has(d)) { seen.add(d); dayPts.push({ x: p.x, label: d }); }
-    });
-    const dstep = Math.max(1, Math.floor(dayPts.length / 4));
-    dayPts.filter((_, i) => i % dstep === 0 || i === dayPts.length - 1).forEach(d => {
-      ctx.fillText(d.label, toX(d.x), H - 6);
-    });
-
-    // Last value pill label
-    const lastPx = toX(xs[xs.length - 1]);
-    const lastPy = toY(lastPnl);
-    const lbl    = (lastPnl >= 0 ? '+' : '') + lastPnl.toFixed(2);
-    ctx.save();
-    ctx.font = 'bold 8.5px "Space Mono", monospace';
-    const lblW  = ctx.measureText(lbl).width + 12;
-    const lblH  = 15;
-    const lblX  = lastPx > W * 0.7 ? lastPx - lblW - 6 : lastPx + 6;
-    const lblY  = Math.max(pad.top + 2, lastPy - lblH / 2);
-    _roundRect(ctx, lblX, lblY, lblW, lblH, 5);
-    ctx.fillStyle = isProfit ? 'rgba(16,185,129,.2)' : 'rgba(239,68,68,.2)';
-    ctx.fill();
-    ctx.fillStyle   = lineColor;
-    ctx.shadowColor = lineColor; ctx.shadowBlur = 5;
-    ctx.textAlign   = 'left';
-    ctx.fillText(lbl, lblX + 6, lblY + 10.5);
-    ctx.restore();
-
-    // Update header PnL label
-    const pnlLabel = document.getElementById('bot-chart-pnl-label');
-    if (pnlLabel) {
-      pnlLabel.textContent = 'PnL Kumulatif: ' + (lastPnl >= 0 ? '+' : '') + lastPnl.toFixed(2) + ' USDT';
-      pnlLabel.style.color = isProfit ? '#10b981' : '#ef4444';
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    const fmtBal  = v => v >= 1000 ? v.toFixed(0) : v >= 1 ? v.toFixed(2) : v.toFixed(4);
+    // max label
+    {
+      const lx = toX(xs[maxIdx]), ly = toY(rawMax);
+      const lbl = fmtBal(rawMax) + ' USDT';
+      const lw  = ctx.measureText(lbl).width + 10;
+      ctx.save();
+      ctx.fillStyle = 'rgba(8,11,20,.85)';
+      _roundRect(ctx, lx - lw/2, ly - 17, lw, 13, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.6)';
+      ctx.fillText(lbl, lx, ly - 7);
+      ctx.restore();
+    }
+    // current (last) label — right side pill
+    {
+      const lx  = toX(xs[xs.length - 1]);
+      const ly  = toY(ys[ys.length - 1]);
+      const lbl = fmtBal(ys[ys.length - 1]) + ' USDT';
+      const lw  = ctx.measureText(lbl).width + 12;
+      ctx.save();
+      ctx.fillStyle = isUp ? 'rgba(245,158,11,.22)' : 'rgba(239,68,68,.22)';
+      _roundRect(ctx, lx - lw - 4, ly - 8, lw, 15, 5); ctx.fill();
+      ctx.strokeStyle = lineClr; ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle   = lineClr;
+      ctx.shadowColor = lineClr; ctx.shadowBlur = 6;
+      ctx.fillText(lbl, lx - lw/2 - 4, ly + 4);
+      ctx.restore();
     }
 
-    _updateSummary(summary);
-    _setupTooltip(canvas, points, toX, toY, W, H, pad);
+    // ── X-axis date labels ──
+    ctx.fillStyle = 'rgba(148,163,184,.3)';
+    ctx.font      = '8px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const seen = new Set(), datePts = [];
+    snaps.forEach(s => {
+      const d = new Date(s.recorded_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', timeZone:'Asia/Jakarta' });
+      if (!seen.has(d)) { seen.add(d); datePts.push({ x: new Date(s.recorded_at).getTime(), label: d }); }
+    });
+    const dstep = Math.max(1, Math.floor(datePts.length / 4));
+    datePts.filter((_, i) => i % dstep === 0 || i === datePts.length - 1).forEach(d => {
+      ctx.fillText(d.label, Math.min(W - 20, Math.max(20, toX(d.x))), H - 6);
+    });
+
+    // ── Buy pins ──────────────────────────────────────────────────────────
+    // For each buy trade, find closest balance snapshot timestamp, draw pin above chart
+    // Pin layout: vertical stem from line → label box above with coin name
+    // Overlap prevention: track used X positions
+    const PIN_COLOR = '#10b981';
+    const usedPinX  = [];
+
+    buys.forEach(t => {
+      const ts  = new Date(t.executed_at).getTime();
+      if (ts < minX || ts > maxX) return;
+
+      // Interpolate Y on balance line at this timestamp
+      let lineY = pad.top + cH * 0.5; // fallback midpoint
+      for (let i = 1; i < snaps.length; i++) {
+        const x0 = new Date(snaps[i-1].recorded_at).getTime();
+        const x1 = new Date(snaps[i].recorded_at).getTime();
+        if (ts >= x0 && ts <= x1) {
+          const frac = x1 === x0 ? 0 : (ts - x0) / (x1 - x0);
+          const y0   = toY(parseFloat(snaps[i-1].balance_usdt));
+          const y1   = toY(parseFloat(snaps[i].balance_usdt));
+          lineY = y0 + (y1 - y0) * frac;
+          break;
+        }
+      }
+      // If before first snap but within range
+      if (lineY === pad.top + cH * 0.5 && ts <= new Date(snaps[0].recorded_at).getTime()) {
+        lineY = toY(ys[0]);
+      }
+
+      const coin = (t.symbol || '').replace(/USDT$/i, '').replace(/PERP$/i, '').slice(0, 8);
+      const pinX = toX(ts);
+
+      // Nudge if overlapping with previous pin
+      let finalX = pinX;
+      usedPinX.forEach(ux => { if (Math.abs(ux - finalX) < 28) finalX = ux + 30; });
+      usedPinX.push(finalX);
+
+      ctx.save();
+
+      // Dashed stem from line up to pin bottom
+      const stemBottom = lineY - 4;
+      const pinBoxY    = 4; // top of pin box
+      const pinBoxH    = 18;
+      const pinBoxBot  = pinBoxY + pinBoxH;
+
+      ctx.strokeStyle = 'rgba(16,185,129,.5)';
+      ctx.lineWidth   = 1.2;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(finalX, stemBottom);
+      ctx.lineTo(finalX, pinBoxBot + 4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot on line
+      ctx.shadowColor = PIN_COLOR; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(pinX, lineY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = PIN_COLOR; ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(pinX, lineY, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+
+      // Pin box
+      ctx.font = 'bold 7.5px Inter, sans-serif';
+      const lblW = Math.max(ctx.measureText(coin).width + 10, 22);
+      const boxX = Math.min(W - pad.right - lblW, Math.max(pad.left, finalX - lblW / 2));
+
+      ctx.shadowColor = 'rgba(16,185,129,.4)'; ctx.shadowBlur = 6;
+      _roundRect(ctx, boxX, pinBoxY, lblW, pinBoxH, 5);
+      ctx.fillStyle = '#10b981'; ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // "B" badge left + coin name
+      ctx.fillStyle = 'rgba(0,0,0,.35)';
+      _roundRect(ctx, boxX + 1, pinBoxY + 1, 11, pinBoxH - 2, 4); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 6.5px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('B', boxX + 7, pinBoxY + 12);
+
+      // Coin name
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 7px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(coin, boxX + 14, pinBoxY + 12);
+
+      ctx.restore();
+    });
+
+    // ── Tooltip ──────────────────────────────────────────────────────────
+    _setupTooltip(canvas, snaps, buys, toX, toY, W, H, pad, fmtBal);
+
+    // ── Update header label ──
+    const curBal  = ys[ys.length - 1];
+    const startBal= ys[0];
+    const diff    = curBal - startBal;
+    const diffPct = startBal > 0 ? (diff / startBal * 100).toFixed(2) : '0.00';
+    const sign    = diff >= 0 ? '+' : '';
+    const balLbl  = document.getElementById('bot-chart-bal-label');
+    if (balLbl) {
+      balLbl.textContent = `${fmtBal(curBal)} USDT  (${sign}${diff >= 1 ? diff.toFixed(2) : diff.toFixed(4)} | ${sign}${diffPct}%)`;
+      balLbl.style.color = diff >= 0 ? '#f59e0b' : '#ef4444';
+    }
+
+    _updateSummary(buys);
   }
 
   function _roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
-    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-    ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-    ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-    ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
   }
 
-  // ── Tooltip ─────────────────────────────────────────────────────────
-  function _setupTooltip(canvas, points, toX, toY, W, H, pad) {
+  // ── Tooltip setup ────────────────────────────────────────────────────
+  function _setupTooltip(canvas, snaps, buys, toX, toY, W, H, pad, fmtBal) {
     if (!_tooltipEl) {
       _tooltipEl = document.createElement('div');
       _tooltipEl.id = 'bot-chart-tooltip';
       canvas.parentElement.appendChild(_tooltipEl);
     }
+    const ttEl = _tooltipEl;
+
     canvas.onmousemove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      const mx   = e.clientX - rect.left;
+      const mx   = (e.clientX - rect.left);
+
+      // Find closest balance snapshot
       let closest = 0, minDist = Infinity;
-      points.forEach((p, i) => { const d = Math.abs(toX(p.x) - mx); if (d < minDist) { minDist = d; closest = i; } });
-      const p = points[closest];
-      if (!p || p.side === null) { _tooltipEl.style.opacity = '0'; return; }
-      const sc = p.side === 'BUY' ? '#10b981' : '#ef4444';
-      const dt = new Date(p.x).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
-      const sym = (p.symbol || '').replace('USDT','');
-      _tooltipEl.innerHTML = `
-        <div style="color:${sc};font-weight:700;margin-bottom:.18rem">${p.side === 'BUY' ? '▲' : '▼'} ${p.side} ${sym}</div>
-        <div style="color:rgba(148,163,184,.6);font-size:.55rem">${dt}</div>
-        ${p.side === 'SELL' ? `<div style="margin-top:.18rem;color:${p.pnl >= 0 ? '#10b981' : '#ef4444'}">PnL: ${p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(3)} USDT</div>` : ''}
-        <div style="color:rgba(148,163,184,.5);margin-top:.1rem">Equity: ${p.y >= 0 ? '+' : ''}${p.y.toFixed(3)}</div>
+      snaps.forEach((s, i) => {
+        const d = Math.abs(toX(new Date(s.recorded_at).getTime()) - mx);
+        if (d < minDist) { minDist = d; closest = i; }
+      });
+
+      if (minDist > 40) { ttEl.style.opacity = '0'; return; }
+
+      const s    = snaps[closest];
+      const px   = toX(new Date(s.recorded_at).getTime());
+      const py   = toY(parseFloat(s.balance_usdt));
+      const bal  = parseFloat(s.balance_usdt);
+      const dt   = new Date(s.recorded_at).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+      const openPos = s.open_positions || 0;
+
+      // Check if a buy happened near this time
+      const nearBuy = buys.find(t => Math.abs(new Date(t.executed_at).getTime() - new Date(s.recorded_at).getTime()) < 20 * 60 * 1000);
+
+      let buyLine = '';
+      if (nearBuy) {
+        const coin = (nearBuy.symbol || '').replace(/USDT$/i, '').replace(/PERP$/i, '');
+        buyLine = `<div style="color:#10b981;margin-top:.25rem">▲ BUY ${coin} @ $${parseFloat(nearBuy.price || 0).toFixed(4)}</div>`;
+      }
+
+      ttEl.innerHTML = `
+        <div style="color:#f59e0b;font-weight:700;font-size:.65rem">${fmtBal(bal)} USDT</div>
+        <div style="color:rgba(148,163,184,.55);font-size:.55rem;margin-top:.1rem">${dt}</div>
+        ${openPos > 0 ? `<div style="color:rgba(148,163,184,.45);font-size:.55rem">${openPos} posisi terbuka</div>` : ''}
+        ${buyLine}
       `;
-      const tipW = 145, px = toX(p.x), py = toY(p.y);
-      _tooltipEl.style.left    = (px + tipW > W - pad.right ? px - tipW - 6 : px + 10) + 'px';
-      _tooltipEl.style.top     = Math.max(pad.top, py - 32) + 'px';
-      _tooltipEl.style.opacity = '1';
+
+      const ttW = 155;
+      let ttX = px + 10;
+      if (ttX + ttW > W) ttX = px - ttW - 10;
+      ttEl.style.cssText += `;left:${ttX}px;top:${Math.max(pad.top, py - 30)}px;opacity:1`;
     };
-    canvas.onmouseleave = () => { if (_tooltipEl) _tooltipEl.style.opacity = '0'; };
+    canvas.onmouseleave = () => { ttEl.style.opacity = '0'; };
   }
 
   // ── Update summary cards ─────────────────────────────────────────────
-  function _updateSummary(s) {
-    const pnlEl = document.getElementById('bcs-pnl');
-    const winEl = document.getElementById('bcs-winrate');
-    const cntEl = document.getElementById('bcs-count');
-    const avgEl = document.getElementById('bcs-avg');
-    if (!pnlEl) return;
-    if (!s) {
-      [pnlEl, winEl, cntEl, avgEl].forEach(el => { if (el) el.textContent = '—'; });
+  function _updateSummary(buys) {
+    const pnlEl   = document.getElementById('bcs-pnl');
+    const wrEl    = document.getElementById('bcs-winrate');
+    const cntEl   = document.getElementById('bcs-count');
+    const avgEl   = document.getElementById('bcs-avg');
+
+    if (!buys || buys.length === 0) {
+      if (pnlEl)  pnlEl.textContent  = '—';
+      if (wrEl)   wrEl.textContent   = '—';
+      if (cntEl)  cntEl.textContent  = '—';
+      if (avgEl)  avgEl.textContent  = '—';
       return;
     }
-    if (pnlEl) { pnlEl.textContent = (s.pnl >= 0 ? '+' : '') + s.pnl.toFixed(2); pnlEl.style.color = s.pnl >= 0 ? '#10b981' : '#ef4444'; }
-    if (winEl) {
-      winEl.textContent  = s.winRate + '%';
-      winEl.style.color  = s.winRate >= 50 ? '#10b981' : s.winRate >= 35 ? '#f59e0b' : '#ef4444';
-    }
-    if (cntEl) {
-      cntEl.innerHTML   = `<span style="color:#10b981;font-size:.72rem">${s.buyCount}</span><span style="opacity:.4;font-size:.62rem">/${s.sellCount}</span>`;
-    }
-    if (avgEl) { avgEl.textContent = '$' + s.avgSize.toFixed(1); avgEl.style.color = '#f59e0b'; }
+
+    // PnL dari selisih saldo awal & akhir dalam periode
+    const bals = _balHistory.sort((a,b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+    const pnl  = bals.length >= 2
+      ? parseFloat(bals[bals.length-1].balance_usdt) - parseFloat(bals[0].balance_usdt)
+      : 0;
+    const pnlSign = pnl >= 0 ? '+' : '';
+
+    // Win rate dari trades yang punya pnl_usdt
+    const closedTrades = _buyTrades.filter(t => t.side === 'SELL' && t.pnl_usdt != null);
+    const wins         = closedTrades.filter(t => parseFloat(t.pnl_usdt) > 0).length;
+    const wr           = closedTrades.length > 0 ? Math.round(wins / closedTrades.length * 100) : 0;
+
+    const buyCount = buys.length;
+    const avgSize  = buyCount > 0
+      ? buys.reduce((s, t) => s + (parseFloat(t.amount_usdt) || 0), 0) / buyCount
+      : 0;
+
+    if (pnlEl)  { pnlEl.textContent  = `${pnlSign}${Math.abs(pnl) >= 1 ? pnl.toFixed(2) : pnl.toFixed(4)}`; pnlEl.style.color = pnl >= 0 ? '#10b981' : '#ef4444'; }
+    if (wrEl)   { wrEl.textContent   = closedTrades.length > 0 ? `${wr}%` : '—'; wrEl.style.color = wr >= 50 ? '#10b981' : '#ef4444'; }
+    if (cntEl)  cntEl.textContent  = `${buyCount}/0`;
+    if (avgEl)  avgEl.textContent  = `$${avgSize.toFixed(1)}`;
   }
 
-  // ── Load chart data (fetch trades + enrich dengan positions PnL) ─────
+  // ── Load data dari Supabase ──────────────────────────────────────────
   async function _botLoadChartData() {
     if (!window.curSeed || !window.seedKeyHash) return;
     try {
@@ -22940,40 +22978,40 @@ if (typeof _origDoLogout === 'function') {
       const SB_HEADERS = window.SB_HEADERS;
       if (!SB_URL || !SB_HEADERS) return;
 
-      const [tradesRes, posRes] = await Promise.all([
-        fetch(`${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&select=side,amount_usdt,order_status,executed_at,symbol,price,pnl_usdt&order=executed_at.asc&limit=500`, { headers: SB_HEADERS }),
-        fetch(`${SB_URL}/rest/v1/positions?user_id=eq.${encodeURIComponent(key)}&select=symbol,entry_price,pnl_usdt,status,direction&order=opened_at.asc&limit=200`,              { headers: SB_HEADERS }),
+      const now    = Date.now();
+      const cutoff = _period === '7d'  ? now - 7  * 86400000
+                   : _period === '30d' ? now - 30 * 86400000 : 0;
+      const cutoffISO = new Date(cutoff).toISOString();
+
+      const [balRes, tradeRes] = await Promise.all([
+        fetch(
+          `${SB_URL}/rest/v1/balance_history?user_id=eq.${encodeURIComponent(key)}&recorded_at=gte.${cutoffISO}&select=balance_usdt,open_positions,recorded_at&order=recorded_at.asc&limit=2000`,
+          { headers: SB_HEADERS }
+        ),
+        fetch(
+          `${SB_URL}/rest/v1/trades?user_id=eq.${encodeURIComponent(key)}&executed_at=gte.${cutoffISO}&select=symbol,side,price,amount_usdt,executed_at,order_status,pnl_usdt&order=executed_at.asc&limit=500`,
+          { headers: SB_HEADERS }
+        ),
       ]);
 
-      const trades    = await tradesRes.json();
-      const positions = await posRes.json().catch(() => []);
-      if (!Array.isArray(trades)) return;
+      const balData   = await balRes.json();
+      const tradeData = await tradeRes.json();
 
-      // Enrich SELL trades dengan pnl dari positions jika trade tidak punya pnl_usdt
-      if (Array.isArray(positions)) {
-        const posMap = {};
-        positions.forEach(p => { if (p.pnl_usdt) posMap[p.symbol] = parseFloat(p.pnl_usdt); });
-        trades.forEach(t => {
-          if (t.side === 'SELL' && (t.pnl_usdt == null || parseFloat(t.pnl_usdt) === 0) && posMap[t.symbol] != null) {
-            t.pnl_usdt = posMap[t.symbol];
-          }
-        });
-      }
+      _balHistory = Array.isArray(balData)   ? balData   : [];
+      _buyTrades  = Array.isArray(tradeData) ? tradeData : [];
 
-      _chartData = trades;
       _renderChart();
-      _updateStatsFromTrades(trades);
+      _updateStatsFromTrades(_buyTrades);
     } catch (e) {
       console.warn('[BotChart] Load error:', e);
     }
   }
 
   function _updateStatsFromTrades(trades) {
-    // FIX ISSUE-2: tambah SIM_OPEN/SIM_CLOSED untuk handle data lama di DB
-    const valid  = trades.filter(t => ['FILLED','CLOSED','SIMULATED','SIM_OPEN','SIM_CLOSED'].includes(t.order_status));
-    const buy    = valid.filter(t => t.side === 'BUY').length;
-    const sell   = valid.filter(t => t.side === 'SELL').length;
-    const vol    = valid.reduce((s, t) => s + (parseFloat(t.amount_usdt) || 0), 0);
+    const valid   = trades.filter(t => ['FILLED','CLOSED','SIMULATED','SIM_OPEN','SIM_CLOSED'].includes(t.order_status));
+    const buy     = valid.filter(t => t.side === 'BUY').length;
+    const sell    = valid.filter(t => t.side === 'SELL').length;
+    const vol     = valid.reduce((s, t) => s + (parseFloat(t.amount_usdt) || 0), 0);
     const totalEl = document.getElementById('bot-stat-total');
     const bsEl    = document.getElementById('bot-stat-buysell');
     const volEl   = document.getElementById('bot-stat-vol');
@@ -22984,24 +23022,24 @@ if (typeof _origDoLogout === 'function') {
 
   // ── Period selector ──────────────────────────────────────────────────
   window.botChartSetPeriod = function (period) {
-    _chartPeriod = period;
+    _period = period;
     ['7d','30d','all'].forEach(p => {
       const btn = document.getElementById('bcp-' + p);
       if (!btn) return;
       if (p === period) {
-        btn.style.background = 'rgba(16,185,129,.15)';
-        btn.style.border     = '1px solid rgba(16,185,129,.4)';
-        btn.style.color      = '#10b981';
+        btn.style.background = 'rgba(245,158,11,.15)';
+        btn.style.border     = '1px solid rgba(245,158,11,.4)';
+        btn.style.color      = '#f59e0b';
       } else {
         btn.style.background = 'var(--surface2, rgba(255,255,255,.04))';
         btn.style.border     = '1px solid var(--border, rgba(255,255,255,.08))';
         btn.style.color      = 'var(--muted, rgba(148,163,184,.6))';
       }
     });
-    _renderChart();
+    _botLoadChartData();
   };
 
-  // ── Real balance fetch ───────────────────────────────────────────────
+  // ── Real balance fetch (tombol refresh) ─────────────────────────────
   window.botRefreshBalance = async function () {
     if (!window.curSeed || !window.seedKeyHash) return;
     const balVal = document.getElementById('bot-real-balance-val');
@@ -23075,14 +23113,14 @@ if (typeof _origDoLogout === 'function') {
     _pollStats();
   };
 
-  // ── Patch botLoadTrades ───────────────────────────────────────────────
+  // ── Patch botLoadTrades ──────────────────────────────────────────────
   const _origLoadTrades = window.botLoadTrades;
   window.botLoadTrades = async function () {
     if (typeof _origLoadTrades === 'function') await _origLoadTrades.apply(this, arguments);
     await _botLoadChartData();
   };
 
-  window.addEventListener('resize', () => { if (_chartData.length) _renderChart(); });
+  window.addEventListener('resize', () => { if (_balHistory.length) _renderChart(); });
   window._botLoadChartData = _botLoadChartData;
 
 })();
