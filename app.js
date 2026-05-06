@@ -21485,6 +21485,8 @@ const _bot = {
   scanning:     false,
   lastScan:     null,
   scanInterval: null,
+  riskMode:     'manual',   // 'auto' | 'manual'
+  riskPct:      1.0,        // % saldo maks hilang per trade (auto mode)
 };
 
 // ── Init: dipanggil saat page trading-bot dibuka ─────────────────
@@ -21520,6 +21522,9 @@ window.botSetMode = function(mode) {
   spotBtn.style.cssText += ';' + (mode === 'spot'    ? onSpot : off);
   futBtn.style.cssText  += ';' + (mode === 'futures' ? onFut  : off);
   if (levRow) levRow.style.display = mode === 'futures' ? 'block' : 'none';
+  // Tampilkan warning jika auto risk mode dipilih tapi mode spot
+  const warnEl = document.getElementById('bot-risk-auto-spot-warn');
+  if (warnEl) warnEl.style.display = (_bot.riskMode === 'auto' && mode !== 'futures') ? 'flex' : 'none';
 };
 
 // ── Set leverage (hanya untuk futures) ───────────────────────────
@@ -21534,6 +21539,106 @@ window.botSetLeverage = function(lev) {
       btn.style.cssText += ';background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
     }
   });
+};
+
+// ── Set risk mode: 'auto' | 'manual' ─────────────────────────────
+window.botSetRiskMode = function(mode) {
+  _bot.riskMode = mode;
+  const manualBtn = document.getElementById('bot-risk-manual');
+  const autoBtn   = document.getElementById('bot-risk-auto');
+  const autoPanel = document.getElementById('bot-risk-auto-panel');
+  const manualAmt = document.getElementById('bot-amount-row');
+
+  const onManual = 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#10b981';
+  const onAuto   = 'background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.45);color:#a855f7';
+  const off      = 'background:var(--surface2);border:1px solid var(--border);color:var(--muted)';
+
+  if (manualBtn) manualBtn.style.cssText += ';' + (mode === 'manual' ? onManual : off);
+  if (autoBtn)   autoBtn.style.cssText   += ';' + (mode === 'auto'   ? onAuto   : off);
+
+  // Toggle panel: auto mode → tampilkan risk % input, sembunyikan fixed amount
+  if (autoPanel) autoPanel.style.display  = mode === 'auto' ? 'block' : 'none';
+  if (manualAmt) manualAmt.style.display  = mode === 'manual' ? 'block' : 'none';
+
+  // Warning jika auto mode tapi spot (tidak didukung)
+  const warnEl = document.getElementById('bot-risk-auto-spot-warn');
+  if (warnEl) warnEl.style.display = (mode === 'auto' && _bot.tradeMode !== 'futures') ? 'flex' : 'none';
+};
+
+// ── Inject risk management UI (dipanggil saat bot settings dibuka) ─
+function _botInjectRiskUI() {
+  if (document.getElementById('bot-risk-mode-row')) return; // sudah ada
+
+  // Cari anchor: bot-amount-row atau bot-leverage-row
+  const amtRow = document.getElementById('bot-amount-row') || document.getElementById('bot-amount')?.closest('[style*="margin"]') || document.getElementById('bot-amount')?.parentElement?.parentElement;
+  if (!amtRow) return;
+
+  const riskHtml = `
+    <div id="bot-risk-mode-row" style="margin-bottom:.9rem">
+      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.45rem">
+        ⚖️ Risk Management Mode
+      </div>
+      <div style="display:flex;gap:.45rem;margin-bottom:.5rem">
+        <button id="bot-risk-manual" onclick="botSetRiskMode('manual')"
+          style="flex:1;padding:.38rem .5rem;border-radius:8px;font-size:.7rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .18s">
+          Manual
+        </button>
+        <button id="bot-risk-auto" onclick="botSetRiskMode('auto')"
+          style="flex:1;padding:.38rem .5rem;border-radius:8px;font-size:.7rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .18s">
+          Auto (% Saldo)
+        </button>
+      </div>
+      <div id="bot-risk-auto-spot-warn" style="display:none;align-items:center;gap:.35rem;padding:.3rem .55rem;border-radius:7px;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);margin-bottom:.4rem">
+        <span style="font-size:.62rem;color:#eab308">⚠️ Auto risk mode hanya untuk Futures. Spot pakai Manual.</span>
+      </div>
+      <div id="bot-risk-auto-panel" style="display:none;margin-top:.35rem">
+        <div style="font-size:.65rem;color:var(--muted);margin-bottom:.3rem">
+          Maks rugi per trade (% dari saldo Bybit)
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <input id="bot-risk-pct" type="number" min="0.1" max="10" step="0.1" value="1.0"
+            style="width:80px;padding:.35rem .5rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:.8rem;font-weight:700;text-align:center"
+            oninput="_bot.riskPct = parseFloat(this.value)||1.0; _botUpdateRiskPreview()"
+          />
+          <span style="font-size:.7rem;color:var(--muted)">% saldo</span>
+        </div>
+        <div id="bot-risk-preview" style="margin-top:.4rem;font-size:.62rem;color:var(--muted);line-height:1.5"></div>
+        <div style="margin-top:.45rem;padding:.35rem .5rem;border-radius:7px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18)">
+          <div style="font-size:.6rem;color:rgba(16,185,129,.7);line-height:1.55">
+            💡 Bot fetch saldo Bybit real-time setiap run, lalu hitung margin otomatis<br>
+            sehingga kerugian saat SL kena = <b>% yang kamu set × saldo saat itu</b>.
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  amtRow.insertAdjacentHTML('beforebegin', riskHtml);
+  botSetRiskMode(_bot.riskMode || 'manual');
+}
+
+// ── Update preview kalkulasi risk ─────────────────────────────────
+window._botUpdateRiskPreview = async function() {
+  const el = document.getElementById('bot-risk-preview');
+  if (!el) return;
+  const pct = _bot.riskPct || 1.0;
+  const lev = _bot.leverage || 10;
+  // Coba fetch saldo dari cache/DB untuk preview
+  try {
+    const key = await seedKeyHash(...curSeed);
+    const cacheKey = 'bot_cfg_' + key.slice(0,16);
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      // Preview pakai saldo estimasi dari last known balance (dari cache atau 0)
+      const SL_PCT = 0.02; // SL futures 2%
+      // Kalkulasi tanpa saldo real (hanya estimasi)
+      el.innerHTML =
+        `<span style="color:var(--muted)">Contoh saldo <b>$100</b>: ` +
+        `margin = <b>$${((100 * pct/100) / (lev * SL_PCT)).toFixed(2)}</b>, ` +
+        `maks rugi = <b>$${(100 * pct/100).toFixed(2)}</b> (<b>${pct}%</b>)</span>`;
+    }
+  } catch(e) {
+    el.innerHTML = '';
+  }
 };
 
 // ── Load config dari localStorage (API key tidak di-load ke input untuk keamanan) ─
@@ -21586,17 +21691,24 @@ async function _botLoadConfig() {
       if (amtEl)  amtEl.value = c.trade_amount_usdt || 10;
       if (topnEl) topnEl.value = c.top_n_by_volume  || 20;
       if (symEl)  symEl.value = (c.symbols || []).join(',');
+      _bot.riskMode = c.risk_mode          || 'manual';
+      _bot.riskPct  = c.risk_pct_per_trade || 1.0;
       botSetExchange(_bot.exchange);
       botSetMode(_bot.tradeMode);
       botSetLeverage(_bot.leverage);
       _botUpdateStatusUI(_bot.isActive);
       if (_bot.isActive) _botStartInterval();
+      // Inject risk UI setelah state ter-load
+      _botInjectRiskUI();
+      const riskPctEl = document.getElementById('bot-risk-pct');
+      if (riskPctEl) riskPctEl.value = _bot.riskPct;
+      botSetRiskMode(_bot.riskMode);
     }
 
     // Cek DB untuk indikator API + data terbaru
     try {
       const dbRes  = await fetch(
-        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,exchange,trade_mode,is_active,trade_amount_usdt,top_n_by_volume,symbols,telegram_chat_id&limit=1`,
+        `${SB_URL}/rest/v1/bot_configs?user_id=eq.${encodeURIComponent(key)}&select=api_key,exchange,trade_mode,is_active,trade_amount_usdt,top_n_by_volume,symbols,telegram_chat_id,leverage,risk_mode,risk_pct_per_trade&limit=1`,
         { headers: SB_HEADERS }
       );
       const dbData = await dbRes.json();
@@ -21616,9 +21728,16 @@ async function _botLoadConfig() {
         if (amtEl  && db.trade_amount_usdt) amtEl.value  = db.trade_amount_usdt;
         if (topnEl && db.top_n_by_volume)   topnEl.value = db.top_n_by_volume;
         if (symEl  && db.symbols)           symEl.value  = (db.symbols || []).join(',');
+        _bot.riskMode = db.risk_mode          || _bot.riskMode || 'manual';
+        _bot.riskPct  = db.risk_pct_per_trade || _bot.riskPct  || 1.0;
         botSetExchange(_bot.exchange);
         botSetMode(_bot.tradeMode);
         _botUpdateStatusUI(_bot.isActive);
+        // Inject & sync risk UI dengan data DB terbaru
+        _botInjectRiskUI();
+        const riskPctElDb = document.getElementById('bot-risk-pct');
+        if (riskPctElDb) riskPctElDb.value = _bot.riskPct;
+        botSetRiskMode(_bot.riskMode);
 
         // Update cache lokal — telegram_chat_id ikut tersimpan
         const safe = { ...db, api_key: '***', api_secret: '***' };
@@ -21720,6 +21839,9 @@ window.botSaveConfig = async function() {
 
     // OPSI B: Simpan config dulu TANPA api_key (pakai placeholder)
     // Lalu kirim api_key ke Edge Function untuk dienkripsi server-side
+    const riskPctInput = parseFloat(document.getElementById('bot-risk-pct')?.value) || 1.0;
+    _bot.riskPct = Math.max(0.1, Math.min(10, riskPctInput));
+
     const payload = {
       user_id:            key,
       exchange:           _bot.exchange,
@@ -21732,6 +21854,8 @@ window.botSaveConfig = async function() {
       trade_amount_usdt:  amount,
       telegram_chat_id:   existingChatId,
       is_active:          _bot.isActive,
+      risk_mode:          _bot.riskMode          || 'manual',
+      risk_pct_per_trade: _bot.riskPct           || 1.0,
       updated_at:         new Date().toISOString(),
     };
 
@@ -21767,7 +21891,10 @@ window.botSaveConfig = async function() {
     document.getElementById('bot-api-key').value    = '';
     document.getElementById('bot-api-secret').value = '';
 
-    toast('✓ API Key tersimpan aman (server encrypted) — bot siap trading LIVE!', 0);
+    const riskModeLabel = _bot.riskMode === 'auto'
+      ? `Auto (maks rugi ${_bot.riskPct}% per trade)`
+      : 'Manual';
+    toast(`✓ Config tersimpan — Risk Mode: ${riskModeLabel}`, 0);
     await _botRefreshTgStatus();
   } catch(e) {
     console.error('[BotSave]', e);
